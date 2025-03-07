@@ -88,3 +88,12 @@ Route::get('/biodata/family-members', [BiodataController::class, 'getFamilyMembe
 Route::get('/api/wilayah/provinsi/{id}/kota', [WilayahController::class, 'getKotaByProvinsi'])
     ->name('wilayah.kota')
     ->where('id', '[0-9]+');
+
+
+Route::get('/api/wilayah/kota/{id}/kecamatan', [WilayahController::class, 'getKecamatanByKota'])
+    ->name('wilayah.kecamatan')
+    ->where('id', '[0-9]+');
+
+Route::get('/api/wilayah/kecamatan/{id}/kelurahan', [WilayahController::class, 'getDesaByKecamatan'])
+    ->name('wilayah.kelurahan')
+    ->where('id', '[0-9]+');

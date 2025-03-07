@@ -13,6 +13,11 @@ class FamilyMember extends Model
 
     public function kk()
     {
-        return $this->belongsTo(KK::class);
+        return $this->belongsTo(KK::class, 'kk_id');
+    }
+
+    public function familyMembers()
+    {
+        return $this->hasMany(FamilyMember::class);
     }
 }

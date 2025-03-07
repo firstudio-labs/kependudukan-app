@@ -78,15 +78,18 @@
             </div>
 
             <!-- Kategori: Data Wilayah -->
+            <!-- Data Wilayah section -->
             <div class="mt-6">
                 <h2 class="text-xl font-semibold text-gray-800 mb-4">Data Wilayah</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label for="province_id" class="block text-sm font-medium text-gray-700">Provinsi</label>
-                        <select name="province_id" id="province_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                        <select name="province_id" id="province_id"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
+                            required>
                             <option value="">Pilih Provinsi</option>
                             @foreach($provinces as $province)
-                                <option value="{{ $province['id'] }}" {{ $kk->province_id == $province['id'] ? 'selected' : '' }}>
+                                <option value="{{ $province['code'] }}" {{ $kk->province_id == $province['code'] ? 'selected' : '' }}>
                                     {{ $province['name'] }}
                                 </option>
                             @endforeach
@@ -94,39 +97,35 @@
                     </div>
                     <div>
                         <label for="district_id" class="block text-sm font-medium text-gray-700">Kabupaten</label>
-                        <select name="district_id" id="district_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                        <select name="district_id" id="district_id"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
+                            required>
                             <option value="">Pilih Kabupaten</option>
+                            <!-- Kabupaten akan diisi oleh JavaScript -->
                         </select>
                     </div>
                     <div>
-                        <label for="kecamatan" class="block text-sm font-medium text-gray-700">Kecamatan</label>
-                        <select name="kecamatan" id="kecamatan" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                        <label for="sub_district_id" class="block text-sm font-medium text-gray-700">Kecamatan</label>
+                        <select name="sub_district_id" id="sub_district_id"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
+                            required>
                             <option value="">Pilih Kecamatan</option>
-                            <option value="Coblong" {{ $kk->kecamatan == 'Coblong' ? 'selected' : '' }}>Coblong</option>
-                            <option value="Tembalang" {{ $kk->kecamatan == 'Tembalang' ? 'selected' : '' }}>Tembalang</option>
-                            <option value="Gubeng" {{ $kk->kecamatan == 'Gubeng' ? 'selected' : '' }}>Gubeng</option>
-                            <!-- Tambahkan opsi kecamatan lainnya -->
+                            <!-- Kecamatan akan diisi oleh JavaScript -->
                         </select>
                     </div>
                     <div>
-                        <label for="desa_kelurahan" class="block text-sm font-medium text-gray-700">Desa/Kelurahan</label>
-                        <select name="desa_kelurahan" id="desa_kelurahan" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                        <label for="village_id" class="block text-sm font-medium text-gray-700">Desa/Kelurahan</label>
+                        <select name="village_id" id="village_id"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
+                            required>
                             <option value="">Pilih Desa/Kelurahan</option>
-                            <option value="Dago" {{ $kk->desa_kelurahan == 'Dago' ? 'selected' : '' }}>Dago</option>
-                            <option value="Tembalang" {{ $kk->desa_kelurahan == 'Tembalang' ? 'selected' : '' }}>Tembalang</option>
-                            <option value="Gubeng" {{ $kk->desa_kelurahan == 'Gubeng' ? 'selected' : '' }}>Gubeng</option>
-                            <!-- Tambahkan opsi desa/kelurahan lainnya -->
+                            <!-- Desa/Kelurahan akan diisi oleh JavaScript -->
                         </select>
                     </div>
                     <div>
                         <label for="dusun" class="block text-sm font-medium text-gray-700">Dusun/Dukuh/Kampung</label>
-                        <select name="dusun" id="dusun" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
-                            <option value="">Pilih Dusun/Dukuh/Kampung</option>
-                            <option value="Dusun 1" {{ $kk->dusun == 'Dusun 1' ? 'selected' : '' }}>Dusun 1</option>
-                            <option value="Dusun 2" {{ $kk->dusun == 'Dusun 2' ? 'selected' : '' }}>Dusun 2</option>
-                            <option value="Dusun 3" {{ $kk->dusun == 'Dusun 3' ? 'selected' : '' }}>Dusun 3</option>
-                            <!-- Tambahkan opsi dusun lainnya -->
-                        </select>
+                        <input type="text" name="dusun" id="dusun" value="{{ $kk->dusun }}"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
                     </div>
                 </div>
             </div>
@@ -184,5 +183,216 @@
                 setTimeout(() => errorAlert.classList.add('hidden'), 1000);
             }
         }, 5000);
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Function to close alert
+            function closeAlert(alertId) {
+                document.getElementById(alertId).classList.add('hidden');
+            }
+
+            // Inisialisasi data wilayah
+            initializeLocationData();
+
+            // Function to initialize location data
+            async function initializeLocationData() {
+                const provinceId = "{{ $kk->province_id }}";
+                const districtId = "{{ $kk->district_id }}";
+                const subDistrictId = "{{ $kk->sub_district_id }}";
+                const villageId = "{{ $kk->village_id }}";
+
+                if (provinceId) {
+                    // Load districts for the selected province
+                    await loadDistricts(provinceId, districtId);
+
+                    if (districtId) {
+                        // Load sub-districts for the selected district
+                        await loadSubDistricts(districtId, subDistrictId);
+
+                        if (subDistrictId) {
+                            // Load villages for the selected sub-district
+                            await loadVillages(subDistrictId, villageId);
+                        }
+                    }
+                }
+            }
+
+            // Event handler for province dropdown
+            document.getElementById('province_id').addEventListener('change', function () {
+                const provinceCode = this.value;
+
+                // Reset dropdowns
+                resetDropdown('district_id', 'Pilih Kabupaten');
+                resetDropdown('sub_district_id', 'Pilih Kecamatan');
+                resetDropdown('village_id', 'Pilih Desa/Kelurahan');
+
+                if (provinceCode) {
+                    loadDistricts(provinceCode);
+                }
+            });
+
+            // Event handler for district dropdown
+            document.getElementById('district_id').addEventListener('change', function () {
+                const districtCode = this.value;
+
+                // Reset dropdowns
+                resetDropdown('sub_district_id', 'Pilih Kecamatan');
+                resetDropdown('village_id', 'Pilih Desa/Kelurahan');
+
+                if (districtCode) {
+                    loadSubDistricts(districtCode);
+                }
+            });
+
+            // Event handler for sub-district dropdown
+            document.getElementById('sub_district_id').addEventListener('change', function () {
+                const subDistrictCode = this.value;
+
+                // Reset dropdown
+                resetDropdown('village_id', 'Pilih Desa/Kelurahan');
+
+                if (subDistrictCode) {
+                    loadVillages(subDistrictCode);
+                }
+            });
+
+            // Function to load districts
+            async function loadDistricts(provinceCode, selectedDistrictId = null) {
+                const districtDropdown = document.getElementById('district_id');
+
+                // Show loading state
+                districtDropdown.disabled = true;
+                resetDropdown('district_id', 'Loading...');
+
+                try {
+                    const response = await axios.get(`/api/wilayah/provinsi/${provinceCode}/kota`);
+                    const districts = response.data;
+
+                    resetDropdown('district_id', 'Pilih Kabupaten');
+
+                    if (Array.isArray(districts) && districts.length > 0) {
+                        districts.forEach(district => {
+                            const option = document.createElement('option');
+                            option.value = district.code;
+                            option.textContent = district.name;
+
+                            if (selectedDistrictId && district.code == selectedDistrictId) {
+                                option.selected = true;
+                            }
+
+                            districtDropdown.appendChild(option);
+                        });
+                    }
+
+                    districtDropdown.disabled = false;
+
+                    // If there's a selected district, trigger change event to load sub-districts
+                    if (selectedDistrictId) {
+                        const event = new Event('change');
+                        districtDropdown.dispatchEvent(event);
+                    }
+
+                    return districts;
+                } catch (error) {
+                    console.error('Error loading districts:', error);
+                    resetDropdown('district_id', 'Error loading data');
+                    return [];
+                }
+            }
+
+            // Function to load sub-districts
+            async function loadSubDistricts(districtCode, selectedSubDistrictId = null) {
+                const subDistrictDropdown = document.getElementById('sub_district_id');
+
+                // Show loading state
+                subDistrictDropdown.disabled = true;
+                resetDropdown('sub_district_id', 'Loading...');
+
+                try {
+                    const response = await axios.get(`/api/wilayah/kota/${districtCode}/kecamatan`);
+                    const subDistricts = response.data;
+
+                    resetDropdown('sub_district_id', 'Pilih Kecamatan');
+
+                    if (Array.isArray(subDistricts) && subDistricts.length > 0) {
+                        subDistricts.forEach(subDistrict => {
+                            const option = document.createElement('option');
+                            option.value = subDistrict.code;
+                            option.textContent = subDistrict.name;
+
+                            if (selectedSubDistrictId && subDistrict.code == selectedSubDistrictId) {
+                                option.selected = true;
+                            }
+
+                            subDistrictDropdown.appendChild(option);
+                        });
+                    }
+
+                    subDistrictDropdown.disabled = false;
+
+                    // If there's a selected sub-district, trigger change event to load villages
+                    if (selectedSubDistrictId) {
+                        const event = new Event('change');
+                        subDistrictDropdown.dispatchEvent(event);
+                    }
+
+                    return subDistricts;
+                } catch (error) {
+                    console.error('Error loading sub-districts:', error);
+                    resetDropdown('sub_district_id', 'Error loading data');
+                    return [];
+                }
+            }
+
+            // Function to load villages
+            async function loadVillages(subDistrictCode, selectedVillageId = null) {
+                const villageDropdown = document.getElementById('village_id');
+
+                // Show loading state
+                villageDropdown.disabled = true;
+                resetDropdown('village_id', 'Loading...');
+
+                try {
+                    const response = await axios.get(`/api/wilayah/kecamatan/${subDistrictCode}/kelurahan`);
+                    const villages = response.data;
+
+                    resetDropdown('village_id', 'Pilih Desa/Kelurahan');
+
+                    if (Array.isArray(villages) && villages.length > 0) {
+                        villages.forEach(village => {
+                            const option = document.createElement('option');
+                            option.value = village.code;
+                            option.textContent = village.name;
+
+                            if (selectedVillageId && village.code == selectedVillageId) {
+                                option.selected = true;
+                            }
+
+                            villageDropdown.appendChild(option);
+                        });
+                    }
+
+                    villageDropdown.disabled = false;
+                    return villages;
+                } catch (error) {
+                    console.error('Error loading villages:', error);
+                    resetDropdown('village_id', 'Error loading data');
+                    return [];
+                }
+            }
+
+            // Function to reset dropdown
+            function resetDropdown(elementId, placeholderText) {
+                const dropdown = document.getElementById(elementId);
+                dropdown.innerHTML = ''; // Clear all options
+
+                const placeholder = document.createElement('option');
+                placeholder.value = '';
+                placeholder.textContent = placeholderText;
+                dropdown.appendChild(placeholder);
+            }
+        });
     </script>
 </x-layout>

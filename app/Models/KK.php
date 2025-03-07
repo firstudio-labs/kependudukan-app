@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 
 
+
 class KK extends Model
 {
     use HasFactory;
@@ -33,7 +34,6 @@ class KK extends Model
         'negara_bagian',
         'negara',
         'kode_pos_luar_negeri',
-        'family_members', // Add this to fillable
     ];
 
     protected $casts = [
@@ -43,5 +43,10 @@ class KK extends Model
     public function user()
     {
         return $this->belongsTo(Users::class, 'nama_lengkap', 'id'); // Jika nama_lengkap adalah user_id
+    }
+
+    public function familyMembers()
+    {
+        return $this->hasMany(FamilyMember::class, 'kk_id');
     }
 }

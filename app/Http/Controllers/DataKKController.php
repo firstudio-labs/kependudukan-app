@@ -8,6 +8,7 @@ use App\Services\CitizenService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
+
 class DataKKController extends Controller
 {
     protected $citizenService;
@@ -24,7 +25,7 @@ class DataKKController extends Controller
 
         $kk = KK::when($search, function ($query, $search) {
             return $query->where('nama_lengkap', 'like', "%{$search}%")
-                         ->orWhere('kk', 'like', "%{$search}%");
+                ->orWhere('kk', 'like', "%{$search}%");
         })->paginate(10);
 
         return view('superadmin.datakk.index', compact('kk', 'search'));
@@ -57,46 +58,45 @@ class DataKKController extends Controller
     }
 
     // Menyimpan data KK ke database
+
     public function store(Request $request)
     {
-        try {
-            $validatedData = $request->validate([
-                'kk' => 'required|unique:kk,kk',
-                'full_name' => 'required',
-                'address' => 'required',
-                'postal_code' => 'required',
-                'rt' => 'required',
-                'rw' => 'required',
-                'jml_anggota_kk' => 'required|integer',
-                'telepon' => 'nullable',
-                'email' => 'nullable|email',
-                'province_id' => 'required',
-                'district_id' => 'required',
-                'sub_district_id' => 'required',
-                'village_id' => 'required',
-                'dusun' => 'nullable',
-                'alamat_luar_negeri' => 'nullable',
-                'kota' => 'nullable',
-                'negara_bagian' => 'nullable',
-                'negara' => 'nullable',
-                'kode_pos_luar_negeri' => 'nullable',
-            ]);
+        // Validate request data
 
-            // Get family members data from API
-            $familyMembers = $this->citizenService->getFamilyMembersByKK($request->kk);
+        // Create KK record
+        $kk = KK::create([
+            'kk' => $request->kk,
+            'full_name' => $request->full_name,
+            'address' => $request->address,
+            'postal_code' => $request->postal_code,
+            'rt' => $request->rt,
+            'rw' => $request->rw,
+            'jml_anggota_kk' => $request->jml_anggota_kk,
+            'telepon' => $request->telepon,
+            'email' => $request->email,
+            'province_id' => $request->province_id,
+            'district_id' => $request->district_id,
+            'sub_district_id' => $request->sub_district_id,
+            'village_id' => $request->village_id,
+            'dusun' => $request->dusun,
+            'alamat_luar_negeri' => $request->alamat_luar_negeri,
+            'kota' => $request->kota,
+            'negara_bagian' => $request->negara_bagian,
+            'negara' => $request->negara,
+            'kode_pos_luar_negeri' => $request->kode_pos_luar_negeri,
+        ]);
 
-            if ($familyMembers && isset($familyMembers['data']) && is_array($familyMembers['data'])) {
-                // Add family members to validated data as JSON
-                $validatedData['family_members'] = $familyMembers['data'];
+        // If you have family members in the request, create them
+        if ($request->has('family_members')) {
+            foreach ($request->family_members as $member) {
+                $kk->familyMembers()->create([
+                    'full_name' => $member['full_name'],
+                    'family_status' => $member['family_status'],
+                ]);
             }
-
-            // Create KK record with family members included
-            $kk = KK::create($validatedData);
-
-            return redirect()->route('superadmin.datakk.index')->with('success', 'Data KK berhasil disimpan!');
-        } catch (\Exception $e) {
-            return back()->with('error', 'Gagal menyimpan data: ' . $e->getMessage());
         }
+
+        return redirect()->route('superadmin.datakk.index')->with('success', 'Data KK berhasil disimpan');
     }
 
     public function edit($id)
