@@ -46,15 +46,24 @@ class JobController extends Controller
     public function edit($id)
     {
         Log::info("Mencoba mengedit job dengan ID: " . $id);
-
-        $job = $this->jobService->getJobById($id);
-
-        if (!$job || !isset($job['id'])) {
-            Log::error("Job dengan ID {$id} tidak ditemukan.");
-            return back()->with('error', 'Job not found.');
+        
+        try {
+            $job = $this->jobService->getJobById($id);
+            
+            Log::info("Response dari service: ", ['job' => $job]);
+            
+            if (!$job || !isset($job['id'])) {
+                Log::error("Job tidak ditemukan untuk ID: " . $id);
+                return redirect()->route('superadmin.datamaster.job.index')
+                               ->with('error', 'Data pekerjaan tidak ditemukan');
+            }
+            
+            return view('superadmin.datamaster.job.edit', compact('job'));
+        } catch (\Exception $e) {
+            Log::error("Error saat mengambil data job: " . $e->getMessage());
+            return redirect()->route('superadmin.datamaster.job.index')
+                           ->with('error', 'Terjadi kesalahan saat mengambil data');
         }
-
-        return view('superadmin.datamaster.job.edit', compact('job'));
     }
 
     public function update(Request $request, $id)

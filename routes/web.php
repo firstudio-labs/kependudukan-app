@@ -26,6 +26,13 @@ Route::middleware(['auth', 'role:superadmin'])->group(function () {
     Route::get('/superadmin/index', function () {
         return view('superadmin.index');
     });
+
+    Route::get('/superadmin/biodata/index', [BiodataController::class, 'index'])->name('superadmin.biodata.index');
+    Route::get('/superadmin/biodata/create', [BiodataController::class, 'create'])->name('superadmin.biodata.create');
+    Route::post('/superadmin/biodata', [BiodataController::class, 'store'])->name('superadmin.biodata.store'); // Add this line
+    Route::get('/superadmin/biodata/{id}/edit', [BiodataController::class, 'edit'])->name('superadmin.biodata.edit');
+    Route::put('/superadmin/biodata/{id}', [BiodataController::class, 'update'])->name('biodata.update');
+    Route::delete('/superadmin/biodata/{id}', [BiodataController::class, 'destroy'])->name('superadmin.biodata.destroy');
 });
 
 // Route untuk admin
@@ -65,18 +72,11 @@ Route::get('/fetch-heads-of-family', [KKController::class, 'fetchHeadsOfFamily']
 Route::get('/fetch-all-citizens', [DataKKController::class, 'fetchAllCitizens']);
 Route::get('/getFamilyMembers', [DataKKController::class, 'getFamilyMembers'])->name('getFamilyMembers');
 
-Route::get('/superadmin/biodata/index', [BiodataController::class, 'index'])->name('superadmin.biodata.index');
-Route::get('/superadmin/biodata/create', [BiodataController::class, 'create'])->name('superadmin.biodata.create');
-Route::post('/superadmin/biodata/store', [BiodataController::class, 'store'])->name('biodata.store'); // Changed route
-Route::get('/superadmin/biodata/{id}/edit', [BiodataController::class, 'edit'])->name('superadmin.biodata.edit');
-Route::put('/superadmin/biodata/{id}', [BiodataController::class, 'update'])->name('biodata.update');
-Route::delete('/superadmin/biodata/{id}', [BiodataController::class, 'destroy'])->name('superadmin.biodata.destroy');
-
 Route::get('/superadmin/datamaster/job/index', [JobController::class, 'index'])->name('superadmin.datamaster.job.index');
 Route::get('/superadmin/datamaster/job/create', [JobController::class, 'create'])->name('superadmin.datamaster.job.create');
 Route::post('/superadmin/datamaster/job', [JobController::class, 'store'])->name('jobs.store');
-Route::get('/superadmin/datamaster/job/{id}/edit', [JobController::class, 'edit'])->name('superadmin.datamaster.job.edit');
-Route::put('/superadmin/datamaster/job/{id}', [JobController::class, 'update'])->name('job.update');
+Route::get('/superadmin/datamaster/job/{id}/edit', [JobController::class, 'edit'])->name('jobs.edit');
+Route::put('/superadmin/datamaster/job/{id}', [JobController::class, 'update'])->name('jobs.update');
 Route::delete('/superadmin/datamaster/job/{id}', [JobController::class, 'destroy'])->name('superadmin.datamaster.job.destroy');
 Route::get('/superadmin/datamaster/wilayah/provinsi/index', [WilayahController::class, 'showProvinsi'])->name('superadmin.datamaster.wilayah.provinsi.index');
 Route::get('/superadmin/datamaster/wilayah/kabupaten/{provinceCode}', [WilayahController::class, 'showKabupaten'])->name('superadmin.datamaster.wilayah.kabupaten.index');
@@ -97,3 +97,5 @@ Route::get('/api/wilayah/kota/{id}/kecamatan', [WilayahController::class, 'getKe
 Route::get('/api/wilayah/kecamatan/{id}/kelurahan', [WilayahController::class, 'getDesaByKecamatan'])
     ->name('wilayah.kelurahan')
     ->where('id', '[0-9]+');
+
+

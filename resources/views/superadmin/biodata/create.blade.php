@@ -1,39 +1,38 @@
 <x-layout>
     <div class="p-4 mt-14">
         @if (session('success'))
-    <div id="success-alert" class="fixed top-5 right-5 z-50 flex items-center p-4 mb-4 text-white bg-green-500 rounded-lg shadow-lg transition-opacity duration-500">
-        <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11.414V8a1 1 0 10-2 0v5.414l-.707-.707a1 1 0 10-1.414 1.414l2 2a1 1 0 001.414 0l2-2a1 1 0 00-1.414-1.414l-.707.707z" clip-rule="evenodd"></path>
-        </svg>
-        <span>{{ session('success') }}</span>
-        <button onclick="closeAlert()" class="ml-4 text-white focus:outline-none">
-            ✖
-        </button>
-    </div>
-@endif
+            <div id="success-alert" class="fixed top-5 right-5 z-50 flex items-center p-4 mb-4 text-white bg-green-500 rounded-lg shadow-lg transition-opacity duration-500">
+                <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11.414V8a1 1 0 10-2 0v5.414l-.707-.707a1 1 0 10-1.414 1.414l2 2a1 1 0 001.414 0l2-2a1 1 0 00-1.414-1.414l-.707.707z" clip-rule="evenodd"></path>
+                </svg>
+                <span>{{ session('success') }}</span>
+                <button onclick="closeAlert()" class="ml-4 text-white focus:outline-none">
+                    ✖
+                </button>
+            </div>
+        @endif
 
-@if ($errors->any())
-    <div id="error-alert" class="fixed top-5 right-5 z-50 flex items-center p-4 mb-4 text-white bg-red-500 rounded-lg shadow-lg transition-opacity duration-500">
-        <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11.414V8a1 1 0 10-2 0v5.414l-.707-.707a1 1 0 10-1.414 1.414l2 2a1 1 0 001.414 0l2-2a1 1 0 00-1.414-1.414l-.707.707z" clip-rule="evenodd"></path>
-        </svg>
-        <ul>
-            @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-        <button onclick="closeAlert()" class="ml-4 text-white focus:outline-none">
-            ✖
-        </button>
-    </div>
-@endif
-        <!-- Judul H1 -->
+        @if ($errors->any())
+            <div id="error-alert" class="fixed top-5 right-5 z-50 flex items-center p-4 mb-4 text-white bg-red-500 rounded-lg shadow-lg transition-opacity duration-500">
+                <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11.414V8a1 1 0 10-2 0v5.414l-.707-.707a1 1 0 10-1.414 1.414l2 2a1 1 0 001.414 0l2-2a1 1 0 00-1.414-1.414l-.707.707z" clip-rule="evenodd"></path>
+                </svg>
+                <ul>
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+                <button onclick="closeAlert()" class="ml-4 text-white focus:outline-none">
+                    ✖
+                </button>
+            </div>
+        @endif
+
         <h1 class="text-2xl font-bold text-gray-800 mb-6">Input/Entry Biodata</h1>
 
-        <!-- Form Tambah Biodata -->
-        <form method="POST" action="{{ route('biodata.store') }}" class="bg-white p-6 rounded-lg shadow-md">
+        <form method="POST" action="{{ route('superadmin.biodata.store') }}" class="bg-white p-6 rounded-lg shadow-md">
             @csrf
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <!-- NIK -->
                 <div>
                     <label for="nik" class="block text-sm font-medium text-gray-700">NIK</label>
@@ -43,7 +42,7 @@
                 <!-- No KK -->
                 <div>
                     <label for="kk" class="block text-sm font-medium text-gray-700">No KK</label>
-                    <input type="text" id="kk" name="kk" pattern="\d{16}" maxlength="16" class="..." required>
+                    <input type="text" id="kk" name="kk" pattern="\d{16}" maxlength="16" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                 </div>
 
                 <!-- Nama Lengkap -->
@@ -53,15 +52,14 @@
                 </div>
 
                 <!-- Jenis Kelamin -->
-<div>
-    <label for="gender" class="block text-sm font-medium text-gray-700">Jenis Kelamin</label>
-    <select id="gender" name="gender" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
-        <option value="">Pilih Jenis Kelamin</option>
-        <option value="Laki-Laki">Laki-Laki</option>
-        <option value="Perempuan">Perempuan</option>
-    </select>
-</div>
-
+                <div>
+                    <label for="gender" class="block text-sm font-medium text-gray-700">Jenis Kelamin</label>
+                    <select id="gender" name="gender" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                        <option value="">Pilih Jenis Kelamin</option>
+                        <option value="1">Laki-Laki</option>
+                        <option value="2">Perempuan</option>
+                    </select>
+                </div>
 
                 <!-- Tanggal Lahir -->
                 <div>
@@ -84,14 +82,13 @@
                 <!-- Alamat -->
                 <div>
                     <label for="address" class="block text-sm font-medium text-gray-700">Alamat</label>
-<textarea id="address" name="address" autocomplete="off" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"></textarea>
-
+                    <textarea id="address" name="address" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"></textarea>
                 </div>
 
                 <!-- Provinsi -->
                 <div>
-                    <label for="province_id" class="block text-sm font-medium text-gray-700">Provinsi</label>
-                    <select id="province_id" name="province_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                    <label for="province_id" class="block text-sm font-medium text-gray-700">Provinsi <span class="text-red-500">*</span></label>
+                    <select id="province_id" name="province_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                         <option value="">Pilih Provinsi</option>
                         @foreach($provinces as $province)
                             <option value="{{ $province['code'] }}">{{ $province['name'] }}</option>
@@ -101,24 +98,24 @@
 
                 <!-- Kabupaten -->
                 <div>
-                    <label for="district_id" class="block text-sm font-medium text-gray-700">Kabupaten</label>
-                    <select id="district_id" name="district_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                    <label for="district_id" class="block text-sm font-medium text-gray-700">Kabupaten <span class="text-red-500">*</span></label>
+                    <select id="district_id" name="district_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                         <option value="">Pilih Kabupaten</option>
                     </select>
                 </div>
 
                 <!-- Kecamatan -->
                 <div>
-                    <label for="sub_district_id" class="block text-sm font-medium text-gray-700">Kecamatan</label>
-                    <select id="sub_district_id" name="sub_district_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                    <label for="sub_district_id" class="block text-sm font-medium text-gray-700">Kecamatan <span class="text-red-500">*</span></label>
+                    <select id="sub_district_id" name="sub_district_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                         <option value="">Pilih Kecamatan</option>
                     </select>
                 </div>
 
                 <!-- Desa -->
                 <div>
-                    <label for="village_id" class="block text-sm font-medium text-gray-700">Desa</label>
-                    <select id="village_id" name="village_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                    <label for="village_id" class="block text-sm font-medium text-gray-700">Desa <span class="text-red-500">*</span></label>
+                    <select id="village_id" name="village_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                         <option value="">Pilih Desa</option>
                     </select>
                 </div>
@@ -138,16 +135,7 @@
                 <!-- Kode POS -->
                 <div>
                     <label for="postal_code" class="block text-sm font-medium text-gray-700">Kode Pos</label>
-                    <input
-                        type="text"
-                        id="postal_code"
-                        name="postal_code"
-                        pattern="\d{5}"
-                        maxlength="5"
-                        autocomplete="off"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
-                        placeholder="Masukkan Kode Pos"
-                    >
+                    <input type="text" id="postal_code" name="postal_code" pattern="\d{5}" maxlength="5" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
                 </div>
 
                 <!-- Kewarganegaraan -->
@@ -155,8 +143,8 @@
                     <label for="citizen_status" class="block text-sm font-medium text-gray-700">Kewarganegaraan</label>
                     <select id="citizen_status" name="citizen_status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
                         <option value="">Pilih Kewarganegaraan</option>
-                        <option value="WNI">WNI</option>
-                        <option value="WNA">WNA</option>
+                        <option value="1">WNI</option>
+                        <option value="2">WNA</option>
                     </select>
                 </div>
 
@@ -176,6 +164,7 @@
                     <input type="text" id="birth_certificate_no" name="birth_certificate_no" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
                 </div>
 
+                <!-- Golongan Darah -->
                 <div>
                     <label for="blood_type" class="block text-sm font-medium text-gray-700">Golongan Darah</label>
                     <select id="blood_type" name="blood_type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
@@ -225,16 +214,15 @@
                     </select>
                 </div>
 
-
                 <!-- Akta Perkawinan -->
-<div>
-    <label for="marital_certificate" class="block text-sm font-medium text-gray-700">Akta Perkawinan</label>
-    <select id="marital_certificate" name="marital_certificate" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
-        <option value="">Pilih Status</option>
-        <option value="1">Ada</option>
-        <option value="2">Tidak Ada</option>
-    </select>
-</div>
+                <div>
+                    <label for="marital_certificate" class="block text-sm font-medium text-gray-700">Akta Perkawinan</label>
+                    <select id="marital_certificate" name="marital_certificate" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                        <option value="">Pilih Status</option>
+                        <option value="1">Ada</option>
+                        <option value="2">Tidak Ada</option>
+                    </select>
+                </div>
 
                 <!-- No Akta Perkawinan -->
                 <div>
@@ -249,14 +237,14 @@
                 </div>
 
                 <!-- Akta Cerai -->
-<div>
-    <label for="divorce_certificate" class="block text-sm font-medium text-gray-700">Akta Cerai</label>
-    <select id="divorce_certificate" name="divorce_certificate" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
-        <option value="">Pilih Status</option>
-        <option value="1">Ada</option>
-        <option value="2">Tidak Ada</option>
-    </select>
-</div>
+                <div>
+                    <label for="divorce_certificate" class="block text-sm font-medium text-gray-700">Akta Cerai</label>
+                    <select id="divorce_certificate" name="divorce_certificate" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                        <option value="">Pilih Status</option>
+                        <option value="1">Ada</option>
+                        <option value="2">Tidak Ada</option>
+                    </select>
+                </div>
 
                 <!-- No Akta Perceraian -->
                 <div>
@@ -271,53 +259,61 @@
                 </div>
 
                 <!-- Status Hubungan Dalam Keluarga -->
-<div>
-    <label for="family_status" class="block text-sm font-medium text-gray-700">Status Hubungan Dalam Keluarga</label>
-    <select id="family_status" name="family_status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
-        <option value="">Pilih Status</option>
-        <option value="KEPALA KELUARGA">KEPALA KELUARGA</option>
-        <option value="ISTRI">ISTRI</option>
-        <option value="ANAK">ANAK</option>
-        <option value="MERTUA">MERTUA</option>
-        <option value="ORANG TUA">ORANG TUA</option>
-        <option value="CUCU">CUCU</option>
-        <option value="FAMILI LAIN">FAMILI LAIN</option>
-        <option value="LAINNYA">LAINNYA</option>
-    </select>
-</div>
+                <div>
+                    <label for="family_status" class="block text-sm font-medium text-gray-700">Status Hubungan Dalam Keluarga</label>
+                    <select id="family_status" name="family_status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                        <option value="">Pilih Status</option>
+                        <option value="1">KEPALA KELUARGA</option>
+                        <option value="2">ISTRI</option>
+                        <option value="3">ANAK</option>
+                        <option value="4">MERTUA</option>
+                        <option value="5">ORANG TUA</option>
+                        <option value="6">CUCU</option>
+                        <option value="7">FAMILI LAIN</option>
+                        <option value="8">LAINNYA</option>
+                    </select>
+                </div>
 
-<!-- Kelainan Fisik dan Mental -->
-<div>
-    <label for="mental_disorders" class="block text-sm font-medium text-gray-700">Kelainan Fisik dan Mental</label>
-    <select id="mental_disorders" name="mental_disorders" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
-        <option value="1">Tidak Ada</option>
-        <option value="2">Ada</option>
-    </select>
-</div>
+                <!-- Kelainan Fisik dan Mental -->
+                <div>
+                    <label for="mental_disorders" class="block text-sm font-medium text-gray-700">Kelainan Fisik dan Mental</label>
+                    <select id="mental_disorders" name="mental_disorders" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                        <option value="1">Ada</option>
+                        <option value="2">Tidak Ada</option>
+                    </select>
+                </div>
 
                 <!-- Penyandang Cacat -->
                 <div>
                     <label for="disabilities" class="block text-sm font-medium text-gray-700">Penyandang Cacat</label>
-                    <input type="text" id="disabilities" name="disabilities" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                    <select id="disabilities" name="disabilities" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                        <option value="">Pilih Status</option>
+                        <option value="1">Fisik</option>
+                        <option value="2">Netra/Buta</option>
+                        <option value="3">Rungu/Wicara</option>
+                        <option value="4">Mental/Jiwa</option>
+                        <option value="5">Fisik dan Mental</option>
+                        <option value="6">Lainnya</option>
+                    </select>
                 </div>
 
                 <!-- Pendidikan Terakhir -->
-<div>
-    <label for="education_status" class="block text-sm font-medium text-gray-700">Pendidikan Terakhir</label>
-    <select id="education_status" name="education_status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
-        <option value="">Pilih Pendidikan</option>
-        <option value="1">Tidak/Belum Sekolah</option>
-        <option value="2">Belum tamat SD/Sederajat</option>
-        <option value="3">Tamat SD</option>
-        <option value="4">SLTP/SMP/Sederajat</option>
-        <option value="5">SLTA/SMA/Sederajat</option>
-        <option value="6">Diploma I/II</option>
-        <option value="7">Akademi/Diploma III/ Sarjana Muda</option>
-        <option value="8">Diploma IV/ Strata I/ Strata II</option>
-        <option value="9">Strata III</option>
-        <option value="10">Lainnya</option>
-    </select>
-</div>
+                <div>
+                    <label for="education_status" class="block text-sm font-medium text-gray-700">Pendidikan Terakhir</label>
+                    <select id="education_status" name="education_status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                        <option value="">Pilih Pendidikan</option>
+                        <option value="1">Tidak/Belum Sekolah</option>
+                        <option value="2">Belum tamat SD/Sederajat</option>
+                        <option value="3">Tamat SD</option>
+                        <option value="4">SLTP/SMP/Sederajat</option>
+                        <option value="5">SLTA/SMA/Sederajat</option>
+                        <option value="6">Diploma I/II</option>
+                        <option value="7">Akademi/Diploma III/ Sarjana Muda</option>
+                        <option value="8">Diploma IV/ Strata I/ Strata II</option>
+                        <option value="9">Strata III</option>
+                        <option value="10">Lainnya</option>
+                    </select>
+                </div>
 
                 <!-- Jenis Pekerjaan -->
                 <div>
@@ -363,12 +359,13 @@
                 </div>
             </div>
 
-            <!-- Tombol Simpan dan Batal -->
             <div class="mt-6 flex justify-end space-x-4">
                 <button type="button" onclick="window.history.back()" class="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-lg">
                     Batal
                 </button>
-                <button type="submit" class="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-lg">Simpan</button>
+                <button type="submit" class="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-lg">
+                    Simpan
+                </button>
             </div>
         </form>
     </div>
@@ -512,4 +509,81 @@
             });
         });
     </script>
+
+    <script>
+    // Replace the existing form submission script with this enhanced version
+    document.querySelector('form').addEventListener('submit', function(e) {
+        // e.preventDefault(); // Uncomment this to prevent form submission for testing
+        const province = document.getElementById('province_id').value;
+    const district = document.getElementById('district_id').value;
+    const subDistrict = document.getElementById('sub_district_id').value;
+    const village = document.getElementById('village_id').value;
+
+    if (!province || !district || !subDistrict || !village) {
+        e.preventDefault();
+        alert('Silakan pilih Provinsi, Kabupaten, Kecamatan, dan Desa');
+        return false;
+    }
+        // Get all form data
+        const formData = new FormData(this);
+        const data = {};
+
+        // Convert FormData to object and log each field
+        console.group('Form Data Detail:');
+        for (let [key, value] of formData.entries()) {
+            data[key] = value;
+            console.log(`${key}: ${value}`);
+        }
+        console.groupEnd();
+
+        // Check for empty required fields
+        const requiredFields = this.querySelectorAll('[required]');
+        const emptyFields = [];
+        const filledFields = [];
+
+        requiredFields.forEach(field => {
+            if (!field.value) {
+                emptyFields.push({
+                    name: field.name,
+                    type: field.type,
+                    id: field.id
+                });
+            } else {
+                filledFields.push({
+                    name: field.name,
+                    value: field.value,
+                    type: field.type
+                });
+            }
+        });
+
+        // Log validation information
+        console.group('Form Validation:');
+        console.log('Required Fields Status:');
+        console.table(filledFields);
+
+        if (emptyFields.length > 0) {
+            console.error('Empty Required Fields:');
+            console.table(emptyFields);
+        }
+        console.groupEnd();
+
+        // Log API-bound data
+        console.group('Data for API:');
+        console.log('Complete payload:', data);
+        console.table(data);
+        console.groupEnd();
+
+        // Check specific fields that might cause issues
+        console.group('Critical Fields Check:');
+        console.log('NIK:', data.nik?.length === 16 ? 'Valid' : 'Invalid', data.nik);
+        console.log('KK:', data.kk?.length === 16 ? 'Valid' : 'Invalid', data.kk);
+        console.log('Province:', data.province_id);
+        console.log('District:', data.district_id);
+        console.log('Sub District:', data.sub_district_id);
+        console.log('Village:', data.village_id);
+        console.log('Job Type:', data.job_type_id);
+        console.groupEnd();
+    });
+</script>
 </x-layout>

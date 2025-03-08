@@ -80,7 +80,7 @@
                                 <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{{ $job['code'] }}</th>
                                 <td class="px-6 py-4">{{ $job['name'] }}</td>
                                 <td class="flex items-center px-6 py-4 space-x-2">
-                                    <a href="{{ route('superadmin.datamaster.job.edit', $job['id']) }}" class="text-yellow-600 hover:text-yellow-800">
+                                    <a href="{{ route('jobs.edit', $job['id']) }}" class="text-yellow-600 hover:text-yellow-800">
                                         <i class="fa-solid fa-pen-to-square"></i>
                                     </a>
 

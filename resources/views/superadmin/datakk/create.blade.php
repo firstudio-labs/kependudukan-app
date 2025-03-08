@@ -528,29 +528,7 @@
                     $('#sub_district_id').val(subDistrict_id || '');
                     $('#village_id').val(village_id || '');
                     $('#dusun').val(dusun);
-                    // Hitung jumlah anggota keluarga berdasarkan No KK
-                    //     let jumlahAnggota = $('#kkSelect option').filter(function () {
-                    //         return $(this).val() === selectedKK;
-                    //     }).length;
-
-                    //     $('#jml_anggota_kk').val(jumlahAnggota);
-
-                    //     $.ajax({
-                    //     url: '/getFamilyMembers?kk=' + selectedKK,
-                    //     type: 'GET',
-                    //     success: function (response) {
-                    //         if (response.status === "OK") {
-                    //             $('#jml_anggota_kk').val(response.count);
-                    //         } else {
-                    //             $('#jml_anggota_kk').val(0);
-                    //         }
-                    //     },
-                    //     error: function () {
-                    //         $('#jml_anggota_kk').val(0);
-                    //     }
-                    // });
-
-                    // Fetch family members count when name is selected
+                    
                     if (kk) {
                         $.ajax({
                             url: "{{ route('getFamilyMembers') }}",

@@ -8,6 +8,7 @@ use App\Services\WilayahService;
 use App\Services\JobService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Validator;
 
 class BiodataController extends Controller
 {
@@ -45,33 +46,91 @@ class BiodataController extends Controller
         return view('superadmin.biodata.create', compact('provinces', 'jobs'));
     }
 
+
     public function store(Request $request)
-    {
-        try {
-            $validatedData = $this->validateCitizenData($request);
-            $validatedData = $this->formatDates($validatedData);
+{
+    try {
+    // Validate the request
+    $validator = Validator::make($request->all(), [
+        'nik' => 'required|string|size:16',
+        'kk' => 'required|string|size:16',
+        'full_name' => 'required|string|max:255',
+        'gender' => 'required|integer|in:1,2',
+        'birth_date' => 'required|date',
+        'age' => 'required|integer',
+        'birth_place' => 'required|string|max:255',
+        'address' => 'required|string',
+        'province_id' => 'required|string', // Changed to string since API uses codes
+        'district_id' => 'required|string', // Changed to string since API uses codes
+        'sub_district_id' => 'required|string', // Changed to string since API uses codes
+        'village_id' => 'required|string', // Changed to string since API uses codes
 
-            Log::info('Validated data:', $validatedData);
+        'rt' => 'required|string|max:3',
+        'rw' => 'required|string|max:3',
+        'postal_code' => 'required|string|size:5',
+        'citizen_status' => 'required|integer|in:1,2',
+        'birth_certificate' => 'required|integer|in:1,2',
+        // Fix this line - changed from integerin to integer|in
+        'blood_type' => 'required|integer|in:1,2,3,4,5,6,7,8,9,10,11,12,13',
+        'religion' => 'required|integer|in:1,2,3,4,5,6,7',
+        'marital_status' => 'required|integer|in:1,2,3,4,5,6',
+        'family_status' => 'required|integer|in:1,2,3,4,5,6,7,8',
+        'mental_disorders' => 'required|integer|in:1,2',
+        'disabilities' => 'required|integer|in:1,2,3,4,5,6',
+        'education_status' => 'required|integer|in:1,2,3,4,5,6,7,8,9,10',
+        'job_type_id' => 'required|integer',
+        'mother' => 'required|string|max:255',
+        'father' => 'required|string|max:255',
+    ]);
 
-            $response = $this->citizenService->createCitizen($validatedData);
+    if ($validator->fails()) {
+        return redirect()
+            ->route('superadmin.biodata.create')
+            ->withErrors($validator)
+            ->withInput();
+    }
 
-            if (isset($response['status']) && $response['status'] === 'CREATED') {
-                return redirect()
-                    ->route('superadmin.biodata.index')
-                    ->with('success', 'Data biodata berhasil ditambahkan');
-            }
+    // Prepare the data for API
+    $data = $request->all();
 
-            return back()
-                ->withInput()
-                ->with('error', 'Gagal menambahkan data: ' . ($response['message'] ?? 'Unknown error'));
+    // Remove token from data
+    unset($data['_token']);
 
-        } catch (\Exception $e) {
-            Log::error('Error in store method: ' . $e->getMessage());
-            return back()
-                ->withInput()
-                ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+    // Cast specific fields to integers
+    $integerFields = [
+        'gender', 'age', 'citizen_status', 'birth_certificate',
+        'blood_type', 'religion', 'marital_status', 'family_status',
+        'mental_disorders', 'disabilities', 'education_status',
+        'job_type_id'
+    ];
+
+    foreach ($integerFields as $field) {
+        if (isset($data[$field])) {
+            $data[$field] = (int) $data[$field];
         }
     }
+
+    // Send data to API through service
+    $response = $this->citizenService->createCitizen($data);
+
+    if ($response['status'] === 'SUCCESS') {
+        return redirect()
+            ->route('superadmin.biodata.index')
+            ->with('success', 'Data biodata berhasil ditambahkan!');
+    }
+
+    return redirect()
+        ->route('superadmin.biodata.create')
+        ->with('error', $response['message'])
+        ->withInput();
+} catch (\Exception $e) {
+    Log::error('Error in store method: ' . $e->getMessage());
+    return redirect()
+        ->route('superadmin.biodata.create')
+        ->with('error', 'Terjadi kesalahan: ' . $e->getMessage())
+        ->withInput();
+}
+}
 
     public function edit($id)
     {
@@ -153,53 +212,7 @@ class BiodataController extends Controller
         }
     }
 
-    private function validateCitizenData(Request $request, $isCreate = true)
-    {
-        $rules = [
-            'kk' => 'required|numeric|digits:16',
-            'full_name' => 'required|string|max:255',
-            'gender' => 'required|in:Laki-Laki,Perempuan',
-            'birth_date' => 'required|date',
-            'age' => 'required|numeric',
-            'birth_place' => 'required|string',
-            'address' => 'nullable|string',
-            'province_id' => 'nullable|numeric',
-            'district_id' => 'nullable|numeric',
-            'sub_district_id' => 'nullable|numeric',
-            'village_id' => 'nullable|numeric',
-            'rt' => 'nullable|string',
-            'rw' => 'nullable|string',
-            'postal_code' => 'nullable|numeric',
-            'citizen_status' => 'nullable|in:WNI,WNA',
-            'birth_certificate' => 'nullable|in:Ada,Tidak Ada',
-            'birth_certificate_no' => 'nullable|string',
-            'blood_type' => 'nullable|in:A,B,AB,O,A+,A-,B+,B-,AB+,AB-,O+,O-,Tidak Tahu',
-            'religion' => 'nullable|in:Islam,Kristen,Katholik,Hindu,Buddha,Kong Hu Cu,Lainya....',
-            'marital_status' => 'nullable|in:Belum Kawin,Kawin Tercatat,Kawin Belum Tercatat,Cerai Hidup Tercatat,Cerai Hidup Belum Tercatat,Cerai Mati',
-            'marital_certificate' => 'nullable|in:Ada,Tidak Ada',
-            'marital_certificate_no' => 'nullable|string',
-            'marriage_date' => 'nullable|date',
-            'divorce_certificate' => 'nullable|in:Ada,Tidak Ada',
-            'divorce_certificate_no' => 'nullable|string',
-            'divorce_certificate_date' => 'nullable|date',
-            'family_status' => 'required|in:KEPALA KELUARGA,ISTRI,ANAK,MERTUA,ORANG TUA,CUCU,FAMILI LAIN,LAINNYA',
-            'mental_disorders' => 'nullable|in:Ada,Tidak Ada',
-            'disabilities' => 'nullable|string',
-            'education_status' => 'nullable|string',
-            'job_type_id' => 'required|numeric',
-            'nik_mother' => 'nullable|string|max:255',
-            'mother' => 'nullable|string|max:255',
-            'nik_father' => 'nullable|string|max:255',
-            'father' => 'nullable|string|max:255',
-            'coordinate' => 'nullable|string',
-        ];
 
-        if ($isCreate) {
-            $rules['nik'] = 'required|numeric|digits:16';
-        }
-
-        return $request->validate($rules);
-    }
 
     private function formatDates(array $data)
     {

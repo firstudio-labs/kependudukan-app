@@ -101,51 +101,8 @@ class CitizenService
         }
     }
 
-    public function createCitizen($data)
-    {
-        try {
-            Log::info('Sending request to API:', [
-                'url' => "{$this->baseUrl}/api/citizens",
-                'data' => $data,
-                'headers' => [
-                    'X-API-Key' => $this->apiKey,
-                    'Content-Type' => 'application/json',
-                    'Accept' => 'application/json'
-                ]
-            ]);
 
-            $response = Http::withHeaders([
-                'X-API-Key' => $this->apiKey,
-                'Content-Type' => 'application/json',
-                'Accept' => 'application/json',
-            ])->post("{$this->baseUrl}/api/citizens", $data);
 
-            Log::info('API Response:', [
-                'status' => $response->status(),
-                'body' => $response->json()
-            ]);
-
-            if ($response->successful()) {
-                return $response->json();
-            }
-
-            Log::error('API request failed:', [
-                'status' => $response->status(),
-                'body' => $response->json()
-            ]);
-
-            return [
-                'status' => 'ERROR',
-                'message' => 'API request failed: ' . $response->status()
-            ];
-        } catch (\Exception $e) {
-            Log::error('Error creating biodata: ' . $e->getMessage());
-            return [
-                'status' => 'ERROR',
-                'message' => 'Failed to create biodata: ' . $e->getMessage()
-            ];
-        }
-    }
 
     public function updateCitizen($nik, $data)
     {
@@ -222,5 +179,45 @@ class CitizenService
             return null;
         }
     }
+
+    public function createCitizen(array $data)
+{
+    try {
+        Log::info('Sending data to API:', ['data' => $data]);
+
+        $response = Http::withHeaders([
+            'X-API-Key' => $this->apiKey,
+            'Content-Type' => 'application/json',
+        ])->post("{$this->baseUrl}/api/citizens", $data);
+
+        Log::info('API Response:', [
+            'status' => $response->status(),
+            'body' => $response->body()
+        ]);
+
+        if ($response->successful()) {
+            return [
+                'status' => 'SUCCESS',
+                'message' => $response->json()['message'] ?? 'Citizen created successfully'
+            ];
+        } else {
+            Log::error('API request failed:', [
+                'status' => $response->status(),
+                'body' => $response->body()
+            ]);
+            return [
+                'status' => 'ERROR',
+                'message' => $response->json()['message'] ?? 'Failed to create citizen'
+            ];
+        }
+    } catch (\Exception $e) {
+        Log::error('Error creating citizen:', ['error' => $e->getMessage()]);
+        return [
+            'status' => 'ERROR',
+            'message' => 'Error creating citizen: ' . $e->getMessage()
+        ];
+    }
+}
+
 }
 

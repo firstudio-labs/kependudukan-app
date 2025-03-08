@@ -4,7 +4,7 @@
         <h1 class="text-2xl font-bold text-gray-800 mb-6">Edit Pekerjaan</h1>
 
         <!-- Form Edit Pekerjaan -->
-        <form action="{{ route('job.update', $job['id']) }}" method="POST">
+        <form action="{{ route('jobs.update', $job['id']) }}" method="POST">
             @csrf
             @method('PUT')
 
