@@ -1,6 +1,6 @@
 <x-layout>
     <div class="p-4 mt-14">
-        @if(session('success'))
+        {{-- @if(session('success'))
             <div id="success-alert" class="fixed top-5 right-5 z-50 flex items-center p-4 mb-4 text-white bg-green-500 rounded-lg shadow-lg transition-opacity duration-500">
                 <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11.414V8a1 1 0 10-2 0v5.414l-.707-.707a1 1 0 10-1.414 1.414l2 2a1 1 0 001.414 0l2-2a1 1 0 00-1.414-1.414l-.707.707z" clip-rule="evenodd"></path>
@@ -23,7 +23,7 @@
                     ✖
                 </button>
             </div>
-        @endif
+        @endif --}}
 
         <!-- Judul H1 -->
         <h1 class="text-2xl font-bold text-gray-800 mb-6">Master Jenis Pekerjaan</h1>
@@ -84,7 +84,7 @@
                                         <i class="fa-solid fa-pen-to-square"></i>
                                     </a>
 
-                                    <form action="{{ route('superadmin.datamaster.job.destroy', $job['id']) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus data?')">
+                                    <form id="delete-form-{{ $job['id'] }}" action="{{ route('superadmin.datamaster.job.destroy', $job['id']) }}" method="POST" onsubmit="confirmDelete(event, {{ $job['id'] }})">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="font-medium text-red-600 hover:underline ml-3">
@@ -117,25 +117,50 @@
 
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <script>
-        function closeAlert(alertId) {
-            document.getElementById(alertId).classList.add('hidden');
+        // Replace existing alert script with SweetAlert
+        @if(session('success'))
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: '{{ session('success') }}',
+                timer: 3000,
+                showConfirmButton: false
+            });
+        @endif
+
+        @if(session('error'))
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal!',
+                text: '{{ session('error') }}',
+                timer: 3000,
+                showConfirmButton: false
+            });
+        @endif
+
+        // Add SweetAlert confirmation for delete
+        function confirmDelete(event, id) {
+            event.preventDefault();
+
+            Swal.fire({
+                title: 'Anda yakin?',
+                text: "Data yang dihapus tidak dapat dikembalikan!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Ya, hapus!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('delete-form-' + id).submit();
+                }
+            });
         }
 
-        setTimeout(function() {
-            const successAlert = document.getElementById('successAlert');
-            if (successAlert) {
-                successAlert.classList.add('opacity-0', 'transition-opacity', 'duration-1000');
-                setTimeout(() => successAlert.classList.add('hidden'), 1000);
-            }
-
-            const errorAlert = document.getElementById('errorAlert');
-            if (errorAlert) {
-                errorAlert.classList.add('opacity-0', 'transition-opacity', 'duration-1000');
-                setTimeout(() => errorAlert.classList.add('hidden'), 1000);
-            }
-        }, 5000);
-
-
+        // ...existing code...
     </script>
 </x-layout>

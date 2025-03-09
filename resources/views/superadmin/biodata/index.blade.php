@@ -1,35 +1,5 @@
 <x-layout>
     <div class="p-4 mt-14">
-        <!-- Alert Sukses -->
-        @if(session('success'))
-            <div id="successAlert" class="flex items-center p-4 mb-4 text-green-800 border border-green-300 rounded-lg bg-green-50 dark:bg-green-800 dark:text-green-300 relative" role="alert">
-                <svg class="w-5 h-5 mr-2 text-green-800 dark:text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                </svg>
-                <span class="font-medium">Sukses!</span> {{ session('success') }}
-                <button type="button" class="absolute top-2 right-2 text-green-800 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900 rounded-lg p-1 transition-all duration-300" onclick="closeAlert('successAlert')">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-        @endif
-
-        <!-- Alert Error -->
-        @if(session('error'))
-            <div id="errorAlert" class="flex items-center p-4 mb-4 text-red-800 border border-red-300 rounded-lg bg-red-50 dark:bg-red-800 dark:text-red-300 relative" role="alert">
-                <svg class="w-5 h-5 mr-2 text-red-800 dark:text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636L5.636 18.364M5.636 5.636l12.728 12.728"></path>
-                </svg>
-                <span class="font-medium">Gagal!</span> {{ session('error') }}
-                <button type="button" class="absolute top-2 right-2 text-red-800 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900 rounded-lg p-1 transition-all duration-300" onclick="closeAlert('errorAlert')">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-        @endif
-
         <h1 class="text-2xl font-bold text-gray-800 mb-6">Biodata</h1>
 
         <div class="flex justify-between items-center mb-4">
@@ -98,10 +68,10 @@
                             <button onclick="showDetailModal({{ json_encode($citizen) }})" class="text-blue-600 hover:text-blue-800" aria-label="Detail">
                                 <i class="fa-solid fa-eye"></i>
                             </button>
-                            <a href="{{ route('superadmin.biodata.edit', $citizen['nik']) }}" class="text-yellow-600 hover:text-yellow-800" aria-label="Edit">
+                            <a href="{{ route('superadmin.biodata.edit', ['nik' => $citizen['nik'], 'page' => $currentPage]) }}" class="text-yellow-600 hover:text-yellow-800" aria-label="Edit">
                                 <i class="fa-solid fa-pen-to-square"></i>
                             </a>
-                            <form action="{{ route('superadmin.biodata.destroy', $citizen['nik']) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus data?')">
+                            <form action="{{ route('superadmin.biodata.destroy', ['id' => $citizen['nik'], 'page' => $currentPage]) }}" method="POST">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="font-medium text-red-600 hover:underline ml-3">
@@ -362,16 +332,50 @@
     </div>
 
     <script>
-        function closeAlert() {
-            document.getElementById('success-alert')?.classList.add('opacity-0');
-            document.getElementById('error-alert')?.classList.add('opacity-0');
-            setTimeout(() => {
-                document.getElementById('success-alert')?.remove();
-                document.getElementById('error-alert')?.remove();
-            }, 500);
-        }
-        setTimeout(closeAlert, 4000); // Auto-close dalam 4 detik
+        // Add new alert handlers
+        @if(session('success'))
+            Swal.fire({
+                icon: 'success',
+                title: 'Sukses!',
+                text: "{{ session('success') }}",
+                timer: 3000,
+                showConfirmButton: false
+            });
+        @endif
 
+        @if(session('error'))
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal!',
+                text: "{{ session('error') }}",
+                timer: 3000,
+                showConfirmButton: false
+            });
+        @endif
+
+        // Delete confirmation
+        const deleteForms = document.querySelectorAll('form[action*="destroy"]');
+        deleteForms.forEach(form => {
+            form.onsubmit = function(e) {
+                e.preventDefault();
+                Swal.fire({
+                    title: 'Yakin ingin menghapus data?',
+                    text: "Data yang dihapus tidak dapat dikembalikan!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#2D336B',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Ya, hapus!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
+            };
+        });
+
+        // ...existing code for showDetailModal and closeDetailModal...
         function showDetailModal(biodata) {
             // Konversi data sebelum ditampilkan
             const genderMap = { '1': 'Laki-laki', '2': 'Perempuan' };

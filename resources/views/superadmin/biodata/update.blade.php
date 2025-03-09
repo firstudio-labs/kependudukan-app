@@ -1,49 +1,5 @@
 <x-layout>
     <div class="p-4 mt-14">
-        @if(session('success'))
-            <div id="successAlert"
-                class="flex items-center p-4 mb-4 text-green-800 border border-green-300 rounded-lg bg-green-50 dark:bg-green-800 dark:text-green-300 relative"
-                role="alert">
-                <svg class="w-5 h-5 mr-2 text-green-800 dark:text-green-300" fill="none" stroke="currentColor"
-                    viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                </svg>
-                <span class="font-medium">Sukses!</span> {{ session('success') }}
-                <button type="button"
-                    class="absolute top-2 right-2 text-green-800 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900 rounded-lg p-1 transition-all duration-300"
-                    onclick="closeAlert('successAlert')">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
-                        </path>
-                    </svg>
-                </button>
-            </div>
-        @endif
-
-        <!-- Alert Error -->
-        @if(session('error'))
-            <div id="errorAlert"
-                class="flex items-center p-4 mb-4 text-red-800 border border-red-300 rounded-lg bg-red-50 dark:bg-red-800 dark:text-red-300 relative"
-                role="alert">
-                <svg class="w-5 h-5 mr-2 text-red-800 dark:text-red-300" fill="none" stroke="currentColor"
-                    viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M18.364 5.636L5.636 18.364M5.636 5.636l12.728 12.728"></path>
-                </svg>
-                <span class="font-medium">Gagal!</span> {{ session('error') }}
-                <button type="button"
-                    class="absolute top-2 right-2 text-red-800 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900 rounded-lg p-1 transition-all duration-300"
-                    onclick="closeAlert('errorAlert')">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
-                        </path>
-                    </svg>
-                </button>
-            </div>
-        @endif
-
         <h1 class="text-2xl font-bold text-gray-800 mb-6">Edit Biodata</h1>
 
         <form method="POST" action="{{ route('superadmin.biodata.update', $citizen['data']['nik']) }}" class="bg-white p-6 rounded-lg shadow-md">
@@ -397,71 +353,102 @@
             </div>
         </form>
     </div>
+
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
     <script>
+        @if(session('success'))
+            Swal.fire({
+                icon: 'success',
+                title: 'Sukses!',
+                text: "{{ session('success') }}",
+                timer: 3000,
+                showConfirmButton: false
+            });
+        @endif
+
+        @if(session('error'))
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal!',
+                text: "{{ session('error') }}",
+                timer: 3000,
+                showConfirmButton: false
+            });
+        @endif
+
         document.addEventListener('DOMContentLoaded', function() {
+            // Cache DOM elements
             const provinceSelect = document.getElementById('province_id');
             const districtSelect = document.getElementById('district_id');
             const subDistrictSelect = document.getElementById('sub_district_id');
             const villageSelect = document.getElementById('village_id');
 
+            // Use a single function for resetting selects with better performance
             function resetSelect(select, defaultText = 'Pilih') {
                 select.innerHTML = `<option value="">${defaultText}</option>`;
                 select.disabled = true;
             }
 
+            // Optimize select population
             function populateSelect(select, data, defaultText, selectedId = null) {
-                select.innerHTML = `<option value="">${defaultText}</option>`;
+                const fragment = document.createDocumentFragment();
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = defaultText;
+                fragment.appendChild(defaultOption);
+
                 if (Array.isArray(data)) {
                     data.forEach(item => {
                         const option = document.createElement('option');
                         option.value = item.id;
-                        option.setAttribute('data-code', item.code);
+                        option.dataset.code = item.code;
                         option.textContent = item.name;
                         if (selectedId && item.id == selectedId) {
                             option.selected = true;
                         }
-                        select.appendChild(option);
+                        fragment.appendChild(option);
                     });
                 }
+
+                select.innerHTML = '';
+                select.appendChild(fragment);
                 select.disabled = false;
             }
 
+            // Use async/await for better handling of API calls
+            async function fetchLocationData(url) {
+                try {
+                    const response = await axios.get(url);
+                    return response.data;
+                } catch (error) {
+                    console.error('Error fetching data:', error);
+                    return null;
+                }
+            }
+
             // Initialize location dropdowns
-            function initializeLocations() {
+            async function initializeLocations() {
                 if (provinceSelect.value) {
                     const selectedProvinceOption = provinceSelect.options[provinceSelect.selectedIndex];
                     const provinceCode = selectedProvinceOption.getAttribute('data-code');
                     // Load districts (kabupaten)
-                    axios.get(`/api/wilayah/provinsi/${provinceCode}/kota`)
-                        .then(response => {
-                            populateSelect(districtSelect, response.data, 'Pilih Kabupaten', {{ $citizen['data']['district_id'] }});
-                            // Get selected district code
-                            const selectedDistrictOption = districtSelect.options[districtSelect.selectedIndex];
-                            if (selectedDistrictOption) {
-                                const districtCode = selectedDistrictOption.getAttribute('data-code');
-                                return axios.get(`/api/wilayah/kota/${districtCode}/kecamatan`);
-                            }
-                        })
-                        .then(response => {
-                            if (response) {
-                                populateSelect(subDistrictSelect, response.data, 'Pilih Kecamatan', {{ $citizen['data']['sub_district_id'] }});
-                                // Get selected subdistrict code
-                                const selectedSubDistrictOption = subDistrictSelect.options[subDistrictSelect.selectedIndex];
-                                if (selectedSubDistrictOption) {
-                                    const subDistrictCode = selectedSubDistrictOption.getAttribute('data-code');
-                                    return axios.get(`/api/wilayah/kecamatan/${subDistrictCode}/kelurahan`);
-                                }
-                            }
-                        })
-                        .then(response => {
-                            if (response) {
-                                populateSelect(villageSelect, response.data, 'Pilih Desa', {{ $citizen['data']['village_id'] }});
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error loading location data:', error);
-                        });
+                    const districts = await fetchLocationData(`/api/wilayah/provinsi/${provinceCode}/kota`);
+                    populateSelect(districtSelect, districts, 'Pilih Kabupaten', {{ $citizen['data']['district_id'] }});
+                    // Get selected district code
+                    const selectedDistrictOption = districtSelect.options[districtSelect.selectedIndex];
+                    if (selectedDistrictOption) {
+                        const districtCode = selectedDistrictOption.getAttribute('data-code');
+                        const subDistricts = await fetchLocationData(`/api/wilayah/kota/${districtCode}/kecamatan`);
+                        populateSelect(subDistrictSelect, subDistricts, 'Pilih Kecamatan', {{ $citizen['data']['sub_district_id'] }});
+                        // Get selected subdistrict code
+                        const selectedSubDistrictOption = subDistrictSelect.options[subDistrictSelect.selectedIndex];
+                        if (selectedSubDistrictOption) {
+                            const subDistrictCode = selectedSubDistrictOption.getAttribute('data-code');
+                            const villages = await fetchLocationData(`/api/wilayah/kecamatan/${subDistrictCode}/kelurahan`);
+                            populateSelect(villageSelect, villages, 'Pilih Desa', {{ $citizen['data']['village_id'] }});
+                        }
+                    }
                 }
             }
 
@@ -469,7 +456,7 @@
             initializeLocations();
 
             // Province change handler
-            provinceSelect.addEventListener('change', function() {
+            provinceSelect.addEventListener('change', async function() {
                 const selectedOption = this.options[this.selectedIndex];
                 const provinceCode = selectedOption.getAttribute('data-code');
 
@@ -478,19 +465,13 @@
                 resetSelect(villageSelect, 'Pilih Desa');
 
                 if (provinceCode) {
-                    axios.get(`/api/wilayah/provinsi/${provinceCode}/kota`)
-                        .then(response => {
-                            populateSelect(districtSelect, response.data, 'Pilih Kabupaten');
-                        })
-                        .catch(error => {
-                            console.error('Error loading districts:', error);
-                            resetSelect(districtSelect, 'Error loading data');
-                        });
+                    const districts = await fetchLocationData(`/api/wilayah/provinsi/${provinceCode}/kota`);
+                    populateSelect(districtSelect, districts, 'Pilih Kabupaten');
                 }
             });
 
             // District change handler
-            districtSelect.addEventListener('change', function() {
+            districtSelect.addEventListener('change', async function() {
                 const selectedOption = this.options[this.selectedIndex];
                 const districtCode = selectedOption.getAttribute('data-code');
 
@@ -498,33 +479,21 @@
                 resetSelect(villageSelect, 'Pilih Desa');
 
                 if (districtCode) {
-                    axios.get(`/api/wilayah/kota/${districtCode}/kecamatan`)
-                        .then(response => {
-                            populateSelect(subDistrictSelect, response.data, 'Pilih Kecamatan');
-                        })
-                        .catch(error => {
-                            console.error('Error loading sub-districts:', error);
-                            resetSelect(subDistrictSelect, 'Error loading data');
-                        });
+                    const subDistricts = await fetchLocationData(`/api/wilayah/kota/${districtCode}/kecamatan`);
+                    populateSelect(subDistrictSelect, subDistricts, 'Pilih Kecamatan');
                 }
             });
 
             // Sub-district change handler
-            subDistrictSelect.addEventListener('change', function() {
+            subDistrictSelect.addEventListener('change', async function() {
                 const selectedOption = this.options[this.selectedIndex];
                 const subDistrictCode = selectedOption.getAttribute('data-code');
 
                 resetSelect(villageSelect, 'Loading...');
 
                 if (subDistrictCode) {
-                    axios.get(`/api/wilayah/kecamatan/${subDistrictCode}/kelurahan`)
-                        .then(response => {
-                            populateSelect(villageSelect, response.data, 'Pilih Desa');
-                        })
-                        .catch(error => {
-                            console.error('Error loading villages:', error);
-                            resetSelect(villageSelect, 'Error loading data');
-                        });
+                    const villages = await fetchLocationData(`/api/wilayah/kecamatan/${subDistrictCode}/kelurahan`);
+                    populateSelect(villageSelect, villages, 'Pilih Desa');
                 }
             });
         });

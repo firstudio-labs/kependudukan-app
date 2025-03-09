@@ -1,49 +1,5 @@
 <x-layout>
     <div class="p-4 mt-14">
-        @if(session('success'))
-            <div id="successAlert"
-                class="flex items-center p-4 mb-4 text-green-800 border border-green-300 rounded-lg bg-green-50 dark:bg-green-800 dark:text-green-300 relative"
-                role="alert">
-                <svg class="w-5 h-5 mr-2 text-green-800 dark:text-green-300" fill="none" stroke="currentColor"
-                    viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                </svg>
-                <span class="font-medium">Sukses!</span> {{ session('success') }}
-                <button type="button"
-                    class="absolute top-2 right-2 text-green-800 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900 rounded-lg p-1 transition-all duration-300"
-                    onclick="closeAlert('successAlert')">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
-                        </path>
-                    </svg>
-                </button>
-            </div>
-        @endif
-
-        <!-- Alert Error -->
-        @if(session('error'))
-            <div id="errorAlert"
-                class="flex items-center p-4 mb-4 text-red-800 border border-red-300 rounded-lg bg-red-50 dark:bg-red-800 dark:text-red-300 relative"
-                role="alert">
-                <svg class="w-5 h-5 mr-2 text-red-800 dark:text-red-300" fill="none" stroke="currentColor"
-                    viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M18.364 5.636L5.636 18.364M5.636 5.636l12.728 12.728"></path>
-                </svg>
-                <span class="font-medium">Gagal!</span> {{ session('error') }}
-                <button type="button"
-                    class="absolute top-2 right-2 text-red-800 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900 rounded-lg p-1 transition-all duration-300"
-                    onclick="closeAlert('errorAlert')">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
-                        </path>
-                    </svg>
-                </button>
-            </div>
-        @endif
-
         <h1 class="text-2xl font-bold text-gray-800 mb-6">Input/Entry Biodata</h1>
 
         <form method="POST" action="{{ route('superadmin.biodata.store') }}" class="bg-white p-6 rounded-lg shadow-md">
@@ -390,26 +346,25 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <script>
-        // Fungsi untuk menutup alert
-        function closeAlert(alertId) {
-            document.getElementById(alertId).classList.add('hidden');
-        }
+        @if(session('success'))
+            Swal.fire({
+                icon: 'success',
+                title: 'Sukses!',
+                text: "{{ session('success') }}",
+                timer: 3000,
+                showConfirmButton: false
+            });
+        @endif
 
-        // Menutup alert secara otomatis setelah 5 detik
-        setTimeout(function() {
-            const successAlert = document.getElementById('successAlert');
-            const errorAlert = document.getElementById('errorAlert');
-
-            if (successAlert) {
-                successAlert.classList.add('opacity-0', 'transition-opacity', 'duration-1000');
-                setTimeout(() => successAlert.classList.add('hidden'), 1000);
-            }
-
-            if (errorAlert) {
-                errorAlert.classList.add('opacity-0', 'transition-opacity', 'duration-1000');
-                setTimeout(() => errorAlert.classList.add('hidden'), 1000);
-            }
-        }, 5000);
+        @if(session('error'))
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal!',
+                text: "{{ session('error') }}",
+                timer: 3000,
+                showConfirmButton: false
+            });
+        @endif
 
         document.addEventListener('DOMContentLoaded', function() {
             const provinceSelect = document.getElementById('province_id');

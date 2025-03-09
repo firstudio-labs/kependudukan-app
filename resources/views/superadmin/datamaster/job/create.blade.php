@@ -1,7 +1,7 @@
 <x-layout>
     <div class="p-4 mt-14">
         <!-- Alert Sukses -->
-        @if(session('success'))
+        {{-- @if(session('success'))
             <div id="successAlert" class="flex items-center p-4 mb-4 text-green-800 border border-green-300 rounded-lg bg-green-50 dark:bg-green-800 dark:text-green-300 relative" role="alert">
                 <svg class="w-5 h-5 mr-2 text-green-800 dark:text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
@@ -28,7 +28,7 @@
                     </svg>
                 </button>
             </div>
-        @endif
+        @endif --}}
 
         <!-- Judul H1 -->
         <h1 class="text-2xl font-bold text-gray-800 mb-6">Tambah Pekerjaan</h1>
@@ -57,14 +57,28 @@
     </div>
 </x-layout>
 
+<!-- Add SweetAlert CDN -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
-    function closeAlert() {
-        document.getElementById('success-alert')?.classList.add('opacity-0');
-        document.getElementById('error-alert')?.classList.add('opacity-0');
-        setTimeout(() => {
-            document.getElementById('success-alert')?.remove();
-            document.getElementById('error-alert')?.remove();
-        }, 500);
-    }
-    setTimeout(closeAlert, 4000); // Auto-close dalam 4 detik
+    // Replace existing alert script with SweetAlert
+    @if(session('success'))
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil!',
+            text: '{{ session('success') }}',
+            timer: 3000,
+            showConfirmButton: false
+        });
+    @endif
+
+    @if(session('error'))
+        Swal.fire({
+            icon: 'error',
+            title: 'Gagal!',
+            text: '{{ session('error') }}',
+            timer: 3000,
+            showConfirmButton: false
+        });
+    @endif
 </script>
