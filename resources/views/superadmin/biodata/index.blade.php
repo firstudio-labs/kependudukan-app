@@ -75,9 +75,15 @@
                 </thead>
                 <tbody>
                     @php
-                        $currentPage = $citizens['data']['pagination']['current_page'];
-                        $itemsPerPage = $citizens['data']['pagination']['items_per_page'];
-                        $totalItems = $citizens['data']['pagination']['total_items'];
+                        $pagination = $citizens['data']['pagination'] ?? [
+                            'current_page' => 1,
+                            'items_per_page' => 10,
+                            'total_items' => 0
+                        ];
+
+                        $currentPage = $pagination['current_page'];
+                        $itemsPerPage = $pagination['items_per_page'];
+                        $totalItems = $pagination['total_items'];
                         $startNumber = ($currentPage - 1) * $itemsPerPage + 1;
                         $endNumber = min($startNumber + $itemsPerPage - 1, $totalItems);
                     @endphp

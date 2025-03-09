@@ -158,29 +158,41 @@ class BiodataController extends Controller
         }
     }
 
-    public function edit($id)
+    public function edit($nik)
     {
-        $response = $this->citizenService->getCitizenByNIK($id);
+        $citizen = $this->citizenService->getCitizenByNIK($nik);
+        if (!$citizen || !isset($citizen['data'])) {
+            return back()->with('error', 'Data tidak ditemukan');
+        }
+
         $provinces = $this->wilayahService->getProvinces();
         $jobs = $this->jobService->getAllJobs();
 
-        if ($response && $response['status'] === 'OK') {
-            $biodata = (object) $response['data'];
-            return view('superadmin.biodata.update', compact('biodata', 'provinces', 'jobs'));
-        }
+        // Get location data for pre-selecting dropdowns
+        $districts = $this->wilayahService->getKabupaten($citizen['data']['province_id']);
+        $subDistricts = $this->wilayahService->getKecamatan($citizen['data']['district_id']);
+        $villages = $this->wilayahService->getDesa($citizen['data']['sub_district_id']);
 
-        return redirect()
-            ->route('superadmin.biodata.index')
-            ->with('error', 'Gagal mengambil data biodata: ' . ($response['message'] ?? 'Unknown error'));
+        return view('superadmin.biodata.update', compact(
+            'citizen',
+            'provinces',
+            'jobs',
+            'districts',
+            'subDistricts',
+            'villages'
+        ));
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, $nik)
     {
         try {
-            Log::info('Incoming biodata update request:', $request->all());
+                    // Tambahkan log untuk melihat nilai yang diterima
+        Log::info('Family Status from request:', [
+            'family_status' => $request->input('family_status'),
+            'all_data' => $request->all()
+        ]);
 
             $validatedData = $request->validate([
-                'nik' => 'required|size:16',
                 'kk' => 'required|size:16',
                 'full_name' => 'required|string|max:255',
                 'gender' => 'required|integer|in:1,2',
@@ -218,70 +230,26 @@ class BiodataController extends Controller
                 'father' => 'required|string|max:255',
                 'coordinate' => 'nullable|string|max:255',
             ]);
+        // Log setelah validasi
+        Log::info('Validated Family Status:', [
+            'family_status' => $validatedData['family_status']
+        ]);
 
-            // Handle nullable integer fields
-            $nullableIntegerFields = [
-                'marital_status',
-                'marital_certificate',
-                'divorce_certificate',
-                'postal_code'
-            ];
+        // $this->processNullableFields($validatedData);
 
-            foreach ($nullableIntegerFields as $field) {
-                $validatedData[$field] = empty($validatedData[$field]) ? 0 : (int) $validatedData[$field];
-            }
+        // Log setelah process nullable fields
+        Log::info('Processed Family Status:', [
+            'family_status' => $validatedData['family_status']
+        ]);
 
-            // Handle nullable string fields
-            $nullableStringFields = [
-                'birth_certificate_no',
-                'marital_certificate_no',
-                'divorce_certificate_no',
-                'nik_mother',
-                'nik_father',
-                'coordinate'
-            ];
+            // Process nullable fields
+            $this->processNullableFields($validatedData);
+            $nik = (int) $nik;
 
-            foreach ($nullableStringFields as $field) {
-                $validatedData[$field] = empty($validatedData[$field]) ? " " : $validatedData[$field];
-            }
+            // Convert KK to integer
+            $validatedData['kk'] = (int) $validatedData['kk'];
 
-            // Handle nullable date fields
-            $nullableDateFields = [
-                'marriage_date',
-                'divorce_certificate_date'
-            ];
-
-            foreach ($nullableDateFields as $field) {
-                $validatedData[$field] = empty($validatedData[$field]) ? " " : date('Y-m-d', strtotime($validatedData[$field]));
-            }
-
-            // Format other integer fields
-            $integerFields = [
-                'gender', 'age', 'province_id', 'district_id', 'sub_district_id',
-                'village_id', 'citizen_status', 'birth_certificate', 'blood_type',
-                'religion', 'family_status', 'mental_disorders', 'disabilities',
-                'education_status', 'job_type_id'
-            ];
-
-            foreach ($integerFields as $field) {
-                if (isset($validatedData[$field])) {
-                    $validatedData[$field] = (int) $validatedData[$field];
-                }
-            }
-
-            // Convert dates to proper format
-            $dateFields = ['birth_date', 'marriage_date', 'divorce_certificate_date'];
-            foreach ($dateFields as $field) {
-                if (!empty($validatedData[$field])) {
-                    $validatedData[$field] = date('Y-m-d', strtotime($validatedData[$field]));
-                }
-            }
-
-            Log::info('Validated data for update:', $validatedData);
-
-            $response = $this->citizenService->updateCitizen($id, $validatedData);
-
-            Log::info('API Response:', $response);
+            $response = $this->citizenService->updateCitizen($nik, $validatedData);
 
             if ($response['status'] === 'OK') {
                 return redirect()
@@ -289,17 +257,11 @@ class BiodataController extends Controller
                     ->with('success', 'Biodata berhasil diperbarui!');
             }
 
-            Log::error('Failed to update biodata:', $response);
             return back()
                 ->withInput()
                 ->with('error', $response['message'] ?? 'Gagal memperbarui data');
 
         } catch (\Exception $e) {
-            Log::error('Exception in update method:', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
             return back()
                 ->withInput()
                 ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());

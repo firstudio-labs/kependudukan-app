@@ -1,75 +1,116 @@
 <x-layout>
     <div class="p-4 mt-14">
-        <h1 class="text-2xl font-bold text-gray-800 mb-6">Update Biodata</h1>
+        @if(session('success'))
+            <div id="successAlert"
+                class="flex items-center p-4 mb-4 text-green-800 border border-green-300 rounded-lg bg-green-50 dark:bg-green-800 dark:text-green-300 relative"
+                role="alert">
+                <svg class="w-5 h-5 mr-2 text-green-800 dark:text-green-300" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                <span class="font-medium">Sukses!</span> {{ session('success') }}
+                <button type="button"
+                    class="absolute top-2 right-2 text-green-800 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900 rounded-lg p-1 transition-all duration-300"
+                    onclick="closeAlert('successAlert')">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+        @endif
 
-        <form method="POST" action="{{ route('superadmin.biodata.update', $biodata->nik) }}" class="bg-white p-6 rounded-lg shadow-md">
+        <!-- Alert Error -->
+        @if(session('error'))
+            <div id="errorAlert"
+                class="flex items-center p-4 mb-4 text-red-800 border border-red-300 rounded-lg bg-red-50 dark:bg-red-800 dark:text-red-300 relative"
+                role="alert">
+                <svg class="w-5 h-5 mr-2 text-red-800 dark:text-red-300" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M18.364 5.636L5.636 18.364M5.636 5.636l12.728 12.728"></path>
+                </svg>
+                <span class="font-medium">Gagal!</span> {{ session('error') }}
+                <button type="button"
+                    class="absolute top-2 right-2 text-red-800 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900 rounded-lg p-1 transition-all duration-300"
+                    onclick="closeAlert('errorAlert')">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+        @endif
+
+        <h1 class="text-2xl font-bold text-gray-800 mb-6">Edit Biodata</h1>
+
+        <form method="POST" action="{{ route('superadmin.biodata.update', $citizen['data']['nik']) }}" class="bg-white p-6 rounded-lg shadow-md">
             @csrf
             @method('PUT')
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- NIK -->
+                <!-- NIK (readonly) -->
                 <div>
                     <label for="nik" class="block text-sm font-medium text-gray-700">NIK</label>
-                    <input type="number" id="nik" name="nik" value="{{ $biodata->nik }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
-                    <p class="text-sm text-gray-500">ID Unik</p>
+                    <input type="text" id="nik" value="{{ $citizen['data']['nik'] }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2 bg-gray-100" readonly>
                 </div>
 
                 <!-- No KK -->
                 <div>
                     <label for="kk" class="block text-sm font-medium text-gray-700">No KK</label>
-                    <input type="number" id="kk" name="kk" value="{{ $biodata->kk }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                    <input type="text" id="kk" name="kk" value="{{ $citizen['data']['kk'] }}" pattern="\d{16}" maxlength="16" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                 </div>
 
                 <!-- Nama Lengkap -->
                 <div>
                     <label for="full_name" class="block text-sm font-medium text-gray-700">Nama Lengkap</label>
-                    <input type="text" id="full_name" name="full_name" value="{{ $biodata->full_name }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                    <input type="text" id="full_name" name="full_name" value="{{ $citizen['data']['full_name'] }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                 </div>
 
                 <!-- Jenis Kelamin -->
                 <div>
                     <label for="gender" class="block text-sm font-medium text-gray-700">Jenis Kelamin</label>
                     <select id="gender" name="gender" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
-                        <option value="">Pilih Jenis Kelamin</option>
-                        <option value="Laki-Laki" {{ $biodata->gender == 'Laki-Laki' ? 'selected' : '' }}>Laki-Laki</option>
-                        <option value="Perempuan" {{ $biodata->gender == 'Perempuan' ? 'selected' : '' }}>Perempuan</option>
+                        <option value="1" {{ $citizen['data']['gender'] == 1 ? 'selected' : '' }}>Laki-Laki</option>
+                        <option value="2" {{ $citizen['data']['gender'] == 2 ? 'selected' : '' }}>Perempuan</option>
                     </select>
                 </div>
 
-                <!-- Tanggal Lahir -->
+                <!-- Example of a date field -->
                 <div>
                     <label for="birth_date" class="block text-sm font-medium text-gray-700">Tanggal Lahir</label>
-                    <input type="date" id="birth_date" name="birth_date"
-                        value="{{ $biodata->birth_date ? \Carbon\Carbon::parse($biodata->birth_date)->format('Y-m-d') : '' }}"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                    <input type="date" id="birth_date" name="birth_date" value="{{ $citizen['data']['birth_date'] }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                 </div>
+
+                <!-- Example of a select field -->
+
 
                 <!-- Umur -->
                 <div>
                     <label for="age" class="block text-sm font-medium text-gray-700">Umur</label>
-                    <input type="number" id="age" name="age" value="{{ $biodata->age }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                    <input type="number" id="age" name="age" value="{{ $citizen['data']['age'] }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                 </div>
 
                 <!-- Tempat Lahir -->
                 <div>
                     <label for="birth_place" class="block text-sm font-medium text-gray-700">Tempat Lahir</label>
-                    <input type="text" id="birth_place" name="birth_place" value="{{ $biodata->birth_place }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                    <input type="text" id="birth_place" name="birth_place" value="{{ $citizen['data']['birth_place'] }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                 </div>
 
                 <!-- Alamat -->
                 <div>
                     <label for="address" class="block text-sm font-medium text-gray-700">Alamat</label>
-                    <textarea id="address" name="address" autocomplete="street-address" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">{{ $biodata->address }}</textarea>
+                    <textarea id="address" name="address" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">{{ $citizen['data']['address'] }}</textarea>
                 </div>
 
                 <!-- Provinsi -->
                 <div>
-                    <label for="province_id" class="block text-sm font-medium text-gray-700">Provinsi <span class="text-red-500">*</span></label>
+                    <label for="province_id" class="block text-sm font-medium text-gray-700">Provinsi</label>
                     <select id="province_id" name="province_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                         <option value="">Pilih Provinsi</option>
                         @foreach($provinces as $province)
-                            <option value="{{ $province['id'] }}"
-                                    data-code="{{ $province['code'] }}"
-                                    {{ $biodata->province_id == $province['id'] ? 'selected' : '' }}>
+                            <option value="{{ $province['id'] }}" data-code="{{ $province['code'] }}" {{ $citizen['data']['province_id'] == $province['id'] ? 'selected' : '' }}>
                                 {{ $province['name'] }}
                             </option>
                         @endforeach
@@ -78,53 +119,70 @@
 
                 <!-- Kabupaten -->
                 <div>
-                    <label for="district_id" class="block text-sm font-medium text-gray-700">Kabupaten <span class="text-red-500">*</span></label>
+                    <label for="district_id" class="block text-sm font-medium text-gray-700">Kabupaten</label>
                     <select id="district_id" name="district_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                         <option value="">Pilih Kabupaten</option>
+                        @foreach($districts as $district)
+                            <option value="{{ $district['id'] }}" data-code="{{ $district['code'] }}" {{ $citizen['data']['district_id'] == $district['id'] ? 'selected' : '' }}>
+                                {{ $district['name'] }}
+                            </option>
+                        @endforeach
                     </select>
                 </div>
 
                 <!-- Kecamatan -->
                 <div>
-                    <label for="sub_district_id" class="block text-sm font-medium text-gray-700">Kecamatan <span class="text-red-500">*</span></label>
+                    <label for="sub_district_id" class="block text-sm font-medium text-gray-700">Kecamatan</label>
                     <select id="sub_district_id" name="sub_district_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                         <option value="">Pilih Kecamatan</option>
+                        @foreach($subDistricts as $subDistrict)
+                            <option value="{{ $subDistrict['id'] }}" data-code="{{ $subDistrict['code'] }}" {{ $citizen['data']['sub_district_id'] == $subDistrict['id'] ? 'selected' : '' }}>
+                                {{ $subDistrict['name'] }}
+                            </option>
+                        @endforeach
                     </select>
                 </div>
 
                 <!-- Desa -->
                 <div>
-                    <label for="village_id" class="block text-sm font-medium text-gray-700">Desa <span class="text-red-500">*</span></label>
+                    <label for="village_id" class="block text-sm font-medium text-gray-700">Desa</label>
                     <select id="village_id" name="village_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                         <option value="">Pilih Desa</option>
+                        @foreach($villages as $village)
+                            <option value="{{ $village['id'] }}" data-code="{{ $village['code'] }}" {{ $citizen['data']['village_id'] == $village['id'] ? 'selected' : '' }}>
+                                {{ $village['name'] }}
+                            </option>
+                        @endforeach
                     </select>
                 </div>
 
                 <!-- RT -->
                 <div>
                     <label for="rt" class="block text-sm font-medium text-gray-700">RT</label>
-                    <input type="text" id="rt" name="rt" value="{{ $biodata->rt }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                    <input type="text" id="rt" name="rt" value="{{ $citizen['data']['rt'] }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                 </div>
 
                 <!-- RW -->
                 <div>
                     <label for="rw" class="block text-sm font-medium text-gray-700">RW</label>
-                    <input type="text" id="rw" name="rw" value="{{ $biodata->rw }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                    <input type="text" id="rw" name="rw" value="{{ $citizen['data']['rw'] }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                 </div>
 
                 <!-- Kode POS -->
                 <div>
-                    <label for="postal_code" class="block text-sm font-medium text-gray-700">Kode POS</label>
-                    <input type="number" id="postal_code" name="postal_code" autocomplete="postal-code" value="{{ $biodata->postal_code }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                    <label for="postal_code" class="block text-sm font-medium text-gray-700">Kode Pos</label>
+                    <input type="text" id="postal_code" name="postal_code"
+                        value="{{ $citizen['data']['postal_code'] && $citizen['data']['postal_code'] != '0' ? $citizen['data']['postal_code'] : '' }}"
+                        pattern="\d{5}" maxlength="5"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
                 </div>
 
                 <!-- Kewarganegaraan -->
                 <div>
                     <label for="citizen_status" class="block text-sm font-medium text-gray-700">Kewarganegaraan</label>
-                    <select id="citizen_status" name="citizen_status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
-                        <option value="">Pilih Kewarganegaraan</option>
-                        <option value="WNI" {{ $biodata->citizen_status == 'WNI' ? 'selected' : '' }}>WNI</option>
-                        <option value="WNA" {{ $biodata->citizen_status == 'WNA' ? 'selected' : '' }}>WNA</option>
+                    <select id="citizen_status" name="citizen_status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                        <option value="1" {{ $citizen['data']['citizen_status'] == 1 ? 'selected' : '' }}>WNI</option>
+                        <option value="2" {{ $citizen['data']['citizen_status'] == 2 ? 'selected' : '' }}>WNA</option>
                     </select>
                 </div>
 
@@ -132,51 +190,48 @@
                 <div>
                     <label for="birth_certificate" class="block text-sm font-medium text-gray-700">Akta Lahir</label>
                     <select id="birth_certificate" name="birth_certificate" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
-                        <option value="">Pilih Status</option>
-                        <option value="Ada" {{ $biodata->birth_certificate == 'Ada' ? 'selected' : '' }}>Ada</option>
-                        <option value="Tidak Ada" {{ $biodata->birth_certificate == 'Tidak Ada' ? 'selected' : '' }}>Tidak Ada</option>
+                        <option value="1" {{ $citizen['data']['birth_certificate'] == 1 ? 'selected' : '' }}>Ada</option>
+                        <option value="2" {{ $citizen['data']['birth_certificate'] == 2 ? 'selected' : '' }}>Tidak Ada</option>
                     </select>
                 </div>
 
                 <!-- No Akta Lahir -->
                 <div>
                     <label for="birth_certificate_no" class="block text-sm font-medium text-gray-700">No Akta Lahir</label>
-                    <input type="text" id="birth_certificate_no" name="birth_certificate_no" value="{{ $biodata->birth_certificate_no }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                    <input type="text" id="birth_certificate_no" name="birth_certificate_no" value="{{ $citizen['data']['birth_certificate_no'] }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
                 </div>
 
                 <!-- Golongan Darah -->
                 <div>
                     <label for="blood_type" class="block text-sm font-medium text-gray-700">Golongan Darah</label>
-                    <select id="blood_type" name="blood_type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
-                        <option value="">Pilih Golongan Darah</option>
-                        <option value="A" {{ $biodata->blood_type == 'A' ? 'selected' : '' }}>A</option>
-                        <option value="B" {{ $biodata->blood_type == 'B' ? 'selected' : '' }}>B</option>
-                        <option value="AB" {{ $biodata->blood_type == 'AB' ? 'selected' : '' }}>AB</option>
-                        <option value="O" {{ $biodata->blood_type == 'O' ? 'selected' : '' }}>O</option>
-                        <option value="A+" {{ $biodata->blood_type == 'A+' ? 'selected' : '' }}>A+</option>
-                        <option value="A-" {{ $biodata->blood_type == 'A-' ? 'selected' : '' }}>A-</option>
-                        <option value="B+" {{ $biodata->blood_type == 'B+' ? 'selected' : '' }}>B+</option>
-                        <option value="B-" {{ $biodata->blood_type == 'B-' ? 'selected' : '' }}>B-</option>
-                        <option value="AB+" {{ $biodata->blood_type == 'AB+' ? 'selected' : '' }}>AB+</option>
-                        <option value="AB-" {{ $biodata->blood_type == 'AB-' ? 'selected' : '' }}>AB-</option>
-                        <option value="O+" {{ $biodata->blood_type == 'O+' ? 'selected' : '' }}>O+</option>
-                        <option value="O-" {{ $biodata->blood_type == 'O-' ? 'selected' : '' }}>O-</option>
-                        <option value="Tidak Tahu" {{ $biodata->blood_type == 'Tidak Tahu' ? 'selected' : '' }}>Tidak Tahu</option>
+                    <select id="blood_type" name="blood_type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                        <option value="1" {{ $citizen['data']['blood_type'] == 1 ? 'selected' : '' }}>A</option>
+                        <option value="2" {{ $citizen['data']['blood_type'] == 2 ? 'selected' : '' }}>B</option>
+                        <option value="3" {{ $citizen['data']['blood_type'] == 3 ? 'selected' : '' }}>AB</option>
+                        <option value="4" {{ $citizen['data']['blood_type'] == 4 ? 'selected' : '' }}>O</option>
+                        <option value="5" {{ $citizen['data']['blood_type'] == 5 ? 'selected' : '' }}>A+</option>
+                        <option value="6" {{ $citizen['data']['blood_type'] == 6 ? 'selected' : '' }}>A-</option>
+                        <option value="7" {{ $citizen['data']['blood_type'] == 7 ? 'selected' : '' }}>B+</option>
+                        <option value="8" {{ $citizen['data']['blood_type'] == 8 ? 'selected' : '' }}>B-</option>
+                        <option value="9" {{ $citizen['data']['blood_type'] == 9 ? 'selected' : '' }}>AB+</option>
+                        <option value="10" {{ $citizen['data']['blood_type'] == 10 ? 'selected' : '' }}>AB-</option>
+                        <option value="11" {{ $citizen['data']['blood_type'] == 11 ? 'selected' : '' }}>O+</option>
+                        <option value="12" {{ $citizen['data']['blood_type'] == 12 ? 'selected' : '' }}>O-</option>
+                        <option value="13" {{ $citizen['data']['blood_type'] == 13 ? 'selected' : '' }}>Tidak Tahu</option>
                     </select>
                 </div>
 
                 <!-- Agama -->
                 <div>
                     <label for="religion" class="block text-sm font-medium text-gray-700">Agama</label>
-                    <select id="religion" name="religion" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
-                        <option value="">Pilih Agama</option>
-                        <option value="Islam" {{ $biodata->religion == 'Islam' ? 'selected' : '' }}>Islam</option>
-                        <option value="Kristen" {{ $biodata->religion == 'Kristen' ? 'selected' : '' }}>Kristen</option>
-                        <option value="Katholik" {{ $biodata->religion == 'Katholik' ? 'selected' : '' }}>Katholik</option>
-                        <option value="Hindu" {{ $biodata->religion == 'Hindu' ? 'selected' : '' }}>Hindu</option>
-                        <option value="Buddha" {{ $biodata->religion == 'Buddha' ? 'selected' : '' }}>Buddha</option>
-                        <option value="Kong Hu Cu" {{ $biodata->religion == 'Kong Hu Cu' ? 'selected' : '' }}>Kong Hu Cu</option>
-                        <option value="Lainya...." {{ $biodata->religion == 'Lainya....' ? 'selected' : '' }}>Lainnya....</option>
+                    <select id="religion" name="religion" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                        <option value="1" {{ $citizen['data']['religion'] == 1 ? 'selected' : '' }}>Islam</option>
+                        <option value="2" {{ $citizen['data']['religion'] == 2 ? 'selected' : '' }}>Kristen</option>
+                        <option value="3" {{ $citizen['data']['religion'] == 3 ? 'selected' : '' }}>Katholik</option>
+                        <option value="4" {{ $citizen['data']['religion'] == 4 ? 'selected' : '' }}>Hindu</option>
+                        <option value="5" {{ $citizen['data']['religion'] == 5 ? 'selected' : '' }}>Buddha</option>
+                        <option value="6" {{ $citizen['data']['religion'] == 6 ? 'selected' : '' }}>Kong Hu Cu</option>
+                        <option value="7" {{ $citizen['data']['religion'] == 7 ? 'selected' : '' }}>Lainnya</option>
                     </select>
                 </div>
 
@@ -184,13 +239,12 @@
                 <div>
                     <label for="marital_status" class="block text-sm font-medium text-gray-700">Status Perkawinan</label>
                     <select id="marital_status" name="marital_status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
-                        <option value="">Pilih Status</option>
-                        <option value="Belum Kawin" {{ $biodata->marital_status == 'Belum Kawin' ? 'selected' : '' }}>Belum Kawin</option>
-                        <option value="Kawin Tercatat" {{ $biodata->marital_status == 'Kawin Tercatat' ? 'selected' : '' }}>Kawin Tercatat</option>
-                        <option value="Kawin Belum Tercatat" {{ $biodata->marital_status == 'Kawin Belum Tercatat' ? 'selected' : '' }}>Kawin Belum Tercatat</option>
-                        <option value="Cerai Hidup Tercatat" {{ $biodata->marital_status == 'Cerai Hidup Tercatat' ? 'selected' : '' }}>Cerai Hidup Tercatat</option>
-                        <option value="Cerai Hidup Belum Tercatat" {{ $biodata->marital_status == 'Cerai Hidup Belum Tercatat' ? 'selected' : '' }}>Cerai Hidup Belum Tercatat</option>
-                        <option value="Cerai Mati" {{ $biodata->marital_status == 'Cerai Mati' ? 'selected' : '' }}>Cerai Mati</option>
+                        <option value="1" {{ $citizen['data']['marital_status'] == 1 ? 'selected' : '' }}>Belum Kawin</option>
+                        <option value="2" {{ $citizen['data']['marital_status'] == 2 ? 'selected' : '' }}>Kawin Tercatat</option>
+                        <option value="3" {{ $citizen['data']['marital_status'] == 3 ? 'selected' : '' }}>Kawin Belum Tercatat</option>
+                        <option value="4" {{ $citizen['data']['marital_status'] == 4 ? 'selected' : '' }}>Cerai Hidup Tercatat</option>
+                        <option value="5" {{ $citizen['data']['marital_status'] == 5 ? 'selected' : '' }}>Cerai Hidup Belum Tercatat</option>
+                        <option value="6" {{ $citizen['data']['marital_status'] == 6 ? 'selected' : '' }}>Cerai Mati</option>
                     </select>
                 </div>
 
@@ -198,283 +252,281 @@
                 <div>
                     <label for="marital_certificate" class="block text-sm font-medium text-gray-700">Akta Perkawinan</label>
                     <select id="marital_certificate" name="marital_certificate" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
-                        <option value="">Pilih Status</option>
-                        <option value="Ada" {{ $biodata->marital_certificate == 'Ada' ? 'selected' : '' }}>Ada</option>
-                        <option value="Tidak Ada" {{ $biodata->marital_certificate == 'Tidak Ada' ? 'selected' : '' }}>Tidak Ada</option>
+                        <option value="1" {{ $citizen['data']['marital_certificate'] == 1 ? 'selected' : '' }}>Ada</option>
+                        <option value="2" {{ $citizen['data']['marital_certificate'] == 2 ? 'selected' : '' }}>Tidak Ada</option>
                     </select>
                 </div>
 
                 <!-- No Akta Perkawinan -->
                 <div>
                     <label for="marital_certificate_no" class="block text-sm font-medium text-gray-700">No Akta Perkawinan</label>
-                    <input type="text" id="marital_certificate_no" name="marital_certificate_no" value="{{ $biodata->marital_certificate_no }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                    <input type="text" id="marital_certificate_no" name="marital_certificate_no" value="{{ $citizen['data']['marital_certificate_no'] }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
                 </div>
 
                 <!-- Tanggal Perkawinan -->
                 <div>
                     <label for="marriage_date" class="block text-sm font-medium text-gray-700">Tanggal Perkawinan</label>
-                    <input type="date" id="marriage_date" name="marriage_date" value="{{ $biodata->marriage_date ? \Carbon\Carbon::createFromFormat('Y-m-d', $biodata->marriage_date)->format('Y-m-d') : '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                    <input type="date" id="marriage_date" name="marriage_date" value="{{ $citizen['data']['marriage_date'] }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
                 </div>
 
                 <!-- Akta Cerai -->
                 <div>
                     <label for="divorce_certificate" class="block text-sm font-medium text-gray-700">Akta Cerai</label>
                     <select id="divorce_certificate" name="divorce_certificate" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
-                        <option value="">Pilih Status</option>
-                        <option value="Ada" {{ $biodata->divorce_certificate == 'Ada' ? 'selected' : '' }}>Ada</option>
-                        <option value="Tidak Ada" {{ $biodata->divorce_certificate == 'Tidak Ada' ? 'selected' : '' }}>Tidak Ada</option>
+                        <option value="1" {{ $citizen['data']['divorce_certificate'] == 1 ? 'selected' : '' }}>Ada</option>
+                        <option value="2" {{ $citizen['data']['divorce_certificate'] == 2 ? 'selected' : '' }}>Tidak Ada</option>
                     </select>
                 </div>
 
                 <!-- No Akta Perceraian -->
                 <div>
                     <label for="divorce_certificate_no" class="block text-sm font-medium text-gray-700">No Akta Perceraian</label>
-                    <input type="text" id="divorce_certificate_no" name="divorce_certificate_no" value="{{ $biodata->divorce_certificate_no }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                    <input type="text" id="divorce_certificate_no" name="divorce_certificate_no" value="{{ $citizen['data']['divorce_certificate_no'] }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
                 </div>
 
                 <!-- Tanggal Perceraian -->
                 <div>
                     <label for="divorce_certificate_date" class="block text-sm font-medium text-gray-700">Tanggal Perceraian</label>
-                    <input type="date" id="divorce_certificate_date" name="divorce_certificate_date" value="{{ $biodata->divorce_certificate_date ? \Carbon\Carbon::createFromFormat('Y-m-d', $biodata->divorce_certificate_date)->format('Y-m-d') : '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                    <input type="date" id="divorce_certificate_date" name="divorce_certificate_date" value="{{ $citizen['data']['divorce_certificate_date'] }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
                 </div>
 
-                <!-- Jobs -->
+                <!-- Status Hubungan Dalam Keluarga -->
+                <div>
+                    <label for="family_status" class="block text-sm font-medium text-gray-700">Status Hubungan Dalam Keluarga</label>
+                    <select id="family_status" name="family_status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                        <option value="1" {{ $citizen['data']['family_status'] == 1 ? 'selected' : '' }}>KEPALA KELUARGA</option>
+                        <option value="2" {{ $citizen['data']['family_status'] == 2 ? 'selected' : '' }}>ISTRI</option>
+                        <option value="3" {{ $citizen['data']['family_status'] == 3 ? 'selected' : '' }}>ANAK</option>
+                        <option value="4" {{ $citizen['data']['family_status'] == 4 ? 'selected' : '' }}>MERTUA</option>
+                        <option value="5" {{ $citizen['data']['family_status'] == 5 ? 'selected' : '' }}>ORANG TUA</option>
+                        <option value="6" {{ $citizen['data']['family_status'] == 6 ? 'selected' : '' }}>CUCU</option>
+                        <option value="7" {{ $citizen['data']['family_status'] == 7 ? 'selected' : '' }}>FAMILI LAIN</option>
+                        <option value="8" {{ $citizen['data']['family_status'] == 8 ? 'selected' : '' }}>LAINNYA</option>
+                    </select>
+                </div>
+
+                <!-- Kelainan Fisik dan Mental -->
+                <div>
+                    <label for="mental_disorders" class="block text-sm font-medium text-gray-700">Kelainan Fisik dan Mental</label>
+                    <select id="mental_disorders" name="mental_disorders" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                        <option value="1" {{ $citizen['data']['mental_disorders'] == 1 ? 'selected' : '' }}>Ada</option>
+                        <option value="2" {{ $citizen['data']['mental_disorders'] == 2 ? 'selected' : '' }}>Tidak Ada</option>
+                    </select>
+                </div>
+
+                <!-- Penyandang Cacat -->
+                <div>
+                    <label for="disabilities" class="block text-sm font-medium text-gray-700">Penyandang Cacat</label>
+                    <select id="disabilities" name="disabilities" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                        <option value="1" {{ $citizen['data']['disabilities'] == 1 ? 'selected' : '' }}>Fisik</option>
+                        <option value="2" {{ $citizen['data']['disabilities'] == 2 ? 'selected' : '' }}>Netra/Buta</option>
+                        <option value="3" {{ $citizen['data']['disabilities'] == 3 ? 'selected' : '' }}>Rungu/Wicara</option>
+                        <option value="4" {{ $citizen['data']['disabilities'] == 4 ? 'selected' : '' }}>Mental/Jiwa</option>
+                        <option value="5" {{ $citizen['data']['disabilities'] == 5 ? 'selected' : '' }}>Fisik dan Mental</option>
+                        <option value="6" {{ $citizen['data']['disabilities'] == 6 ? 'selected' : '' }}>Lainnya</option>
+                    </select>
+                </div>
+
+                <!-- Pendidikan Terakhir -->
+                <div>
+                    <label for="education_status" class="block text-sm font-medium text-gray-700">Pendidikan Terakhir</label>
+                    <select id="education_status" name="education_status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                        <option value="1" {{ $citizen['data']['education_status'] == 1 ? 'selected' : '' }}>Tidak/Belum Sekolah</option>
+                        <option value="2" {{ $citizen['data']['education_status'] == 2 ? 'selected' : '' }}>Belum tamat SD/Sederajat</option>
+                        <option value="3" {{ $citizen['data']['education_status'] == 3 ? 'selected' : '' }}>Tamat SD</option>
+                        <option value="4" {{ $citizen['data']['education_status'] == 4 ? 'selected' : '' }}>SLTP/SMP/Sederajat</option>
+                        <option value="5" {{ $citizen['data']['education_status'] == 5 ? 'selected' : '' }}>SLTA/SMA/Sederajat</option>
+                        <option value="6" {{ $citizen['data']['education_status'] == 6 ? 'selected' : '' }}>Diploma I/II</option>
+                        <option value="7" {{ $citizen['data']['education_status'] == 7 ? 'selected' : '' }}>Akademi/Diploma III/ Sarjana Muda</option>
+                        <option value="8" {{ $citizen['data']['education_status'] == 8 ? 'selected' : '' }}>Diploma IV/ Strata I/ Strata II</option>
+                        <option value="9" {{ $citizen['data']['education_status'] == 9 ? 'selected' : '' }}>Strata III</option>
+                        <option value="10" {{ $citizen['data']['education_status'] == 10 ? 'selected' : '' }}>Lainnya</option>
+                    </select>
+                </div>
+
+                <!-- Jenis Pekerjaan -->
                 <div>
                     <label for="job_type_id" class="block text-sm font-medium text-gray-700">Jenis Pekerjaan</label>
                     <select id="job_type_id" name="job_type_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                         <option value="">Pilih Jenis Pekerjaan</option>
                         @foreach($jobs as $job)
-                            <option value="{{ $job['id'] }}" {{ $biodata->job_type_id == $job['id'] ? 'selected' : '' }}>
+                            <option value="{{ $job['id'] }}" {{ $citizen['data']['job_type_id'] == $job['id'] ? 'selected' : '' }}>
                                 {{ $job['name'] }}
                             </option>
                         @endforeach
                     </select>
                 </div>
 
-                <!-- Mental Disorders -->
-                <div>
-                    <label for="mental_disorders" class="block text-sm font-medium text-gray-700">Kelainan Fisik dan Mental</label>
-                    <select id="mental_disorders" name="mental_disorders" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
-                        <option value="1" {{ $biodata->mental_disorders == '1' ? 'selected' : '' }}>Ada</option>
-                        <option value="2" {{ $biodata->mental_disorders == '2' ? 'selected' : '' }}>Tidak Ada</option>
-                    </select>
-                </div>
-
-                <!-- Family Status -->
-                <div>
-                    <label for="family_status" class="block text-sm font-medium text-gray-700">Status Hubungan Dalam Keluarga</label>
-                    <select id="family_status" name="family_status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
-                        <option value="">Pilih Status</option>
-                        <option value="1" {{ (string)$biodata->family_status === '1' ? 'selected' : '' }}>KEPALA KELUARGA</option>
-                        <option value="2" {{ (string)$biodata->family_status === '2' ? 'selected' : '' }}>ISTRI</option>
-                        <option value="3" {{ (string)$biodata->family_status === '3' ? 'selected' : '' }}>ANAK</option>
-                        <option value="4" {{ (string)$biodata->family_status === '4' ? 'selected' : '' }}>MERTUA</option>
-                        <option value="5" {{ (string)$biodata->family_status === '5' ? 'selected' : '' }}>ORANG TUA</option>
-                        <option value="6" {{ (string)$biodata->family_status === '6' ? 'selected' : '' }}>CUCU</option>
-                        <option value="7" {{ (string)$biodata->family_status === '7' ? 'selected' : '' }}>FAMILI LAIN</option>
-                        <option value="8" {{ (string)$biodata->family_status === '8' ? 'selected' : '' }}>LAINNYA</option>
-                    </select>
-                </div>
-
-                <!-- Disabilities -->
-                <div>
-                    <label for="disabilities" class="block text-sm font-medium text-gray-700">Penyandang Cacat</label>
-                    <select id="disabilities" name="disabilities" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
-                        <option value="">Pilih Status</option>
-                        <option value="1" {{ (string)$biodata->disabilities === '1' ? 'selected' : '' }}>Fisik</option>
-                        <option value="2" {{ (string)$biodata->disabilities === '2' ? 'selected' : '' }}>Netra/Buta</option>
-                        <option value="3" {{ (string)$biodata->disabilities === '3' ? 'selected' : '' }}>Rungu/Wicara</option>
-                        <option value="4" {{ (string)$biodata->disabilities === '4' ? 'selected' : '' }}>Mental/Jiwa</option>
-                        <option value="5" {{ (string)$biodata->disabilities === '5' ? 'selected' : '' }}>Fisik dan Mental</option>
-                        <option value="6" {{ (string)$biodata->disabilities === '6' ? 'selected' : '' }}>Lainnya</option>
-                    </select>
-                </div>
-
-                <!-- Education Status -->
-                <div>
-                    <label for="education_status" class="block text-sm font-medium text-gray-700">Pendidikan Terakhir</label>
-                    <select id="education_status" name="education_status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
-                        <option value="">Pilih Pendidikan</option>
-                        <option value="1" {{ (string)$biodata->education_status === '1' ? 'selected' : '' }}>Tidak/Belum Sekolah</option>
-                        <option value="2" {{ (string)$biodata->education_status === '2' ? 'selected' : '' }}>Belum tamat SD/Sederajat</option>
-                        <option value="3" {{ (string)$biodata->education_status === '3' ? 'selected' : '' }}>Tamat SD</option>
-                        <option value="4" {{ (string)$biodata->education_status === '4' ? 'selected' : '' }}>SLTP/SMP/Sederajat</option>
-                        <option value="5" {{ (string)$biodata->education_status === '5' ? 'selected' : '' }}>SLTA/SMA/Sederajat</option>
-                        <option value="6" {{ (string)$biodata->education_status === '6' ? 'selected' : '' }}>Diploma I/II</option>
-                        <option value="7" {{ (string)$biodata->education_status === '7' ? 'selected' : '' }}>Akademi/Diploma III/Sarjana Muda</option>
-                        <option value="8" {{ (string)$biodata->education_status === '8' ? 'selected' : '' }}>Diploma IV/Strata I/Strata II</option>
-                        <option value="9" {{ (string)$biodata->education_status === '9' ? 'selected' : '' }}>Strata III</option>
-                        <option value="10" {{ (string)$biodata->education_status === '10' ? 'selected' : '' }}>Lainnya</option>
-                    </select>
-                </div>
-
-                <!-- NIK Mother -->
+                <!-- NIK Ibu -->
                 <div>
                     <label for="nik_mother" class="block text-sm font-medium text-gray-700">NIK Ibu</label>
-                    <input type="text" id="nik_mother" name="nik_mother" value="{{ $biodata->nik_mother }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                    <input type="text" id="nik_mother" name="nik_mother" value="{{ $citizen['data']['nik_mother'] }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
                 </div>
 
-                <!-- Mother Name -->
+                <!-- Nama Ibu -->
                 <div>
                     <label for="mother" class="block text-sm font-medium text-gray-700">Nama Ibu</label>
-                    <input type="text" id="mother" name="mother" value="{{ $biodata->mother }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                    <input type="text" id="mother" name="mother" value="{{ $citizen['data']['mother'] }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
                 </div>
 
-                <!-- NIK Father -->
+                <!-- NIK Ayah -->
                 <div>
                     <label for="nik_father" class="block text-sm font-medium text-gray-700">NIK Ayah</label>
-                    <input type="text" id="nik_father" name="nik_father" value="{{ $biodata->nik_father }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                    <input type="text" id="nik_father" name="nik_father" value="{{ $citizen['data']['nik_father'] }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
                 </div>
 
-                <!-- Father Name -->
+                <!-- Nama Ayah -->
                 <div>
                     <label for="father" class="block text-sm font-medium text-gray-700">Nama Ayah</label>
-                    <input type="text" id="father" name="father" value="{{ $biodata->father }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                    <input type="text" id="father" name="father" value="{{ $citizen['data']['father'] }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
                 </div>
 
-                <!-- Coordinate -->
+                <!-- Tag Lokasi -->
                 <div>
                     <label for="coordinate" class="block text-sm font-medium text-gray-700">Tag Lokasi (Log, Lat)</label>
-                    <input type="text" id="coordinate" name="coordinate" value="{{ $biodata->coordinate }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                    <input type="text" id="coordinate" name="coordinate" value="{{ $citizen['data']['coordinate'] }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
                 </div>
             </div>
-
-            <div class="mt-6 flex justify-between">
-                <button type="submit" class="w-full bg-indigo-500 text-white p-2 rounded-md shadow-md hover:bg-indigo-600">Update</button>
-                <a href="{{ route('superadmin.biodata.index') }}" class="w-full bg-gray-500 text-white p-2 rounded-md shadow-md hover:bg-gray-600 text-center ml-4">Batal</a>
+            <div class="mt-6 flex justify-end space-x-4">
+                <button type="button" onclick="window.history.back()" class="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-lg">
+                    Batal
+                </button>
+                <button type="submit" class="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-lg">
+                    Update
+                </button>
             </div>
         </form>
     </div>
-
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
-    document.addEventListener('DOMContentLoaded', async function() {
-        const provinceSelect = document.getElementById('province_id');
-        const districtSelect = document.getElementById('district_id');
-        const subDistrictSelect = document.getElementById('sub_district_id');
-        const villageSelect = document.getElementById('village_id');
+        document.addEventListener('DOMContentLoaded', function() {
+            const provinceSelect = document.getElementById('province_id');
+            const districtSelect = document.getElementById('district_id');
+            const subDistrictSelect = document.getElementById('sub_district_id');
+            const villageSelect = document.getElementById('village_id');
 
-        // Store initial values
-        const initialDistrict = "{{ $biodata->district_id }}";
-        const initialSubDistrict = "{{ $biodata->sub_district_id }}";
-        const initialVillage = "{{ $biodata->village_id }}";
-
-        // Helper function for populating select
-        function populateSelect(selectElement, data, placeholder, selectedValue = '') {
-            selectElement.innerHTML = `<option value="">${placeholder}</option>`;
-            if (Array.isArray(data)) {
-                data.forEach(item => {
-                    const option = document.createElement('option');
-                    option.value = item.id;
-                    option.setAttribute('data-code', item.code);
-                    option.textContent = item.name;
-                    if (item.id == selectedValue) {
-                        option.selected = true;
-                    }
-                    selectElement.appendChild(option);
-                });
+            function resetSelect(select, defaultText = 'Pilih') {
+                select.innerHTML = `<option value="">${defaultText}</option>`;
+                select.disabled = true;
             }
-            selectElement.disabled = false;
-        }
 
-        // Initial load of data
-        async function loadInitialData() {
-            if (provinceSelect.value) {
-                const selectedProvince = provinceSelect.options[provinceSelect.selectedIndex];
-                const provinceCode = selectedProvince.getAttribute('data-code');
-
-                try {
-                    // Load districts
-                    const districtsResponse = await fetch(`/api/wilayah/provinsi/${provinceCode}/kota`);
-                    const districts = await districtsResponse.json();
-                    populateSelect(districtSelect, districts, 'Pilih Kabupaten', initialDistrict);
-
-                    if (initialDistrict) {
-                        // Get selected district's code
-                        const selectedDistrict = districtSelect.options[districtSelect.selectedIndex];
-                        const districtCode = selectedDistrict.getAttribute('data-code');
-
-                        // Load subdistricts using the code
-                        const subDistrictsResponse = await fetch(`/api/wilayah/kota/${districtCode}/kecamatan`);
-                        const subDistricts = await subDistrictsResponse.json();
-                        populateSelect(subDistrictSelect, subDistricts, 'Pilih Kecamatan', initialSubDistrict);
-
-                        if (initialSubDistrict) {
-                            // Get selected subdistrict's code
-                            const selectedSubDistrict = subDistrictSelect.options[subDistrictSelect.selectedIndex];
-                            const subDistrictCode = selectedSubDistrict.getAttribute('data-code');
-
-                            // Load villages using the code
-                            const villagesResponse = await fetch(`/api/wilayah/kecamatan/${subDistrictCode}/kelurahan`);
-                            const villages = await villagesResponse.json();
-                            populateSelect(villageSelect, villages, 'Pilih Desa', initialVillage);
+            function populateSelect(select, data, defaultText, selectedId = null) {
+                select.innerHTML = `<option value="">${defaultText}</option>`;
+                if (Array.isArray(data)) {
+                    data.forEach(item => {
+                        const option = document.createElement('option');
+                        option.value = item.id;
+                        option.setAttribute('data-code', item.code);
+                        option.textContent = item.name;
+                        if (selectedId && item.id == selectedId) {
+                            option.selected = true;
                         }
-                    }
-                } catch (error) {
-                    console.error('Error loading data:', error);
+                        select.appendChild(option);
+                    });
+                }
+                select.disabled = false;
+            }
+
+            // Initialize location dropdowns
+            function initializeLocations() {
+                if (provinceSelect.value) {
+                    const selectedProvinceOption = provinceSelect.options[provinceSelect.selectedIndex];
+                    const provinceCode = selectedProvinceOption.getAttribute('data-code');
+                    // Load districts (kabupaten)
+                    axios.get(`/api/wilayah/provinsi/${provinceCode}/kota`)
+                        .then(response => {
+                            populateSelect(districtSelect, response.data, 'Pilih Kabupaten', {{ $citizen['data']['district_id'] }});
+                            // Get selected district code
+                            const selectedDistrictOption = districtSelect.options[districtSelect.selectedIndex];
+                            if (selectedDistrictOption) {
+                                const districtCode = selectedDistrictOption.getAttribute('data-code');
+                                return axios.get(`/api/wilayah/kota/${districtCode}/kecamatan`);
+                            }
+                        })
+                        .then(response => {
+                            if (response) {
+                                populateSelect(subDistrictSelect, response.data, 'Pilih Kecamatan', {{ $citizen['data']['sub_district_id'] }});
+                                // Get selected subdistrict code
+                                const selectedSubDistrictOption = subDistrictSelect.options[subDistrictSelect.selectedIndex];
+                                if (selectedSubDistrictOption) {
+                                    const subDistrictCode = selectedSubDistrictOption.getAttribute('data-code');
+                                    return axios.get(`/api/wilayah/kecamatan/${subDistrictCode}/kelurahan`);
+                                }
+                            }
+                        })
+                        .then(response => {
+                            if (response) {
+                                populateSelect(villageSelect, response.data, 'Pilih Desa', {{ $citizen['data']['village_id'] }});
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error loading location data:', error);
+                        });
                 }
             }
-        }
 
-        // Load initial data
-        await loadInitialData();
+            // Initialize locations on page load
+            initializeLocations();
 
-        // Event listeners
-        provinceSelect.addEventListener('change', async function() {
-            const selectedOption = this.options[this.selectedIndex];
-            const provinceCode = selectedOption.getAttribute('data-code');
+            // Province change handler
+            provinceSelect.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                const provinceCode = selectedOption.getAttribute('data-code');
 
-            districtSelect.innerHTML = '<option value="">Loading...</option>';
-            subDistrictSelect.innerHTML = '<option value="">Pilih Kecamatan</option>';
-            villageSelect.innerHTML = '<option value="">Pilih Desa</option>';
+                resetSelect(districtSelect, 'Loading...');
+                resetSelect(subDistrictSelect, 'Pilih Kecamatan');
+                resetSelect(villageSelect, 'Pilih Desa');
 
-            if (provinceCode) {
-                try {
-                    const response = await fetch(`/api/wilayah/provinsi/${provinceCode}/kota`);
-                    const districts = await response.json();
-                    populateSelect(districtSelect, districts, 'Pilih Kabupaten');
-                } catch (error) {
-                    console.error('Error:', error);
-                    districtSelect.innerHTML = '<option value="">Error loading data</option>';
+                if (provinceCode) {
+                    axios.get(`/api/wilayah/provinsi/${provinceCode}/kota`)
+                        .then(response => {
+                            populateSelect(districtSelect, response.data, 'Pilih Kabupaten');
+                        })
+                        .catch(error => {
+                            console.error('Error loading districts:', error);
+                            resetSelect(districtSelect, 'Error loading data');
+                        });
                 }
-            }
+            });
+
+            // District change handler
+            districtSelect.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                const districtCode = selectedOption.getAttribute('data-code');
+
+                resetSelect(subDistrictSelect, 'Loading...');
+                resetSelect(villageSelect, 'Pilih Desa');
+
+                if (districtCode) {
+                    axios.get(`/api/wilayah/kota/${districtCode}/kecamatan`)
+                        .then(response => {
+                            populateSelect(subDistrictSelect, response.data, 'Pilih Kecamatan');
+                        })
+                        .catch(error => {
+                            console.error('Error loading sub-districts:', error);
+                            resetSelect(subDistrictSelect, 'Error loading data');
+                        });
+                }
+            });
+
+            // Sub-district change handler
+            subDistrictSelect.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                const subDistrictCode = selectedOption.getAttribute('data-code');
+
+                resetSelect(villageSelect, 'Loading...');
+
+                if (subDistrictCode) {
+                    axios.get(`/api/wilayah/kecamatan/${subDistrictCode}/kelurahan`)
+                        .then(response => {
+                            populateSelect(villageSelect, response.data, 'Pilih Desa');
+                        })
+                        .catch(error => {
+                            console.error('Error loading villages:', error);
+                            resetSelect(villageSelect, 'Error loading data');
+                        });
+                }
+            });
         });
-
-        districtSelect.addEventListener('change', async function() {
-            const selectedOption = this.options[this.selectedIndex];
-            const districtCode = selectedOption.getAttribute('data-code');
-
-            subDistrictSelect.innerHTML = '<option value="">Loading...</option>';
-            villageSelect.innerHTML = '<option value="">Pilih Desa</option>';
-
-            if (districtCode) {
-                try {
-                    const response = await fetch(`/api/wilayah/kota/${districtCode}/kecamatan`);
-                    const subDistricts = await response.json();
-                    populateSelect(subDistrictSelect, subDistricts, 'Pilih Kecamatan');
-                } catch (error) {
-                    console.error('Error:', error);
-                    subDistrictSelect.innerHTML = '<option value="">Error loading data</option>';
-                }
-            }
-        });
-
-        subDistrictSelect.addEventListener('change', async function() {
-            const selectedOption = this.options[this.selectedIndex];
-            const subDistrictCode = selectedOption.getAttribute('data-code');
-
-            villageSelect.innerHTML = '<option value="">Loading...</option>';
-
-            if (subDistrictCode) {
-                try {
-                    const response = await fetch(`/api/wilayah/kecamatan/${subDistrictCode}/kelurahan`);
-                    const villages = await response.json();
-                    populateSelect(villageSelect, villages, 'Pilih Desa');
-                } catch (error) {
-                    console.error('Error:', error);
-                    villageSelect.innerHTML = '<option value="">Error loading data</option>';
-                }
-            }
-        });
-    });
     </script>
 </x-layout>
