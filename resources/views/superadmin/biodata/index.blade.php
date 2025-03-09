@@ -71,7 +71,7 @@
                             <a href="{{ route('superadmin.biodata.edit', ['nik' => $citizen['nik'], 'page' => $currentPage]) }}" class="text-yellow-600 hover:text-yellow-800" aria-label="Edit">
                                 <i class="fa-solid fa-pen-to-square"></i>
                             </a>
-                            <form action="{{ route('superadmin.biodata.destroy', ['id' => $citizen['nik'], 'page' => $currentPage]) }}" method="POST">
+                            <form action="{{ route('superadmin.biodata.destroy', ['id' => $citizen['nik'], 'page' => $currentPage]) }}" method="POST" onsubmit="return confirmDelete(event)">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="font-medium text-red-600 hover:underline ml-3">
@@ -353,27 +353,28 @@
             });
         @endif
 
-        // Delete confirmation
-        const deleteForms = document.querySelectorAll('form[action*="destroy"]');
-        deleteForms.forEach(form => {
-            form.onsubmit = function(e) {
-                e.preventDefault();
-                Swal.fire({
-                    title: 'Yakin ingin menghapus data?',
-                    text: "Data yang dihapus tidak dapat dikembalikan!",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#2D336B',
-                    cancelButtonColor: '#d33',
-                    confirmButtonText: 'Ya, hapus!',
-                    cancelButtonText: 'Batal'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        form.submit();
-                    }
-                });
-            };
-        });
+        // Delete confirmation function
+        function confirmDelete(event) {
+            event.preventDefault();
+            const form = event.target;
+
+            Swal.fire({
+                title: 'Apakah anda yakin?',
+                text: "Data yang dihapus tidak dapat dikembalikan!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#2D336B',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Ya, hapus!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+
+            return false;
+        }
 
         // ...existing code for showDetailModal and closeDetailModal...
         function showDetailModal(biodata) {
@@ -435,7 +436,7 @@
             document.getElementById('detailAddress').innerText = biodata.address || '-';
             document.getElementById('detailRT').innerText = biodata.rt || '-';
             document.getElementById('detailRW').innerText = biodata.rw || '-';
-            document.getElementById('detailVillageId').innerText = biodata.village_name || biodata.village_id || '-';
+            document.getElementById('detailVillageId').innerText = biodata.village_name || biodat '-';
             document.getElementById('detailSubDistrictId').innerText = biodata.sub_district_name || biodata.sub_district_id || '-';
             document.getElementById('detailDistrictId').innerText = biodata.district_name || biodata.district_id || '-';
             document.getElementById('detailProvinceId').innerText = biodata.province_name || biodata.province_id || '-';

@@ -1,7 +1,7 @@
 <x-layout>
     <div class="p-4 mt-14">
         <!-- Pesan Sukses/Gagal -->
-        @if(session('success'))
+        {{-- @if(session('success'))
             <div id="successAlert" class="flex items-center p-4 mb-4 text-green-800 border border-green-300 rounded-lg bg-green-50 dark:bg-green-800 dark:text-green-300 relative" role="alert">
                 <svg class="w-5 h-5 mr-2 text-green-800 dark:text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
@@ -27,7 +27,7 @@
                     </svg>
                 </button>
             </div>
-        @endif
+        @endif --}}
 
         <!-- Judul H1 -->
         <h1 class="text-2xl font-bold text-gray-800 mb-6">Edit Data KK</h1>
@@ -166,6 +166,26 @@
     </div>
 
     <script>
+        @if(session('success'))
+            Swal.fire({
+                icon: 'success',
+                title: 'Sukses!',
+                text: "{{ session('success') }}",
+                timer: 3000,
+                showConfirmButton: false
+            });
+        @endif
+
+        @if(session('error'))
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal!',
+                text: "{{ session('error') }}",
+                timer: 3000,
+                showConfirmButton: false
+            });
+        @endif
+
         function closeAlert(alertId) {
             document.getElementById(alertId).classList.add('hidden');
         }

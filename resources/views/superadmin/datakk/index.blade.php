@@ -1,7 +1,7 @@
 <x-layout>
     <div class="p-4 mt-14">
         <!-- Alert Sukses -->
-        @if(session('success'))
+        {{-- @if(session('success'))
             <div id="success-alert" class="fixed top-5 right-5 z-50 flex items-center p-4 mb-4 text-white bg-green-500 rounded-lg shadow-lg transition-opacity duration-500">
                 <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11.414V8a1 1 0 10-2 0v5.414l-.707-.707a1 1 0 10-1.414 1.414l2 2a1 1 0 001.414 0l2-2a1 1 0 00-1.414-1.414l-.707.707z" clip-rule="evenodd"></path>
@@ -24,7 +24,7 @@
                     ✖
                 </button>
             </div>
-        @endif
+        @endif --}}
 
         <!-- Judul H1 -->
         <h1 class="text-2xl font-bold text-gray-800 mb-6">Data KK</h1>
@@ -81,10 +81,13 @@
                         <td class="px-6 py-4">{{ $k->address }}</td>
                         <td class="px-6 py-4">{{ $k->jml_anggota_kk }}</td>
                         <td class="flex items-center px-6 py-4 space-x-2">
+                            <button onclick="showDetailModal({{ $k->toJson() }})" class="text-blue-600 hover:text-blue-800" aria-label="Detail">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
                             <a href="{{ route('superadmin.datakk.update', $k->id) }}" class="text-yellow-600 hover:text-yellow-800" aria-label="Edit">
                                 <i class="fa-solid fa-pen-to-square"></i>
                             </a>
-                            <form action="{{ route('superadmin.destroy', $k->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus data?')">
+                            <form action="{{ route('superadmin.destroy', $k->id) }}" method="POST" class="delete-form">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="font-medium text-red-600 hover:underline ml-3">
@@ -106,7 +109,178 @@
         </div>
     </div>
 
+    <!-- Modal Detail -->
+    <div id="detailModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <!-- Modal Backdrop -->
+            <div class="fixed inset-0 bg-black opacity-50"></div>
+
+            <!-- Modal Content -->
+            <div class="relative w-full max-w-4xl bg-white rounded-lg shadow-xl overflow-hidden">
+                <!-- Modal Header -->
+                <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-[#7886C7] bg-gray-50">
+                    <h3 class="text-xl font-semibold text-[#2D336B]">Detail Data KK</h3>
+                    <button onclick="closeDetailModal()" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 inline-flex justify-center items-center">
+                        <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="p-4 md:p-5 overflow-y-auto max-h-[70vh]">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Informasi KK -->
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="text-lg font-semibold mb-4 text-[#7886C7]">Informasi KK</h4>
+                            <div class="space-y-3">
+                                <div class="flex flex-col">
+                                    <span class="text-sm text-gray-500">Nomor KK</span>
+                                    <span id="detailKK" class="font-medium"></span>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-sm text-gray-500">Nama Lengkap</span>
+                                    <span id="detailFullName" class="font-medium"></span>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-sm text-gray-500">Jumlah Anggota KK</span>
+                                    <span id="detailJmlAnggota" class="font-medium"></span>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-sm text-gray-500">Email</span>
+                                    <span id="detailEmail" class="font-medium"></span>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-sm text-gray-500">Telepon</span>
+                                    <span id="detailTelepon" class="font-medium"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Informasi Alamat -->
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="text-lg font-semibold mb-4 text-[#7886C7]">Informasi Alamat</h4>
+                            <div class="space-y-3">
+                                <div class="flex flex-col">
+                                    <span class="text-sm text-gray-500">Alamat</span>
+                                    <span id="detailAddress" class="font-medium"></span>
+                                </div>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div class="flex flex-col">
+                                        <span class="text-sm text-gray-500">RT</span>
+                                        <span id="detailRT" class="font-medium"></span>
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <span class="text-sm text-gray-500">RW</span>
+                                        <span id="detailRW" class="font-medium"></span>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-sm text-gray-500">Dusun</span>
+                                    <span id="detailDusun" class="font-medium"></span>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-sm text-gray-500">Provinsi</span>
+                                    <span id="detailProvinceId" class="font-medium"></span>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-sm text-gray-500">Kabupaten/Kota</span>
+                                    <span id="detailDistrictId" class="font-medium"></span>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-sm text-gray-500">Kecamatan</span>
+                                    <span id="detailSubDistrictId" class="font-medium"></span>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-sm text-gray-500">Desa/Kelurahan</span>
+                                    <span id="detailVillageId" class="font-medium"></span>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-sm text-gray-500">Kode Pos</span>
+                                    <span id="detailPostalCode" class="font-medium"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Informasi Luar Negeri (jika ada) -->
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="text-lg font-semibold mb-4 text-[#7886C7]">Informasi Luar Negeri</h4>
+                            <div class="space-y-3">
+                                <div class="flex flex-col">
+                                    <span class="text-sm text-gray-500">Alamat Luar Negeri</span>
+                                    <span id="detailAlamatLuarNegeri" class="font-medium"></span>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-sm text-gray-500">Kota</span>
+                                    <span id="detailKota" class="font-medium"></span>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-sm text-gray-500">Negara Bagian</span>
+                                    <span id="detailNegaraBagian" class="font-medium"></span>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-sm text-gray-500">Negara</span>
+                                    <span id="detailNegara" class="font-medium"></span>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-sm text-gray-500">Kode Pos Luar Negeri</span>
+                                    <span id="detailKodePosLuarNegeri" class="font-medium"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="flex items-center justify-end p-4 md:p-5 border-t border-gray-200 rounded-b">
+                    <button onclick="closeDetailModal()" type="button" class="text-white bg-gray-500 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg text-sm px-5 py-2.5 text-center">
+                        Tutup
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
+        @if(session('success'))
+            Swal.fire({
+                icon: 'success',
+                title: 'Sukses!',
+                text: "{{ session('success') }}",
+                timer: 3000,
+                showConfirmButton: false
+            });
+        @endif
+
+        @if(session('error'))
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal!',
+                text: "{{ session('error') }}",
+                timer: 3000,
+                showConfirmButton: false
+            });
+        @endif
+
+        function confirmDelete(event, id) {
+            event.preventDefault();
+
+            Swal.fire({
+                title: 'Anda yakin?',
+                text: "Data yang dihapus tidak dapat dikembalikan!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Ya, hapus!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('delete-form-' + id).submit();
+                }
+            });
+        }
+
         function closeAlert() {
             document.getElementById('success-alert')?.classList.add('opacity-0');
             document.getElementById('error-alert')?.classList.add('opacity-0');
@@ -116,5 +290,59 @@
             }, 500);
         }
         setTimeout(closeAlert, 4000); // Auto-close dalam 4 detik
+
+        function showDetailModal(data) {
+            // Set values to modal
+            document.getElementById('detailKK').innerText = data.kk || '-';
+            document.getElementById('detailFullName').innerText = data.full_name || '-';
+            document.getElementById('detailJmlAnggota').innerText = data.jml_anggota_kk || '-';
+            document.getElementById('detailEmail').innerText = data.email || '-';
+            document.getElementById('detailTelepon').innerText = data.telepon || '-';
+            document.getElementById('detailAddress').innerText = data.address || '-';
+            document.getElementById('detailRT').innerText = data.rt || '-';
+            document.getElementById('detailRW').innerText = data.rw || '-';
+            document.getElementById('detailDusun').innerText = data.dusun || '-';
+            document.getElementById('detailPostalCode').innerText = data.postal_code || '-';
+
+            // Set location names instead of IDs
+            document.getElementById('detailProvinceId').innerText = data.province_name || data.province_id || '-';
+            document.getElementById('detailDistrictId').innerText = data.district_name || data.district_id || '-';
+            document.getElementById('detailSubDistrictId').innerText = data.sub_district_name || data.sub_district_id || '-';
+            document.getElementById('detailVillageId').innerText = data.village_name || data.village_id || '-';
+
+            document.getElementById('detailAlamatLuarNegeri').innerText = data.alamat_luar_negeri || '-';
+            document.getElementById('detailKota').innerText = data.kota || '-';
+            document.getElementById('detailNegaraBagian').innerText = data.negara_bagian || '-';
+            document.getElementById('detailNegara').innerText = data.negara || '-';
+            document.getElementById('detailKodePosLuarNegeri').innerText = data.kode_pos_luar_negeri || '-';
+
+            document.getElementById('detailModal').classList.remove('hidden');
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detailModal').classList.add('hidden');
+        }
+
+        // Delete confirmation handler
+        document.querySelectorAll('.delete-form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                Swal.fire({
+                    title: 'Apakah anda yakin?',
+                    text: "Data yang dihapus tidak dapat dikembalikan!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#2D336B',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Ya, hapus!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        this.submit();
+                    }
+                });
+            });
+        });
     </script>
 </x-layout>

@@ -1,7 +1,7 @@
 <x-layout>
     <div class="p-4 mt-14">
         <!-- Alert Sukses -->
-        @if(session('success'))
+        {{-- @if(session('success'))
             <div id="successAlert"
                 class="flex items-center p-4 mb-4 text-green-800 border border-green-300 rounded-lg bg-green-50 dark:bg-green-800 dark:text-green-300 relative"
                 role="alert">
@@ -43,7 +43,7 @@
                     </svg>
                 </button>
             </div>
-        @endif
+        @endif --}}
 
         <!-- Judul H1 -->
         <h1 class="text-2xl font-bold text-gray-800 mb-6">Tambah Data KK</h1>
@@ -237,6 +237,25 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <script>
+        @if(session('success'))
+            Swal.fire({
+                icon: 'success',
+                title: 'Sukses!',
+                text: "{{ session('success') }}",
+                timer: 3000,
+                showConfirmButton: false
+            });
+        @endif
+
+        @if(session('error'))
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal!',
+                text: "{{ session('error') }}",
+                timer: 3000,
+                showConfirmButton: false
+            });
+        @endif
         // Fungsi untuk menutup alert
         function closeAlert(alertId) {
             document.getElementById(alertId).classList.add('hidden');
@@ -528,7 +547,7 @@
                     $('#sub_district_id').val(subDistrict_id || '');
                     $('#village_id').val(village_id || '');
                     $('#dusun').val(dusun);
-                    
+
                     if (kk) {
                         $.ajax({
                             url: "{{ route('getFamilyMembers') }}",
