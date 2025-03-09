@@ -50,86 +50,73 @@ class BiodataController extends Controller
     public function store(Request $request)
 {
     try {
-    // Validate the request
-    $validator = Validator::make($request->all(), [
-        'nik' => 'required|string|size:16',
-        'kk' => 'required|string|size:16',
+        Log::info('Incoming biodata request:', $request->all());
+    $validatedData = $request->validate([
+        'nik' => 'required|size:16',
+        'kk' => 'required|size:16',
         'full_name' => 'required|string|max:255',
         'gender' => 'required|integer|in:1,2',
         'birth_date' => 'required|date',
         'age' => 'required|integer',
         'birth_place' => 'required|string|max:255',
         'address' => 'required|string',
-        'province_id' => 'required|string', // Changed to string since API uses codes
-        'district_id' => 'required|string', // Changed to string since API uses codes
-        'sub_district_id' => 'required|string', // Changed to string since API uses codes
-        'village_id' => 'required|string', // Changed to string since API uses codes
-
+        'province_id' => 'required|integer', 
+        'district_id' => 'required|integer', 
+        'sub_district_id' => 'required|integer', 
+        'village_id' => 'required|integer', 
         'rt' => 'required|string|max:3',
         'rw' => 'required|string|max:3',
-        'postal_code' => 'required|string|size:5',
+        'postal_code' => 'nullable|digits:5',
         'citizen_status' => 'required|integer|in:1,2',
-        'birth_certificate' => 'required|integer|in:1,2',
-        // Fix this line - changed from integerin to integer|in
+        'birth_certificate' => '|integer|in:1,2',
+        'birth_certificate_no' => 'nullable|string',
         'blood_type' => 'required|integer|in:1,2,3,4,5,6,7,8,9,10,11,12,13',
         'religion' => 'required|integer|in:1,2,3,4,5,6,7',
-        'marital_status' => 'required|integer|in:1,2,3,4,5,6',
+        'marital_status' => 'nullable|integer|in:1,2,3,4,5,6',
+        'marital_certificate_no' => 'nullable|string',
+        'marriage_date' => 'nullable|date',
+        'divorce_certificate' => 'nullable|integer|in:1,2',
+        'divorce_certificate_no' => 'nullable|string',
+        'divorce_certificate_date' => 'nullable|date',
         'family_status' => 'required|integer|in:1,2,3,4,5,6,7,8',
         'mental_disorders' => 'required|integer|in:1,2',
         'disabilities' => 'required|integer|in:1,2,3,4,5,6',
         'education_status' => 'required|integer|in:1,2,3,4,5,6,7,8,9,10',
         'job_type_id' => 'required|integer',
+        'nik_mother' => 'nullable|string|size:16',
         'mother' => 'required|string|max:255',
+        'nik_father' => 'nullable|string|size:16',
         'father' => 'required|string|max:255',
+        'coordinate' => 'nullable|string|max:255',
     ]);
+    Log::info('Validated data:', $validatedData);
 
-    if ($validator->fails()) {
-        return redirect()
-            ->route('superadmin.biodata.create')
-            ->withErrors($validator)
-            ->withInput();
-    }
+    $response = $this->citizenService->createCitizen($validatedData);
 
-    // Prepare the data for API
-    $data = $request->all();
+    Log::info('API Response:', $response);
 
-    // Remove token from data
-    unset($data['_token']);
-
-    // Cast specific fields to integers
-    $integerFields = [
-        'gender', 'age', 'citizen_status', 'birth_certificate',
-        'blood_type', 'religion', 'marital_status', 'family_status',
-        'mental_disorders', 'disabilities', 'education_status',
-        'job_type_id'
-    ];
-
-    foreach ($integerFields as $field) {
-        if (isset($data[$field])) {
-            $data[$field] = (int) $data[$field];
-        }
-    }
-
-    // Send data to API through service
-    $response = $this->citizenService->createCitizen($data);
-
-    if ($response['status'] === 'SUCCESS') {
+    if ($response['status'] === 'CREATED') {
         return redirect()
             ->route('superadmin.biodata.index')
-            ->with('success', 'Data biodata berhasil ditambahkan!');
+            ->with('success', $response['message']);
     }
 
-    return redirect()
-        ->route('superadmin.biodata.create')
-        ->with('error', $response['message'])
-        ->withInput();
+    Log::error('Failed to create biodata:', $response);
+    return back()
+        ->withInput()
+        ->with('error', $response['message'] ?? 'Gagal menyimpan data');
+        
 } catch (\Exception $e) {
-    Log::error('Error in store method: ' . $e->getMessage());
-    return redirect()
-        ->route('superadmin.biodata.create')
-        ->with('error', 'Terjadi kesalahan: ' . $e->getMessage())
-        ->withInput();
+    Log::error('Exception in store method:', [
+        'message' => $e->getMessage(),
+        'trace' => $e->getTraceAsString()
+    ]);
+    
+    return back()
+        ->withInput()
+        ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
 }
+
 }
 
     public function edit($id)

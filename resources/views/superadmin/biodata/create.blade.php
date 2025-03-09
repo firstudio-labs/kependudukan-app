@@ -32,7 +32,7 @@
 
         <form method="POST" action="{{ route('superadmin.biodata.store') }}" class="bg-white p-6 rounded-lg shadow-md">
             @csrf
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <!-- NIK -->
                 <div>
                     <label for="nik" class="block text-sm font-medium text-gray-700">NIK</label>

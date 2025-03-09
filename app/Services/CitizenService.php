@@ -180,44 +180,49 @@ class CitizenService
         }
     }
 
-    public function createCitizen(array $data)
-{
-    try {
-        Log::info('Sending data to API:', ['data' => $data]);
 
-        $response = Http::withHeaders([
-            'X-API-Key' => $this->apiKey,
-            'Content-Type' => 'application/json',
-        ])->post("{$this->baseUrl}/api/citizens", $data);
+    public function createCitizen($data)
+    {
+        try {
+            Log::info('Sending data to API:', $data);
+            $response = Http::withHeaders([
+                'X-API-Key' => $this->apiKey,
+            ])->post("{$this->baseUrl}/api/citizens", $data);
 
-        Log::info('API Response:', [
-            'status' => $response->status(),
-            'body' => $response->body()
-        ]);
-
-        if ($response->successful()) {
-            return [
-                'status' => 'SUCCESS',
-                'message' => $response->json()['message'] ?? 'Citizen created successfully'
-            ];
-        } else {
-            Log::error('API request failed:', [
+            Log::info('API Response:', [
                 'status' => $response->status(),
-                'body' => $response->body()
+                'body' => $response->json()
             ]);
+    
+            if ($response->successful()) {
+                return [
+                    'status' => 'CREATED',
+                    'message' => 'Data berhasil disimpan',
+                    'data' => $response->json()
+                ];
+            }
+    
+            Log::error('API Error:', [
+                'status' => $response->status(),
+                'body' => $response->json()
+            ]);
+    
             return [
                 'status' => 'ERROR',
-                'message' => $response->json()['message'] ?? 'Failed to create citizen'
+                'message' => $response->json()['message'] ?? 'Gagal menyimpan data'
+            ];
+        } catch (\Exception $e) {
+            Log::error('Exception in createCitizen:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+    
+            return [
+                'status' => 'ERROR',
+                'message' => 'Terjadi kesalahan sistem'
             ];
         }
-    } catch (\Exception $e) {
-        Log::error('Error creating citizen:', ['error' => $e->getMessage()]);
-        return [
-            'status' => 'ERROR',
-            'message' => 'Error creating citizen: ' . $e->getMessage()
-        ];
     }
-}
 
 }
 
