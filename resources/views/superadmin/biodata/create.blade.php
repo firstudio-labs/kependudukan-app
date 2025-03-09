@@ -82,7 +82,7 @@
                 <!-- Alamat -->
                 <div>
                     <label for="address" class="block text-sm font-medium text-gray-700">Alamat</label>
-                    <textarea id="address" name="address" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"></textarea>
+                    <textarea id="address" name="address" autocomplete="off" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"></textarea>
                 </div>
 
                 <!-- Provinsi -->
@@ -91,7 +91,7 @@
                     <select id="province_id" name="province_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                         <option value="">Pilih Provinsi</option>
                         @foreach($provinces as $province)
-                            <option value="{{ $province['code'] }}">{{ $province['name'] }}</option>
+                            <option value="{{ $province['id'] }}" data-code="{{ $province['code'] }}">{{ $province['name'] }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -135,7 +135,7 @@
                 <!-- Kode POS -->
                 <div>
                     <label for="postal_code" class="block text-sm font-medium text-gray-700">Kode Pos</label>
-                    <input type="text" id="postal_code" name="postal_code" pattern="\d{5}" maxlength="5" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                    <input type="text" id="postal_code" name="postal_code" pattern="\d{5}" maxlength="5" autocomplete="off" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
                 </div>
 
                 <!-- Kewarganegaraan -->
@@ -395,7 +395,6 @@
             }
         }, 5000);
 
-        // Replace existing script with this new one
         document.addEventListener('DOMContentLoaded', function() {
             const provinceSelect = document.getElementById('province_id');
             const districtSelect = document.getElementById('district_id');
@@ -415,7 +414,8 @@
                     if (Array.isArray(data)) {
                         data.forEach(item => {
                             const option = document.createElement('option');
-                            option.value = item.code; // Menggunakan code sebagai value
+                            option.value = item.id;
+                            option.setAttribute('data-code', item.code);
                             option.textContent = item.name;
                             select.appendChild(option);
                         });
@@ -431,16 +431,17 @@
 
             // Province change handler
             provinceSelect.addEventListener('change', function() {
-                const provinceCode = this.value;
+                const selectedOption = this.options[this.selectedIndex];
+                const provinceId = this.value;
+                const provinceCode = selectedOption.getAttribute('data-code');
+
                 resetSelect(districtSelect, 'Loading...');
                 resetSelect(subDistrictSelect, 'Pilih Kecamatan');
                 resetSelect(villageSelect, 'Pilih Desa');
 
-                if (provinceCode) {
-                    console.log('Selected province code:', provinceCode); // Debug
+                if (provinceId && provinceCode) {
                     axios.get(`/api/wilayah/provinsi/${provinceCode}/kota`)
                         .then(response => {
-                            console.log('API Response:', response.data); // Debug
                             if (response.data) {
                                 populateSelect(districtSelect, response.data, 'Pilih Kabupaten');
                             } else {
@@ -448,7 +449,6 @@
                             }
                         })
                         .catch(error => {
-                            console.error('Error:', error.response?.data || error.message);
                             resetSelect(districtSelect, 'Error loading data');
                         });
                 }
@@ -456,12 +456,14 @@
 
             // District change handler with similar error handling
             districtSelect.addEventListener('change', function() {
-                const districtCode = this.value; // Sekarang ini akan berisi code, bukan id
+                const selectedOption = this.options[this.selectedIndex];
+                const districtId = this.value;
+                const districtCode = selectedOption.getAttribute('data-code');
+
                 resetSelect(subDistrictSelect, 'Loading...');
                 resetSelect(villageSelect, 'Pilih Desa');
 
-                if (districtCode) {
-                    console.log('Selected district code:', districtCode); // Debug
+                if (districtId && districtCode) {
                     axios.get(`/api/wilayah/kota/${districtCode}/kecamatan`)
                         .then(response => {
                             if (response.data) {
@@ -471,7 +473,6 @@
                             }
                         })
                         .catch(error => {
-                            console.error('Error:', error);
                             resetSelect(subDistrictSelect, 'Error loading data');
                         });
                 }
@@ -479,10 +480,13 @@
 
             // Sub-district change handler with similar error handling
             subDistrictSelect.addEventListener('change', function() {
-                const subDistrictCode = this.value;
+                const selectedOption = this.options[this.selectedIndex];
+                const subDistrictId = this.value;
+                const subDistrictCode = selectedOption.getAttribute('data-code');
+
                 resetSelect(villageSelect, 'Loading...');
 
-                if (subDistrictCode) {
+                if (subDistrictId && subDistrictCode) {
                     axios.get(`/api/wilayah/kecamatan/${subDistrictCode}/kelurahan`)
                         .then(response => {
                             if (response.data) {
@@ -492,20 +496,9 @@
                             }
                         })
                         .catch(error => {
-                            console.error('Error:', error);
                             resetSelect(villageSelect, 'Error loading data');
                         });
                 }
-            });
-        });
-    </script>
-
-    <script>
-        $(document).ready(function() {
-            $('#district_id').on('change', function() {
-                var selectedOption = $(this).find('option:selected');
-                var kotaCode = selectedOption.val();
-                console.log('Kode Kota yang dipilih:', kotaCode);
             });
         });
     </script>

@@ -31,7 +31,7 @@ Route::middleware(['auth', 'role:superadmin'])->group(function () {
     Route::get('/superadmin/biodata/create', [BiodataController::class, 'create'])->name('superadmin.biodata.create');
     Route::post('/superadmin/biodata/store', [BiodataController::class, 'store'])->name('superadmin.biodata.store');
     Route::get('/superadmin/biodata/{id}/edit', [BiodataController::class, 'edit'])->name('superadmin.biodata.edit');
-    Route::put('/superadmin/biodata/{id}', [BiodataController::class, 'update'])->name('biodata.update');
+    Route::put('/superadmin/biodata/{id}', [BiodataController::class, 'update'])->name('superadmin.biodata.update'); // Changed route name
     Route::delete('/superadmin/biodata/{id}', [BiodataController::class, 'destroy'])->name('superadmin.biodata.destroy');
 });
 

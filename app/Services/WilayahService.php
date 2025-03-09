@@ -13,18 +13,14 @@ class WilayahService
             $provinces = Http::get('https://api.desaverse.id/wilayah/provinsi')->json();
 
             if (!empty($provinces)) {
-                // Get kabupaten count for each province
                 foreach ($provinces as &$province) {
                     $kabupaten = Http::get("https://api.desaverse.id/wilayah/provinsi/{$province['code']}/kota")->json();
                     $province['kabupaten_count'] = count($kabupaten ?? []);
                 }
-
                 return $provinces;
             }
-
             return [];
         } catch (\Exception $e) {
-            Log::error('Error fetching provinces: ' . $e->getMessage());
             return [];
         }
     }
@@ -35,7 +31,6 @@ class WilayahService
             $response = Http::get("https://api.desaverse.id/wilayah/provinsi/{$provinceCode}/kota");
             return $response->json() ?? [];
         } catch (\Exception $e) {
-            Log::error('Error fetching kabupaten: ' . $e->getMessage());
             return [];
         }
     }
@@ -43,10 +38,8 @@ class WilayahService
     public function getProvinceDetail($provinceCode)
     {
         try {
-            $response = Http::get("https://api.desaverse.id/wilayah/provinsi/{$provinceCode}");
-            return $response->json();
+            return Http::get("https://api.desaverse.id/wilayah/provinsi/{$provinceCode}")->json();
         } catch (\Exception $e) {
-            Log::error('Error fetching province detail: ' . $e->getMessage());
             return null;
         }
     }
@@ -54,10 +47,8 @@ class WilayahService
     public function getKecamatan($kotaCode)
     {
         try {
-            $response = Http::get("https://api.desaverse.id/wilayah/kota/{$kotaCode}/kecamatan");
-            return $response->json() ?? [];
+            return Http::get("https://api.desaverse.id/wilayah/kota/{$kotaCode}/kecamatan")->json() ?? [];
         } catch (\Exception $e) {
-            Log::error('Error fetching kecamatan: ' . $e->getMessage());
             return [];
         }
     }
@@ -65,10 +56,8 @@ class WilayahService
     public function getKotaDetail($kotaCode)
     {
         try {
-            $response = Http::get("https://api.desaverse.id/wilayah/kota/{$kotaCode}");
-            return $response->json();
+            return Http::get("https://api.desaverse.id/wilayah/kota/{$kotaCode}")->json();
         } catch (\Exception $e) {
-            Log::error('Error fetching kota detail: ' . $e->getMessage());
             return null;
         }
     }
@@ -76,10 +65,8 @@ class WilayahService
     public function getDesa($kecamatanCode)
     {
         try {
-            $response = Http::get("https://api.desaverse.id/wilayah/kecamatan/{$kecamatanCode}/kelurahan");
-            return $response->json() ?? [];
+            return Http::get("https://api.desaverse.id/wilayah/kecamatan/{$kecamatanCode}/kelurahan")->json() ?? [];
         } catch (\Exception $e) {
-            Log::error('Error fetching desa: ' . $e->getMessage());
             return [];
         }
     }
@@ -87,11 +74,31 @@ class WilayahService
     public function getKecamatanDetail($kecamatanCode)
     {
         try {
-            $response = Http::get("https://api.desaverse.id/wilayah/kecamatan/{$kecamatanCode}");
-            return $response->json();
+            return Http::get("https://api.desaverse.id/wilayah/kecamatan/{$kecamatanCode}")->json();
         } catch (\Exception $e) {
-            Log::error('Error fetching kecamatan detail: ' . $e->getMessage());
             return null;
         }
     }
+
+    // public function getIdByCode($code, $type)
+    // {
+    //     try {
+    //         $endpoint = match($type) {
+    //             'province' => "provinsi/{$code}/kota",
+    //             'district' => "kota/{$code}/kecamatan",
+    //             'subdistrict' => "kecamatan/{$code}/kelurahan",
+    //             'village' => "kelurahan/{$code}",
+    //             default => throw new \Exception("Invalid type")
+    //         };
+
+    //         $response = Http::get("https://api.desaverse.id/wilayah/{$endpoint}");
+    //         if ($response->successful()) {
+    //             $data = $response->json();
+    //             return $data['id'];
+    //         }
+    //         return null;
+    //     } catch (\Exception $e) {
+    //         return null;
+    //     }
+    // }
 }

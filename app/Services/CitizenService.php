@@ -184,16 +184,24 @@ class CitizenService
     public function createCitizen($data)
     {
         try {
+            // Convert NIK and KK to integers before sending
+            $data['nik'] = (int) $data['nik'];
+            $data['kk'] = (int) $data['kk'];
+
             Log::info('Sending data to API:', $data);
-            $response = Http::withHeaders([
-                'X-API-Key' => $this->apiKey,
-            ])->post("{$this->baseUrl}/api/citizens", $data);
+
+            $response = Http::timeout(30)
+                ->withHeaders([
+                    'X-API-Key' => $this->apiKey,
+                    'Content-Type' => 'application/json',
+                    'Accept' => 'application/json'
+                ])->post("{$this->baseUrl}/api/citizens", $data);
 
             Log::info('API Response:', [
                 'status' => $response->status(),
                 'body' => $response->json()
             ]);
-    
+
             if ($response->successful()) {
                 return [
                     'status' => 'CREATED',
@@ -201,12 +209,12 @@ class CitizenService
                     'data' => $response->json()
                 ];
             }
-    
+
             Log::error('API Error:', [
                 'status' => $response->status(),
                 'body' => $response->json()
             ]);
-    
+
             return [
                 'status' => 'ERROR',
                 'message' => $response->json()['message'] ?? 'Gagal menyimpan data'
@@ -216,7 +224,7 @@ class CitizenService
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-    
+
             return [
                 'status' => 'ERROR',
                 'message' => 'Terjadi kesalahan sistem'
