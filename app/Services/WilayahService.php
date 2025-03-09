@@ -10,16 +10,8 @@ class WilayahService
     public function getProvinces()
     {
         try {
-            $provinces = Http::get('https://api.desaverse.id/wilayah/provinsi')->json();
-
-            if (!empty($provinces)) {
-                foreach ($provinces as &$province) {
-                    $kabupaten = Http::get("https://api.desaverse.id/wilayah/provinsi/{$province['code']}/kota")->json();
-                    $province['kabupaten_count'] = count($kabupaten ?? []);
-                }
-                return $provinces;
-            }
-            return [];
+            $response = Http::get('https://api.desaverse.id/wilayah/provinsi');
+            return $response->successful() ? $response->json() : [];
         } catch (\Exception $e) {
             return [];
         }

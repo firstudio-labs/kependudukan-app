@@ -506,77 +506,16 @@
     <script>
     // Replace the existing form submission script with this enhanced version
     document.querySelector('form').addEventListener('submit', function(e) {
-        // e.preventDefault(); // Uncomment this to prevent form submission for testing
         const province = document.getElementById('province_id').value;
-    const district = document.getElementById('district_id').value;
-    const subDistrict = document.getElementById('sub_district_id').value;
-    const village = document.getElementById('village_id').value;
+        const district = document.getElementById('district_id').value;
+        const subDistrict = document.getElementById('sub_district_id').value;
+        const village = document.getElementById('village_id').value;
 
-    if (!province || !district || !subDistrict || !village) {
-        e.preventDefault();
-        alert('Silakan pilih Provinsi, Kabupaten, Kecamatan, dan Desa');
-        return false;
-    }
-        // Get all form data
-        const formData = new FormData(this);
-        const data = {};
-
-        // Convert FormData to object and log each field
-        console.group('Form Data Detail:');
-        for (let [key, value] of formData.entries()) {
-            data[key] = value;
-            console.log(`${key}: ${value}`);
+        if (!province || !district || !subDistrict || !village) {
+            e.preventDefault();
+            alert('Silakan pilih Provinsi, Kabupaten, Kecamatan, dan Desa');
+            return false;
         }
-        console.groupEnd();
-
-        // Check for empty required fields
-        const requiredFields = this.querySelectorAll('[required]');
-        const emptyFields = [];
-        const filledFields = [];
-
-        requiredFields.forEach(field => {
-            if (!field.value) {
-                emptyFields.push({
-                    name: field.name,
-                    type: field.type,
-                    id: field.id
-                });
-            } else {
-                filledFields.push({
-                    name: field.name,
-                    value: field.value,
-                    type: field.type
-                });
-            }
-        });
-
-        // Log validation information
-        console.group('Form Validation:');
-        console.log('Required Fields Status:');
-        console.table(filledFields);
-
-        if (emptyFields.length > 0) {
-            console.error('Empty Required Fields:');
-            console.table(emptyFields);
-        }
-        console.groupEnd();
-
-        // Log API-bound data
-        console.group('Data for API:');
-        console.log('Complete payload:', data);
-        console.table(data);
-        console.groupEnd();
-
-        // Check specific fields that might cause issues
-        console.group('Critical Fields Check:');
-        console.log('NIK:', data.nik?.length === 16 ? 'Valid' : 'Invalid', data.nik);
-        console.log('KK:', data.kk?.length === 16 ? 'Valid' : 'Invalid', data.kk);
-        console.log('Province:', data.province_id);
-        console.log('District:', data.district_id);
-        console.log('Sub District:', data.sub_district_id);
-        console.log('Village:', data.village_id);
-        console.log('Job Type:', data.job_type_id);
-        console.groupEnd();
     });
 </script>
 </x-layout>
