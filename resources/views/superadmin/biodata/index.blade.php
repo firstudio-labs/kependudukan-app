@@ -61,7 +61,7 @@
             </button>
         </div>
 
-        <div class="relative shadow-md sm:rounded-lg">
+        <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
             <table class="w-full text-sm text-left text-gray-500">
                 <thead class="text-xs text-gray-700 uppercase bg-[#e6e8ed]">
                     <tr>
@@ -117,41 +117,82 @@
                     @endforelse
                 </tbody>
             </table>
-            <div class="mt-4 flex justify-between items-center mb-6">
-                <div class="text-sm text-gray-600 ml-2">
+
+            <!-- Pagination Section -->
+            <div class="px-4 py-3 flex flex-col sm:flex-row justify-between items-center">
+                <div class="text-sm text-gray-700 mb-4 sm:mb-0">
                     Showing {{ $startNumber }} to {{ $endNumber }} of {{ $totalItems }} results
                 </div>
                 @if(isset($citizens['data']['pagination']) && $citizens['data']['pagination']['total_page'] > 1)
-                    <nav class="flex justify-between items-center mt-4 mb-4">
-                        <ul class="inline-flex items-center -space-x-px">
-                            @if($citizens['data']['pagination']['prev_page'])
-                                <li>
-                                    <a href="?page={{ $citizens['data']['pagination']['prev_page'] }}" class="px-3 py-2 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 rounded-l-lg hover:bg-gray-100 hover:text-gray-700">
-                                        Previous
-                                    </a>
-                                </li>
+                    <nav class="relative z-0 inline-flex shadow-sm -space-x-px" aria-label="Pagination">
+                        @php
+                            $totalPages = $citizens['data']['pagination']['total_page'];
+                            $currentPage = $citizens['data']['pagination']['current_page'];
+
+                            // Logic for showing page numbers
+                            $startPage = 1;
+                            $endPage = $totalPages;
+                            $maxVisible = 7; // Number of visible page links excluding Previous/Next
+
+                            if ($totalPages > $maxVisible) {
+                                $halfVisible = floor($maxVisible / 2);
+                                $startPage = max($currentPage - $halfVisible, 1);
+                                $endPage = min($startPage + $maxVisible - 1, $totalPages);
+
+                                if ($endPage - $startPage < $maxVisible - 1) {
+                                    $startPage = max($endPage - $maxVisible + 1, 1);
+                                }
+                            }
+                        @endphp
+
+                        <!-- Previous Button -->
+                        @if($currentPage > 1)
+                            <a href="?page={{ $currentPage - 1 }}&search={{ request('search') }}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                <span class="sr-only">Previous</span>
+                                Previous
+                            </a>
+                        @endif
+
+                        <!-- First Page -->
+                        @if($startPage > 1)
+                            <a href="?page=1&search={{ request('search') }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                1
+                            </a>
+                            @if($startPage > 2)
+                                <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                                    ...
+                                </span>
                             @endif
-                            @php
-                                $totalPages = $citizens['data']['pagination']['total_page'];
-                                $currentPage = $citizens['data']['pagination']['current_page'];
-                                $startPage = max(1, $currentPage - 5);
-                                $endPage = min($totalPages, $currentPage + 4);
-                            @endphp
-                            @for($i = $startPage; $i <= $endPage; $i++)
-                                <li>
-                                    <a href="?page={{ $i }}" class="px-3 py-2 leading-tight {{ $i == $currentPage ? 'text-blue-600 bg-blue-50 border border-blue-300' : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700' }}">
-                                        {{ $i }}
-                                    </a>
-                                </li>
-                            @endfor
-                            @if($citizens['data']['pagination']['next_page'])
-                                <li>
-                                    <a href="?page={{ $citizens['data']['pagination']['next_page'] }}" class="px-3 py-2 leading-tight text-gray-500 bg-white border border-gray-300 rounded-r-lg hover:bg-gray-100 hover:text-gray-700 mr-2">
-                                        Next
-                                    </a>
-                                </li>
+                        @endif
+
+                        <!-- Page Numbers -->
+                        @for($i = $startPage; $i <= $endPage; $i++)
+                            <a href="?page={{ $i }}&search={{ request('search') }}"
+                               class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium
+                               {{ $i == $currentPage ? 'z-10 bg-blue-50 border-blue-500 text-[#8c93d6]' : 'bg-white text-gray-700 hover:bg-gray-50' }}">
+                                {{ $i }}
+                            </a>
+                        @endfor
+
+                        <!-- Last Page -->
+                        @if($endPage < $totalPages)
+                            @if($endPage < $totalPages - 1)
+                                <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                                    ...
+                                </span>
                             @endif
-                        </ul>
+                            <a href="?page={{ $totalPages }}&search={{ request('search') }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                {{ $totalPages }}
+                            </a>
+                        @endif
+
+                        <!-- Next Button -->
+                        @if($currentPage < $totalPages)
+                            <a href="?page={{ $currentPage + 1 }}&search={{ request('search') }}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                <span class="sr-only">Next</span>
+                                Next
+                            </a>
+                        @endif
                     </nav>
                 @endif
             </div>
@@ -160,55 +201,161 @@
 
     <!-- Modal Detail -->
     <div id="detailModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
-        <div class="flex items-center justify-center min-h-screen px-4">
-            <div class="relative w-full max-w-2xl p-6 bg-white rounded-lg shadow-lg">
-                <div class="flex justify-between items-center pb-3">
-                    <h3 class="text-xl font-semibold">Detail Biodata</h3>
-                    <button onclick="closeDetailModal()" class="text-gray-400 hover:text-gray-600">
-                        ✖
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <!-- Modal Backdrop -->
+            <div class="fixed inset-0 bg-black opacity-50"></div>
+
+            <!-- Modal Content -->
+            <div class="relative w-full max-w-4xl bg-white rounded-lg shadow-xl overflow-hidden">
+                <!-- Modal Header -->
+                <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-[#7886C7] bg-gray-50">
+                    <h3 class="text-xl font-semibold text-[#2D336B]">Detail Biodata</h3>
+                    <button onclick="closeDetailModal()" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 inline-flex justify-center items-center">
+                        <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                        </svg>
                     </button>
                 </div>
-                <div class="mt-4">
-                    <p><strong>NIK:</strong> <span id="detailNIK"></span></p>
-                    <p><strong>KK:</strong> <span id="detailKK"></span></p>
-                    <p><strong>Nama Lengkap:</strong> <span id="detailFullName"></span></p>
-                    <p><strong>Jenis Kelamin:</strong> <span id="detailGender"></span></p>
-                    <p><strong>Tanggal Lahir:</strong> <span id="detailBirthDate"></span></p>
-                    <p><strong>Umur:</strong> <span id="detailAge"></span></p>
-                    <p><strong>Tempat Lahir:</strong> <span id="detailBirthPlace"></span></p>
-                    <p><strong>Alamat:</strong> <span id="detailAddress"></span></p>
-                    <p><strong>Provinsi:</strong> <span id="detailProvinceId"></span></p>
-                    <p><strong>Kabupaten/Kota:</strong> <span id="detailDistrictId"></span></p>
-                    <p><strong>Kecamatan:</strong> <span id="detailSubDistrictId"></span></p>
-                    <p><strong>Desa/Kelurahan:</strong> <span id="detailVillageId"></span></p>
-                    <p><strong>RT:</strong> <span id="detailRT"></span></p>
-                    <p><strong>RW:</strong> <span id="detailRW"></span></p>
-                    <p><strong>Kode Pos:</strong> <span id="detailPostalCode"></span></p>
-                    <p><strong>Status Kewarganegaraan:</strong> <span id="detailCitizenStatus"></span></p>
-                    <p><strong>Akta Kelahiran:</strong> <span id="detailBirthCertificate"></span></p>
-                    <p><strong>No. Akta Kelahiran:</strong> <span id="detailBirthCertificateNo"></span></p>
-                    <p><strong>Golongan Darah:</strong> <span id="detailBloodType"></span></p>
-                    <p><strong>Agama:</strong> <span id="detailReligion"></span></p>
-                    <p><strong>Status Perkawinan:</strong> <span id="detailMaritalStatus"></span></p>
-                    <p><strong>Akta Perkawinan:</strong> <span id="detailMaritalCertificate"></span></p>
-                    <p><strong>No. Akta Perkawinan:</strong> <span id="detailMaritalCertificateNo"></span></p>
-                    <p><strong>Tanggal Perkawinan:</strong> <span id="detailMarriageDate"></span></p>
-                    <p><strong>Akta Perceraian:</strong> <span id="detailDivorceCertificate"></span></p>
-                    <p><strong>No. Akta Perceraian:</strong> <span id="detailDivorceCertificateNo"></span></p>
-                    <p><strong>Tanggal Perceraian:</strong> <span id="detailDivorceCertificateDate"></span></p>
-                    <p><strong>SHDK:</strong> <span id="detailFamilyStatus"></span></p>
-                    <p><strong>Gangguan Jiwa:</strong> <span id="detailMentalDisorders"></span></p>
-                    <p><strong>Disabilitas:</strong> <span id="detailDisabilities"></span></p>
-                    <p><strong>Status Pendidikan:</strong> <span id="detailEducationStatus"></span></p>
-                    <p><strong>Jenis Pekerjaan:</strong> <span id="detailJobTypeId"></span></p>
-                    <p><strong>NIK Ibu:</strong> <span id="detailNikMother"></span></p>
-                    <p><strong>Nama Ibu:</strong> <span id="detailMother"></span></p>
-                    <p><strong>NIK Ayah:</strong> <span id="detailNikFather"></span></p>
-                    <p><strong>Nama Ayah:</strong> <span id="detailFather"></span></p>
-                    <p><strong>Koordinat:</strong> <span id="detailCoordinate"></span></p>
+
+                <!-- Modal Body -->
+                <div class="p-4 md:p-5 overflow-y-auto max-h-[70vh]">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Informasi Pribadi -->
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="text-lg font-semibold mb-4 text-[#7886C7]">Informasi Pribadi</h4>
+                            <div class="space-y-3">
+                                <div class="flex flex-col">
+                                    <span class="text-sm text-gray-500">NIK</span>
+                                    <span id="detailNIK" class="font-medium"></span>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-sm text-gray-500">Nomor KK</span>
+                                    <span id="detailKK" class="font-medium"></span>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-sm text-gray-500">Nama Lengkap</span>
+                                    <span id="detailFullName" class="font-medium"></span>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-sm text-gray-500">Jenis Kelamin</span>
+                                    <span id="detailGender" class="font-medium"></span>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-sm text-gray-500">Tempat, Tanggal Lahir</span>
+                                    <span class="font-medium">
+                                        <span id="detailBirthPlace"></span>,
+                                        <span id="detailBirthDate"></span>
+                                    </span>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-sm text-gray-500">Usia</span>
+                                    <span id="detailAge" class="font-medium"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Informasi Alamat -->
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="text-lg font-semibold mb-4 text-[#7886C7]">Informasi Alamat</h4>
+                            <div class="space-y-3">
+                                <div class="flex flex-col">
+                                    <span class="text-sm text-gray-500">Alamat Lengkap</span>
+                                    <span id="detailAddress" class="font-medium"></span>
+                                </div>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div class="flex flex-col">
+                                        <span class="text-sm text-gray-500">RT</span>
+                                        <span id="detailRT" class="font-medium"></span>
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <span class="text-sm text-gray-500">RW</span>
+                                        <span id="detailRW" class="font-medium"></span>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-sm text-gray-500">Desa/Kelurahan</span>
+                                    <span id="detailVillageId" class="font-medium"></span>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-sm text-gray-500">Kecamatan</span>
+                                    <span id="detailSubDistrictId" class="font-medium"></span>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-sm text-gray-500">Kabupaten/Kota</span>
+                                    <span id="detailDistrictId" class="font-medium"></span>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-sm text-gray-500">Provinsi</span>
+                                    <span id="detailProvinceId" class="font-medium"></span>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-sm text-gray-500">Kode Pos</span>
+                                    <span id="detailPostalCode" class="font-medium"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Informasi Lainnya -->
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="text-lg font-semibold mb-4 text-[#7886C7]">Informasi Lainnya</h4>
+                            <div class="space-y-3">
+                                <div class="flex flex-col">
+                                    <span class="text-sm text-gray-500">Status Kewarganegaraan</span>
+                                    <span id="detailCitizenStatus" class="font-medium"></span>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-sm text-gray-500">Agama</span>
+                                    <span id="detailReligion" class="font-medium"></span>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-sm text-gray-500">Golongan Darah</span>
+                                    <span id="detailBloodType" class="font-medium"></span>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-sm text-gray-500">Status Pendidikan</span>
+                                    <span id="detailEducationStatus" class="font-medium"></span>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-sm text-gray-500">Pekerjaan</span>
+                                    <span id="detailJobTypeId" class="font-medium"></span>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-sm text-gray-500">Status dalam Keluarga</span>
+                                    <span id="detailFamilyStatus" class="font-medium"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Informasi Orangtua -->
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="text-lg font-semibold mb-4 text-[#7886C7]">Informasi Orangtua</h4>
+                            <div class="space-y-3">
+                                <div class="flex flex-col">
+                                    <span class="text-sm text-gray-500">Nama Ayah</span>
+                                    <span id="detailFather" class="font-medium"></span>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-sm text-gray-500">NIK Ayah</span>
+                                    <span id="detailNikFather" class="font-medium"></span>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-sm text-gray-500">Nama Ibu</span>
+                                    <span id="detailMother" class="font-medium"></span>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-sm text-gray-500">NIK Ibu</span>
+                                    <span id="detailNikMother" class="font-medium"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="flex justify-end pt-4">
-                    <button onclick="closeDetailModal()" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600">Tutup</button>
+
+                <!-- Modal Footer -->
+                <div class="flex items-center justify-end p-4 md:p-5 border-t border-gray-200 rounded-b">
+                    <button onclick="closeDetailModal()" type="button" class="text-white bg-gray-500 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg text-sm px-5 py-2.5 text-center">
+                        Tutup
+                    </button>
                 </div>
             </div>
         </div>
@@ -226,43 +373,90 @@
         setTimeout(closeAlert, 4000); // Auto-close dalam 4 detik
 
         function showDetailModal(biodata) {
-            document.getElementById('detailNIK').innerText = biodata.nik;
-            document.getElementById('detailKK').innerText = biodata.kk;
-            document.getElementById('detailFullName').innerText = biodata.full_name;
-            document.getElementById('detailGender').innerText = biodata.gender;
-            document.getElementById('detailBirthDate').innerText = biodata.birth_date;
-            document.getElementById('detailAge').innerText = biodata.age;
-            document.getElementById('detailBirthPlace').innerText = biodata.birth_place;
-            document.getElementById('detailAddress').innerText = biodata.address;
-            document.getElementById('detailProvinceId').innerText = biodata.province_id;
-            document.getElementById('detailDistrictId').innerText = biodata.district_id;
-            document.getElementById('detailSubDistrictId').innerText = biodata.sub_district_id;
-            document.getElementById('detailVillageId').innerText = biodata.village_id;
-            document.getElementById('detailRT').innerText = biodata.rt;
-            document.getElementById('detailRW').innerText = biodata.rw;
-            document.getElementById('detailPostalCode').innerText = biodata.postal_code;
-            document.getElementById('detailCitizenStatus').innerText = biodata.citizen_status;
-            document.getElementById('detailBirthCertificate').innerText = biodata.birth_certificate;
-            document.getElementById('detailBirthCertificateNo').innerText = biodata.birth_certificate_no;
-            document.getElementById('detailBloodType').innerText = biodata.blood_type;
-            document.getElementById('detailReligion').innerText = biodata.religion;
-            document.getElementById('detailMaritalStatus').innerText = biodata.marital_status;
-            document.getElementById('detailMaritalCertificate').innerText = biodata.marital_certificate;
-            document.getElementById('detailMaritalCertificateNo').innerText = biodata.marital_certificate_no;
-            document.getElementById('detailMarriageDate').innerText = biodata.marriage_date;
-            document.getElementById('detailDivorceCertificate').innerText = biodata.divorce_certificate;
-            document.getElementById('detailDivorceCertificateNo').innerText = biodata.divorce_certificate_no;
-            document.getElementById('detailDivorceCertificateDate').innerText = biodata.divorce_certificate_date;
-            document.getElementById('detailFamilyStatus').innerText = biodata.family_status;
-            document.getElementById('detailMentalDisorders').innerText = biodata.mental_disorders;
-            document.getElementById('detailDisabilities').innerText = biodata.disabilities;
-            document.getElementById('detailEducationStatus').innerText = biodata.education_status;
-            document.getElementById('detailJobTypeId').innerText = biodata.job_type_id;
-            document.getElementById('detailNikMother').innerText = biodata.nik_mother;
-            document.getElementById('detailMother').innerText = biodata.mother;
-            document.getElementById('detailNikFather').innerText = biodata.nik_father;
-            document.getElementById('detailFather').innerText = biodata.father;
-            document.getElementById('detailCoordinate').innerText = biodata.coordinate;
+            // Konversi data sebelum ditampilkan
+            const genderMap = { '1': 'Laki-laki', '2': 'Perempuan' };
+            const citizenStatusMap = { '1': 'WNI', '2': 'WNA' };
+            const bloodTypeMap = {
+                '1': 'A', '2': 'B', '3': 'AB', '4': 'O',
+                '5': 'A+', '6': 'A-', '7': 'B+', '8': 'B-',
+                '9': 'AB+', '10': 'AB-', '11': 'O+', '12': 'O-',
+                '13': 'Tidak Tahu'
+            };
+            const religionMap = {
+                '1': 'Islam', '2': 'Kristen', '3': 'Katolik',
+                '4': 'Hindu', '5': 'Buddha', '6': 'Konghucu',
+                '7': 'Kepercayaan Terhadap Tuhan YME'
+            };
+            const educationStatusMap = {
+                '1': 'Tidak/Belum Sekolah', '2': 'Belum Tamat SD/Sederajat',
+                '3': 'Tamat SD/Sederajat', '4': 'SLTP/Sederajat',
+                '5': 'SLTA/Sederajat', '6': 'Diploma I/II',
+                '7': 'Akademi/Diploma III/S. Muda',
+                '8': 'Diploma IV/Strata I', '9': 'Strata II',
+                '10': 'Strata III'
+            };
+            const familyStatusMap = {
+                '1': 'Kepala Keluarga', '2': 'Istri',
+                '3': 'Anak', '4': 'Menantu', '5': 'Cucu',
+                '6': 'Orangtua', '7': 'Mertua', '8': 'Famili Lain'
+            };
+
+            // Set values dengan konversi
+            document.getElementById('detailGender').innerText = genderMap[biodata.gender] || biodata.gender;
+            document.getElementById('detailCitizenStatus').innerText = citizenStatusMap[biodata.citizen_status] || biodata.citizen_status;
+            document.getElementById('detailBloodType').innerText = bloodTypeMap[biodata.blood_type] || biodata.blood_type;
+            document.getElementById('detailReligion').innerText = religionMap[biodata.religion] || biodata.religion;
+            document.getElementById('detailEducationStatus').innerText = educationStatusMap[biodata.education_status] || biodata.education_status;
+            document.getElementById('detailFamilyStatus').innerText = familyStatusMap[biodata.family_status] || biodata.family_status;
+
+            // Format tanggal
+            const formatDate = (dateStr) => {
+                if (!dateStr) return '-';
+                const date = new Date(dateStr);
+                return date.toLocaleDateString('id-ID', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
+                });
+            };
+
+            // Set nilai-nilai lainnya
+            document.getElementById('detailNIK').innerText = biodata.nik || '-';
+            document.getElementById('detailKK').innerText = biodata.kk || '-';
+            document.getElementById('detailFullName').innerText = biodata.full_name || '-';
+            document.getElementById('detailBirthDate').innerText = formatDate(biodata.birth_date);
+            document.getElementById('detailAge').innerText = `${biodata.age} Tahun` || '-';
+            document.getElementById('detailBirthPlace').innerText = biodata.birth_place || '-';
+            // Set data alamat
+            document.getElementById('detailAddress').innerText = biodata.address || '-';
+            document.getElementById('detailRT').innerText = biodata.rt || '-';
+            document.getElementById('detailRW').innerText = biodata.rw || '-';
+            document.getElementById('detailVillageId').innerText = biodata.village_name || biodata.village_id || '-';
+            document.getElementById('detailSubDistrictId').innerText = biodata.sub_district_name || biodata.sub_district_id || '-';
+            document.getElementById('detailDistrictId').innerText = biodata.district_name || biodata.district_id || '-';
+            document.getElementById('detailProvinceId').innerText = biodata.province_name || biodata.province_id || '-';
+            document.getElementById('detailPostalCode').innerText = biodata.postal_code || '-';
+
+            // Set data orangtua
+            document.getElementById('detailFather').innerText = biodata.father || '-';
+            document.getElementById('detailNikFather').innerText = biodata.nik_father || '-';
+            document.getElementById('detailMother').innerText = biodata.mother || '-';
+            document.getElementById('detailNikMother').innerText = biodata.nik_mother || '-';
+
+            // Set data lainnya seperti sebelumnya
+            document.getElementById('detailNIK').innerText = biodata.nik || '-';
+            document.getElementById('detailKK').innerText = biodata.kk || '-';
+            document.getElementById('detailFullName').innerText = biodata.full_name || '-';
+            document.getElementById('detailGender').innerText = genderMap[biodata.gender] || biodata.gender || '-';
+            document.getElementById('detailBirthPlace').innerText = biodata.birth_place || '-';
+            document.getElementById('detailBirthDate').innerText = formatDate(biodata.birth_date);
+            document.getElementById('detailAge').innerText = biodata.age ? `${biodata.age} Tahun` : '-';
+            document.getElementById('detailCitizenStatus').innerText = citizenStatusMap[biodata.citizen_status] || biodata.citizen_status || '-';
+            document.getElementById('detailBloodType').innerText = bloodTypeMap[biodata.blood_type] || biodata.blood_type || '-';
+            document.getElementById('detailReligion').innerText = religionMap[biodata.religion] || biodata.religion || '-';
+            document.getElementById('detailEducationStatus').innerText = educationStatusMap[biodata.education_status] || biodata.education_status || '-';
+            document.getElementById('detailFamilyStatus').innerText = familyStatusMap[biodata.family_status] || biodata.family_status || '-';
+
             document.getElementById('detailModal').classList.remove('hidden');
         }
 
