@@ -111,19 +111,10 @@ class CitizenService
                 $data['kk'] = (int) $data['kk'];
             }
 
-            Log::info('Updating citizen with data:', [
-                'nik' => $nik,
-                'family_status' => $data['family_status']
-            ]);
-
             $response = Http::withHeaders([
                 'X-API-Key' => $this->apiKey,
             ])->put("{$this->baseUrl}/api/citizens/{$nik}", $data);
-            Log::info('API Response:', [
-                'status' => $response->status(),
-                'body' => $response->json()
-            ]);
-
+            
             if ($response->successful()) {
                 return $response->json();
             } else {

@@ -46,18 +46,18 @@ class JobController extends Controller
     public function edit($id)
     {
         Log::info("Mencoba mengedit job dengan ID: " . $id);
-        
+
         try {
             $job = $this->jobService->getJobById($id);
-            
+
             Log::info("Response dari service: ", ['job' => $job]);
-            
+
             if (!$job || !isset($job['id'])) {
                 Log::error("Job tidak ditemukan untuk ID: " . $id);
                 return redirect()->route('superadmin.datamaster.job.index')
                                ->with('error', 'Data pekerjaan tidak ditemukan');
             }
-            
+
             return view('superadmin.datamaster.job.edit', compact('job'));
         } catch (\Exception $e) {
             Log::error("Error saat mengambil data job: " . $e->getMessage());
@@ -71,8 +71,8 @@ class JobController extends Controller
         Log::info("Mencoba update job ID {$id} dengan data: ", $request->all());
 
         $validatedData = $request->validate([
-            'code' => 'required|min:5',
-            'name' => 'required|min:5',
+            'code' => 'required',
+            'name' => 'required',
         ]);
 
         Log::info("Setelah validasi, data dikirim ke API: ", $validatedData);

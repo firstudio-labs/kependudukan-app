@@ -159,8 +159,8 @@
 
                 <!-- Agama -->
                 <div>
-                    <label for="religion" class="block text-sm font-medium text-gray-700">Agama</label>
-                    <select id="religion" name="religion" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                    <label for="religion" class="block text-sm font-medium text-gray-700">Agama <span class="text-red-500">*</span></label>
+                    <select id="religion" name="religion" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                         <option value="">Pilih Agama</option>
                         <option value="1">Islam</option>
                         <option value="2">Kristen</option>
@@ -411,18 +411,25 @@
                 resetSelect(villageSelect, 'Pilih Desa');
 
                 if (provinceId && provinceCode) {
-                    axios.get(`/api/wilayah/provinsi/${provinceCode}/kota`)
-                        .then(response => {
-                            if (response.data) {
-                                populateSelect(districtSelect, response.data, 'Pilih Kabupaten');
-                            } else {
-                                resetSelect(districtSelect, 'No data available');
-                            }
-                        })
-                        .catch(error => {
-                            resetSelect(districtSelect, 'Error loading data');
-                        });
+                    const cachedData = sessionStorage.getItem(`/api/wilayah/provinsi/${provinceCode}/kota`);
+                    if (cachedData) {
+                        populateSelect(districtSelect, JSON.parse(cachedData), 'Pilih Kabupaten');
+                    } else {
+                        axios.get(`/api/wilayah/provinsi/${provinceCode}/kota`)
+                            .then(response => {
+                                if (response.data) {
+                                    sessionStorage.setItem(`/api/wilayah/provinsi/${provinceCode}/kota`, JSON.stringify(response.data));
+                                    populateSelect(districtSelect, response.data, 'Pilih Kabupaten');
+                                } else {
+                                    resetSelect(districtSelect, 'No data available');
+                                }
+                            })
+                            .catch(error => {
+                                resetSelect(districtSelect, 'Error loading data');
+                            });
+                    }
                 }
+
             });
 
             // District change handler with similar error handling

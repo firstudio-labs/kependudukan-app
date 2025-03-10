@@ -5,6 +5,8 @@
         <form method="POST" action="{{ route('superadmin.biodata.update', $citizen['data']['nik']) }}" class="bg-white p-6 rounded-lg shadow-md">
             @csrf
             @method('PUT')
+            <input type="hidden" name="current_page" value="{{ request()->query('page', 1) }}">
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <!-- NIK (readonly) -->
                 <div>
@@ -75,7 +77,7 @@
 
                 <!-- Kabupaten -->
                 <div>
-                    <label for="district_id" class="block text-sm font-medium text-gray-700">Kabupaten</label>
+                    <label for="district_id" class="block text-sm font-medium text-gray-700">Kabupaten </label>
                     <select id="district_id" name="district_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                         <option value="">Pilih Kabupaten</option>
                         @foreach($districts as $district)
@@ -88,9 +90,9 @@
 
                 <!-- Kecamatan -->
                 <div>
-                    <label for="sub_district_id" class="block text-sm font-medium text-gray-700">Kecamatan</label>
+                    <label for="sub_district_id" class="block text-sm font-medium text-gray-700">Kecamatan </label>
                     <select id="sub_district_id" name="sub_district_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
-                        <option value="">Pilih Kecamatan</option>
+                        <option value="">Pilih Kecamatan </option>
                         @foreach($subDistricts as $subDistrict)
                             <option value="{{ $subDistrict['id'] }}" data-code="{{ $subDistrict['code'] }}" {{ $citizen['data']['sub_district_id'] == $subDistrict['id'] ? 'selected' : '' }}>
                                 {{ $subDistrict['name'] }}
@@ -419,12 +421,24 @@
             // Use async/await for better handling of API calls
             async function fetchLocationData(url) {
                 try {
-                    const response = await axios.get(url);
-                    return response.data;
-                } catch (error) {
-                    console.error('Error fetching data:', error);
-                    return null;
-                }
+                    const cachedData = sessionStorage.getItem(url);
+                        if (cachedData) {
+                            return JSON.parse(cachedData);
+                        }
+
+                        // If not in cache, fetch from server
+                        const response = await axios.get(url);
+
+                        // Store in sessionStorage for future use
+                        if (response.data) {
+                            sessionStorage.setItem(url, JSON.stringify(response.data));
+                        }
+
+                        return response.data;
+                    } catch (error) {
+                        console.error('Error fetching data:', error);
+                        return null;
+                    }
             }
 
             // Initialize location dropdowns
@@ -436,13 +450,13 @@
                     const districts = await fetchLocationData(`/api/wilayah/provinsi/${provinceCode}/kota`);
                     populateSelect(districtSelect, districts, 'Pilih Kabupaten', {{ $citizen['data']['district_id'] }});
                     // Get selected district code
-                    const selectedDistrictOption = districtSelect.options[districtSelect.selectedIndex];
+                    const selectedDistrictOption = districtSelect.querySelector('option:checked');
                     if (selectedDistrictOption) {
                         const districtCode = selectedDistrictOption.getAttribute('data-code');
                         const subDistricts = await fetchLocationData(`/api/wilayah/kota/${districtCode}/kecamatan`);
                         populateSelect(subDistrictSelect, subDistricts, 'Pilih Kecamatan', {{ $citizen['data']['sub_district_id'] }});
                         // Get selected subdistrict code
-                        const selectedSubDistrictOption = subDistrictSelect.options[subDistrictSelect.selectedIndex];
+                        const selectedSubDistrictOption = subDistrictSelect.querySelector('option:checked');
                         if (selectedSubDistrictOption) {
                             const subDistrictCode = selectedSubDistrictOption.getAttribute('data-code');
                             const villages = await fetchLocationData(`/api/wilayah/kecamatan/${subDistrictCode}/kelurahan`);

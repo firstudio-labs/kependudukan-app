@@ -87,7 +87,7 @@
                             <a href="{{ route('superadmin.datakk.update', $k->id) }}" class="text-yellow-600 hover:text-yellow-800" aria-label="Edit">
                                 <i class="fa-solid fa-pen-to-square"></i>
                             </a>
-                            <form action="{{ route('superadmin.destroy', $k->id) }}" method="POST" class="delete-form">
+                            <form action="{{ route('superadmin.destroy', $k->id) }}" method="POST" class="delete-form" id="delete-form-{{ $k->id }}">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="font-medium text-red-600 hover:underline ml-3">
@@ -156,6 +156,8 @@
                                 </div>
                             </div>
                         </div>
+
+
 
                         <!-- Informasi Alamat -->
                         <div class="bg-gray-50 p-4 rounded-lg">
@@ -228,6 +230,37 @@
                                 </div>
                             </div>
                         </div>
+
+                        <div class="col-span-1 md:col-span-2 bg-gray-50 p-4 rounded-lg mt-4">
+                            <h4 class="text-lg font-semibold mb-4 text-[#7886C7]">Informasi Anggota Keluarga</h4>
+                            <div id="familyMembersLoading" class="text-center py-4">
+                                <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#7886C7]"></div>
+                                <p class="mt-2 text-gray-600">Memuat data anggota keluarga...</p>
+                            </div>
+                            <div id="familyMembersError" class="hidden text-center py-4 text-red-500">
+                                Gagal memuat data anggota keluarga
+                            </div>
+                            <div id="familyMembersEmpty" class="hidden text-center py-4 text-gray-500">
+                                Tidak ada data anggota keluarga
+                            </div>
+                            <div id="familyMembersContainer" class="hidden">
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200">
+                                        <thead>
+                                            <tr>
+                                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
+                                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
+                                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status Keluarga</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="familyMembersTable" class="bg-white divide-y divide-gray-200">
+                                            <!-- Family members will be inserted here dynamically -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 
@@ -262,24 +295,29 @@
             });
         @endif
 
-        function confirmDelete(event, id) {
-            event.preventDefault();
+        document.addEventListener('DOMContentLoaded', function() {
+        // Attach event listeners to all delete forms
+        document.querySelectorAll('.delete-form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
 
-            Swal.fire({
-                title: 'Anda yakin?',
-                text: "Data yang dihapus tidak dapat dikembalikan!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Ya, hapus!',
-                cancelButtonText: 'Batal'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    document.getElementById('delete-form-' + id).submit();
-                }
+                Swal.fire({
+                    title: 'Apakah anda yakin?',
+                    text: "Data yang dihapus tidak dapat dikembalikan!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#2D336B',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Ya, hapus!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        this.submit();
+                    }
+                });
             });
-        }
+        });
+    });
 
         function closeAlert() {
             document.getElementById('success-alert')?.classList.add('opacity-0');
@@ -317,32 +355,54 @@
             document.getElementById('detailKodePosLuarNegeri').innerText = data.kode_pos_luar_negeri || '-';
 
             document.getElementById('detailModal').classList.remove('hidden');
+
+            // Reset family members section
+            document.getElementById('familyMembersLoading').classList.remove('hidden');
+            document.getElementById('familyMembersError').classList.add('hidden');
+            document.getElementById('familyMembersEmpty').classList.add('hidden');
+            document.getElementById('familyMembersContainer').classList.add('hidden');
+            document.getElementById('familyMembersTable').innerHTML = '';
+
+            // Fetch family members
+            fetchFamilyMembers(data.id);
         }
 
         function closeDetailModal() {
             document.getElementById('detailModal').classList.add('hidden');
         }
 
-        // Delete confirmation handler
-        document.querySelectorAll('.delete-form').forEach(form => {
-            form.addEventListener('submit', function(e) {
-                e.preventDefault();
+        function fetchFamilyMembers(kkId) {
+    axios.get(`/superadmin/datakk/${kkId}/family-members`)
+        .then(response => {
+            document.getElementById('familyMembersLoading').classList.add('hidden');
 
-                Swal.fire({
-                    title: 'Apakah anda yakin?',
-                    text: "Data yang dihapus tidak dapat dikembalikan!",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#2D336B',
-                    cancelButtonColor: '#d33',
-                    confirmButtonText: 'Ya, hapus!',
-                    cancelButtonText: 'Batal'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        this.submit();
-                    }
+            if (response.data.status === 'OK' && response.data.data && response.data.data.length > 0) {
+                const members = response.data.data;
+                const tableBody = document.getElementById('familyMembersTable');
+                tableBody.innerHTML = '';
+
+                members.forEach((member, index) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="px-4 py-2 whitespace-nowrap">${index + 1}</td>
+                        <td class="px-4 py-2 whitespace-nowrap">${member.full_name || '-'}</td>
+                        <td class="px-4 py-2 whitespace-nowrap">${member.family_status || '-'}</td>
+                    `;
+                    tableBody.appendChild(row);
                 });
-            });
+
+                document.getElementById('familyMembersContainer').classList.remove('hidden');
+            } else {
+                document.getElementById('familyMembersEmpty').classList.remove('hidden');
+            }
+        })
+        .catch(error => {
+            document.getElementById('familyMembersLoading').classList.add('hidden');
+            document.getElementById('familyMembersError').classList.remove('hidden');
+            console.error('Error fetching family members:', error);
         });
+}
+
+
     </script>
 </x-layout>

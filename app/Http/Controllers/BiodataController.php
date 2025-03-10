@@ -70,7 +70,7 @@ class BiodataController extends Controller
                 'birth_certificate' => 'integer|in:1,2',
                 'birth_certificate_no' => 'nullable|string',
                 'blood_type' => 'required|integer|in:1,2,3,4,5,6,7,8,9,10,11,12,13',
-                'religion' => 'required|integer|in:1,2,3,4,5,6,7',
+                'religion' => 'required|in:1,2,3,4,5,6,7',
                 'marital_status' => 'nullable|integer|in:1,2,3,4,5,6',
                 'marital_certificate' => 'required|in:1,2',
                 'marital_certificate_no' => 'nullable|string',
@@ -96,6 +96,7 @@ class BiodataController extends Controller
             // Convert NIK and KK to integers
             $validatedData['nik'] = (int) $validatedData['nik'];
             $validatedData['kk'] = (int) $validatedData['kk'];
+            $validatedData['religion'] = (int) $validatedData['religion'];
 
             $response = $this->citizenService->createCitizen($validatedData);
 
@@ -186,11 +187,7 @@ class BiodataController extends Controller
     public function update(Request $request, $nik)
     {
         try {
-                    // Tambahkan log untuk melihat nilai yang diterima
-        Log::info('Family Status from request:', [
-            'family_status' => $request->input('family_status'),
-            'all_data' => $request->all()
-        ]);
+            $page = $request->input('current_page', 1);
 
             $validatedData = $request->validate([
                 'kk' => 'required|size:16',
@@ -230,17 +227,6 @@ class BiodataController extends Controller
                 'father' => 'required|string|max:255',
                 'coordinate' => 'nullable|string|max:255',
             ]);
-        // Log setelah validasi
-        Log::info('Validated Family Status:', [
-            'family_status' => $validatedData['family_status']
-        ]);
-
-        // $this->processNullableFields($validatedData);
-
-        // Log setelah process nullable fields
-        Log::info('Processed Family Status:', [
-            'family_status' => $validatedData['family_status']
-        ]);
 
             // Process nullable fields
             $this->processNullableFields($validatedData);
@@ -253,7 +239,7 @@ class BiodataController extends Controller
 
             if ($response['status'] === 'OK') {
                 return redirect()
-                    ->route('superadmin.biodata.index')
+                    ->route('superadmin.biodata.index', ['page' => $page])
                     ->with('success', 'Biodata berhasil diperbarui!');
             }
 
@@ -266,19 +252,23 @@ class BiodataController extends Controller
                 ->withInput()
                 ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
+
     }
 
-    public function destroy($id)
+    public function destroy($id, Request $request)
     {
-        $response = $this->citizenService->deleteCitizen($id);
+        $page = $request->query('page', 1);
+    $response = $this->citizenService->deleteCitizen($id);
 
-        if ($response['status'] === 'OK') {
-            return redirect()
-                ->route('superadmin.biodata.index')
-                ->with('success', 'Biodata berhasil dihapus!');
-        }
+    if ($response['status'] === 'OK') {
+        return redirect()
+            ->route('superadmin.biodata.index', ['page' => $page])
+            ->with('success', 'Biodata berhasil dihapus!');
+    }
 
-        return back()->with('error', 'Gagal menghapus biodata: ' . $response['message']);
+    return redirect()
+        ->route('superadmin.biodata.index', ['page' => $page])
+        ->with('error', 'Gagal menghapus biodata: ' . $response['message']);
     }
 
     private function getProvinces()

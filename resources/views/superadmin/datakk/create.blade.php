@@ -329,13 +329,13 @@
                             fullNameOption.setAttribute('data-postal-code', citizen.postal_code);
                             fullNameOption.setAttribute('data-rt', citizen.rt);
                             fullNameOption.setAttribute('data-rw', citizen.rw);
-                            fullNameOption.setAttribute('data-telepon', citizen.telepon);
-                            fullNameOption.setAttribute('data-email', citizen.email);
+                            fullNameOption.setAttribute('data-telepon', citizen.telepon || '');
+                            fullNameOption.setAttribute('data-email', citizen.email || '');
                             fullNameOption.setAttribute('data-province_id', citizen.province_id);
                             fullNameOption.setAttribute('data-district_id', citizen.district_id);
-                            fullNameOption.setAttribute('data-sub_district_id', citizen.sub_district_id);
+                            fullNameOption.setAttribute('data-sub_district_id', citizen.sub_district_id); // Fix: This had a dash instead of underscore
                             fullNameOption.setAttribute('data-village_id', citizen.village_id);
-                            fullNameOption.setAttribute('data-dusun', citizen.dusun);
+                            fullNameOption.setAttribute('data-dusun', citizen.dusun || '');
                             fullNameSelect.appendChild(fullNameOption);
                         }
                     });
@@ -350,8 +350,6 @@
                 }
             }
         }
-
-
 
         // Event listener saat halaman dimuat
         document.addEventListener('DOMContentLoaded', function () {
@@ -400,11 +398,11 @@
                     $('#rw').val(rw || '');
                     $('#telepon').val(telepon);
                     $('#email').val(email);
-                    $('#province_id').val(province_id || '');
-                    $('#district_id').val(district_id || '');
-                    $('#sub_district_id').val(subDistrict_id || '');
-                    $('#village_id').val(village_id || '');
                     $('#dusun').val(dusun);
+
+                    // Load location data sequentially
+                    loadLocationData(province_id, district_id, subDistrict_id, village_id);
+
                     // Hitung jumlah anggota keluarga berdasarkan No KK
                     let jumlahAnggota = $('#kkSelect option').filter(function () {
                         return $(this).val() === selectedKK;
@@ -435,6 +433,8 @@
                                         value="${member.full_name} - ${member.family_status}"
                                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
                                         readonly>
+                                    <input type="hidden" name="family_members[${index}][full_name]" value="${member.full_name}">
+                                    <input type="hidden" name="family_members[${index}][family_status]" value="${member.family_status}">
                                 </div>
                             `;
                                         $('#familyMembersContainer').append(fieldHtml);
@@ -476,6 +476,8 @@
                                         value="${member.full_name} - ${member.family_status}"
                                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
                                         readonly>
+                                    <input type="hidden" name="family_members[${index}][full_name]" value="${member.full_name}">
+                                    <input type="hidden" name="family_members[${index}][family_status]" value="${member.family_status}">
                                 </div>
                             `;
                                         $('#familyMembersContainer').append(fieldHtml);
@@ -542,11 +544,10 @@
                     $('#rw').val(rw || '');
                     $('#telepon').val(telepon);
                     $('#email').val(email);
-                    $('#province_id').val(province_id || '');
-                    $('#district_id').val(district_id || '');
-                    $('#sub_district_id').val(subDistrict_id || '');
-                    $('#village_id').val(village_id || '');
                     $('#dusun').val(dusun);
+
+                    // Load location data sequentially
+                    loadLocationData(province_id, district_id, subDistrict_id, village_id);
 
                     if (kk) {
                         $.ajax({
@@ -573,6 +574,8 @@
                                             value="${member.full_name} - ${member.family_status}"
                                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
                                             readonly>
+                                        <input type="hidden" name="family_members[${index}][full_name]" value="${member.full_name}">
+                                        <input type="hidden" name="family_members[${index}][family_status]" value="${member.family_status}">
                                     </div>
                                 `;
                                             $('#familyMembersContainer').append(fieldHtml);
@@ -613,8 +616,38 @@
             fetchCitizens(); // Memanggil fungsi untuk mengambil data warga saat halaman dimuat
         });
 
+        // Function to load location data sequentially
+        function loadLocationData(provinceId, districtId, subDistrictId, villageId) {
+            console.log('Loading location data:', { provinceId, districtId, subDistrictId, villageId });
+
+            // Set province first
+            if (provinceId) {
+                $('#province_id').val(provinceId).trigger('change');
+
+                // Wait for districts to load, then set district
+                setTimeout(() => {
+                    if (districtId) {
+                        $('#district_id').val(districtId).trigger('change');
+
+                        // Wait for sub-districts to load, then set sub-district
+                        setTimeout(() => {
+                            if (subDistrictId) {
+                                $('#sub_district_id').val(subDistrictId).trigger('change');
+
+                                // Wait for villages to load, then set village
+                                setTimeout(() => {
+                                    if (villageId) {
+                                        $('#village_id').val(villageId);
+                                    }
+                                }, 1000);
+                            }
+                        }, 1000);
+                    }
+                }, 1000);
+            }
+        }
+
         // Event handler untuk dropdown provinsi
-       // Event handler untuk dropdown provinsi
         $('#province_id').on('change', function () {
             const provinceCode = $(this).val();
             console.log('Kode provinsi yang dipilih:', provinceCode);

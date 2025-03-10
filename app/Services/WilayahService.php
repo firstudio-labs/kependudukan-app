@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 
 class WilayahService
 {
@@ -72,25 +73,5 @@ class WilayahService
         }
     }
 
-    // public function getIdByCode($code, $type)
-    // {
-    //     try {
-    //         $endpoint = match($type) {
-    //             'province' => "provinsi/{$code}/kota",
-    //             'district' => "kota/{$code}/kecamatan",
-    //             'subdistrict' => "kecamatan/{$code}/kelurahan",
-    //             'village' => "kelurahan/{$code}",
-    //             default => throw new \Exception("Invalid type")
-    //         };
 
-    //         $response = Http::get("https://api.desaverse.id/wilayah/{$endpoint}");
-    //         if ($response->successful()) {
-    //             $data = $response->json();
-    //             return $data['id'];
-    //         }
-    //         return null;
-    //     } catch (\Exception $e) {
-    //         return null;
-    //     }
-    // }
 }

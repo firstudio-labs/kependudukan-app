@@ -7,16 +7,22 @@ use App\Models\KK; // Pastikan ini diimpor
 use App\Services\CitizenService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use App\Services\WilayahService;
+
 
 
 class DataKKController extends Controller
 {
     protected $citizenService;
+    protected $wilayahService;
 
-    public function __construct(CitizenService $citizenService)
+    public function __construct(CitizenService $citizenService, WilayahService $wilayahService)
     {
         $this->citizenService = $citizenService;
+        $this->wilayahService = $wilayahService;
     }
+
+
 
     public function index(Request $request)
     {
@@ -62,6 +68,12 @@ class DataKKController extends Controller
     public function store(Request $request)
     {
         // Validate request data
+        $request->validate([
+            'kk' => 'required|string',
+            'full_name' => 'required|string',
+            'address' => 'required|string',
+            // Add other validation rules as needed
+        ]);
 
         // Create KK record
         $kk = KK::create([
@@ -88,12 +100,18 @@ class DataKKController extends Controller
 
         // If you have family members in the request, create them
         if ($request->has('family_members')) {
+            Log::info('Family members found in request: ' . count($request->family_members));
+
             foreach ($request->family_members as $member) {
-                $kk->familyMembers()->create([
-                    'full_name' => $member['full_name'],
-                    'family_status' => $member['family_status'],
-                ]);
+                if (!empty($member['full_name']) && !empty($member['family_status'])) {
+                    $kk->familyMembers()->create([
+                        'full_name' => $member['full_name'],
+                        'family_status' => $member['family_status'],
+                    ]);
+                }
             }
+        } else {
+            Log::info('No family members found in request');
         }
 
         return redirect()->route('superadmin.datakk.index')->with('success', 'Data KK berhasil disimpan');
@@ -194,5 +212,26 @@ class DataKKController extends Controller
             'message' => 'Gagal mengambil data anggota keluarga'
         ]);
     }
+
+    public function getFamilyMembersByKK($kk_id)
+{
+    try {
+        $kk = KK::findOrFail($kk_id);
+        $familyMembers = $kk->familyMembers()->get();
+
+        return response()->json([
+            'status' => 'OK',
+            'count' => $familyMembers->count(),
+            'data' => $familyMembers
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'ERROR',
+            'message' => 'Gagal mengambil data anggota keluarga: ' . $e->getMessage()
+        ], 500);
+    }
+}
+
+
 }
 

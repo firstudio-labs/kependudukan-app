@@ -332,31 +332,33 @@
     </div>
 
     <script>
-        // Add new alert handlers
+        document.addEventListener('DOMContentLoaded', function() {
+        // Kode SweetAlert dan fungsi lainnya
         @if(session('success'))
-            Swal.fire({
-                icon: 'success',
-                title: 'Sukses!',
-                text: "{{ session('success') }}",
-                timer: 3000,
-                showConfirmButton: false
-            });
-        @endif
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Sukses!',
+                    text: "{{ session('success') }}",
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+            @endif
 
-        @if(session('error'))
-            Swal.fire({
-                icon: 'error',
-                title: 'Gagal!',
-                text: "{{ session('error') }}",
-                timer: 3000,
-                showConfirmButton: false
-            });
-        @endif
+            @if(session('error'))
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal!',
+                    text: "{{ session('error') }}",
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+            @endif
+        });
 
         // Delete confirmation function
         function confirmDelete(event) {
-            event.preventDefault();
-            const form = event.target;
+            event.preventDefault(); // Menghentikan pengiriman form default
+            const form = event.target; // Form yang akan di-submit
 
             Swal.fire({
                 title: 'Apakah anda yakin?',
@@ -369,12 +371,16 @@
                 cancelButtonText: 'Batal'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    form.submit();
+                    form.submit(); // Lanjutkan dengan pengiriman form jika dikonfirmasi
                 }
             });
 
-            return false;
+            return false; // Menghentikan pengiriman form
         }
+
+
+
+
 
         // ...existing code for showDetailModal and closeDetailModal...
         function showDetailModal(biodata) {
@@ -433,15 +439,15 @@
             document.getElementById('detailAge').innerText = `${biodata.age} Tahun` || '-';
             document.getElementById('detailBirthPlace').innerText = biodata.birth_place || '-';
             // Set data alamat
+// Set data alamat
             document.getElementById('detailAddress').innerText = biodata.address || '-';
             document.getElementById('detailRT').innerText = biodata.rt || '-';
             document.getElementById('detailRW').innerText = biodata.rw || '-';
-            document.getElementById('detailVillageId').innerText = biodata.village_name || biodat '-';
-            document.getElementById('detailSubDistrictId').innerText = biodata.sub_district_name || biodata.sub_district_id || '-';
-            document.getElementById('detailDistrictId').innerText = biodata.district_name || biodata.district_id || '-';
-            document.getElementById('detailProvinceId').innerText = biodata.province_name || biodata.province_id || '-';
+            document.getElementById('detailVillageId').innerText = biodata.village_name || `${biodata.village_id} (Nama tidak tersedia)` || '-';
+    document.getElementById('detailSubDistrictId').innerText = biodata.sub_district_name || `${biodata.sub_district_id} (Nama tidak tersedia)` || '-';
+    document.getElementById('detailDistrictId').innerText = biodata.district_name || `${biodata.district_id} (Nama tidak tersedia)` || '-';
+    document.getElementById('detailProvinceId').innerText = biodata.province_name || `${biodata.province_id} (Nama tidak tersedia)` || '-';
             document.getElementById('detailPostalCode').innerText = biodata.postal_code || '-';
-
             // Set data orangtua
             document.getElementById('detailFather').innerText = biodata.father || '-';
             document.getElementById('detailNikFather').innerText = biodata.nik_father || '-';

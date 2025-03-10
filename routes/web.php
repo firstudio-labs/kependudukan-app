@@ -72,7 +72,7 @@ Route::middleware(['auth', 'role:user'])->group(function () {
 Route::get('/fetch-heads-of-family', [KKController::class, 'fetchHeadsOfFamily']);
 Route::get('/fetch-all-citizens', [DataKKController::class, 'fetchAllCitizens']);
 Route::get('/getFamilyMembers', [DataKKController::class, 'getFamilyMembers'])->name('getFamilyMembers');
-
+Route::get('/superadmin/datakk/{kk_id}/family-members', [DataKKController::class, 'getFamilyMembersByKK'])->name('superadmin.datakk.family-members');
 Route::get('/biodata/family-members', [BiodataController::class, 'getFamilyMembers'])->name('biodata.family-members');
 
 // Update the wilayah route to use proper parameters
