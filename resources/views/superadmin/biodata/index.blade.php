@@ -57,7 +57,7 @@
                         $startNumber = ($currentPage - 1) * $itemsPerPage + 1;
                         $endNumber = min($startNumber + $itemsPerPage - 1, $totalItems);
                     @endphp
-                    @forelse($citizens['data']['citizens'] as $index => $citizen)
+                    @forelse($citizens['data']['citizens'] ?? [] as $index => $citizen)
                     <tr class="bg-white border-gray-300 border-b hover:bg-gray-50">
                         <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{{ $startNumber + $index }}</th>
                         <td class="px-6 py-4">{{ $citizen['nik'] }}</td>
@@ -287,7 +287,7 @@
                                 </div>
                                 <div class="flex flex-col">
                                     <span class="text-sm text-gray-500">Pekerjaan</span>
-                                    <span id="detailJobTypeId" class="font-medium"></span>
+                                    <span id="detailJobName" class="font-medium"></span>
                                 </div>
                                 <div class="flex flex-col">
                                     <span class="text-sm text-gray-500">Status dalam Keluarga</span>
@@ -355,6 +355,282 @@
             @endif
         });
 
+        // API config
+        const baseUrl = 'http://api-kependudukan.desaverse.id:3000/api';
+        const apiKey = '{{ config('services.kependudukan.key') }}';
+
+        // Cache for location names and codes
+        const locationCache = {};
+
+        // Function to fetch location data based on ID and type
+        async function fetchLocationData(type, id) {
+            if (!id) return null;
+
+            // Check cache first
+            const cacheKey = `${type}_${id}`;
+            if (locationCache[cacheKey]) {
+                return locationCache[cacheKey];
+            }
+
+            try {
+                switch(type) {
+                    case 'province':
+                        // For provinces, directly fetch all provinces and find by ID
+                        const provResponse = await axios.get(`${baseUrl}/provinces`, {
+                            headers: {
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json',
+                                'X-API-Key': apiKey
+                            }
+                        });
+
+                        if (provResponse.data && provResponse.data.data) {
+                            const province = provResponse.data.data.find(p => String(p.id) === String(id));
+                            if (province) {
+                                locationCache[cacheKey] = province; // Cache the entire province object
+                                return province;
+                            }
+                        }
+                        break;
+
+                    case 'district':
+                        // For districts, need to iterate through provinces to find the district
+                        const provincesResponse = await axios.get(`${baseUrl}/provinces`, {
+                            headers: {
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json',
+                                'X-API-Key': apiKey
+                            }
+                        });
+
+                        if (provincesResponse.data && provincesResponse.data.data) {
+                            for (const province of provincesResponse.data.data) {
+                                try {
+                                    const distResponse = await axios.get(`${baseUrl}/districts/${province.code}`, {
+                                        headers: {
+                                            'Accept': 'application/json',
+                                            'Content-Type': 'application/json',
+                                            'X-API-Key': apiKey
+                                        }
+                                    });
+
+                                    if (distResponse.data && distResponse.data.data) {
+                                        const district = distResponse.data.data.find(d => String(d.id) === String(id));
+                                        if (district) {
+                                            district.province = province; // Add parent province reference
+                                            locationCache[cacheKey] = district;
+                                            return district;
+                                        }
+                                    }
+                                } catch (e) {
+                                    // Continue to next province
+                                    continue;
+                                }
+                            }
+                        }
+                        break;
+
+                    case 'subdistrict':
+                        // For subdistricts, first need to find the district
+                        // If we have the parent district_id, use it to narrow down search
+                        let parentDistrictData = null;
+                        const parentDistrictId = arguments[2]; // Optional parent district ID
+
+                        if (parentDistrictId) {
+                            parentDistrictData = await fetchLocationData('district', parentDistrictId);
+                        }
+
+                        if (parentDistrictData) {
+                            // If we found the parent district, search within it
+                            try {
+                                const subdistResponse = await axios.get(`${baseUrl}/sub-districts/${parentDistrictData.code}`, {
+                                    headers: {
+                                        'Accept': 'application/json',
+                                        'Content-Type': 'application/json',
+                                        'X-API-Key': apiKey
+                                    }
+                                });
+
+                                if (subdistResponse.data && subdistResponse.data.data) {
+                                    const subdistrict = subdistResponse.data.data.find(sd => String(sd.id) === String(id));
+                                    if (subdistrict) {
+                                        subdistrict.district = parentDistrictData; // Add parent district reference
+                                        locationCache[cacheKey] = subdistrict;
+                                        return subdistrict;
+                                    }
+                                }
+                            } catch (e) {
+                                // If error, continue to full search
+                            }
+                        }
+
+                        // If no parent district or not found within parent, search all provinces and districts
+                        const allProvincesForSubdist = await axios.get(`${baseUrl}/provinces`, {
+                            headers: {
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json',
+                                'X-API-Key': apiKey
+                            }
+                        });
+
+                        if (allProvincesForSubdist.data && allProvincesForSubdist.data.data) {
+                            for (const province of allProvincesForSubdist.data.data) {
+                                try {
+                                    const districtsInProvince = await axios.get(`${baseUrl}/districts/${province.code}`, {
+                                        headers: {
+                                            'Accept': 'application/json',
+                                            'Content-Type': 'application/json',
+                                            'X-API-Key': apiKey
+                                        }
+                                    });
+
+                                    if (districtsInProvince.data && districtsInProvince.data.data) {
+                                        for (const district of districtsInProvince.data.data) {
+                                            try {
+                                                const subdistrictsInDistrict = await axios.get(`${baseUrl}/sub-districts/${district.code}`, {
+                                                    headers: {
+                                                        'Accept': 'application/json',
+                                                        'Content-Type': 'application/json',
+                                                        'X-API-Key': apiKey
+                                                    }
+                                                });
+
+                                                if (subdistrictsInDistrict.data && subdistrictsInDistrict.data.data) {
+                                                    const subdistrict = subdistrictsInDistrict.data.data.find(sd => String(sd.id) === String(id));
+                                                    if (subdistrict) {
+                                                        district.province = province;
+                                                        subdistrict.district = district;
+                                                        locationCache[cacheKey] = subdistrict;
+                                                        return subdistrict;
+                                                    }
+                                                }
+                                            } catch (e) {
+                                                // Continue to next district
+                                                continue;
+                                            }
+                                        }
+                                    }
+                                } catch (e) {
+                                    // Continue to next province
+                                    continue;
+                                }
+                            }
+                        }
+                        break;
+
+                    case 'village':
+                        // For villages, first try with parent subdistrict if available
+                        const parentSubdistrictId = arguments[2]; // Optional parent subdistrict ID
+                        let parentSubdistrictData = null;
+
+                        if (parentSubdistrictId) {
+                            const parentDistrictId = arguments[3]; // Optional parent district ID
+                            parentSubdistrictData = await fetchLocationData('subdistrict', parentSubdistrictId, parentDistrictId);
+                        }
+
+                        if (parentSubdistrictData) {
+                            // If we found the parent subdistrict, search within it
+                            try {
+                                const villageResponse = await axios.get(`${baseUrl}/villages/${parentSubdistrictData.code}`, {
+                                    headers: {
+                                        'Accept': 'application/json',
+                                        'Content-Type': 'application/json',
+                                        'X-API-Key': apiKey
+                                    }
+                                });
+
+                                if (villageResponse.data && villageResponse.data.data) {
+                                    const village = villageResponse.data.data.find(v => String(v.id) === String(id));
+                                    if (village) {
+                                        village.subdistrict = parentSubdistrictData; // Add parent subdistrict reference
+                                        locationCache[cacheKey] = village;
+                                        return village;
+                                    }
+                                }
+                            } catch (e) {
+                                // If error, continue to full search
+                            }
+                        }
+
+                        // If no parent subdistrict or not found within parent, search all locations
+                        const allProvincesForVillage = await axios.get(`${baseUrl}/provinces`, {
+                            headers: {
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json',
+                                'X-API-Key': apiKey
+                            }
+                        });
+
+                        if (allProvincesForVillage.data && allProvincesForVillage.data.data) {
+                            for (const province of allProvincesForVillage.data.data) {
+                                try {
+                                    const districtsInProvince = await axios.get(`${baseUrl}/districts/${province.code}`, {
+                                        headers: {
+                                            'Accept': 'application/json',
+                                            'Content-Type': 'application/json',
+                                            'X-API-Key': apiKey
+                                        }
+                                    });
+
+                                    if (districtsInProvince.data && districtsInProvince.data.data) {
+                                        for (const district of districtsInProvince.data.data) {
+                                            try {
+                                                const subdistrictsInDistrict = await axios.get(`${baseUrl}/sub-districts/${district.code}`, {
+                                                    headers: {
+                                                        'Accept': 'application/json',
+                                                        'Content-Type': 'application/json',
+                                                        'X-API-Key': apiKey
+                                                    }
+                                                });
+
+                                                if (subdistrictsInDistrict.data && subdistrictsInDistrict.data.data) {
+                                                    for (const subdistrict of subdistrictsInDistrict.data.data) {
+                                                        try {
+                                                            const villagesInSubdistrict = await axios.get(`${baseUrl}/villages/${subdistrict.code}`, {
+                                                                headers: {
+                                                                    'Accept': 'application/json',
+                                                                    'Content-Type': 'application/json',
+                                                                    'X-API-Key': apiKey
+                                                                }
+                                                            });
+
+                                                            if (villagesInSubdistrict.data && villagesInSubdistrict.data.data) {
+                                                                const village = villagesInSubdistrict.data.data.find(v => String(v.id) === String(id));
+                                                                if (village) {
+                                                                    district.province = province;
+                                                                    subdistrict.district = district;
+                                                                    village.subdistrict = subdistrict;
+                                                                    locationCache[cacheKey] = village;
+                                                                    return village;
+                                                                }
+                                                            }
+                                                        } catch (e) {
+                                                            // Continue to next subdistrict
+                                                            continue;
+                                                        }
+                                                    }
+                                                }
+                                            } catch (e) {
+                                                // Continue to next district
+                                                continue;
+                                            }
+                                        }
+                                    }
+                                } catch (e) {
+                                    // Continue to next province
+                                    continue;
+                                }
+                            }
+                        }
+                        break;
+                }
+
+                return null;
+            } catch (error) {
+                return null;
+            }
+        }
+
         // Delete confirmation function
         function confirmDelete(event) {
             event.preventDefault(); // Menghentikan pengiriman form default
@@ -378,12 +654,8 @@
             return false; // Menghentikan pengiriman form
         }
 
-
-
-
-
-        // ...existing code for showDetailModal and closeDetailModal...
-        function showDetailModal(biodata) {
+        // Updated showDetailModal function
+        async function showDetailModal(biodata) {
             // Konversi data sebelum ditampilkan
             const genderMap = { '1': 'Laki-laki', '2': 'Perempuan' };
             const citizenStatusMap = { '1': 'WNI', '2': 'WNA' };
@@ -431,44 +703,105 @@
                 });
             };
 
+            // Show loading indicators for location data
+            document.getElementById('detailProvinceId').innerText = 'Memuat...';
+            document.getElementById('detailDistrictId').innerText = 'Memuat...';
+            document.getElementById('detailSubDistrictId').innerText = 'Memuat...';
+            document.getElementById('detailVillageId').innerText = 'Memuat...';
+            document.getElementById('detailJobName').innerText = 'Memuat...';
+
             // Set nilai-nilai lainnya
             document.getElementById('detailNIK').innerText = biodata.nik || '-';
             document.getElementById('detailKK').innerText = biodata.kk || '-';
             document.getElementById('detailFullName').innerText = biodata.full_name || '-';
             document.getElementById('detailBirthDate').innerText = formatDate(biodata.birth_date);
-            document.getElementById('detailAge').innerText = `${biodata.age} Tahun` || '-';
+            document.getElementById('detailAge').innerText = biodata.age ? `${biodata.age} Tahun` : '-';
             document.getElementById('detailBirthPlace').innerText = biodata.birth_place || '-';
-            // Set data alamat
-// Set data alamat
+
+            // Set basic address data
             document.getElementById('detailAddress').innerText = biodata.address || '-';
             document.getElementById('detailRT').innerText = biodata.rt || '-';
             document.getElementById('detailRW').innerText = biodata.rw || '-';
-            document.getElementById('detailVillageId').innerText = biodata.village_name || `${biodata.village_id} (Nama tidak tersedia)` || '-';
-    document.getElementById('detailSubDistrictId').innerText = biodata.sub_district_name || `${biodata.sub_district_id} (Nama tidak tersedia)` || '-';
-    document.getElementById('detailDistrictId').innerText = biodata.district_name || `${biodata.district_id} (Nama tidak tersedia)` || '-';
-    document.getElementById('detailProvinceId').innerText = biodata.province_name || `${biodata.province_id} (Nama tidak tersedia)` || '-';
             document.getElementById('detailPostalCode').innerText = biodata.postal_code || '-';
+
             // Set data orangtua
             document.getElementById('detailFather').innerText = biodata.father || '-';
             document.getElementById('detailNikFather').innerText = biodata.nik_father || '-';
             document.getElementById('detailMother').innerText = biodata.mother || '-';
             document.getElementById('detailNikMother').innerText = biodata.nik_mother || '-';
 
-            // Set data lainnya seperti sebelumnya
-            document.getElementById('detailNIK').innerText = biodata.nik || '-';
-            document.getElementById('detailKK').innerText = biodata.kk || '-';
-            document.getElementById('detailFullName').innerText = biodata.full_name || '-';
-            document.getElementById('detailGender').innerText = genderMap[biodata.gender] || biodata.gender || '-';
-            document.getElementById('detailBirthPlace').innerText = biodata.birth_place || '-';
-            document.getElementById('detailBirthDate').innerText = formatDate(biodata.birth_date);
-            document.getElementById('detailAge').innerText = biodata.age ? `${biodata.age} Tahun` : '-';
-            document.getElementById('detailCitizenStatus').innerText = citizenStatusMap[biodata.citizen_status] || biodata.citizen_status || '-';
-            document.getElementById('detailBloodType').innerText = bloodTypeMap[biodata.blood_type] || biodata.blood_type || '-';
-            document.getElementById('detailReligion').innerText = religionMap[biodata.religion] || biodata.religion || '-';
-            document.getElementById('detailEducationStatus').innerText = educationStatusMap[biodata.education_status] || biodata.education_status || '-';
-            document.getElementById('detailFamilyStatus').innerText = familyStatusMap[biodata.family_status] || biodata.family_status || '-';
-
+            // Show the modal immediately
             document.getElementById('detailModal').classList.remove('hidden');
+            document.getElementById('detailModal').classList.remove('hidden');
+
+    // Fetch job data based on job_type_id
+    if (biodata.job_type_id) {
+        try {
+            const response = await axios.get(`${baseUrl}/jobs`, {
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-API-Key': apiKey
+                }
+            });
+
+            if (response.data && response.data.data) {
+                const job = response.data.data.find(j => String(j.id) === String(biodata.job_type_id));
+                if (job) {
+                    document.getElementById('detailJobName').innerText = job.name || biodata.job_type_id;
+                } else {
+                    document.getElementById('detailJobName').innerText = biodata.job_type_id || '-';
+                }
+            } else {
+                document.getElementById('detailJobName').innerText = biodata.job_type_id || '-';
+            }
+        } catch (error) {
+            document.getElementById('detailJobName').innerText = biodata.job_type_id || '-';
+        }
+    } else {
+        document.getElementById('detailJobName').innerText = '-';
+    }
+
+            // Fetch location data based on IDs
+            try {
+                // Fetch province data
+                const provinceData = await fetchLocationData('province', biodata.province_id);
+                if (provinceData) {
+                    document.getElementById('detailProvinceId').innerText = provinceData.name || biodata.province_id;
+                } else {
+                    document.getElementById('detailProvinceId').innerText = biodata.province_id || '-';
+                }
+
+                // Fetch district data
+                const districtData = await fetchLocationData('district', biodata.district_id);
+                if (districtData) {
+                    document.getElementById('detailDistrictId').innerText = districtData.name || biodata.district_id;
+                } else {
+                    document.getElementById('detailDistrictId').innerText = biodata.district_id || '-';
+                }
+
+                // Fetch subdistrict data using district as parent for optimization
+                const subdistrictData = await fetchLocationData('subdistrict', biodata.sub_district_id, biodata.district_id);
+                if (subdistrictData) {
+                    document.getElementById('detailSubDistrictId').innerText = subdistrictData.name || biodata.sub_district_id;
+                } else {
+                    document.getElementById('detailSubDistrictId').innerText = biodata.sub_district_id || '-';
+                }
+
+                // Fetch village data using subdistrict and district as parents for optimization
+                const villageData = await fetchLocationData('village', biodata.village_id, biodata.sub_district_id, biodata.district_id);
+                if (villageData) {
+                    document.getElementById('detailVillageId').innerText = villageData.name || biodata.village_id;
+                } else {
+                    document.getElementById('detailVillageId').innerText = biodata.village_id || '-';
+                }
+            } catch (error) {
+                // If API calls fail, fall back to IDs
+                document.getElementById('detailProvinceId').innerText = biodata.province_id || '-';
+                document.getElementById('detailDistrictId').innerText = biodata.district_id || '-';
+                document.getElementById('detailSubDistrictId').innerText = biodata.sub_district_id || '-';
+                document.getElementById('detailVillageId').innerText = biodata.village_id || '-';
+            }
         }
 
         function closeDetailModal() {

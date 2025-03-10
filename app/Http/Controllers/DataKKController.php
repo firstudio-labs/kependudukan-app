@@ -3,13 +3,12 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\KK; // Pastikan ini diimpor
+use App\Models\KK;
 use App\Services\CitizenService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use App\Services\WilayahService;
-
-
+use Illuminate\Support\Facades\Cache;
 
 class DataKKController extends Controller
 {
@@ -22,15 +21,12 @@ class DataKKController extends Controller
         $this->wilayahService = $wilayahService;
     }
 
-
-
     public function index(Request $request)
     {
-        $kk = KK::all(); // Ambil semua data KK
         $search = $request->input('search');
 
         $kk = KK::when($search, function ($query, $search) {
-            return $query->where('nama_lengkap', 'like', "%{$search}%")
+            return $query->where('full_name', 'like', "%{$search}%")
                 ->orWhere('kk', 'like', "%{$search}%");
         })->paginate(10);
 
@@ -39,31 +35,37 @@ class DataKKController extends Controller
 
     public function create()
     {
-        // Get provinces data
-        $provinces = $this->getProvinces();
+        // Get provinces data with caching
+        $provinces = Cache::remember('provinces', 3600, function () {
+            return $this->getProvinces();
+        });
 
         return view('superadmin.datakk.create', compact('provinces'));
     }
 
+    /**
+     * Get provinces with proper structure for the dropdown
+     */
     private function getProvinces()
     {
         try {
-            $response = Http::get('https://api.desaverse.id/wilayah/provinsi');
+            $baseUrl = config('services.kependudukan.url');
+            $apiKey = config('services.kependudukan.key');
+
+            $response = Http::withHeaders([
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+                'X-API-Key' => $apiKey,
+            ])->get("{$baseUrl}/api/provinces");
 
             if ($response->successful()) {
-                Log::info('Provinces data fetched successfully');
-                return $response->json();
-            } else {
-                Log::error('Province API request failed: ' . $response->status());
-                return [];
+                return $response->json()['data'] ?? [];
             }
+            return [];
         } catch (\Exception $e) {
-            Log::error('Error fetching provinces: ' . $e->getMessage());
             return [];
         }
     }
-
-    // Menyimpan data KK ke database
 
     public function store(Request $request)
     {
@@ -100,8 +102,6 @@ class DataKKController extends Controller
 
         // If you have family members in the request, create them
         if ($request->has('family_members')) {
-            Log::info('Family members found in request: ' . count($request->family_members));
-
             foreach ($request->family_members as $member) {
                 if (!empty($member['full_name']) && !empty($member['family_status'])) {
                     $kk->familyMembers()->create([
@@ -110,8 +110,6 @@ class DataKKController extends Controller
                     ]);
                 }
             }
-        } else {
-            Log::info('No family members found in request');
         }
 
         return redirect()->route('superadmin.datakk.index')->with('success', 'Data KK berhasil disimpan');
@@ -120,11 +118,15 @@ class DataKKController extends Controller
     public function edit($id)
     {
         $kk = KK::findOrFail($id);
-        $provinces = $this->getProvinces(); // Get provinces data
+
+        // Get provinces data with caching
+        $provinces = Cache::remember('provinces', 3600, function () {
+            return $this->getProvinces();
+        });
+
         return view('superadmin.datakk.update', compact('kk', 'provinces'));
     }
 
-    // Method untuk memproses update data
     public function update(Request $request, $id)
     {
         // Validasi input tanpa kk dan full_name
@@ -148,14 +150,10 @@ class DataKKController extends Controller
             'kode_pos_luar_negeri' => 'nullable|string|max:10',
         ]);
 
-        // Ambil data berdasarkan ID
         $kk = KK::findOrFail($id);
-
-        // Update data kecuali kk dan full_name
         $kk->fill($validatedData);
         $kk->save();
 
-        // Redirect dengan pesan sukses
         return redirect()->route('superadmin.datakk.index')->with('success', 'Data KK berhasil diperbarui!');
     }
 
@@ -185,53 +183,61 @@ class DataKKController extends Controller
     public function getFamilyMembers(Request $request)
     {
         $kk = $request->input('kk');
-        $familyMembers = $this->citizenService->getFamilyMembersByKK($kk);
+        $cacheKey = "family_members_{$kk}";
 
-        if ($familyMembers && isset($familyMembers['data']) && is_array($familyMembers['data'])) {
-            // Sort family members to put Kepala Keluarga first
-            $sortedMembers = collect($familyMembers['data'])->sortBy(function ($member) {
-                // Custom sorting order for family status
-                $order = [
-                    'KEPALA KELUARGA' => 1,
-                    'ISTRI' => 2,
-                    'ANAK' => 3
-                ];
-                return $order[$member['family_status']] ?? 999;
-            })->values()->all();
+        // Load family members with appropriate citizen data including location information
+        return Cache::remember($cacheKey, 300, function () use ($kk) {
+            $familyMembers = $this->citizenService->getFamilyMembersByKK($kk);
+
+            if ($familyMembers && isset($familyMembers['data']) && is_array($familyMembers['data'])) {
+                // Sort family members to put Kepala Keluarga first
+                $sortedMembers = collect($familyMembers['data'])->sortBy(function ($member) {
+                    $order = [
+                        'KEPALA KELUARGA' => 1,
+                        'ISTRI' => 2,
+                        'ANAK' => 3
+                    ];
+                    return $order[$member['family_status']] ?? 999;
+                })->values()->all();
+
+                return response()->json([
+                    'status' => 'OK',
+                    'count' => count($sortedMembers),
+                    'data' => $sortedMembers
+                ]);
+            }
 
             return response()->json([
-                'status' => 'OK',
-                'count' => count($sortedMembers),
-                'data' => $sortedMembers
+                'status' => 'ERROR',
+                'count' => 0,
+                'message' => 'Gagal mengambil data anggota keluarga'
             ]);
-        }
-
-        return response()->json([
-            'status' => 'ERROR',
-            'count' => 0,
-            'message' => 'Gagal mengambil data anggota keluarga'
-        ]);
+        });
     }
 
     public function getFamilyMembersByKK($kk_id)
-{
-    try {
-        $kk = KK::findOrFail($kk_id);
-        $familyMembers = $kk->familyMembers()->get();
+    {
+        try {
+            $kk = KK::findOrFail($kk_id);
 
-        return response()->json([
-            'status' => 'OK',
-            'count' => $familyMembers->count(),
-            'data' => $familyMembers
-        ]);
-    } catch (\Exception $e) {
-        return response()->json([
-            'status' => 'ERROR',
-            'message' => 'Gagal mengambil data anggota keluarga: ' . $e->getMessage()
-        ], 500);
+            // Cache family members for better performance
+            $cacheKey = "kk_family_members_{$kk_id}";
+
+            return Cache::remember($cacheKey, 300, function () use ($kk) {
+                $familyMembers = $kk->familyMembers()->get();
+
+                return response()->json([
+                    'status' => 'OK',
+                    'count' => $familyMembers->count(),
+                    'data' => $familyMembers
+                ]);
+            });
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'ERROR',
+                'message' => 'Gagal mengambil data anggota keluarga'
+            ], 500);
+        }
     }
-}
-
-
 }
 

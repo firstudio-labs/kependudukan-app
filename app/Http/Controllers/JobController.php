@@ -31,7 +31,7 @@ class JobController extends Controller
     {
         $validatedData = $request->validate([
             'code' => 'required',
-        'name' => 'required',
+            'name' => 'required',
         ]);
 
         $response = $this->jobService->createJob($validatedData);

@@ -1,31 +1,5 @@
 <x-layout>
     <div class="p-4 mt-14">
-        <!-- Alert Sukses -->
-        {{-- @if(session('success'))
-            <div id="success-alert" class="fixed top-5 right-5 z-50 flex items-center p-4 mb-4 text-white bg-green-500 rounded-lg shadow-lg transition-opacity duration-500">
-                <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11.414V8a1 1 0 10-2 0v5.414l-.707-.707a1 1 0 10-1.414 1.414l2 2a1 1 0 001.414 0l2-2a1 1 0 00-1.414-1.414l-.707.707z" clip-rule="evenodd"></path>
-                </svg>
-                <span>{{ session('success') }}</span>
-                <button onclick="closeAlert()" class="ml-4 text-white focus:outline-none">
-                    ✖
-                </button>
-            </div>
-        @endif
-
-        <!-- Alert Error -->
-        @if(session('error'))
-            <div id="error-alert" class="fixed top-5 right-5 z-50 flex items-center p-4 mb-4 text-white bg-red-500 rounded-lg shadow-lg transition-opacity duration-500">
-                <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11.414V8a1 1 0 10-2 0v5.414l-.707-.707a1 1 0 10-1.414 1.414l2 2a1 1 0 001.414 0l2-2a1 1 0 00-1.414-1.414l-.707.707z" clip-rule="evenodd"></path>
-                </svg>
-                <span>{{ session('error') }}</span>
-                <button onclick="closeAlert()" class="ml-4 text-white focus:outline-none">
-                    ✖
-                </button>
-            </div>
-        @endif --}}
-
         <!-- Judul H1 -->
         <h1 class="text-2xl font-bold text-gray-800 mb-6">Data KK</h1>
 
@@ -295,29 +269,306 @@
             });
         @endif
 
-        document.addEventListener('DOMContentLoaded', function() {
-        // Attach event listeners to all delete forms
-        document.querySelectorAll('.delete-form').forEach(form => {
-            form.addEventListener('submit', function(e) {
-                e.preventDefault();
+        // API config
+        const baseUrl = 'http://api-kependudukan.desaverse.id:3000/api';
+        const apiKey = '{{ config('services.kependudukan.key') }}';
 
-                Swal.fire({
-                    title: 'Apakah anda yakin?',
-                    text: "Data yang dihapus tidak dapat dikembalikan!",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#2D336B',
-                    cancelButtonColor: '#d33',
-                    confirmButtonText: 'Ya, hapus!',
-                    cancelButtonText: 'Batal'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        this.submit();
-                    }
+        // Cache for location names and codes
+        const locationCache = {};
+
+        // Function to fetch location data based on ID and type
+        async function fetchLocationData(type, id) {
+            if (!id) return null;
+
+            // Check cache first
+            const cacheKey = `${type}_${id}`;
+            if (locationCache[cacheKey]) {
+                return locationCache[cacheKey];
+            }
+
+            try {
+                switch(type) {
+                    case 'province':
+                        // For provinces, directly fetch all provinces and find by ID
+                        const provResponse = await axios.get(`${baseUrl}/provinces`, {
+                            headers: {
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json',
+                                'X-API-Key': apiKey
+                            }
+                        });
+
+                        if (provResponse.data && provResponse.data.data) {
+                            const province = provResponse.data.data.find(p => String(p.id) === String(id));
+                            if (province) {
+                                locationCache[cacheKey] = province; // Cache the entire province object
+                                return province;
+                            }
+                        }
+                        break;
+
+                    case 'district':
+                        // For districts, need to iterate through provinces to find the district
+                        const provincesResponse = await axios.get(`${baseUrl}/provinces`, {
+                            headers: {
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json',
+                                'X-API-Key': apiKey
+                            }
+                        });
+
+                        if (provincesResponse.data && provincesResponse.data.data) {
+                            for (const province of provincesResponse.data.data) {
+                                try {
+                                    const distResponse = await axios.get(`${baseUrl}/districts/${province.code}`, {
+                                        headers: {
+                                            'Accept': 'application/json',
+                                            'Content-Type': 'application/json',
+                                            'X-API-Key': apiKey
+                                        }
+                                    });
+
+                                    if (distResponse.data && distResponse.data.data) {
+                                        const district = distResponse.data.data.find(d => String(d.id) === String(id));
+                                        if (district) {
+                                            district.province = province; // Add parent province reference
+                                            locationCache[cacheKey] = district;
+                                            return district;
+                                        }
+                                    }
+                                } catch (e) {
+                                    // Continue to next province
+                                    continue;
+                                }
+                            }
+                        }
+                        break;
+
+                    case 'subdistrict':
+                        // For subdistricts, first need to find the district
+                        // If we have the parent district_id, use it to narrow down search
+                        let parentDistrictData = null;
+                        const parentDistrictId = arguments[2]; // Optional parent district ID
+
+                        if (parentDistrictId) {
+                            parentDistrictData = await fetchLocationData('district', parentDistrictId);
+                        }
+
+                        if (parentDistrictData) {
+                            // If we found the parent district, search within it
+                            try {
+                                const subdistResponse = await axios.get(`${baseUrl}/sub-districts/${parentDistrictData.code}`, {
+                                    headers: {
+                                        'Accept': 'application/json',
+                                        'Content-Type': 'application/json',
+                                        'X-API-Key': apiKey
+                                    }
+                                });
+
+                                if (subdistResponse.data && subdistResponse.data.data) {
+                                    const subdistrict = subdistResponse.data.data.find(sd => String(sd.id) === String(id));
+                                    if (subdistrict) {
+                                        subdistrict.district = parentDistrictData; // Add parent district reference
+                                        locationCache[cacheKey] = subdistrict;
+                                        return subdistrict;
+                                    }
+                                }
+                            } catch (e) {
+                                // If error, continue to full search
+                            }
+                        }
+
+                        // If no parent district or not found within parent, search all provinces and districts
+                        const allProvincesForSubdist = await axios.get(`${baseUrl}/provinces`, {
+                            headers: {
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json',
+                                'X-API-Key': apiKey
+                            }
+                        });
+
+                        if (allProvincesForSubdist.data && allProvincesForSubdist.data.data) {
+                            for (const province of allProvincesForSubdist.data.data) {
+                                try {
+                                    const districtsInProvince = await axios.get(`${baseUrl}/districts/${province.code}`, {
+                                        headers: {
+                                            'Accept': 'application/json',
+                                            'Content-Type': 'application/json',
+                                            'X-API-Key': apiKey
+                                        }
+                                    });
+
+                                    if (districtsInProvince.data && districtsInProvince.data.data) {
+                                        for (const district of districtsInProvince.data.data) {
+                                            try {
+                                                const subdistrictsInDistrict = await axios.get(`${baseUrl}/sub-districts/${district.code}`, {
+                                                    headers: {
+                                                        'Accept': 'application/json',
+                                                        'Content-Type': 'application/json',
+                                                        'X-API-Key': apiKey
+                                                    }
+                                                });
+
+                                                if (subdistrictsInDistrict.data && subdistrictsInDistrict.data.data) {
+                                                    const subdistrict = subdistrictsInDistrict.data.data.find(sd => String(sd.id) === String(id));
+                                                    if (subdistrict) {
+                                                        district.province = province;
+                                                        subdistrict.district = district;
+                                                        locationCache[cacheKey] = subdistrict;
+                                                        return subdistrict;
+                                                    }
+                                                }
+                                            } catch (e) {
+                                                // Continue to next district
+                                                continue;
+                                            }
+                                        }
+                                    }
+                                } catch (e) {
+                                    // Continue to next province
+                                    continue;
+                                }
+                            }
+                        }
+                        break;
+
+                    case 'village':
+                        // For villages, first try with parent subdistrict if available
+                        const parentSubdistrictId = arguments[2]; // Optional parent subdistrict ID
+                        let parentSubdistrictData = null;
+
+                        if (parentSubdistrictId) {
+                            const parentDistrictId = arguments[3]; // Optional parent district ID
+                            parentSubdistrictData = await fetchLocationData('subdistrict', parentSubdistrictId, parentDistrictId);
+                        }
+
+                        if (parentSubdistrictData) {
+                            // If we found the parent subdistrict, search within it
+                            try {
+                                const villageResponse = await axios.get(`${baseUrl}/villages/${parentSubdistrictData.code}`, {
+                                    headers: {
+                                        'Accept': 'application/json',
+                                        'Content-Type': 'application/json',
+                                        'X-API-Key': apiKey
+                                    }
+                                });
+
+                                if (villageResponse.data && villageResponse.data.data) {
+                                    const village = villageResponse.data.data.find(v => String(v.id) === String(id));
+                                    if (village) {
+                                        village.subdistrict = parentSubdistrictData; // Add parent subdistrict reference
+                                        locationCache[cacheKey] = village;
+                                        return village;
+                                    }
+                                }
+                            } catch (e) {
+                                // If error, continue to full search
+                            }
+                        }
+
+                        // If no parent subdistrict or not found within parent, search all locations
+                        const allProvincesForVillage = await axios.get(`${baseUrl}/provinces`, {
+                            headers: {
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json',
+                                'X-API-Key': apiKey
+                            }
+                        });
+
+                        if (allProvincesForVillage.data && allProvincesForVillage.data.data) {
+                            for (const province of allProvincesForVillage.data.data) {
+                                try {
+                                    const districtsInProvince = await axios.get(`${baseUrl}/districts/${province.code}`, {
+                                        headers: {
+                                            'Accept': 'application/json',
+                                            'Content-Type': 'application/json',
+                                            'X-API-Key': apiKey
+                                        }
+                                    });
+
+                                    if (districtsInProvince.data && districtsInProvince.data.data) {
+                                        for (const district of districtsInProvince.data.data) {
+                                            try {
+                                                const subdistrictsInDistrict = await axios.get(`${baseUrl}/sub-districts/${district.code}`, {
+                                                    headers: {
+                                                        'Accept': 'application/json',
+                                                        'Content-Type': 'application/json',
+                                                        'X-API-Key': apiKey
+                                                    }
+                                                });
+
+                                                if (subdistrictsInDistrict.data && subdistrictsInDistrict.data.data) {
+                                                    for (const subdistrict of subdistrictsInDistrict.data.data) {
+                                                        try {
+                                                            const villagesInSubdistrict = await axios.get(`${baseUrl}/villages/${subdistrict.code}`, {
+                                                                headers: {
+                                                                    'Accept': 'application/json',
+                                                                    'Content-Type': 'application/json',
+                                                                    'X-API-Key': apiKey
+                                                                }
+                                                            });
+
+                                                            if (villagesInSubdistrict.data && villagesInSubdistrict.data.data) {
+                                                                const village = villagesInSubdistrict.data.data.find(v => String(v.id) === String(id));
+                                                                if (village) {
+                                                                    district.province = province;
+                                                                    subdistrict.district = district;
+                                                                    village.subdistrict = subdistrict;
+                                                                    locationCache[cacheKey] = village;
+                                                                    return village;
+                                                                }
+                                                            }
+                                                        } catch (e) {
+                                                            // Continue to next subdistrict
+                                                            continue;
+                                                        }
+                                                    }
+                                                }
+                                            } catch (e) {
+                                                // Continue to next district
+                                                continue;
+                                            }
+                                        }
+                                    }
+                                } catch (e) {
+                                    // Continue to next province
+                                    continue;
+                                }
+                            }
+                        }
+                        break;
+                }
+
+                return null;
+            } catch (error) {
+                return null;
+            }
+        }
+
+        // Delete confirmation function
+        document.addEventListener('DOMContentLoaded', function() {
+            // Attach event listeners to all delete forms
+            document.querySelectorAll('.delete-form').forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+
+                    Swal.fire({
+                        title: 'Apakah anda yakin?',
+                        text: "Data yang dihapus tidak dapat dikembalikan!",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#2D336B',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Ya, hapus!',
+                        cancelButtonText: 'Batal'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            this.submit();
+                        }
+                    });
                 });
             });
         });
-    });
 
         function closeAlert() {
             document.getElementById('success-alert')?.classList.add('opacity-0');
@@ -327,10 +578,10 @@
                 document.getElementById('error-alert')?.remove();
             }, 500);
         }
-        setTimeout(closeAlert, 4000); // Auto-close dalam 4 detik
+        setTimeout(closeAlert, 4000);
 
-        function showDetailModal(data) {
-            // Set values to modal
+        async function showDetailModal(data) {
+            // Set basic values to modal
             document.getElementById('detailKK').innerText = data.kk || '-';
             document.getElementById('detailFullName').innerText = data.full_name || '-';
             document.getElementById('detailJmlAnggota').innerText = data.jml_anggota_kk || '-';
@@ -341,30 +592,64 @@
             document.getElementById('detailRW').innerText = data.rw || '-';
             document.getElementById('detailDusun').innerText = data.dusun || '-';
             document.getElementById('detailPostalCode').innerText = data.postal_code || '-';
-
-            // Set location names instead of IDs
-            document.getElementById('detailProvinceId').innerText = data.province_name || data.province_id || '-';
-            document.getElementById('detailDistrictId').innerText = data.district_name || data.district_id || '-';
-            document.getElementById('detailSubDistrictId').innerText = data.sub_district_name || data.sub_district_id || '-';
-            document.getElementById('detailVillageId').innerText = data.village_name || data.village_id || '-';
-
             document.getElementById('detailAlamatLuarNegeri').innerText = data.alamat_luar_negeri || '-';
             document.getElementById('detailKota').innerText = data.kota || '-';
             document.getElementById('detailNegaraBagian').innerText = data.negara_bagian || '-';
             document.getElementById('detailNegara').innerText = data.negara || '-';
             document.getElementById('detailKodePosLuarNegeri').innerText = data.kode_pos_luar_negeri || '-';
 
+            // Show loading indicators for location data
+            document.getElementById('detailProvinceId').innerText = 'Memuat...';
+            document.getElementById('detailDistrictId').innerText = 'Memuat...';
+            document.getElementById('detailSubDistrictId').innerText = 'Memuat...';
+            document.getElementById('detailVillageId').innerText = 'Memuat...';
+
+            // Show the modal
             document.getElementById('detailModal').classList.remove('hidden');
 
-            // Reset family members section
-            document.getElementById('familyMembersLoading').classList.remove('hidden');
-            document.getElementById('familyMembersError').classList.add('hidden');
-            document.getElementById('familyMembersEmpty').classList.add('hidden');
-            document.getElementById('familyMembersContainer').classList.add('hidden');
-            document.getElementById('familyMembersTable').innerHTML = '';
-
-            // Fetch family members
+            // Fetch family members early to improve perceived performance
             fetchFamilyMembers(data.id);
+
+            // Fetch and set location names
+            try {
+                // Fetch province data
+                const provinceData = await fetchLocationData('province', data.province_id);
+                if (provinceData) {
+                    document.getElementById('detailProvinceId').innerText = provinceData.name || data.province_id;
+                } else {
+                    document.getElementById('detailProvinceId').innerText = data.province_id || '-';
+                }
+
+                // Fetch district data
+                const districtData = await fetchLocationData('district', data.district_id);
+                if (districtData) {
+                    document.getElementById('detailDistrictId').innerText = districtData.name || data.district_id;
+                } else {
+                    document.getElementById('detailDistrictId').innerText = data.district_id || '-';
+                }
+
+                // Fetch subdistrict data using district as parent for optimization
+                const subdistrictData = await fetchLocationData('subdistrict', data.sub_district_id, data.district_id);
+                if (subdistrictData) {
+                    document.getElementById('detailSubDistrictId').innerText = subdistrictData.name || data.sub_district_id;
+                } else {
+                    document.getElementById('detailSubDistrictId').innerText = data.sub_district_id || '-';
+                }
+
+                // Fetch village data using subdistrict and district as parents for optimization
+                const villageData = await fetchLocationData('village', data.village_id, data.sub_district_id, data.district_id);
+                if (villageData) {
+                    document.getElementById('detailVillageId').innerText = villageData.name || data.village_id;
+                } else {
+                    document.getElementById('detailVillageId').innerText = data.village_id || '-';
+                }
+            } catch (error) {
+                // If API calls fail, fall back to IDs
+                document.getElementById('detailProvinceId').innerText = data.province_id || '-';
+                document.getElementById('detailDistrictId').innerText = data.district_id || '-';
+                document.getElementById('detailSubDistrictId').innerText = data.sub_district_id || '-';
+                document.getElementById('detailVillageId').innerText = data.village_id || '-';
+            }
         }
 
         function closeDetailModal() {
@@ -372,37 +657,34 @@
         }
 
         function fetchFamilyMembers(kkId) {
-    axios.get(`/superadmin/datakk/${kkId}/family-members`)
-        .then(response => {
-            document.getElementById('familyMembersLoading').classList.add('hidden');
+            axios.get(`/superadmin/datakk/${kkId}/family-members`)
+                .then(response => {
+                    document.getElementById('familyMembersLoading').classList.add('hidden');
 
-            if (response.data.status === 'OK' && response.data.data && response.data.data.length > 0) {
-                const members = response.data.data;
-                const tableBody = document.getElementById('familyMembersTable');
-                tableBody.innerHTML = '';
+                    if (response.data.status === 'OK' && response.data.data && response.data.data.length > 0) {
+                        const members = response.data.data;
+                        const tableBody = document.getElementById('familyMembersTable');
+                        tableBody.innerHTML = '';
 
-                members.forEach((member, index) => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td class="px-4 py-2 whitespace-nowrap">${index + 1}</td>
-                        <td class="px-4 py-2 whitespace-nowrap">${member.full_name || '-'}</td>
-                        <td class="px-4 py-2 whitespace-nowrap">${member.family_status || '-'}</td>
-                    `;
-                    tableBody.appendChild(row);
+                        members.forEach((member, index) => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td class="px-4 py-2 whitespace-nowrap">${index + 1}</td>
+                                <td class="px-4 py-2 whitespace-nowrap">${member.full_name || '-'}</td>
+                                <td class="px-4 py-2 whitespace-nowrap">${member.family_status || '-'}</td>
+                            `;
+                            tableBody.appendChild(row);
+                        });
+
+                        document.getElementById('familyMembersContainer').classList.remove('hidden');
+                    } else {
+                        document.getElementById('familyMembersEmpty').classList.remove('hidden');
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('familyMembersLoading').classList.add('hidden');
+                    document.getElementById('familyMembersError').classList.remove('hidden');
                 });
-
-                document.getElementById('familyMembersContainer').classList.remove('hidden');
-            } else {
-                document.getElementById('familyMembersEmpty').classList.remove('hidden');
-            }
-        })
-        .catch(error => {
-            document.getElementById('familyMembersLoading').classList.add('hidden');
-            document.getElementById('familyMembersError').classList.remove('hidden');
-            console.error('Error fetching family members:', error);
-        });
-}
-
-
+        }
     </script>
 </x-layout>

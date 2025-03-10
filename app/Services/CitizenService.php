@@ -114,7 +114,7 @@ class CitizenService
             $response = Http::withHeaders([
                 'X-API-Key' => $this->apiKey,
             ])->put("{$this->baseUrl}/api/citizens/{$nik}", $data);
-            
+
             if ($response->successful()) {
                 return $response->json();
             } else {

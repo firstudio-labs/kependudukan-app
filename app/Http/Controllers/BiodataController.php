@@ -78,7 +78,7 @@ class BiodataController extends Controller
                 'divorce_certificate' => 'nullable|integer|in:1,2',
                 'divorce_certificate_no' => 'nullable|string',
                 'divorce_certificate_date' => 'nullable|date',
-                'family_status' => 'required|integer|in:1,2,3,4,5,6,7,8',
+                'family_status' => 'required|integer|in:1,2,3,4,5,6,7',
                 'mental_disorders' => 'required|integer|in:1,2',
                 'disabilities' => 'required|integer|in:1,2,3,4,5,6',
                 'education_status' => 'required|integer|in:1,2,3,4,5,6,7,8,9,10',
@@ -216,7 +216,7 @@ class BiodataController extends Controller
                 'divorce_certificate' => 'nullable|integer|in:1,2',
                 'divorce_certificate_no' => 'nullable|string',
                 'divorce_certificate_date' => 'nullable|date',
-                'family_status' => 'required|integer|in:1,2,3,4,5,6,7,8',
+                'family_status' => 'required|integer|in:1,2,3,4,5,6,7',
                 'mental_disorders' => 'required|integer|in:1,2',
                 'disabilities' => 'required|integer|in:1,2,3,4,5,6',
                 'education_status' => 'required|integer|in:1,2,3,4,5,6,7,8,9,10',
@@ -337,7 +337,7 @@ class BiodataController extends Controller
     /**
      * Get cities/districts for a province
      */
-    public function getCities($provinceCode)
+public function getCities($provinceCode)
 {
     try {
         Log::info('BiodataController->getCities called with province code: ' . $provinceCode);
@@ -351,6 +351,7 @@ class BiodataController extends Controller
         Log::error('Error in getCities: ' . $e->getMessage());
         return response()->json(['error' => 'Failed to fetch cities: ' . $e->getMessage()], 500);
     }
+
 }
 
 /**

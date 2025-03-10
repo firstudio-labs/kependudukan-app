@@ -248,18 +248,18 @@
                     <input type="date" id="divorce_certificate_date" name="divorce_certificate_date" value="{{ $citizen['data']['divorce_certificate_date'] }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
                 </div>
 
+                
                 <!-- Status Hubungan Dalam Keluarga -->
                 <div>
                     <label for="family_status" class="block text-sm font-medium text-gray-700">Status Hubungan Dalam Keluarga</label>
                     <select id="family_status" name="family_status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
-                        <option value="1" {{ $citizen['data']['family_status'] == 1 ? 'selected' : '' }}>KEPALA KELUARGA</option>
-                        <option value="2" {{ $citizen['data']['family_status'] == 2 ? 'selected' : '' }}>ISTRI</option>
-                        <option value="3" {{ $citizen['data']['family_status'] == 3 ? 'selected' : '' }}>ANAK</option>
-                        <option value="4" {{ $citizen['data']['family_status'] == 4 ? 'selected' : '' }}>MERTUA</option>
-                        <option value="5" {{ $citizen['data']['family_status'] == 5 ? 'selected' : '' }}>ORANG TUA</option>
+                        <option value="1" {{ $citizen['data']['family_status'] == 1 ? 'selected' : '' }}>ANAK</option>
+                        <option value="2" {{ $citizen['data']['family_status'] == 2 ? 'selected' : '' }}>KEPALA KELUARGA</option>
+                        <option value="3" {{ $citizen['data']['family_status'] == 3 ? 'selected' : '' }}>ISTRI</option>
+                        <option value="4" {{ $citizen['data']['family_status'] == 4 ? 'selected' : '' }}>ORANG TUA</option>
+                        <option value="5" {{ $citizen['data']['family_status'] == 5 ? 'selected' : '' }}>MERTUA</option>
                         <option value="6" {{ $citizen['data']['family_status'] == 6 ? 'selected' : '' }}>CUCU</option>
                         <option value="7" {{ $citizen['data']['family_status'] == 7 ? 'selected' : '' }}>FAMILI LAIN</option>
-                        <option value="8" {{ $citizen['data']['family_status'] == 8 ? 'selected' : '' }}>LAINNYA</option>
                     </select>
                 </div>
 
@@ -386,6 +386,10 @@
             const subDistrictSelect = document.getElementById('sub_district_id');
             const villageSelect = document.getElementById('village_id');
 
+            // API config
+            const baseUrl = 'http://api-kependudukan.desaverse.id:3000/api';
+            const apiKey = '{{ config('services.kependudukan.key') }}';
+
             // Use a single function for resetting selects with better performance
             function resetSelect(select, defaultText = 'Pilih') {
                 select.innerHTML = `<option value="">${defaultText}</option>`;
@@ -419,26 +423,34 @@
             }
 
             // Use async/await for better handling of API calls
-            async function fetchLocationData(url) {
+            async function fetchLocationData(endpoint) {
                 try {
-                    const cachedData = sessionStorage.getItem(url);
-                        if (cachedData) {
-                            return JSON.parse(cachedData);
-                        }
-
-                        // If not in cache, fetch from server
-                        const response = await axios.get(url);
-
-                        // Store in sessionStorage for future use
-                        if (response.data) {
-                            sessionStorage.setItem(url, JSON.stringify(response.data));
-                        }
-
-                        return response.data;
-                    } catch (error) {
-                        console.error('Error fetching data:', error);
-                        return null;
+                    const cacheKey = `${baseUrl}/${endpoint}`;
+                    const cachedData = sessionStorage.getItem(cacheKey);
+                    if (cachedData) {
+                        return JSON.parse(cachedData);
                     }
+
+                    // If not in cache, fetch from server
+                    const response = await axios.get(`${baseUrl}/${endpoint}`, {
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                            'X-API-Key': apiKey
+                        }
+                    });
+
+                    // Store in sessionStorage for future use
+                    if (response.data && response.data.data) {
+                        sessionStorage.setItem(cacheKey, JSON.stringify(response.data.data));
+                        return response.data.data;
+                    }
+
+                    return [];
+                } catch (error) {
+                    console.error('Error fetching data:', error);
+                    return [];
+                }
             }
 
             // Initialize location dropdowns
@@ -447,19 +459,19 @@
                     const selectedProvinceOption = provinceSelect.options[provinceSelect.selectedIndex];
                     const provinceCode = selectedProvinceOption.getAttribute('data-code');
                     // Load districts (kabupaten)
-                    const districts = await fetchLocationData(`/api/wilayah/provinsi/${provinceCode}/kota`);
+                    const districts = await fetchLocationData(`districts/${provinceCode}`);
                     populateSelect(districtSelect, districts, 'Pilih Kabupaten', {{ $citizen['data']['district_id'] }});
                     // Get selected district code
                     const selectedDistrictOption = districtSelect.querySelector('option:checked');
                     if (selectedDistrictOption) {
                         const districtCode = selectedDistrictOption.getAttribute('data-code');
-                        const subDistricts = await fetchLocationData(`/api/wilayah/kota/${districtCode}/kecamatan`);
+                        const subDistricts = await fetchLocationData(`sub-districts/${districtCode}`);
                         populateSelect(subDistrictSelect, subDistricts, 'Pilih Kecamatan', {{ $citizen['data']['sub_district_id'] }});
                         // Get selected subdistrict code
                         const selectedSubDistrictOption = subDistrictSelect.querySelector('option:checked');
                         if (selectedSubDistrictOption) {
                             const subDistrictCode = selectedSubDistrictOption.getAttribute('data-code');
-                            const villages = await fetchLocationData(`/api/wilayah/kecamatan/${subDistrictCode}/kelurahan`);
+                            const villages = await fetchLocationData(`villages/${subDistrictCode}`);
                             populateSelect(villageSelect, villages, 'Pilih Desa', {{ $citizen['data']['village_id'] }});
                         }
                     }
@@ -479,7 +491,7 @@
                 resetSelect(villageSelect, 'Pilih Desa');
 
                 if (provinceCode) {
-                    const districts = await fetchLocationData(`/api/wilayah/provinsi/${provinceCode}/kota`);
+                    const districts = await fetchLocationData(`districts/${provinceCode}`);
                     populateSelect(districtSelect, districts, 'Pilih Kabupaten');
                 }
             });
@@ -493,7 +505,7 @@
                 resetSelect(villageSelect, 'Pilih Desa');
 
                 if (districtCode) {
-                    const subDistricts = await fetchLocationData(`/api/wilayah/kota/${districtCode}/kecamatan`);
+                    const subDistricts = await fetchLocationData(`sub-districts/${districtCode}`);
                     populateSelect(subDistrictSelect, subDistricts, 'Pilih Kecamatan');
                 }
             });
@@ -506,7 +518,7 @@
                 resetSelect(villageSelect, 'Loading...');
 
                 if (subDistrictCode) {
-                    const villages = await fetchLocationData(`/api/wilayah/kecamatan/${subDistrictCode}/kelurahan`);
+                    const villages = await fetchLocationData(`villages/${subDistrictCode}`);
                     populateSelect(villageSelect, villages, 'Pilih Desa');
                 }
             });

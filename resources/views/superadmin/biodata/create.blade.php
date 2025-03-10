@@ -4,7 +4,7 @@
 
         <form method="POST" action="{{ route('superadmin.biodata.store') }}" class="bg-white p-6 rounded-lg shadow-md">
             @csrf
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <!-- NIK -->
                 <div>
                     <label for="nik" class="block text-sm font-medium text-gray-700">NIK</label>
@@ -243,14 +243,13 @@
                     <label for="family_status" class="block text-sm font-medium text-gray-700">Status Hubungan Dalam Keluarga</label>
                     <select id="family_status" name="family_status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                         <option value="">Pilih Status</option>
-                        <option value="1">KEPALA KELUARGA</option>
-                        <option value="2">ISTRI</option>
-                        <option value="3">ANAK</option>
-                        <option value="4">MERTUA</option>
-                        <option value="5">ORANG TUA</option>
+                        <option value="1">ANAK</option>
+                        <option value="2">KEPALA KELUARGA</option>
+                        <option value="3">ISTRI</option>
+                        <option value="4">ORANG TUA</option>
+                        <option value="5">MERTUA</option>
                         <option value="6">CUCU</option>
                         <option value="7">FAMILI LAIN</option>
-                        <option value="8">LAINNYA</option>
                     </select>
                 </div>
 
@@ -373,6 +372,7 @@
         @endif
 
         // Replace the incomplete JavaScript section with this:
+// Replace the JavaScript section with this code that uses the external API directly
 
 document.addEventListener('DOMContentLoaded', function() {
     const provinceSelect = document.getElementById('province_code');
@@ -386,11 +386,26 @@ document.addEventListener('DOMContentLoaded', function() {
     const subDistrictIdInput = document.getElementById('sub_district_id');
     const villageIdInput = document.getElementById('village_id');
 
+    // API config
+    const baseUrl = 'http://api-kependudukan.desaverse.id:3000/api';
+    const apiKey = '{{ config('services.kependudukan.key') }}';
+
     // Helper function to reset select options
     function resetSelect(select, defaultText = 'Pilih', hiddenInput = null) {
         select.innerHTML = `<option value="">${defaultText}</option>`;
         select.disabled = true;
         if (hiddenInput) hiddenInput.value = '';
+    }
+
+    // Helper function to make API requests
+    function fetchFromAPI(endpoint) {
+        return axios.get(`${baseUrl}/${endpoint}`, {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-API-Key': apiKey
+            }
+        });
     }
 
     // Helper function to populate select options with code as value and id as data attribute
@@ -441,11 +456,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (provinceCode) {
             console.log('Fetching districts for province:', provinceCode);
-            axios.get(`/api/districts/${provinceCode}`)
+            fetchFromAPI(`districts/${provinceCode}`)
                 .then(response => {
                     console.log('Districts API response:', response.data);
-                    populateSelect(districtSelect, response.data, 'Pilih Kabupaten', districtIdInput);
-                    districtSelect.disabled = false;
+                    if (response.data && response.data.data) {
+                        const districts = response.data.data.map(district => ({
+                            id: district.id,
+                            code: district.code,
+                            name: district.name || `Kabupaten ${district.code}`
+                        }));
+                        populateSelect(districtSelect, districts, 'Pilih Kabupaten', districtIdInput);
+                        districtSelect.disabled = false;
+                    } else {
+                        console.error('No district data in response');
+                        resetSelect(districtSelect, 'No data available', districtIdInput);
+                    }
                 })
                 .catch(error => {
                     console.error('Error fetching districts:', error);
@@ -464,11 +489,21 @@ document.addEventListener('DOMContentLoaded', function() {
         resetSelect(villageSelect, 'Pilih Desa', villageIdInput);
 
         if (districtCode) {
-            axios.get(`/api/sub-districts/${districtCode}`)
+            fetchFromAPI(`sub-districts/${districtCode}`)
                 .then(response => {
                     console.log('Sub-districts API response:', response.data);
-                    populateSelect(subDistrictSelect, response.data, 'Pilih Kecamatan', subDistrictIdInput);
-                    subDistrictSelect.disabled = false;
+                    if (response.data && response.data.data) {
+                        const subDistricts = response.data.data.map(subDistrict => ({
+                            id: subDistrict.id,
+                            code: subDistrict.code,
+                            name: subDistrict.name || `Kecamatan ${subDistrict.code}`
+                        }));
+                        populateSelect(subDistrictSelect, subDistricts, 'Pilih Kecamatan', subDistrictIdInput);
+                        subDistrictSelect.disabled = false;
+                    } else {
+                        console.error('No sub-district data in response');
+                        resetSelect(subDistrictSelect, 'No data available', subDistrictIdInput);
+                    }
                 })
                 .catch(error => {
                     console.error('Error fetching sub-districts:', error);
@@ -486,11 +521,21 @@ document.addEventListener('DOMContentLoaded', function() {
         resetSelect(villageSelect, 'Loading...', villageIdInput);
 
         if (subDistrictCode) {
-            axios.get(`/api/villages/${subDistrictCode}`)
+            fetchFromAPI(`villages/${subDistrictCode}`)
                 .then(response => {
                     console.log('Villages API response:', response.data);
-                    populateSelect(villageSelect, response.data, 'Pilih Desa', villageIdInput);
-                    villageSelect.disabled = false;
+                    if (response.data && response.data.data) {
+                        const villages = response.data.data.map(village => ({
+                            id: village.id,
+                            code: village.code,
+                            name: village.name || `Desa ${village.code}`
+                        }));
+                        populateSelect(villageSelect, villages, 'Pilih Desa', villageIdInput);
+                        villageSelect.disabled = false;
+                    } else {
+                        console.error('No village data in response');
+                        resetSelect(villageSelect, 'No data available', villageIdInput);
+                    }
                 })
                 .catch(error => {
                     console.error('Error fetching villages:', error);
@@ -519,21 +564,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
     </script>
-
-    {{-- <script> --}}
-    {{-- // // Replace the existing form submission script with this enhanced version
-    // document.querySelector('form').addEventListener('submit', function(e) {
-    //     const province = document.getElementById('province_id').value;
-    //     const district = document.getElementById('district_id').value;
-    //     const subDistrict = document.getElementById('sub_district_id').value;
-    //     const village = document.getElementById('village_id').value;
-
-    //     if (!province || !district || !subDistrict || !village) {
-    //         e.preventDefault();
-    //         alert('Silakan pilih Provinsi, Kabupaten, Kecamatan, dan Desa');
-    //         return false;
-    //     }
-    // }); --}}
-{{-- </script> --}}
 </x-layout>
