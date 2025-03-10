@@ -274,7 +274,15 @@ class BiodataController extends Controller
     private function getProvinces()
     {
         try {
-            $response = Http::get('https://api.desaverse.id/wilayah/provinsi');
+            $baseUrl = config('services.kependudukan.url');
+            $apiKey = config('services.kependudukan.key');
+
+            $response = Http::withHeaders([
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+                'X-API-Key' => $apiKey,
+            ])->get("{$baseUrl}/api/provinces");
+
             if ($response->successful()) {
                 $provinces = $response->json();
                 // Transform the data to match the expected format
@@ -326,21 +334,66 @@ class BiodataController extends Controller
     }
 
     // Add these new methods for location data
+    /**
+     * Get cities/districts for a province
+     */
     public function getCities($provinceCode)
-    {
+{
+    try {
+        Log::info('BiodataController->getCities called with province code: ' . $provinceCode);
+
+        // Use the WilayahService to get data from the external API
         $cities = $this->wilayahService->getKabupaten($provinceCode);
+
+        // Return the data as JSON
         return response()->json($cities);
+    } catch (\Exception $e) {
+        Log::error('Error in getCities: ' . $e->getMessage());
+        return response()->json(['error' => 'Failed to fetch cities: ' . $e->getMessage()], 500);
     }
+}
 
-    public function getDistricts($cityCode)
-    {
+/**
+ * Get sub-districts for a city/district
+ *
+ * @param string $cityCode
+ * @return \Illuminate\Http\JsonResponse
+ */
+public function getDistricts($cityCode)
+{
+    try {
+        Log::info('BiodataController->getDistricts called with city code: ' . $cityCode);
+
+        // Use the WilayahService to get data from the external API
         $districts = $this->wilayahService->getKecamatan($cityCode);
-        return response()->json($districts);
-    }
 
-    public function getVillages($districtCode)
-    {
-        $villages = $this->wilayahService->getDesa($districtCode);
-        return response()->json($villages);
+        // Return the data as JSON
+        return response()->json($districts);
+    } catch (\Exception $e) {
+        Log::error('Error in getDistricts: ' . $e->getMessage());
+        return response()->json(['error' => 'Failed to fetch districts: ' . $e->getMessage()], 500);
     }
+}
+
+/**
+ * Get villages for a sub-district
+ *
+ * @param string $districtCode
+ * @return \Illuminate\Http\JsonResponse
+ */
+public function getVillages($districtCode)
+{
+    try {
+        Log::info('BiodataController->getVillages called with district code: ' . $districtCode);
+
+        // Use the WilayahService to get data from the external API
+        $villages = $this->wilayahService->getDesa($districtCode);
+
+        // Return the data as JSON
+        return response()->json($villages);
+    } catch (\Exception $e) {
+        Log::error('Error in getVillages: ' . $e->getMessage());
+        return response()->json(['error' => 'Failed to fetch villages: ' . $e->getMessage()], 500);
+    }
+}
 }

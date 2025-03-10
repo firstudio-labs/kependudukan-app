@@ -2,9 +2,10 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\WilayahController;
+use App\Http\Controllers\BiodataController;
 
-Route::prefix('wilayah')->group(function () {
-    Route::get('provinsi/{code}/kota', [WilayahController::class, 'getKotaByProvinsi']);
-    Route::get('kota/{code}/kecamatan', [WilayahController::class, 'getKecamatanByKota']);
-    Route::get('kecamatan/{code}/kelurahan', [WilayahController::class, 'getDesaByKecamatan']);
-});
+
+// API routes for location data
+Route::get('/districts/{code}', [BiodataController::class, 'getCities']);
+Route::get('/sub-districts/{code}', [BiodataController::class, 'getDistricts']);
+Route::get('/villages/{code}', [BiodataController::class, 'getVillages']);

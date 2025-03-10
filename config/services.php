@@ -31,10 +31,10 @@ return [
         ],
     ],
 
-        'kependudukan' => [
+    'kependudukan' => [
             'url' => env('API_KEPENDUDUKAN_URL'),
             'key' => env('API_KEPENDUDUKAN_KEY'),
-        ],
+    ],
 
 
 ];

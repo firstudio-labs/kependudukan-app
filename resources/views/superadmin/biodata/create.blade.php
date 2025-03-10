@@ -57,39 +57,47 @@
                     <textarea id="address" name="address" autocomplete="off" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"></textarea>
                 </div>
 
-                <!-- Provinsi -->
+                <!-- Provinsi section - Modify to use code as value, but store ID as data attribute -->
                 <div>
-                    <label for="province_id" class="block text-sm font-medium text-gray-700">Provinsi <span class="text-red-500">*</span></label>
-                    <select id="province_id" name="province_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                    <label for="province_code" class="block text-sm font-medium text-gray-700">Provinsi <span class="text-red-500">*</span></label>
+                    <select id="province_code" name="province_code" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                         <option value="">Pilih Provinsi</option>
                         @foreach($provinces as $province)
-                            <option value="{{ $province['id'] }}" data-code="{{ $province['code'] }}">{{ $province['name'] }}</option>
+                            <option value="{{ $province['code'] }}" data-id="{{ $province['id'] }}">{{ $province['name'] }}</option>
                         @endforeach
                     </select>
+                    <!-- Hidden input to store the actual ID for database storage -->
+                    <input type="hidden" id="province_id" name="province_id" value="">
                 </div>
 
                 <!-- Kabupaten -->
                 <div>
-                    <label for="district_id" class="block text-sm font-medium text-gray-700">Kabupaten <span class="text-red-500">*</span></label>
-                    <select id="district_id" name="district_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                    <label for="district_code" class="block text-sm font-medium text-gray-700">Kabupaten <span class="text-red-500">*</span></label>
+                    <select id="district_code" name="district_code" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                         <option value="">Pilih Kabupaten</option>
                     </select>
+                    <!-- Hidden input to store the actual ID for database storage -->
+                    <input type="hidden" id="district_id" name="district_id" value="">
                 </div>
 
                 <!-- Kecamatan -->
                 <div>
-                    <label for="sub_district_id" class="block text-sm font-medium text-gray-700">Kecamatan <span class="text-red-500">*</span></label>
-                    <select id="sub_district_id" name="sub_district_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                    <label for="sub_district_code" class="block text-sm font-medium text-gray-700">Kecamatan <span class="text-red-500">*</span></label>
+                    <select id="sub_district_code" name="sub_district_code" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                         <option value="">Pilih Kecamatan</option>
                     </select>
+                    <!-- Hidden input to store the actual ID for database storage -->
+                    <input type="hidden" id="sub_district_id" name="sub_district_id" value="">
                 </div>
 
                 <!-- Desa -->
                 <div>
-                    <label for="village_id" class="block text-sm font-medium text-gray-700">Desa <span class="text-red-500">*</span></label>
-                    <select id="village_id" name="village_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                    <label for="village_code" class="block text-sm font-medium text-gray-700">Desa <span class="text-red-500">*</span></label>
+                    <select id="village_code" name="village_code" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                         <option value="">Pilih Desa</option>
                     </select>
+                    <!-- Hidden input to store the actual ID for database storage -->
+                    <input type="hidden" id="village_id" name="village_id" value="">
                 </div>
 
                 <!-- RT -->
@@ -342,8 +350,6 @@
         </form>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <script>
         @if(session('success'))
@@ -366,134 +372,168 @@
             });
         @endif
 
-        document.addEventListener('DOMContentLoaded', function() {
-            const provinceSelect = document.getElementById('province_id');
-            const districtSelect = document.getElementById('district_id');
-            const subDistrictSelect = document.getElementById('sub_district_id');
-            const villageSelect = document.getElementById('village_id');
+        // Replace the incomplete JavaScript section with this:
 
-            // Helper function to reset select options
-            function resetSelect(select, defaultText = 'Pilih') {
-                select.innerHTML = `<option value="">${defaultText}</option>`;
-                select.disabled = true;
-            }
+document.addEventListener('DOMContentLoaded', function() {
+    const provinceSelect = document.getElementById('province_code');
+    const districtSelect = document.getElementById('district_code');
+    const subDistrictSelect = document.getElementById('sub_district_code');
+    const villageSelect = document.getElementById('village_code');
 
-            // Helper function to populate select options with error handling
-            function populateSelect(select, data, defaultText) {
-                try {
-                    select.innerHTML = `<option value="">${defaultText}</option>`;
-                    if (Array.isArray(data)) {
-                        data.forEach(item => {
-                            const option = document.createElement('option');
-                            option.value = item.id;
-                            option.setAttribute('data-code', item.code);
-                            option.textContent = item.name;
-                            select.appendChild(option);
-                        });
-                    } else {
-                        console.error('Invalid data format:', data);
-                    }
-                    select.disabled = false;
-                } catch (error) {
-                    console.error('Error populating select:', error);
-                    resetSelect(select, 'Error loading data');
-                }
-            }
+    // Hidden inputs for IDs
+    const provinceIdInput = document.getElementById('province_id');
+    const districtIdInput = document.getElementById('district_id');
+    const subDistrictIdInput = document.getElementById('sub_district_id');
+    const villageIdInput = document.getElementById('village_id');
 
-            // Province change handler
-            provinceSelect.addEventListener('change', function() {
-                const selectedOption = this.options[this.selectedIndex];
-                const provinceId = this.value;
-                const provinceCode = selectedOption.getAttribute('data-code');
+    // Helper function to reset select options
+    function resetSelect(select, defaultText = 'Pilih', hiddenInput = null) {
+        select.innerHTML = `<option value="">${defaultText}</option>`;
+        select.disabled = true;
+        if (hiddenInput) hiddenInput.value = '';
+    }
 
-                resetSelect(districtSelect, 'Loading...');
-                resetSelect(subDistrictSelect, 'Pilih Kecamatan');
-                resetSelect(villageSelect, 'Pilih Desa');
+    // Helper function to populate select options with code as value and id as data attribute
+    function populateSelect(select, data, defaultText, hiddenInput = null) {
+        try {
+            select.innerHTML = `<option value="">${defaultText}</option>`;
 
-                if (provinceId && provinceCode) {
-                    const cachedData = sessionStorage.getItem(`/api/wilayah/provinsi/${provinceCode}/kota`);
-                    if (cachedData) {
-                        populateSelect(districtSelect, JSON.parse(cachedData), 'Pilih Kabupaten');
-                    } else {
-                        axios.get(`/api/wilayah/provinsi/${provinceCode}/kota`)
-                            .then(response => {
-                                if (response.data) {
-                                    sessionStorage.setItem(`/api/wilayah/provinsi/${provinceCode}/kota`, JSON.stringify(response.data));
-                                    populateSelect(districtSelect, response.data, 'Pilih Kabupaten');
-                                } else {
-                                    resetSelect(districtSelect, 'No data available');
-                                }
-                            })
-                            .catch(error => {
-                                resetSelect(districtSelect, 'Error loading data');
-                            });
-                    }
-                }
-
+            data.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.code;
+                option.textContent = item.name;
+                option.setAttribute('data-id', item.id);
+                select.appendChild(option);
             });
 
-            // District change handler with similar error handling
-            districtSelect.addEventListener('change', function() {
-                const selectedOption = this.options[this.selectedIndex];
-                const districtId = this.value;
-                const districtCode = selectedOption.getAttribute('data-code');
+            select.disabled = false;
 
-                resetSelect(subDistrictSelect, 'Loading...');
-                resetSelect(villageSelect, 'Pilih Desa');
+            if (hiddenInput) hiddenInput.value = '';
+        } catch (error) {
+            console.error('Error populating select:', error);
+            select.innerHTML = `<option value="">Error loading data</option>`;
+            select.disabled = true;
+            if (hiddenInput) hiddenInput.value = '';
+        }
+    }
 
-                if (districtId && districtCode) {
-                    axios.get(`/api/wilayah/kota/${districtCode}/kecamatan`)
-                        .then(response => {
-                            if (response.data) {
-                                populateSelect(subDistrictSelect, response.data, 'Pilih Kecamatan');
-                            } else {
-                                resetSelect(subDistrictSelect, 'No data available');
-                            }
-                        })
-                        .catch(error => {
-                            resetSelect(subDistrictSelect, 'Error loading data');
-                        });
-                }
-            });
+    // Update hidden input when selection changes
+    function updateHiddenInput(select, hiddenInput) {
+        const selectedOption = select.options[select.selectedIndex];
+        if (selectedOption && selectedOption.hasAttribute('data-id')) {
+            hiddenInput.value = selectedOption.getAttribute('data-id');
+        } else {
+            hiddenInput.value = '';
+        }
+    }
 
-            // Sub-district change handler with similar error handling
-            subDistrictSelect.addEventListener('change', function() {
-                const selectedOption = this.options[this.selectedIndex];
-                const subDistrictId = this.value;
-                const subDistrictCode = selectedOption.getAttribute('data-code');
+    // Province change handler
+    provinceSelect.addEventListener('change', function() {
+        const provinceCode = this.value;
+        console.log('Selected province code:', provinceCode);
 
-                resetSelect(villageSelect, 'Loading...');
+        // Update the hidden input with the ID
+        updateHiddenInput(this, provinceIdInput);
 
-                if (subDistrictId && subDistrictCode) {
-                    axios.get(`/api/wilayah/kecamatan/${subDistrictCode}/kelurahan`)
-                        .then(response => {
-                            if (response.data) {
-                                populateSelect(villageSelect, response.data, 'Pilih Desa');
-                            } else {
-                                resetSelect(villageSelect, 'No data available');
-                            }
-                        })
-                        .catch(error => {
-                            resetSelect(villageSelect, 'Error loading data');
-                        });
-                }
-            });
-        });
-    </script>
+        resetSelect(districtSelect, 'Loading...', districtIdInput);
+        resetSelect(subDistrictSelect, 'Pilih Kecamatan', subDistrictIdInput);
+        resetSelect(villageSelect, 'Pilih Desa', villageIdInput);
 
-    <script>
-    // Replace the existing form submission script with this enhanced version
+        if (provinceCode) {
+            console.log('Fetching districts for province:', provinceCode);
+            axios.get(`/api/districts/${provinceCode}`)
+                .then(response => {
+                    console.log('Districts API response:', response.data);
+                    populateSelect(districtSelect, response.data, 'Pilih Kabupaten', districtIdInput);
+                    districtSelect.disabled = false;
+                })
+                .catch(error => {
+                    console.error('Error fetching districts:', error);
+                    resetSelect(districtSelect, 'Error loading data', districtIdInput);
+                });
+        }
+    });
+
+    // District change handler
+    districtSelect.addEventListener('change', function() {
+        const districtCode = this.value;
+        // Update hidden input with ID
+        updateHiddenInput(this, districtIdInput);
+
+        resetSelect(subDistrictSelect, 'Loading...', subDistrictIdInput);
+        resetSelect(villageSelect, 'Pilih Desa', villageIdInput);
+
+        if (districtCode) {
+            axios.get(`/api/sub-districts/${districtCode}`)
+                .then(response => {
+                    console.log('Sub-districts API response:', response.data);
+                    populateSelect(subDistrictSelect, response.data, 'Pilih Kecamatan', subDistrictIdInput);
+                    subDistrictSelect.disabled = false;
+                })
+                .catch(error => {
+                    console.error('Error fetching sub-districts:', error);
+                    resetSelect(subDistrictSelect, 'Error loading data', subDistrictIdInput);
+                });
+        }
+    });
+
+    // Sub-district change handler
+    subDistrictSelect.addEventListener('change', function() {
+        const subDistrictCode = this.value;
+        // Update hidden input with ID
+        updateHiddenInput(this, subDistrictIdInput);
+
+        resetSelect(villageSelect, 'Loading...', villageIdInput);
+
+        if (subDistrictCode) {
+            axios.get(`/api/villages/${subDistrictCode}`)
+                .then(response => {
+                    console.log('Villages API response:', response.data);
+                    populateSelect(villageSelect, response.data, 'Pilih Desa', villageIdInput);
+                    villageSelect.disabled = false;
+                })
+                .catch(error => {
+                    console.error('Error fetching villages:', error);
+                    resetSelect(villageSelect, 'Error loading data', villageIdInput);
+                });
+        }
+    });
+
+    // Village change handler
+    villageSelect.addEventListener('change', function() {
+        // Update hidden input with ID
+        updateHiddenInput(this, villageIdInput);
+    });
+
+    // Form validation to check if both IDs and codes are set
     document.querySelector('form').addEventListener('submit', function(e) {
-        const province = document.getElementById('province_id').value;
-        const district = document.getElementById('district_id').value;
-        const subDistrict = document.getElementById('sub_district_id').value;
-        const village = document.getElementById('village_id').value;
+        const provinceId = document.getElementById('province_id').value;
+        const districtId = document.getElementById('district_id').value;
+        const subDistrictId = document.getElementById('sub_district_id').value;
+        const villageId = document.getElementById('village_id').value;
 
-        if (!province || !district || !subDistrict || !village) {
+        if (!provinceId || !districtId || !subDistrictId || !villageId) {
             e.preventDefault();
             alert('Silakan pilih Provinsi, Kabupaten, Kecamatan, dan Desa');
             return false;
         }
     });
-</script>
+});
+    </script>
+
+    {{-- <script> --}}
+    {{-- // // Replace the existing form submission script with this enhanced version
+    // document.querySelector('form').addEventListener('submit', function(e) {
+    //     const province = document.getElementById('province_id').value;
+    //     const district = document.getElementById('district_id').value;
+    //     const subDistrict = document.getElementById('sub_district_id').value;
+    //     const village = document.getElementById('village_id').value;
+
+    //     if (!province || !district || !subDistrict || !village) {
+    //         e.preventDefault();
+    //         alert('Silakan pilih Provinsi, Kabupaten, Kecamatan, dan Desa');
+    //         return false;
+    //     }
+    // }); --}}
+{{-- </script> --}}
 </x-layout>
