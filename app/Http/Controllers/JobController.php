@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Services\JobService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class JobController extends Controller
 {
@@ -18,7 +19,20 @@ class JobController extends Controller
 
     public function index()
     {
-        $jobs = $this->jobService->getAllJobs();
+        // Get all jobs from the service
+        $allJobs = $this->jobService->getAllJobs();
+
+        // Convert array to collection and paginate
+        $perPage = 10; // Number of items per page
+        $currentPage = request()->query('page', 1);
+        $jobs = new LengthAwarePaginator(
+            collect($allJobs)->forPage($currentPage, $perPage),
+            count($allJobs),
+            $perPage,
+            $currentPage,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
+
         return view('superadmin.datamaster.job.index', compact('jobs'));
     }
 

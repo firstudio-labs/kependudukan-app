@@ -21,6 +21,18 @@ class WilayahController extends Controller
         try {
             $provinces = $this->wilayahService->getProvinces();
             Log::info('Provinces data:', ['provinces' => $provinces]);
+
+            // Convert array to collection and paginate
+            $perPage = 10; // Number of items per page
+            $currentPage = request()->query('page', 1);
+            $provinces = new \Illuminate\Pagination\LengthAwarePaginator(
+                collect($provinces)->forPage($currentPage, $perPage),
+                count($provinces),
+                $perPage,
+                $currentPage,
+                ['path' => request()->url(), 'query' => request()->query()]
+            );
+
             return view('superadmin.datamaster.wilayah.provinsi.index', compact('provinces'));
         } catch (\Exception $e) {
             Log::error('Error in showProvinsi: ' . $e->getMessage());
@@ -33,6 +45,18 @@ class WilayahController extends Controller
         try {
             $kabupaten = $this->wilayahService->getKabupaten($provinceCode);
             $province = $this->wilayahService->getProvinceDetail($provinceCode);
+
+            // Convert array to collection and paginate
+            $perPage = 10; // Number of items per page
+            $currentPage = request()->query('page', 1);
+            $kabupaten = new \Illuminate\Pagination\LengthAwarePaginator(
+                collect($kabupaten)->forPage($currentPage, $perPage),
+                count($kabupaten),
+                $perPage,
+                $currentPage,
+                ['path' => request()->url(), 'query' => request()->query()]
+            );
+
             return view('superadmin.datamaster.wilayah.kabupaten.index', compact('kabupaten', 'province'));
         } catch (\Exception $e) {
             Log::error('Error in showKabupaten: ' . $e->getMessage());
