@@ -56,13 +56,13 @@
                         <div>
                             <label for="no_hp" class="block text-sm font-medium text-white">No HP</label>
                             <input type="tel" name="no_hp" id="no_hp" inputmode="numeric" pattern="[0-9]*"
-                                class="w-full p-2 border border-gray-300 rounded-lg focus:ring-[#25295A] focus:border-[#25295A] text-gray-900"
+                                class="bg-white w-full p-2 border border-gray-300 rounded-lg focus:ring-[#25295A] focus:border-[#25295A] text-gray-900"
                                 placeholder="Masukkan No HP Anda" required>
                         </div>
                         <div>
                             <label for="password" class="block text-sm font-medium text-white">Password</label>
                             <input type="password" name="password" id="password" placeholder="••••••••"
-                                class="w-full p-2 border border-gray-300 rounded-lg focus:ring-[#25295A] focus:border-[#25295A] text-gray-900"
+                                class="bg-white w-full p-2 border border-gray-300 rounded-lg focus:ring-[#25295A] focus:border-[#25295A] text-gray-900"
                                 required>
                         </div>
                         <button type="submit"

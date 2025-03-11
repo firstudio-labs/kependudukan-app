@@ -83,6 +83,7 @@
                     <i id="dropdown-icon" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
                 </button>
                 <ul id="masterDataDropdown" class="hidden space-y-2 pl-6">
+
                     <li>
                         <a href="{{ route('superadmin.datamaster.job.index') }}"
                             class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
@@ -91,6 +92,16 @@
                                     : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                             <i class="fa-solid fa-briefcase text-lg transition-all duration-300"></i>
                             <span>Master Jenis Pekerjaan</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('superadmin.datamaster.user.index') }}"
+                            class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                {{ request()->routeIs('superadmin.datamaster.user.index')
+                                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                            <i class="fa-solid fa-users text-lg transition-all duration-300"></i>
+                            <span>Master User</span>
                         </a>
                     </li>
                     <li>
@@ -127,7 +138,7 @@
                                     <span>Kecamatan</span>
                                 </a>
                             </li>
-                            
+
                             <li>
                                 <a href=""
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
@@ -140,6 +151,17 @@
                         </ul>
                     </li>
                 </ul>
+            </li>
+            <!-- Add logout button below the Master menu -->
+            <li class="-ml-5 mt-6">
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit"
+                        class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-red-500 hover:text-white">
+                        <i class="fa-solid fa-sign-out-alt text-lg transition-all duration-300"></i>
+                        <span>Logout</span>
+                    </button>
+                </form>
             </li>
             @elseif ($user->role == 'admin')
                 <li>
@@ -156,12 +178,27 @@
                     </a> --}}
                 </li>
             @elseif ($user->role == 'user')
-                <li>
-                    {{-- <a href="{{ route('profile.index') }}" class="flex items-center p-2 text-[#2D336B] rounded-lg hover:bg-gray-100">
-                        <i class="fa-solid fa-user-circle text-[#2D336B]"></i>
-                        <span class="ms-3">Profil</span>
-                    </a> --}}
-                </li>
+            <li class="-ml-5">
+                <a href="/user/index"
+                    class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                        {{ request()->is('user/index')
+                            ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                            : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                    <i class="fa-regular fa-clipboard text-lg transition-all duration-300"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <!-- Add logout button for user role too -->
+            <li class="-ml-5 mt-6">
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit"
+                        class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-red-500 hover:text-white">
+                        <i class="fa-solid fa-sign-out-alt text-lg transition-all duration-300"></i>
+                        <span>Logout</span>
+                    </button>
+                </form>
+            </li>
             @endif
         </ul>
     </div>

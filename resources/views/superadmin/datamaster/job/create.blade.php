@@ -12,7 +12,7 @@
                 <!-- Kode -->
                 <div>
                     <label for="code" class="block text-sm font-medium text-gray-700">Kode</label>
-                    <input type="text" id="code" name="code" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" placeholder="Masukkan kode min:3" minlength="3" required>
+                    <input type="text" id="code" name="code" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" placeholder="Masukkan kode" required>
                 </div>
 
                 <!-- Nama -->
@@ -22,8 +22,11 @@
                 </div>
             </div>
 
-            <div class="mt-6">
-                <button type="submit" class="w-full bg-indigo-500 text-white p-2 rounded-md shadow-md hover:bg-indigo-600">Simpan</button>
+            <div class="mt-6 flex justify-between">
+                <button type="button" onclick="window.history.back()" class="w-full bg-white text-gray-700 p-2 rounded-md shadow-md border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-lg">
+                    Batal
+                </button>
+                <button type="submit" class="w-full bg-[#7886C7] text-white p-2 rounded-md shadow-md hover:bg-[#2D336B] ml-4">Simpan</button>
             </div>
         </form>
     </div>

@@ -14,11 +14,15 @@ class User extends Authenticatable
     protected $table = 'users'; // Pastikan tabelnya benar
 
     protected $fillable = [
-        'nik', 'password', 'no_hp',
+        'nik', 'password', 'no_hp', 'role',
     ];
 
     protected $hidden = [
         'password', 'remember_token',
+    ];
+
+    protected $casts = [
+        'password' => 'hashed',
     ];
 
     // /**

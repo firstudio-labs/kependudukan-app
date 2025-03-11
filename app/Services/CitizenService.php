@@ -168,18 +168,26 @@ class CitizenService
     public function getCitizenByNIK($nik)
     {
         try {
+            // Convert to integer to ensure consistent format
+            $nik = (int) $nik;
+
+            Log::info('Making API request to get citizen by NIK: ' . $nik);
+
             $response = Http::withHeaders([
                 'X-API-Key' => $this->apiKey,
             ])->get("{$this->baseUrl}/api/citizens/{$nik}");
 
             if ($response->successful()) {
-                return $response->json();
+                $result = $response->json();
+                Log::info('Successful API response for NIK: ' . $nik);
+                return $result;
             } else {
-                Log::error('API request failed: ' . $response->status());
+                Log::error('API request failed for NIK: ' . $nik . ', Status: ' . $response->status());
+                Log::error('Response body: ' . $response->body());
                 return null;
             }
         } catch (\Exception $e) {
-            Log::error('Error fetching citizen data: ' . $e->getMessage());
+            Log::error('Error fetching citizen data for NIK ' . $nik . ': ' . $e->getMessage());
             return null;
         }
     }

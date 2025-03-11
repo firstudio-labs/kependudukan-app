@@ -8,6 +8,7 @@ use App\Http\Controllers\CitizenController;
 use App\Http\Controllers\BiodataController;
 use App\Http\Controllers\JobController;
 use App\Http\Controllers\WilayahController;
+use App\Http\Controllers\ProfileController;
 
 Route::get('/', function () {
     return view('homepage');
@@ -66,6 +67,21 @@ Route::middleware(['auth', 'role:operator'])->group(function () {
 Route::middleware(['auth', 'role:user'])->group(function () {
     Route::get('/user/index', function () {
         return view('user.index');
+    });
+
+    // Profile routes
+    Route::get('/user/profile', [ProfileController::class, 'index'])->name('user.profile.index');
+    Route::get('/user/profile/edit', [ProfileController::class, 'edit'])->name('user.profile.edit');
+    Route::put('/user/profile', [ProfileController::class, 'update'])->name('user.profile.update');
+    Route::get('/user/profile/create', [ProfileController::class, 'create'])->name('user.profile.create');
+    Route::post('/user/profile', [ProfileController::class, 'store'])->name('user.profile.store');
+});
+
+// User management routes
+Route::middleware(['auth'])->group(function () {
+    // User CRUD routes for superadmin
+    Route::middleware(['role:superadmin'])->prefix('superadmin/datamaster')->group(function () {
+        Route::resource('user', \App\Http\Controllers\UsersController::class, ['as' => 'superadmin.datamaster']);
     });
 });
 
