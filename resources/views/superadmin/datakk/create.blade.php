@@ -242,10 +242,6 @@
             }
         }, 5000);
 
-        // API config
-        const baseUrl = 'http://api-kependudukan.desaverse.id:3000/api';
-        const apiKey = '{{ config('services.kependudukan.key') }}';
-
         // Global variables to store location code mappings
         let provinceCodeMap = {};
         let districtCodeMap = {};
@@ -262,13 +258,8 @@
         async function loadProvinceCodeMap() {
             try {
                 const response = await $.ajax({
-                    url: `${baseUrl}/provinces`,
-                    type: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                        'X-API-Key': apiKey
-                    }
+                    url: `{{ url('/location/provinces') }}`,
+                    type: 'GET'
                 });
 
                 if (response.data && Array.isArray(response.data)) {
@@ -287,18 +278,13 @@
         async function loadDistrictCodeMap(provinceCode) {
             try {
                 const response = await $.ajax({
-                    url: `${baseUrl}/districts/${provinceCode}`,
-                    type: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                        'X-API-Key': apiKey
-                    }
+                    url: `{{ url('/location/districts') }}/${provinceCode}`,
+                    type: 'GET'
                 });
 
-                if (response.data && Array.isArray(response.data)) {
+                if (response && Array.isArray(response)) {
                     // Create mappings in both directions
-                    response.data.forEach(district => {
+                    response.forEach(district => {
                         districtCodeMap[district.id] = district.code;
                         districtIdMap[district.code] = district.id;
                     });
@@ -312,18 +298,13 @@
         async function loadSubDistrictCodeMap(districtCode) {
             try {
                 const response = await $.ajax({
-                    url: `${baseUrl}/sub-districts/${districtCode}`,
-                    type: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                        'X-API-Key': apiKey
-                    }
+                    url: `{{ url('/location/sub-districts') }}/${districtCode}`,
+                    type: 'GET'
                 });
 
-                if (response.data && Array.isArray(response.data)) {
+                if (response && Array.isArray(response)) {
                     // Create mappings in both directions
-                    response.data.forEach(subDistrict => {
+                    response.forEach(subDistrict => {
                         subDistrictCodeMap[subDistrict.id] = subDistrict.code;
                         subDistrictIdMap[subDistrict.code] = subDistrict.id;
                     });
@@ -337,18 +318,13 @@
         async function loadVillageCodeMap(subDistrictCode) {
             try {
                 const response = await $.ajax({
-                    url: `${baseUrl}/villages/${subDistrictCode}`,
-                    type: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                        'X-API-Key': apiKey
-                    }
+                    url: `{{ url('/location/villages') }}/${subDistrictCode}`,
+                    type: 'GET'
                 });
 
-                if (response.data && Array.isArray(response.data)) {
+                if (response && Array.isArray(response)) {
                     // Create mappings in both directions
-                    response.data.forEach(village => {
+                    response.forEach(village => {
                         villageCodeMap[village.id] = village.code;
                         villageIdMap[village.code] = village.id;
                     });
@@ -358,21 +334,30 @@
             }
         }
 
-        // Fungsi untuk mengambil data dari API
+        // Fungsi untuk mengambil data dari API through controllers
         async function fetchCitizens() {
             try {
-                // First, load the province code mapping
-                await loadProvinceCodeMap();
-
-                const response = await axios.get('{{ config("services.kependudukan.url") }}/api/all-citizens', {
-                    headers: {
-                        'X-API-Key': '{{ config("services.kependudukan.key") }}'
-                    }
-                });
-
+                // Use the all citizens endpoint
+                const response = await axios.get('{{ route("citizens.all") }}');
                 const data = response.data;
 
-                if (data.status === 'OK' && data.data && Array.isArray(data.data)) {
+                // Get the citizens array regardless of structure
+                let citizensList = [];
+
+                if (data.status === 'OK') {
+                    if (Array.isArray(data.data)) {
+                        citizensList = data.data;
+                    } else if (data.data && typeof data.data === 'object') {
+                        // In case data.data is a single object
+                        if (data.data.citizens && Array.isArray(data.data.citizens)) {
+                            // If structure is { data: { citizens: [...] } }
+                            citizensList = data.data.citizens;
+                        } else {
+                            // If it's a single citizen, make it an array
+                            citizensList = [data.data];
+                        }
+                    }
+
                     const kkSelect = document.getElementById('kkSelect');
                     const fullNameSelect = document.getElementById('full_name');
 
@@ -380,91 +365,80 @@
                         return;
                     }
 
-                    // Kosongkan opsi yang ada sebelum menambahkan yang baru
+                    // Clear existing options
                     kkSelect.innerHTML = '<option value="">Pilih No KK</option>';
                     fullNameSelect.innerHTML = '<option value="">Pilih Nama Lengkap</option>';
 
-                    // Tambahkan opsi baru ke select
-                    for (const citizen of data.data) {
-                        if (citizen.family_status === 'KEPALA KELUARGA') {
-                            // Get the location IDs from citizen data
-                            const provinceId = parseInt(citizen.province_id);
-                            const districtId = parseInt(citizen.district_id);
-                            const subDistrictId = parseInt(citizen.sub_district_id);
-                            const villageId = parseInt(citizen.village_id);
+                    // Filter only heads of family from all citizens
+                    const headsOfFamily = citizensList.filter(citizen =>
+                        citizen.family_status === 'KEPALA KELUARGA');
 
-                            // Convert IDs to codes using our mapping
-                            const provinceCode = provinceCodeMap[provinceId];
+                    // Add options for heads of family
+                    if (headsOfFamily.length > 0) {
+                        for (const citizen of headsOfFamily) {
+                            const kkOption = document.createElement('option');
+                            kkOption.value = citizen.kk;
+                            kkOption.textContent = citizen.kk;
 
-                            // Only proceed if we have valid province code
-                            if (provinceCode) {
-                                // Load district codes for this province
-                                await loadDistrictCodeMap(provinceCode);
-                                const districtCode = districtCodeMap[districtId];
+                            // Set all data attributes
+                            kkOption.setAttribute('data-full-name', citizen.full_name);
+                            kkOption.setAttribute('data-address', citizen.address || '');
+                            kkOption.setAttribute('data-postal-code', citizen.postal_code || '');
+                            kkOption.setAttribute('data-rt', citizen.rt || '');
+                            kkOption.setAttribute('data-rw', citizen.rw || '');
+                            kkOption.setAttribute('data-telepon', citizen.telepon || '');
+                            kkOption.setAttribute('data-email', citizen.email || '');
+                            kkOption.setAttribute('data-province-id', citizen.province_id || '');
+                            kkOption.setAttribute('data-district-id', citizen.district_id || '');
+                            kkOption.setAttribute('data-sub-district-id', citizen.sub_district_id || '');
+                            kkOption.setAttribute('data-village-id', citizen.village_id || '');
+                            kkOption.setAttribute('data-dusun', citizen.dusun || '');
 
-                                // Only proceed if we have valid district code
-                                if (districtCode) {
-                                    // Load subdistrict codes for this district
-                                    await loadSubDistrictCodeMap(districtCode);
-                                    const subDistrictCode = subDistrictCodeMap[subDistrictId];
+                            kkSelect.appendChild(kkOption);
 
-                                    // Only proceed if we have valid subdistrict code
-                                    if (subDistrictCode) {
-                                        // Load village codes for this subdistrict
-                                        await loadVillageCodeMap(subDistrictCode);
-                                        const villageCode = villageCodeMap[villageId];
+                            const fullNameOption = document.createElement('option');
+                            fullNameOption.value = citizen.full_name;
+                            fullNameOption.textContent = citizen.full_name;
 
-                                        // Now store all converted codes
-                                        const kkOption = document.createElement('option');
-                                        kkOption.value = citizen.kk;
-                                        kkOption.textContent = citizen.kk;
-                                        kkOption.setAttribute('data-full-name', citizen.full_name);
-                                        kkOption.setAttribute('data-address', citizen.address);
-                                        kkOption.setAttribute('data-postal-code', citizen.postal_code);
-                                        kkOption.setAttribute('data-rt', citizen.rt);
-                                        kkOption.setAttribute('data-rw', citizen.rw);
-                                        kkOption.setAttribute('data-telepon', citizen.telepon || '');
-                                        kkOption.setAttribute('data-email', citizen.email || '');
-                                        // Store converted location codes
-                                        kkOption.setAttribute('data-province-code', provinceCode);
-                                        kkOption.setAttribute('data-district-code', districtCode);
-                                        kkOption.setAttribute('data-sub-district-code', subDistrictCode);
-                                        kkOption.setAttribute('data-village-code', villageCode);
-                                        kkOption.setAttribute('data-dusun', citizen.dusun || '');
-                                        kkSelect.appendChild(kkOption);
+                            // Set all data attributes
+                            fullNameOption.setAttribute('data-kk', citizen.kk || '');
+                            fullNameOption.setAttribute('data-address', citizen.address || '');
+                            fullNameOption.setAttribute('data-postal-code', citizen.postal_code || '');
+                            fullNameOption.setAttribute('data-rt', citizen.rt || '');
+                            fullNameOption.setAttribute('data-rw', citizen.rw || '');
+                            fullNameOption.setAttribute('data-telepon', citizen.telepon || '');
+                            fullNameOption.setAttribute('data-email', citizen.email || '');
+                            fullNameOption.setAttribute('data-province-id', citizen.province_id || '');
+                            fullNameOption.setAttribute('data-district-id', citizen.district_id || '');
+                            fullNameOption.setAttribute('data-sub-district-id', citizen.sub_district_id || '');
+                            fullNameOption.setAttribute('data-village-id', citizen.village_id || '');
+                            fullNameOption.setAttribute('data-dusun', citizen.dusun || '');
 
-                                        const fullNameOption = document.createElement('option');
-                                        fullNameOption.value = citizen.full_name;
-                                        fullNameOption.textContent = citizen.full_name;
-                                        fullNameOption.setAttribute('data-kk', citizen.kk);
-                                        fullNameOption.setAttribute('data-address', citizen.address);
-                                        fullNameOption.setAttribute('data-postal-code', citizen.postal_code);
-                                        fullNameOption.setAttribute('data-rt', citizen.rt);
-                                        fullNameOption.setAttribute('data-rw', citizen.rw);
-                                        fullNameOption.setAttribute('data-telepon', citizen.telepon || '');
-                                        fullNameOption.setAttribute('data-email', citizen.email || '');
-                                        // Store converted location codes
-                                        fullNameOption.setAttribute('data-province-code', provinceCode);
-                                        fullNameOption.setAttribute('data-district-code', districtCode);
-                                        fullNameOption.setAttribute('data-sub-district-code', subDistrictCode);
-                                        fullNameOption.setAttribute('data-village-code', villageCode);
-                                        fullNameOption.setAttribute('data-dusun', citizen.dusun || '');
-                                        fullNameSelect.appendChild(fullNameOption);
-                                    }
-                                }
-                            }
+                            fullNameSelect.appendChild(fullNameOption);
                         }
+
+                        // Initialize Select2 after populating options
+                        $('#kkSelect').select2({
+                            placeholder: 'Pilih No KK',
+                            width: '100%'
+                        });
+
+                        $('#full_name').select2({
+                            placeholder: 'Pilih Nama Lengkap',
+                            width: '100%'
+                        });
                     }
                 }
             } catch (error) {
-                // Silent error handling
+                // Silently handle errors
             }
         }
 
+        // Define isUpdating in the global scope so all handlers can access it
+        let isUpdating = false;
+
         // Event listener saat halaman dimuat
         document.addEventListener('DOMContentLoaded', function () {
-            let isUpdating = false; // Flag untuk menghindari rekursi
-
             // Inisialisasi Select2 untuk elemen select No KK
             $('#kkSelect').select2({
                 placeholder: 'Pilih No KK',
@@ -494,11 +468,11 @@
                     const rw = selectedOption.attr('data-rw');
                     const telepon = selectedOption.attr('data-telepon') || '';
                     const email = selectedOption.attr('data-email') || '';
-                    // Get location codes
-                    const provinceCode = selectedOption.attr('data-province-code');
-                    const districtCode = selectedOption.attr('data-district-code');
-                    const subDistrictCode = selectedOption.attr('data-sub-district-code');
-                    const villageCode = selectedOption.attr('data-village-code');
+                    // Get location IDs directly (not codes)
+                    const provinceId = selectedOption.attr('data-province-id');
+                    const districtId = selectedOption.attr('data-district-id');
+                    const subDistrictId = selectedOption.attr('data-sub-district-id');
+                    const villageId = selectedOption.attr('data-village-id');
                     const dusun = selectedOption.attr('data-dusun') || '';
 
                     // Isi field yang sesuai
@@ -511,17 +485,20 @@
                     $('#email').val(email);
                     $('#dusun').val(dusun);
 
-                    // Load location data sequentially with proper API calls to get the name for each code
-                    fetchAndSetLocationData(provinceCode, districtCode, subDistrictCode, villageCode);
+                    // Store the location IDs in hidden fields
+                    $('#province_id_hidden').val(provinceId || '');
+                    $('#district_id_hidden').val(districtId || '');
+                    $('#sub_district_id_hidden').val(subDistrictId || '');
+                    $('#village_id_hidden').val(villageId || '');
 
-                    // Fetch family members count
+                    // Use the new function to populate location dropdowns
+                    populateLocationDropdowns(provinceId, districtId, subDistrictId, villageId);
+
+                    // Fetch family members through controller route
                     $.ajax({
                         url: "{{ route('getFamilyMembers') }}",
                         type: "GET",
                         data: { kk: selectedKK },
-                        headers: {
-                            'X-API-Key': "{{ config('services.kependudukan.key') }}"
-                        },
                         success: function (response) {
                             if (response.status === "OK") {
                                 $('#jml_anggota_kk').val(response.count);
@@ -596,11 +573,11 @@
                     const rw = selectedOption.attr('data-rw');
                     const telepon = selectedOption.attr('data-telepon') || '';
                     const email = selectedOption.attr('data-email') || '';
-                    // Get location codes
-                    const provinceCode = selectedOption.attr('data-province-code');
-                    const districtCode = selectedOption.attr('data-district-code');
-                    const subDistrictCode = selectedOption.attr('data-sub-district-code');
-                    const villageCode = selectedOption.attr('data-village-code');
+                    // Get location IDs directly (not codes)
+                    const provinceId = selectedOption.attr('data-province-id');
+                    const districtId = selectedOption.attr('data-district-id');
+                    const subDistrictId = selectedOption.attr('data-sub-district-id');
+                    const villageId = selectedOption.attr('data-village-id');
                     const dusun = selectedOption.attr('data-dusun') || '';
 
                     // Fill in all form fields
@@ -612,17 +589,20 @@
                     $('#email').val(email);
                     $('#dusun').val(dusun);
 
-                    // Load location data sequentially with proper API calls to get the name for each code
-                    fetchAndSetLocationData(provinceCode, districtCode, subDistrictCode, villageCode);
+                    // Store the location IDs in hidden fields
+                    $('#province_id_hidden').val(provinceId || '');
+                    $('#district_id_hidden').val(districtId || '');
+                    $('#sub_district_id_hidden').val(subDistrictId || '');
+                    $('#village_id_hidden').val(villageId || '');
 
-                    // Fetch family members count
+                    // Use the new function to populate location dropdowns
+                    populateLocationDropdowns(provinceId, districtId, subDistrictId, villageId);
+
+                    // Fetch family members through controller route
                     $.ajax({
                         url: "{{ route('getFamilyMembers') }}",
                         type: "GET",
                         data: { kk: kk },
-                        headers: {
-                            'X-API-Key': "{{ config('services.kependudukan.key') }}"
-                        },
                         success: function (response) {
                             if (response.status === "OK") {
                                 $('#jml_anggota_kk').val(response.count);
@@ -692,13 +672,8 @@
 
             // Step 2: Fetch district data based on province code
             $.ajax({
-                url: `${baseUrl}/districts/${provinceCode}`,
+                url: `{{ url('/location/districts') }}/${provinceCode}`,
                 type: 'GET',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'X-API-Key': apiKey
-                },
                 success: function (response) {
                     // Clear and prepare district dropdown
                     $('#district_id').empty().append('<option value="">Pilih Kabupaten</option>');
@@ -729,13 +704,8 @@
                     // If district code exists, fetch sub-districts
                     if (districtCode) {
                         $.ajax({
-                            url: `${baseUrl}/sub-districts/${districtCode}`,
+                            url: `{{ url('/location/sub-districts') }}/${districtCode}`,
                             type: 'GET',
-                            headers: {
-                                'Accept': 'application/json',
-                                'Content-Type': 'application/json',
-                                'X-API-Key': apiKey
-                            },
                             success: function (response) {
                                 // Clear and prepare sub-district dropdown
                                 $('#sub_district_id').empty().append('<option value="">Pilih Kecamatan</option>');
@@ -766,13 +736,8 @@
                                 // If sub-district code exists, fetch villages
                                 if (subDistrictCode) {
                                     $.ajax({
-                                        url: `${baseUrl}/villages/${subDistrictCode}`,
+                                        url: `{{ url('/location/villages') }}/${subDistrictCode}`,
                                         type: 'GET',
-                                        headers: {
-                                            'Accept': 'application/json',
-                                            'Content-Type': 'application/json',
-                                            'X-API-Key': apiKey
-                                        },
                                         success: function (response) {
                                             // Clear and prepare village dropdown
                                             $('#village_id').empty().append('<option value="">Pilih Desa/Kelurahan</option>');
@@ -845,13 +810,8 @@
 
                 // Ambil data kabupaten dari API
                 $.ajax({
-                    url: `${baseUrl}/districts/${provinceCode}`,
+                    url: `{{ url('/location/districts') }}/${provinceCode}`,
                     type: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                        'X-API-Key': apiKey
-                    },
                     success: function (response) {
                         $('#district_id').empty().append('<option value="">Pilih Kabupaten</option>');
 
@@ -903,13 +863,8 @@
 
                 // Fetch sub-districts from API
                 $.ajax({
-                    url: `${baseUrl}/sub-districts/${districtCode}`,
+                    url: `{{ url('/location/sub-districts') }}/${districtCode}`,
                     type: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                        'X-API-Key': apiKey
-                    },
                     success: function (response) {
                         $('#sub_district_id').empty().append('<option value="">Pilih Kecamatan</option>');
 
@@ -959,13 +914,8 @@
 
                 // Fetch villages from API
                 $.ajax({
-                    url: `${baseUrl}/villages/${subDistrictCode}`,
+                    url: `{{ url('/location/villages') }}/${subDistrictCode}`,
                     type: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                        'X-API-Key': apiKey
-                    },
                     success: function (response) {
                         $('#village_id').empty().append('<option value="">Pilih Desa/Kelurahan</option>');
 
@@ -1002,6 +952,326 @@
             } else {
                 $('#village_id_hidden').val('');
             }
+        });
+
+        // Add this function to map location IDs to their corresponding codes and populate dropdowns
+        async function populateLocationDropdowns(provinceId, districtId, subDistrictId, villageId) {
+            try {
+                // First, store the IDs in hidden fields
+                $('#province_id_hidden').val(provinceId || '');
+                $('#district_id_hidden').val(districtId || '');
+                $('#sub_district_id_hidden').val(subDistrictId || '');
+                $('#village_id_hidden').val(villageId || '');
+
+                // Then populate province dropdown (should already be populated on page load)
+                if (provinceId) {
+                    // Get province data from API
+                    const provinceResponse = await axios.get('{{ route("location.provinces") }}');
+                    if (provinceResponse.data && provinceResponse.data.data) {
+                        // Find matching province by ID
+                        const province = provinceResponse.data.data.find(p => p.id == provinceId);
+                        if (province) {
+                            // Update province dropdown
+                            $('#province_id').val(province.code);
+
+                            // Now get district data for this province
+                            const districtResponse = await axios.get(`{{ url('/location/districts') }}/${province.code}`);
+
+                            if (districtResponse.data && Array.isArray(districtResponse.data)) {
+                                // Clear and repopulate district dropdown
+                                $('#district_id').empty()
+                                    .append('<option value="">Pilih Kabupaten</option>')
+                                    .prop('disabled', false);
+
+                                // Add all districts
+                                districtResponse.data.forEach(district => {
+                                    $('#district_id').append(
+                                        `<option value="${district.code}" data-id="${district.id}">${district.name}</option>`
+                                    );
+                                    // Store mapping
+                                    districtIdMap[district.code] = district.id;
+                                    districtCodeMap[district.id] = district.code;
+                                });
+
+                                // If we have a district ID, select it
+                                if (districtId) {
+                                    // Find the district by ID
+                                    const district = districtResponse.data.find(d => d.id == districtId);
+                                    if (district) {
+                                        $('#district_id').val(district.code);
+
+                                        // Now get subdistrict data
+                                        const subDistrictResponse = await axios.get(`{{ url('/location/sub-districts') }}/${district.code}`);
+
+                                        if (subDistrictResponse.data && Array.isArray(subDistrictResponse.data)) {
+                                            // Clear and repopulate subdistrict dropdown
+                                            $('#sub_district_id').empty()
+                                                .append('<option value="">Pilih Kecamatan</option>')
+                                                .prop('disabled', false);
+
+                                            // Add all subdistricts
+                                            subDistrictResponse.data.forEach(subDistrict => {
+                                                $('#sub_district_id').append(
+                                                    `<option value="${subDistrict.code}" data-id="${subDistrict.id}">${subDistrict.name}</option>`
+                                                );
+                                                // Store mapping
+                                                subDistrictIdMap[subDistrict.code] = subDistrict.id;
+                                                subDistrictCodeMap[subDistrict.id] = subDistrict.code;
+                                            });
+
+                                            // If we have a subdistrict ID, select it
+                                            if (subDistrictId) {
+                                                // Find the subdistrict by ID
+                                                const subDistrict = subDistrictResponse.data.find(sd => sd.id == subDistrictId);
+                                                if (subDistrict) {
+                                                    $('#sub_district_id').val(subDistrict.code);
+
+                                                    // Now get village data
+                                                    const villageResponse = await axios.get(`{{ url('/location/villages') }}/${subDistrict.code}`);
+
+                                                    if (villageResponse.data && Array.isArray(villageResponse.data)) {
+                                                        // Clear and repopulate village dropdown
+                                                        $('#village_id').empty()
+                                                            .append('<option value="">Pilih Desa/Kelurahan</option>')
+                                                            .prop('disabled', false);
+
+                                                        // Add all villages
+                                                        villageResponse.data.forEach(village => {
+                                                            $('#village_id').append(
+                                                                `<option value="${village.code}" data-id="${village.id}">${village.name}</option>`
+                                                            );
+                                                            // Store mapping
+                                                            villageIdMap[village.code] = village.id;
+                                                            villageCodeMap[village.id] = village.code;
+                                                        });
+
+                                                        // If we have a village ID, select it
+                                                        if (villageId) {
+                                                            // Find the village by ID
+                                                            const village = villageResponse.data.find(v => v.id == villageId);
+                                                            if (village) {
+                                                                $('#village_id').val(village.code);
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                // Silent error handling
+            }
+        }
+
+        // Update the KK select change handler to use the new function
+        $('#kkSelect').on('change', function () {
+            if (isUpdating) return; // Hindari rekursi
+            isUpdating = true;
+
+            const selectedKK = $(this).val(); // Ambil nilai yang dipilih
+            const selectedOption = $(this).find('option:selected'); // Ambil opsi yang dipilih
+
+            if (selectedKK) {
+                // Ambil data dari atribut data-*
+                const fullName = selectedOption.attr('data-full-name');
+                const address = selectedOption.attr('data-address');
+                const postalCode = selectedOption.attr('data-postal-code');
+                const rt = selectedOption.attr('data-rt');
+                const rw = selectedOption.attr('data-rw');
+                const telepon = selectedOption.attr('data-telepon') || '';
+                const email = selectedOption.attr('data-email') || '';
+                // Get location IDs directly (not codes)
+                const provinceId = selectedOption.attr('data-province-id');
+                const districtId = selectedOption.attr('data-district-id');
+                const subDistrictId = selectedOption.attr('data-sub-district-id');
+                const villageId = selectedOption.attr('data-village-id');
+                const dusun = selectedOption.attr('data-dusun') || '';
+
+                // Isi field yang sesuai
+                $('#full_name').val(fullName || '').trigger('change.select2');
+                $('#address').val(address || '');
+                $('#postal_code').val(postalCode || '');
+                $('#rt').val(rt || '');
+                $('#rw').val(rw || '');
+                $('#telepon').val(telepon);
+                $('#email').val(email);
+                $('#dusun').val(dusun);
+
+                // Store the location IDs in hidden fields
+                $('#province_id_hidden').val(provinceId || '');
+                $('#district_id_hidden').val(districtId || '');
+                $('#sub_district_id_hidden').val(subDistrictId || '');
+                $('#village_id_hidden').val(villageId || '');
+
+                // Use the new function to populate location dropdowns
+                populateLocationDropdowns(provinceId, districtId, subDistrictId, villageId);
+
+                // Fetch family members through controller route
+                $.ajax({
+                    url: "{{ route('getFamilyMembers') }}",
+                    type: "GET",
+                    data: { kk: selectedKK },
+                    success: function (response) {
+                        if (response.status === "OK") {
+                            $('#jml_anggota_kk').val(response.count);
+
+                            // Clear previous fields
+                            $('#familyMembersContainer').empty();
+
+                            // Create fields for each family member
+                            if (response.data && Array.isArray(response.data)) {
+                                response.data.forEach((member, index) => {
+                                    const fieldHtml = `
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700">Anggota ${index + 1}</label>
+                                    <input type="text"
+                                        value="${member.full_name} - ${member.family_status}"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
+                                        readonly>
+                                    <input type="hidden" name="family_members[${index}][full_name]" value="${member.full_name}">
+                                    <input type="hidden" name="family_members[${index}][family_status]" value="${member.family_status}">
+                                </div>
+                            `;
+                                    $('#familyMembersContainer').append(fieldHtml);
+                                });
+                            }
+                        } else {
+                            $('#jml_anggota_kk').val(0);
+                            $('#familyMembersContainer').empty();
+                        }
+                    },
+                    error: function () {
+                        $('#jml_anggota_kk').val(0);
+                        $('#familyMembersContainer').empty();
+                    }
+                });
+
+            } else {
+                // Kosongkan field jika tidak ada pilihan
+                $('#full_name').val('').trigger('change.select2');
+                $('#address').val('');
+                $('#postal_code').val('');
+                $('#rt').val('');
+                $('#rw').val('');
+                $('#telepon').val('');
+                $('#email').val('');
+                $('#provinc_id').val('');
+                $('#district_id').val('');
+                $('#sub_district_id').val('');
+                $('#village_id').val('');
+                $('#dusun').val('');
+            }
+
+            isUpdating = false; // Reset flag
+        });
+
+        // Similar update for fullNameSelect change handler
+        $('#full_name').on('change', function() {
+            if (isUpdating) return; // Hindari rekursi
+            isUpdating = true;
+
+            const selectedName = $(this).val(); // Ambil nilai yang dipilih
+            const selectedOption = $(this).find('option:selected'); // Ambil opsi yang dipilih
+
+            if (selectedName) {
+                // Set KK value but don't trigger change to avoid recursion
+                const kk = selectedOption.attr('data-kk');
+                $('#kkSelect').val(kk).trigger('change.select2');
+
+                // Directly populate all fields from the name selection data attributes
+                const address = selectedOption.attr('data-address');
+                const postalCode = selectedOption.attr('data-postal-code');
+                const rt = selectedOption.attr('data-rt');
+                const rw = selectedOption.attr('data-rw');
+                const telepon = selectedOption.attr('data-telepon') || '';
+                const email = selectedOption.attr('data-email') || '';
+                // Get location IDs directly (not codes)
+                const provinceId = selectedOption.attr('data-province-id');
+                const districtId = selectedOption.attr('data-district-id');
+                const subDistrictId = selectedOption.attr('data-sub-district-id');
+                const villageId = selectedOption.attr('data-village-id');
+                const dusun = selectedOption.attr('data-dusun') || '';
+
+                // Fill in all form fields
+                $('#address').val(address || '');
+                $('#postal_code').val(postalCode || '');
+                $('#rt').val(rt || '');
+                $('#rw').val(rw || '');
+                $('#telepon').val(telepon);
+                $('#email').val(email);
+                $('#dusun').val(dusun);
+
+                // Store the location IDs in hidden fields
+                $('#province_id_hidden').val(provinceId || '');
+                $('#district_id_hidden').val(districtId || '');
+                $('#sub_district_id_hidden').val(subDistrictId || '');
+                $('#village_id_hidden').val(villageId || '');
+
+                // Use the new function to populate location dropdowns
+                populateLocationDropdowns(provinceId, districtId, subDistrictId, villageId);
+
+                // Fetch family members through controller route
+                $.ajax({
+                    url: "{{ route('getFamilyMembers') }}",
+                    type: "GET",
+                    data: { kk: kk },
+                    success: function (response) {
+                        if (response.status === "OK") {
+                            $('#jml_anggota_kk').val(response.count);
+
+                            // Clear previous fields
+                            $('#familyMembersContainer').empty();
+
+                            // Create fields for each family member
+                            if (response.data && Array.isArray(response.data)) {
+                                response.data.forEach((member, index) => {
+                                    const fieldHtml = `
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700">Anggota ${index + 1}</label>
+                                    <input type="text"
+                                        value="${member.full_name} - ${member.family_status}"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
+                                        readonly>
+                                    <input type="hidden" name="family_members[${index}][full_name]" value="${member.full_name}">
+                                    <input type="hidden" name="family_members[${index}][family_status]" value="${member.family_status}">
+                                </div>
+                            `;
+                                    $('#familyMembersContainer').append(fieldHtml);
+                                });
+                            }
+                        } else {
+                            $('#jml_anggota_kk').val(0);
+                            $('#familyMembersContainer').empty();
+                        }
+                    },
+                    error: function () {
+                        $('#jml_anggota_kk').val(0);
+                        $('#familyMembersContainer').empty();
+                    }
+                });
+            } else {
+                // Clear fields if no name is selected
+                $('#address').val('');
+                $('#postal_code').val('');
+                $('#rt').val('');
+                $('#rw').val('');
+                $('#telepon').val('');
+                $('#email').val('');
+                $('#province_id').val('');
+                $('#district_id').val('');
+                $('#sub_district_id').val('');
+                $('#village_id').val('');
+                $('#dusun').val('');
+                $('#jml_anggota_kk').val('');
+                $('#familyMembersContainer').empty();
+            }
+
+            isUpdating = false; // Reset flag
         });
     </script>
 

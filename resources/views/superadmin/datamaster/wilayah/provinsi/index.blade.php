@@ -1,29 +1,5 @@
 <x-layout>
     <div class="p-4 mt-14">
-        @if(session('success'))
-            <div id="success-alert" class="fixed top-5 right-5 z-50 flex items-center p-4 mb-4 text-white bg-green-500 rounded-lg shadow-lg transition-opacity duration-500">
-                <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11.414V8a1 1 0 10-2 0v5.414l-.707-.707a1 1 0 10-1.414 1.414l2 2a1 1 0 001.414 0l2-2a1 1 0 00-1.414-1.414l-.707.707z" clip-rule="evenodd"></path>
-                </svg>
-                <span>{{ session('success') }}</span>
-                <button onclick="closeAlert()" class="ml-4 text-white focus:outline-none">
-                    ✖
-                </button>
-            </div>
-        @endif
-
-        <!-- Alert Error -->
-        @if(session('error'))
-            <div id="error-alert" class="fixed top-5 right-5 z-50 flex items-center p-4 mb-4 text-white bg-red-500 rounded-lg shadow-lg transition-opacity duration-500">
-                <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11.414V8a1 1 0 10-2 0v5.414l-.707-.707a1 1 0 10-1.414 1.414l2 2a1 1 0 001.414 0l2-2a1 1 0 00-1.414-1.414l-.707.707z" clip-rule="evenodd"></path>
-                </svg>
-                <span>{{ session('error') }}</span>
-                <button onclick="closeAlert()" class="ml-4 text-white focus:outline-none">
-                    ✖
-                </button>
-            </div>
-        @endif
 
         <!-- Judul H1 -->
         <h1 class="text-2xl font-bold text-gray-800 mb-6">Master Data Provinsi</h1>
@@ -58,17 +34,15 @@
             <table class="w-full text-sm text-left text-gray-500">
                 <thead class="text-xs text-gray-700 uppercase bg-[#e6e8ed]">
                     <tr>
-                        <th scope="col" class="px-6 py-3">ID</th>
+                        <th scope="col" class="px-6 py-3">Kode</th>
                         <th scope="col" class="px-6 py-3">Nama Provinsi</th>
-                        <th scope="col" class="px-6 py-3">Jumlah Kabupaten</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($provinces as $province)
                         <tr class="bg-white border-gray-300 border-b hover:bg-gray-50">
-                            <td class="px-6 py-4">{{ $province['id'] }}</td>
+                            <td class="px-6 py-4">{{ $province['code'] }}</td>
                             <td class="px-6 py-4">{{ $province['name'] }}</td>
-                            <td class="px-6 py-4">{{ $province['kabupaten_count'] ?? '-' }}</td>
                         </tr>
                     @empty
                         <tr>

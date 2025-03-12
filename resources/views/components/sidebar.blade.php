@@ -57,9 +57,19 @@
             {{-- Menu berdasarkan role --}}
             @if ($user->role == 'superadmin')
             <li class="-ml-5">
+                <a href="{{ route('superadmin.index') }}"
+                    class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                        {{ request()->routeIs('superadmin.index')
+                            ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                            : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                    <i class="fa-solid fa-gauge-high text-lg transition-all duration-300"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li class="-ml-5">
                 <a href="{{ route('superadmin.biodata.index') }}"
                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                        {{ request()->routeIs('superadmin.biodata.index')
+                        {{ request()->routeIs('superadmin.biodata*')
                             ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
                             : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                     <i class="fa-regular fa-clipboard text-lg transition-all duration-300"></i>
@@ -69,7 +79,7 @@
             <li class="-ml-5">
                 <a href="{{ route('superadmin.datakk.index') }}"
                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                        {{ request()->routeIs('superadmin.datakk.index')
+                        {{ request()->routeIs('superadmin.datakk*')
                             ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
                             : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                     <i class="fa-solid fa-people-group text-lg transition-all duration-300"></i>
@@ -77,17 +87,18 @@
                 </a>
             </li>
             <li class="-ml-5">
-                <button type="button" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white" onclick="toggleDropdown('masterDataDropdown')">
+                <button type="button"
+                    class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
+                    onclick="toggleDropdown('masterDataDropdown')">
                     <i class="fa-solid fa-database text-lg transition-all duration-300"></i>
                     <span>Master Data</span>
                     <i id="dropdown-icon" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
                 </button>
                 <ul id="masterDataDropdown" class="hidden space-y-2 pl-6">
-
                     <li>
                         <a href="{{ route('superadmin.datamaster.job.index') }}"
                             class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                {{ request()->routeIs('superadmin.datamaster.job.index')
+                                {{ request()->routeIs('superadmin.datamaster.job*')
                                     ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
                                     : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                             <i class="fa-solid fa-briefcase text-lg transition-all duration-300"></i>
@@ -97,7 +108,7 @@
                     <li>
                         <a href="{{ route('superadmin.datamaster.user.index') }}"
                             class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                {{ request()->routeIs('superadmin.datamaster.user.index')
+                                {{ request()->routeIs('superadmin.datamaster.user*')
                                     ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
                                     : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                             <i class="fa-solid fa-users text-lg transition-all duration-300"></i>
@@ -105,7 +116,9 @@
                         </a>
                     </li>
                     <li>
-                        <button type="button" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white" onclick="toggleDropdown('wilayahDropdown')">
+                        <button type="button"
+                            class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
+                            onclick="toggleDropdown('wilayahDropdown')">
                             <i class="fa-solid fa-map text-lg transition-all duration-300"></i>
                             <span>Master Wilayah</span>
                             <i id="dropdown-icon-wilayah" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
@@ -114,7 +127,7 @@
                             <li>
                                 <a href="{{ route('superadmin.datamaster.wilayah.provinsi.index') }}"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                        {{ request()->routeIs('superadmin.datamaster.wilayah.provinsi.index')
+                                        {{ request()->routeIs('superadmin.datamaster.wilayah.provinsi*')
                                             ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
                                             : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Provinsi</span>
@@ -123,7 +136,7 @@
                             <li>
                                 <a href="{{ route('superadmin.datamaster.wilayah.kabupaten.index', ['provinceCode' => '11']) }}"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                        {{ request()->routeIs('superadmin.datamaster.wilayah.kabupaten.index')
+                                        {{ request()->routeIs('superadmin.datamaster.wilayah.kabupaten*')
                                             ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
                                             : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Kabupaten</span>
@@ -132,7 +145,7 @@
                             <li>
                                 <a href="{{ route('superadmin.datamaster.wilayah.kecamatan.index', ['kotaCode' => '1101']) }}"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                        {{ request()->routeIs('superadmin.datamaster.wilayah.kecamatan.index')
+                                        {{ request()->routeIs('superadmin.datamaster.wilayah.kecamatan*')
                                             ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
                                             : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Kecamatan</span>
@@ -142,7 +155,7 @@
                             <li>
                                 <a href=""
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                        {{ request()->routeIs('superadmin.datamaster.wilayah.desa.index')
+                                        {{ request()->routeIs('superadmin.datamaster.wilayah.desa*')
                                             ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
                                             : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Desa</span>

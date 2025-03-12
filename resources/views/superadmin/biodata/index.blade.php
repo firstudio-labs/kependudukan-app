@@ -692,23 +692,55 @@
             document.getElementById('detailEducationStatus').innerText = educationStatusMap[biodata.education_status] || biodata.education_status;
             document.getElementById('detailFamilyStatus').innerText = familyStatusMap[biodata.family_status] || biodata.family_status;
 
-            // Format tanggal
+            // Improved format date function that handles more date formats
             const formatDate = (dateStr) => {
-                if (!dateStr) return '-';
-                const date = new Date(dateStr);
-                return date.toLocaleDateString('id-ID', {
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric'
-                });
-            };
+                if (!dateStr || dateStr === " " || dateStr === "null") return '-';
 
-            // Show loading indicators for location data
-            document.getElementById('detailProvinceId').innerText = 'Memuat...';
-            document.getElementById('detailDistrictId').innerText = 'Memuat...';
-            document.getElementById('detailSubDistrictId').innerText = 'Memuat...';
-            document.getElementById('detailVillageId').innerText = 'Memuat...';
-            document.getElementById('detailJobName').innerText = 'Memuat...';
+                // Try to detect the format and parse the date correctly
+                try {
+                    let date;
+
+                    // Check if dateStr is in dd/MM/yyyy format
+                    if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
+                        const parts = dateStr.split('/');
+                        // Create date with format: year, month (0-based), day
+                        date = new Date(
+                            parseInt(parts[2]),
+                            parseInt(parts[1]) - 1,
+                            parseInt(parts[0])
+                        );
+                    }
+                    // Check if dateStr is in yyyy-MM-dd format
+                    else if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+                        const parts = dateStr.split('-');
+                        date = new Date(
+                            parseInt(parts[0]),
+                            parseInt(parts[1]) - 1,
+                            parseInt(parts[2])
+                        );
+                    }
+                    // Otherwise try standard date parsing
+                    else {
+                        date = new Date(dateStr);
+                    }
+
+                    // Verify that the date is valid
+                    if (isNaN(date.getTime())) {
+                        console.error('Invalid date after parsing:', dateStr);
+                        return '-';
+                    }
+
+                    // Format the date in Indonesian locale
+                    return date.toLocaleDateString('id-ID', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric'
+                    });
+                } catch (error) {
+                    console.error('Error formatting date:', error, dateStr);
+                    return '-';
+                }
+            };
 
             // Set nilai-nilai lainnya
             document.getElementById('detailNIK').innerText = biodata.nik || '-';

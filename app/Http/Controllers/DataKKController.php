@@ -36,35 +36,19 @@ class DataKKController extends Controller
     public function create()
     {
         // Get provinces data with caching
-        $provinces = Cache::remember('provinces', 3600, function () {
-            return $this->getProvinces();
-        });
+        $provinces = $this->wilayahService->getProvinces();
 
-        return view('superadmin.datakk.create', compact('provinces'));
-    }
+        // Initialize empty arrays for district, sub-district, and village data
+        $districts = [];
+        $subDistricts = [];
+        $villages = [];
 
-    /**
-     * Get provinces with proper structure for the dropdown
-     */
-    private function getProvinces()
-    {
-        try {
-            $baseUrl = config('services.kependudukan.url');
-            $apiKey = config('services.kependudukan.key');
-
-            $response = Http::withHeaders([
-                'Accept' => 'application/json',
-                'Content-Type' => 'application/json',
-                'X-API-Key' => $apiKey,
-            ])->get("{$baseUrl}/api/provinces");
-
-            if ($response->successful()) {
-                return $response->json()['data'] ?? [];
-            }
-            return [];
-        } catch (\Exception $e) {
-            return [];
-        }
+        return view('superadmin.datakk.create', compact(
+            'provinces',
+            'districts',
+            'subDistricts',
+            'villages'
+        ));
     }
 
     public function store(Request $request)
@@ -121,10 +105,34 @@ class DataKKController extends Controller
 
         // Get provinces data with caching
         $provinces = Cache::remember('provinces', 3600, function () {
-            return $this->getProvinces();
+            return $this->wilayahService->getProvinces();
         });
 
-        return view('superadmin.datakk.update', compact('kk', 'provinces'));
+        // Log the province data for debugging
+        Log::info('Provinces data for KK edit', [
+            'count' => count($provinces),
+            'kk_province_id' => $kk->province_id
+        ]);
+
+        // Get location data for pre-selecting dropdowns
+        $districts = $this->wilayahService->getKabupaten($kk->province_id);
+        $subDistricts = $this->wilayahService->getKecamatan($kk->district_id);
+        $villages = $this->wilayahService->getDesa($kk->sub_district_id);
+
+        // Log the fetched location data to ensure it's being retrieved correctly
+        Log::info('Location data for KK edit', [
+            'districts_count' => count($districts),
+            'sub_districts_count' => count($subDistricts),
+            'villages_count' => count($villages),
+        ]);
+
+        return view('superadmin.datakk.update', compact(
+            'kk',
+            'provinces',
+            'districts',
+            'subDistricts',
+            'villages'
+        ));
     }
 
     public function update(Request $request, $id)
@@ -169,50 +177,118 @@ class DataKKController extends Controller
         }
     }
 
-    public function fetchAllCitizens()
+    public function fetchAllCitizens(Request $request)
     {
-        $citizens = $this->citizenService->getAllCitizens();
+        // Get search parameters
+        $search = $request->input('search');
+        $page = $request->input('page', 1);
+        $limit = $request->input('limit', 100);
 
-        if ($citizens) {
-            return response()->json($citizens);
-        } else {
-            return response()->json(['error' => 'Data tidak ditemukan'], 404);
+        // Use cache for non-search queries to improve performance
+        $cacheKey = "citizens_all_{$page}_{$limit}";
+
+        // Only use cache for non-search queries
+        if (!$search && Cache::has($cacheKey)) {
+            return response()->json(Cache::get($cacheKey));
         }
+
+        // Get citizens with parameters and transform to expected format
+        $response = $search
+            ? $this->citizenService->searchCitizens($search, $page, $limit)
+            : $this->citizenService->getAllCitizensWithHighLimit($page, $limit);
+
+        // Extract citizens array from the response structure
+        $citizens = [];
+        $status = 'ERROR';
+
+        if (isset($response['data']) && isset($response['data']['citizens']) && is_array($response['data']['citizens'])) {
+            // Format from API: { data: { citizens: [...] } }
+            $citizens = $response['data']['citizens'];
+            $status = 'OK';
+        } elseif (isset($response['data']) && is_array($response['data'])) {
+            // Format directly: { data: [...] }
+            $citizens = $response['data'];
+            $status = 'OK';
+        }
+
+        // Filter only needed fields to reduce response size
+        $citizens = array_map(function($citizen) {
+            return [
+                'kk' => $citizen['kk'] ?? '',
+                'full_name' => $citizen['full_name'] ?? '',
+                'address' => $citizen['address'] ?? '',
+                'postal_code' => $citizen['postal_code'] ?? '',
+                'rt' => $citizen['rt'] ?? '',
+                'rw' => $citizen['rw'] ?? '',
+                'telepon' => $citizen['telepon'] ?? '',
+                'email' => $citizen['email'] ?? '',
+                'province_id' => $citizen['province_id'] ?? '',
+                'district_id' => $citizen['district_id'] ?? '',
+                'sub_district_id' => $citizen['sub_district_id'] ?? '',
+                'village_id' => $citizen['village_id'] ?? '',
+                'dusun' => $citizen['dusun'] ?? '',
+                'family_status' => $citizen['family_status'] ?? '',
+            ];
+        }, $citizens);
+
+        // Prepare the response
+        $responseData = [
+            'status' => $status,
+            'count' => count($citizens),
+            'data' => $citizens
+        ];
+
+        // Cache non-search results for 5 minutes
+        if (!$search) {
+            Cache::put($cacheKey, $responseData, now()->addMinutes(5));
+        }
+
+        return response()->json($responseData);
     }
 
     public function getFamilyMembers(Request $request)
     {
         $kk = $request->input('kk');
+
+        // Use a short cache for family members (1 minute)
         $cacheKey = "family_members_{$kk}";
 
-        // Load family members with appropriate citizen data including location information
-        return Cache::remember($cacheKey, 300, function () use ($kk) {
-            $familyMembers = $this->citizenService->getFamilyMembersByKK($kk);
+        if (Cache::has($cacheKey)) {
+            return response()->json(Cache::get($cacheKey));
+        }
 
-            if ($familyMembers && isset($familyMembers['data']) && is_array($familyMembers['data'])) {
-                // Sort family members to put Kepala Keluarga first
-                $sortedMembers = collect($familyMembers['data'])->sortBy(function ($member) {
-                    $order = [
-                        'KEPALA KELUARGA' => 1,
-                        'ISTRI' => 2,
-                        'ANAK' => 3
-                    ];
-                    return $order[$member['family_status']] ?? 999;
-                })->values()->all();
+        // Get family members
+        $familyMembers = $this->citizenService->getFamilyMembersByKK($kk);
 
-                return response()->json([
-                    'status' => 'OK',
-                    'count' => count($sortedMembers),
-                    'data' => $sortedMembers
-                ]);
-            }
+        if ($familyMembers && isset($familyMembers['data']) && is_array($familyMembers['data'])) {
+            // Sort family members to put Kepala Keluarga first
+            $sortedMembers = collect($familyMembers['data'])->sortBy(function ($member) {
+                $order = [
+                    'KEPALA KELUARGA' => 1,
+                    'ISTRI' => 2,
+                    'ANAK' => 3
+                ];
+                return $order[$member['family_status']] ?? 999;
+            })->values()->all();
 
-            return response()->json([
-                'status' => 'ERROR',
-                'count' => 0,
-                'message' => 'Gagal mengambil data anggota keluarga'
-            ]);
-        });
+            // Prepare response
+            $responseData = [
+                'status' => 'OK',
+                'count' => count($sortedMembers),
+                'data' => $sortedMembers
+            ];
+
+            // Cache the result for 1 minute
+            Cache::put($cacheKey, $responseData, now()->addMinute());
+
+            return response()->json($responseData);
+        }
+
+        return response()->json([
+            'status' => 'ERROR',
+            'count' => 0,
+            'message' => 'Gagal mengambil data anggota keluarga'
+        ]);
     }
 
     public function getFamilyMembersByKK($kk_id)
@@ -238,6 +314,52 @@ class DataKKController extends Controller
                 'message' => 'Gagal mengambil data anggota keluarga'
             ], 500);
         }
+    }
+
+    // Add these methods for location data
+    /**
+     * Get provinces with both ID and code for mapping purposes
+     */
+    public function getProvinces()
+    {
+        $provinces = $this->wilayahService->getProvinces();
+
+        // Log the data to verify it contains both ID and code
+        Log::info('Provinces data', [
+            'count' => count($provinces),
+            'sample' => !empty($provinces) ? $provinces[0] : 'No data'
+        ]);
+
+        return response()->json(['data' => $provinces]);
+    }
+
+    /**
+     * Get districts with both ID and code for mapping purposes
+     */
+    public function getDistricts($provinceCode)
+    {
+        $districts = $this->wilayahService->getKabupaten($provinceCode);
+
+        // Log the data to verify it contains both ID and code
+        Log::info('Districts data', [
+            'for_province' => $provinceCode,
+            'count' => count($districts),
+            'sample' => !empty($districts) ? $districts[0] : 'No data'
+        ]);
+
+        return response()->json($districts);
+    }
+
+    public function getSubDistricts($districtCode)
+    {
+        $subDistricts = $this->wilayahService->getKecamatan($districtCode);
+        return response()->json($subDistricts);
+    }
+
+    public function getVillages($subDistrictCode)
+    {
+        $villages = $this->wilayahService->getDesa($subDistrictCode);
+        return response()->json($villages);
     }
 }
 

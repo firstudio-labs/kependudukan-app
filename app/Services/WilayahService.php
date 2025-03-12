@@ -59,8 +59,6 @@ class WilayahService
     public function getKabupaten($provinceCode)
     {
         try {
-            Log::info('Fetching districts for province code/id: ' . $provinceCode);
-
             $response = Http::withHeaders([
                 'Accept' => 'application/json',
                 'Content-Type' => 'application/json',
@@ -69,15 +67,6 @@ class WilayahService
 
             if ($response->successful()) {
                 $responseData = $response->json();
-
-                // Debug the actual response
-                Log::info('District API Response:', [
-                    'status' => $responseData['status'] ?? 'No status',
-                    'message' => $responseData['message'] ?? 'No message',
-                    'has_data' => isset($responseData['data']) ? 'Yes' : 'No',
-                    'data_count' => isset($responseData['data']) ? count($responseData['data']) : 0,
-                    'sample' => isset($responseData['data'][0]) ? $responseData['data'][0] : null
-                ]);
 
                 if (isset($responseData['data']) && is_array($responseData['data'])) {
                     return collect($responseData['data'])->map(function ($district) {
@@ -103,8 +92,6 @@ class WilayahService
             return [];
         }
     }
-
-
 
     public function getKecamatan($kotaCode)
     {

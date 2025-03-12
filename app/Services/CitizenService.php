@@ -35,6 +35,11 @@ class CitizenService
         }
     }
 
+    /**
+     * Get all citizens who are heads of families
+     *
+     * @return array|null
+     */
     public function getHeadsOfFamily()
     {
         $allHeadsOfFamily = [];
@@ -57,9 +62,9 @@ class CitizenService
                             return isset($citizen['family_status']) && $citizen['family_status'] === 'KEPALA KELUARGA';
                         });
 
-                        $allHeadsOfFamily = array_merge($allHeadsOfFamily, $headsOfFamily);
+                        $allHeadsOfFamily = array_merge($allHeadsOfFamily, array_values($headsOfFamily));
 
-                        $hasMoreData = $data['data']['pagination']['has_more_pages'];
+                        $hasMoreData = $data['data']['pagination']['has_more_pages'] ?? false;
                         $page++;
                     } else {
                         Log::error('Invalid API response structure');
@@ -75,7 +80,11 @@ class CitizenService
             }
         }
 
-        return $allHeadsOfFamily;
+        return [
+            'status' => 'OK',
+            'count' => count($allHeadsOfFamily),
+            'data' => $allHeadsOfFamily
+        ];
     }
 
     public function getAllCitizens($page = 1, $search = null)
@@ -98,6 +107,68 @@ class CitizenService
         } catch (\Exception $e) {
             Log::error('Error fetching citizens data: ' . $e->getMessage());
             return null;
+        }
+    }
+
+    // Add a new method with higher limit to fetch more citizens at once
+    /**
+     * Get all citizens with a high limit and detailed logging
+     */
+    public function getAllCitizensWithHighLimit($search = null)
+    {
+        try {
+            Log::info('Requesting citizens data with high limit');
+
+            $response = Http::withHeaders([
+                'X-API-Key' => $this->apiKey,
+            ])->get("{$this->baseUrl}/api/all-citizens");
+
+            if ($response->successful()) {
+                $data = $response->json();
+                Log::info('API responded successfully', [
+                    'status_code' => $response->status(),
+                    'has_data' => isset($data['data']),
+                    'data_structure' => json_encode(array_keys($data)),
+                    'citizens_type' => isset($data['citizens']) ? gettype($data['citizens']) : 'not set',
+                    'citizen_count' => isset($data['citizens']) ? count($data['citizens']) : 'N/A'
+                ]);
+
+                // Check different possible structures for the response
+                if (isset($data['citizens']) && is_array($data['citizens'])) {
+                    return [
+                        'status' => 'OK',
+                        'data' => ['citizens' => $data['citizens']]
+                    ];
+                } elseif (isset($data['data']) && is_array($data['data'])) {
+                    return $data;
+                } else {
+                    // Return a fallback structure
+                    return [
+                        'status' => 'OK',
+                        'data' => ['citizens' => $data]
+                    ];
+                }
+            } else {
+                Log::error('API request failed', [
+                    'status_code' => $response->status(),
+                    'response_body' => $response->body()
+                ]);
+                return [
+                    'status' => 'ERROR',
+                    'message' => 'Failed to fetch citizens',
+                    'data' => []
+                ];
+            }
+        } catch (\Exception $e) {
+            Log::error('Exception fetching citizens data', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return [
+                'status' => 'ERROR',
+                'message' => 'Error: ' . $e->getMessage(),
+                'data' => []
+            ];
         }
     }
 

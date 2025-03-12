@@ -371,9 +371,6 @@
             });
         @endif
 
-        // Replace the incomplete JavaScript section with this:
-// Replace the JavaScript section with this code that uses the external API directly
-
 document.addEventListener('DOMContentLoaded', function() {
     const provinceSelect = document.getElementById('province_code');
     const districtSelect = document.getElementById('district_code');
@@ -386,26 +383,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const subDistrictIdInput = document.getElementById('sub_district_id');
     const villageIdInput = document.getElementById('village_id');
 
-    // API config
-    const baseUrl = 'http://api-kependudukan.desaverse.id:3000/api';
-    const apiKey = '{{ config('services.kependudukan.key') }}';
-
     // Helper function to reset select options
     function resetSelect(select, defaultText = 'Pilih', hiddenInput = null) {
         select.innerHTML = `<option value="">${defaultText}</option>`;
         select.disabled = true;
         if (hiddenInput) hiddenInput.value = '';
-    }
-
-    // Helper function to make API requests
-    function fetchFromAPI(endpoint) {
-        return axios.get(`${baseUrl}/${endpoint}`, {
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'X-API-Key': apiKey
-            }
-        });
     }
 
     // Helper function to populate select options with code as value and id as data attribute
@@ -425,7 +407,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (hiddenInput) hiddenInput.value = '';
         } catch (error) {
-            console.error('Error populating select:', error);
             select.innerHTML = `<option value="">Error loading data</option>`;
             select.disabled = true;
             if (hiddenInput) hiddenInput.value = '';
@@ -445,7 +426,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Province change handler
     provinceSelect.addEventListener('change', function() {
         const provinceCode = this.value;
-        console.log('Selected province code:', provinceCode);
 
         // Update the hidden input with the ID
         updateHiddenInput(this, provinceIdInput);
@@ -455,25 +435,18 @@ document.addEventListener('DOMContentLoaded', function() {
         resetSelect(villageSelect, 'Pilih Desa', villageIdInput);
 
         if (provinceCode) {
-            console.log('Fetching districts for province:', provinceCode);
-            fetchFromAPI(`districts/${provinceCode}`)
-                .then(response => {
-                    console.log('Districts API response:', response.data);
-                    if (response.data && response.data.data) {
-                        const districts = response.data.data.map(district => ({
-                            id: district.id,
-                            code: district.code,
-                            name: district.name || `Kabupaten ${district.code}`
-                        }));
-                        populateSelect(districtSelect, districts, 'Pilih Kabupaten', districtIdInput);
+            // Use web route directly to BiodataController
+            fetch(`{{ url('/location/districts') }}/${provinceCode}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.length > 0) {
+                        populateSelect(districtSelect, data, 'Pilih Kabupaten', districtIdInput);
                         districtSelect.disabled = false;
                     } else {
-                        console.error('No district data in response');
                         resetSelect(districtSelect, 'No data available', districtIdInput);
                     }
                 })
                 .catch(error => {
-                    console.error('Error fetching districts:', error);
                     resetSelect(districtSelect, 'Error loading data', districtIdInput);
                 });
         }
@@ -489,24 +462,18 @@ document.addEventListener('DOMContentLoaded', function() {
         resetSelect(villageSelect, 'Pilih Desa', villageIdInput);
 
         if (districtCode) {
-            fetchFromAPI(`sub-districts/${districtCode}`)
-                .then(response => {
-                    console.log('Sub-districts API response:', response.data);
-                    if (response.data && response.data.data) {
-                        const subDistricts = response.data.data.map(subDistrict => ({
-                            id: subDistrict.id,
-                            code: subDistrict.code,
-                            name: subDistrict.name || `Kecamatan ${subDistrict.code}`
-                        }));
-                        populateSelect(subDistrictSelect, subDistricts, 'Pilih Kecamatan', subDistrictIdInput);
+            // Use web route directly to BiodataController
+            fetch(`{{ url('/location/sub-districts') }}/${districtCode}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.length > 0) {
+                        populateSelect(subDistrictSelect, data, 'Pilih Kecamatan', subDistrictIdInput);
                         subDistrictSelect.disabled = false;
                     } else {
-                        console.error('No sub-district data in response');
                         resetSelect(subDistrictSelect, 'No data available', subDistrictIdInput);
                     }
                 })
                 .catch(error => {
-                    console.error('Error fetching sub-districts:', error);
                     resetSelect(subDistrictSelect, 'Error loading data', subDistrictIdInput);
                 });
         }
@@ -521,24 +488,18 @@ document.addEventListener('DOMContentLoaded', function() {
         resetSelect(villageSelect, 'Loading...', villageIdInput);
 
         if (subDistrictCode) {
-            fetchFromAPI(`villages/${subDistrictCode}`)
-                .then(response => {
-                    console.log('Villages API response:', response.data);
-                    if (response.data && response.data.data) {
-                        const villages = response.data.data.map(village => ({
-                            id: village.id,
-                            code: village.code,
-                            name: village.name || `Desa ${village.code}`
-                        }));
-                        populateSelect(villageSelect, villages, 'Pilih Desa', villageIdInput);
+            // Use web route directly to BiodataController
+            fetch(`{{ url('/location/villages') }}/${subDistrictCode}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.length > 0) {
+                        populateSelect(villageSelect, data, 'Pilih Desa', villageIdInput);
                         villageSelect.disabled = false;
                     } else {
-                        console.error('No village data in response');
                         resetSelect(villageSelect, 'No data available', villageIdInput);
                     }
                 })
                 .catch(error => {
-                    console.error('Error fetching villages:', error);
                     resetSelect(villageSelect, 'Error loading data', villageIdInput);
                 });
         }
@@ -564,6 +525,5 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
-
-    </script>
+</script>
 </x-layout>

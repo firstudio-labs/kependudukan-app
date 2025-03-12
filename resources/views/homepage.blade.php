@@ -6,9 +6,41 @@
         @vite('resources/css/app.css')
 
         <title>Kependudukan</title>
+        <style>
+            .gradient-bg {
+                background: linear-gradient(135deg, #FFF2F2 0%, #A9B5DF 35%, #7886C7 65%, #2D336B 100%);
+            }
+
+            .glass-card {
+                background-color: rgba(255, 255, 255, 0.15);
+                backdrop-filter: blur(12px);
+                border: 1px solid rgba(255, 255, 255, 0.3);
+                box-shadow: 0 8px 32px rgba(31, 38, 135, 0.2);
+            }
+
+            .logo-text {
+                font-weight: 700;
+                color: white;
+                text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                position: absolute;
+                top: 1.5rem;
+                left: 1.5rem;
+                z-index: 10;
+                font-size: 1.5rem;
+            }
+
+            @media (max-width: 640px) {
+                .logo-text {
+                    font-size: 1.25rem;
+                    top: 1rem;
+                    left: 1rem;
+                }
+            }
+        </style>
     </head>
 
-    <body class="bg-[#2D336B] flex items-center justify-center min-h-screen">
+    <body class="gradient-bg flex items-center justify-center min-h-screen">
+        <!-- Logo text in top left corner -->
 
         @if (session('success'))
         <div id="success-alert" class="fixed top-5 right-5 z-50 flex items-center p-4 text-white bg-green-500 rounded-lg shadow-lg transition-opacity duration-500">
@@ -35,10 +67,10 @@
         @endif
 
         <section class="flex items-center justify-center w-full px-6 py-8">
-            <div class="w-full max-w-4xl bg-white/10 backdrop-blur-md rounded-2xl shadow-[0_10px_25px_rgba(0,0,0,0.3)] border border-white/20 overflow-hidden">
+            <div class="w-full max-w-4xl glass-card rounded-2xl overflow-hidden">
                 <div class="grid grid-cols-1 md:grid-cols-2">
                     <!-- Kolom Kiri (SVG) -->
-                    <div class="flex items-center justify-center bg-white/10backdrop-blur-md p-6">
+                    <div class="flex items-center justify-center p-6">
                         <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" viewBox="0 0 500 500" style="enable-background:new 0 0 500 500;" xml:space="preserve">
                             <g id="Background_Complete">
                                 <g>
@@ -427,18 +459,18 @@
                             @csrf
                             <div>
                                 <label for="nik" class="block mb-2 text-sm font-medium text-white">NIK</label>
-                                <input type="text" name="nik" id="nik" class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-[#25295A] focus:border-[#25295A] block w-full p-2.5" placeholder="Masukkan NIK Anda" required>
+                                <input type="text" name="nik" id="nik" class="bg-white/80 border border-gray-200 text-gray-900 rounded-lg focus:ring-[#7886C7] focus:border-[#7886C7] block w-full p-2.5 transition-all duration-200" placeholder="Masukkan NIK Anda" required>
                             </div>
                             <div>
                                 <label for="password" class="block mb-2 text-sm font-medium text-white">Password</label>
-                                <input type="password" name="password" id="password" placeholder="••••••••" class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-[#25295A] focus:border-[#25295A] block w-full p-2.5" required>
+                                <input type="password" name="password" id="password" placeholder="••••••••" class="bg-white/80 border border-gray-200 text-gray-900 rounded-lg focus:ring-[#7886C7] focus:border-[#7886C7] block w-full p-2.5 transition-all duration-200" required>
                             </div>
                             <div class="flex items-center justify-between">
                                 <a href="#" class="text-sm font-medium text-white hover:underline">Forgot password?</a>
                             </div>
                             <button type="submit" class="w-full text-white bg-[#2D336B] hover:bg-[#25295A] focus:ring-4 focus:outline-none focus:ring-[#25295A] font-medium rounded-lg text-sm px-5 py-2.5 text-center">Sign in</button>
                             <p class="text-sm font-light text-white">
-                                Don’t have an account yet? <a href="{{ route('register') }}" class="font-medium text-white hover:underline">Sign up</a>
+                                Don't have an account yet? <a href="{{ route('register') }}" class="font-medium text-white hover:text-[#FFF2F2] hover:underline transition-colors">Sign up</a>
                             </p>
                         </form>
                     </div>

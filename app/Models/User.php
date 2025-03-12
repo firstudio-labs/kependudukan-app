@@ -23,28 +23,18 @@ class User extends Authenticatable
 
     protected $casts = [
         'password' => 'hashed',
+        'created_at' => 'datetime', // Ensure created_at is cast as datetime
     ];
 
-    // /**
-    //  * The attributes that should be hidden for serialization.
-    //  *
-    //  * @var array<int, string>
-    //  */
-    // protected $hidden = [
-    //     'password',
-    //     'remember_token',
-    // ];
+    // Add a scope to get monthly registration counts
+    public static function getMonthlyRegistrations($year = null)
+    {
+        $year = $year ?? date('Y');
 
-    // /**
-    //  * Get the attributes that should be cast.
-    //  *
-    //  * @return array<string, string>
-    //  */
-    // protected function casts(): array
-    // {
-    //     return [
-    //         'email_verified_at' => 'datetime',
-    //         'password' => 'hashed',
-    //     ];
-    // }
+        return self::selectRaw('MONTH(created_at) as month, COUNT(*) as count')
+            ->whereYear('created_at', $year)
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get();
+    }
 }

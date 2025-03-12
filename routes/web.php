@@ -85,8 +85,10 @@ Route::middleware(['auth'])->group(function () {
     });
 });
 
-Route::get('/fetch-heads-of-family', [KKController::class, 'fetchHeadsOfFamily']);
-Route::get('/fetch-all-citizens', [DataKKController::class, 'fetchAllCitizens']);
+// Fix the fetch-heads-of-family route to use the correct controller
+// Route::get('/fetch-heads-of-family', [DataKKController::class, 'fetchHeadsOfFamily'])->name('citizens.heads');
+
+// Route::get('/fetch-all-citizens', [DataKKController::class, 'fetchAllCitizens']);
 Route::get('/getFamilyMembers', [DataKKController::class, 'getFamilyMembers'])->name('getFamilyMembers');
 Route::get('/superadmin/datakk/{kk_id}/family-members', [DataKKController::class, 'getFamilyMembersByKK'])->name('superadmin.datakk.family-members');
 Route::get('/biodata/family-members', [BiodataController::class, 'getFamilyMembers'])->name('biodata.family-members');
@@ -103,5 +105,20 @@ Route::get('/api/wilayah/kota/{id}/kecamatan', [WilayahController::class, 'getKe
 Route::get('/api/wilayah/kecamatan/{id}/kelurahan', [WilayahController::class, 'getDesaByKecamatan'])
     ->name('wilayah.kelurahan')
     ->where('id', '[0-9]+');
+
+// Location data routes (directly from BiodataController)
+// Fix duplicate route definitions by keeping only one set of location endpoints
+Route::get('/location/districts/{provinceCode}', [DataKKController::class, 'getDistricts'])->name('location.districts');
+Route::get('/location/sub-districts/{districtCode}', [DataKKController::class, 'getSubDistricts'])->name('location.sub-districts');
+Route::get('/location/villages/{subDistrictCode}', [DataKKController::class, 'getVillages'])->name('location.villages');
+
+// Location data routes for both modules
+Route::get('/location/provinces', [DataKKController::class, 'getProvinces'])->name('location.provinces');
+Route::get('/location/districts/{provinceCode}', [DataKKController::class, 'getDistricts'])->name('location.districts');
+Route::get('/location/sub-districts/{districtCode}', [DataKKController::class, 'getSubDistricts'])->name('location.sub-districts');
+Route::get('/location/villages/{subDistrictCode}', [DataKKController::class, 'getVillages'])->name('location.villages');
+
+// Citizen data routes
+Route::get('/citizens/all', [DataKKController::class, 'fetchAllCitizens'])->name('citizens.all');
 
 

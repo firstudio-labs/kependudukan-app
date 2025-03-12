@@ -88,52 +88,5 @@ class WilayahController extends Controller
         }
     }
 
-    public function getKotaByProvinsi($code)
-    {
-        try {
-            // Tambahkan log untuk melihat kode provinsi yang diterima
-            Log::info('Mendapatkan kabupaten untuk provinsi dengan kode:', ['provinceCode' => $code]);
-
-            $response = Http::get("https://api.desaverse.id/wilayah/provinsi/{$code}/kota");
-            if (!$response->successful()) {
-                Log::error('API Error: ' . $response->body());
-                return response()->json(['error' => 'API request failed'], 500);
-            }
-
-            $data = $response->json();
-            Log::info('Kota data:', ['data' => $data]);
-
-            // Pastikan kita mengembalikan array kosong jika data tidak valid
-            return response()->json(is_array($data) ? $data : []);
-        } catch (\Exception $e) {
-            Log::error('Exception in getKotaByProvinsi: ' . $e->getMessage());
-            return response()->json(['error' => $e->getMessage()], 500);
-        }
-    }
-
-    public function getKecamatanByKota($code)
-    {
-        try {
-            $response = Http::get("https://api.desaverse.id/wilayah/kota/{$code}/kecamatan");
-            $data = $response->json();
-            Log::info('Kecamatan data:', ['data' => $data]); // Debug log
-            return response()->json(is_array($data) ? $data : []);
-        } catch (\Exception $e) {
-            Log::error('Exception in getKecamatanByKota: ' . $e->getMessage());
-            return response()->json(['error' => $e->getMessage()], 500);
-        }
-    }
-
-    public function getDesaByKecamatan($code)
-    {
-        try {
-            $response = Http::get("https://api.desaverse.id/wilayah/kecamatan/{$code}/kelurahan");
-            $data = $response->json();
-            Log::info('Kelurahan data:', ['data' => $data]); // Debug log
-            return response()->json(is_array($data) ? $data : []);
-        } catch (\Exception $e) {
-            Log::error('Exception in getDesaByKecamatan: ' . $e->getMessage());
-            return response()->json(['error' => $e->getMessage()], 500);
-        }
-    }
+    
 }

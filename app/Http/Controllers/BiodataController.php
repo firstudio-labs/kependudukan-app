@@ -43,7 +43,18 @@ class BiodataController extends Controller
         $provinces = $this->wilayahService->getProvinces();
         $jobs = $this->jobService->getAllJobs();
 
-        return view('superadmin.biodata.create', compact('provinces', 'jobs'));
+        // Initialize empty arrays for district, sub-district, and village data
+        $districts = [];
+        $subDistricts = [];
+        $villages = [];
+
+        return view('superadmin.biodata.create', compact(
+            'provinces',
+            'jobs',
+            'districts',
+            'subDistricts',
+            'villages'
+        ));
     }
 
 
@@ -166,6 +177,9 @@ class BiodataController extends Controller
             return back()->with('error', 'Data tidak ditemukan');
         }
 
+        // Format date fields to yyyy-MM-dd for HTML date inputs
+        $this->formatDatesForView($citizen['data']);
+
         $provinces = $this->wilayahService->getProvinces();
         $jobs = $this->jobService->getAllJobs();
 
@@ -271,35 +285,35 @@ class BiodataController extends Controller
         ->with('error', 'Gagal menghapus biodata: ' . $response['message']);
     }
 
-    private function getProvinces()
-    {
-        try {
-            $baseUrl = config('services.kependudukan.url');
-            $apiKey = config('services.kependudukan.key');
+    // private function getProvinces()
+    // {
+    //     try {
+    //         $baseUrl = config('services.kependudukan.url');
+    //         $apiKey = config('services.kependudukan.key');
 
-            $response = Http::withHeaders([
-                'Accept' => 'application/json',
-                'Content-Type' => 'application/json',
-                'X-API-Key' => $apiKey,
-            ])->get("{$baseUrl}/api/provinces");
+    //         $response = Http::withHeaders([
+    //             'Accept' => 'application/json',
+    //             'Content-Type' => 'application/json',
+    //             'X-API-Key' => $apiKey,
+    //         ])->get("{$baseUrl}/api/provinces");
 
-            if ($response->successful()) {
-                $provinces = $response->json();
-                // Transform the data to match the expected format
-                return collect($provinces)->map(function ($province) {
-                    return [
-                        'id' => $province['code'], // Use code instead of id
-                        'name' => $province['name']
-                    ];
-                })->all();
-            }
-            Log::error('Province API request failed: ' . $response->status());
-            return [];
-        } catch (\Exception $e) {
-            Log::error('Error fetching provinces: ' . $e->getMessage());
-            return [];
-        }
-    }
+    //         if ($response->successful()) {
+    //             $provinces = $response->json();
+    //             // Transform the data to match the expected format
+    //             return collect($provinces)->map(function ($province) {
+    //                 return [
+    //                     'id' => $province['code'], // Use code instead of id
+    //                     'name' => $province['name']
+    //                 ];
+    //             })->all();
+    //         }
+    //         Log::error('Province API request failed: ' . $response->status());
+    //         return [];
+    //     } catch (\Exception $e) {
+    //         Log::error('Error fetching provinces: ' . $e->getMessage());
+    //         return [];
+    //     }
+    // }
 
     private function getJobs()
     {
@@ -318,7 +332,58 @@ class BiodataController extends Controller
         }
     }
 
+    // Add these new methods for location data
+    public function getDistricts($provinceCode)
+    {
+        $districts = $this->wilayahService->getKabupaten($provinceCode);
+        return response()->json($districts);
+    }
 
+    public function getSubDistricts($districtCode)
+    {
+        $subDistricts = $this->wilayahService->getKecamatan($districtCode);
+        return response()->json($subDistricts);
+    }
+
+    public function getVillages($subDistrictCode)
+    {
+        $villages = $this->wilayahService->getDesa($subDistrictCode);
+        return response()->json($villages);
+    }
+
+    private function formatDatesForView(&$data)
+    {
+        $dateFields = ['birth_date', 'marriage_date', 'divorce_certificate_date'];
+
+        foreach ($dateFields as $field) {
+            if (isset($data[$field]) && !empty($data[$field]) && $data[$field] !== " ") {
+                try {
+                    // Check if it's already in yyyy-MM-dd format
+                    if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $data[$field])) {
+                        continue;
+                    }
+
+                    // Handle dd/MM/yyyy format
+                    if (preg_match('/^\d{2}\/\d{2}\/\d{4}$/', $data[$field])) {
+                        $parts = explode('/', $data[$field]);
+                        if (count($parts) === 3) {
+                            $data[$field] = $parts[2] . '-' . $parts[1] . '-' . $parts[0];
+                            continue;
+                        }
+                    }
+
+                    // Try standard date parsing as fallback
+                    $timestamp = strtotime($data[$field]);
+                    if ($timestamp !== false) {
+                        $data[$field] = date('Y-m-d', $timestamp);
+                    }
+                } catch (\Exception $e) {
+                    Log::error('Error formatting date: ' . $e->getMessage());
+                    // Keep original value if we can't format it
+                }
+            }
+        }
+    }
 
     private function formatDates(array $data)
     {
@@ -333,68 +398,95 @@ class BiodataController extends Controller
         return $data;
     }
 
-    // Add these new methods for location data
+    public function getCitizenByNIK($nik)
+    {
+        // ...existing code...
+
+        // Before returning the citizen data, ensure the select field values are numeric
+        $this->normalizeSelectValues($citizen['data']);
+
+        return $citizen;
+    }
+
     /**
-     * Get cities/districts for a province
+     * Ensure select field values are numeric IDs instead of display text
      */
-public function getCities($provinceCode)
-{
-    try {
-        Log::info('BiodataController->getCities called with province code: ' . $provinceCode);
+    private function normalizeSelectValues(&$data)
+    {
+        // Define mappings for text values to their numeric ID equivalents
+        $genderMap = ['Laki-Laki' => 1, 'Perempuan' => 2];
+        $citizenStatusMap = ['WNI' => 1, 'WNA' => 2];
+        $certificateMap = ['Ada' => 1, 'Tidak Ada' => 2];
+        $bloodTypeMap = [
+            'A' => 1, 'B' => 2, 'AB' => 3, 'O' => 4,
+            'A+' => 5, 'A-' => 6, 'B+' => 7, 'B-' => 8,
+            'AB+' => 9, 'AB-' => 10, 'O+' => 11, 'O-' => 12,
+            'Tidak Tahu' => 13
+        ];
+        $religionMap = [
+            'Islam' => 1, 'Kristen' => 2, 'Katolik' => 3, 'Katholik' => 3,
+            'Hindu' => 4, 'Buddha' => 5, 'Budha' => 5, 'Kong Hu Cu' => 6,
+            'Konghucu' => 6, 'Lainnya' => 7
+        ];
+        $maritalStatusMap = [
+            'Belum Kawin' => 1, 'Kawin Tercatat' => 2, 'Kawin Belum Tercatat' => 3,
+            'Cerai Hidup Tercatat' => 4, 'Cerai Hidup Belum Tercatat' => 5, 'Cerai Mati' => 6
+        ];
+        $familyStatusMap = [
+            'ANAK' => 1, 'Anak' => 1, 'KEPALA KELUARGA' => 2, 'Kepala Keluarga' => 2,
+            'ISTRI' => 3, 'Istri' => 3, 'ORANG TUA' => 4, 'Orang Tua' => 4,
+            'MERTUA' => 5, 'Mertua' => 5, 'CUCU' => 6, 'Cucu' => 6,
+            'FAMILI LAIN' => 7, 'Famili Lain' => 7
+        ];
+        $disabilitiesMap = [
+            'Fisik' => 1, 'Netra/Buta' => 2, 'Rungu/Wicara' => 3,
+            'Mental/Jiwa' => 4, 'Fisik dan Mental' => 5, 'Lainnya' => 6
+        ];
+        $educationStatusMap = [
+            'Tidak/Belum Sekolah' => 1, 'Belum tamat SD/Sederajat' => 2, 'Tamat SD' => 3,
+            'SLTP/SMP/Sederajat' => 4, 'SLTA/SMA/Sederajat' => 5, 'Diploma I/II' => 6,
+            'Akademi/Diploma III/ Sarjana Muda' => 7, 'Diploma IV/ Strata I/ Strata II' => 8,
+            'Strata III' => 9, 'Lainnya' => 10
+        ];
 
-        // Use the WilayahService to get data from the external API
-        $cities = $this->wilayahService->getKabupaten($provinceCode);
+        // Convert text values to numeric IDs
+        $fieldsToNormalize = [
+            'gender' => $genderMap,
+            'citizen_status' => $citizenStatusMap,
+            'birth_certificate' => $certificateMap,
+            'blood_type' => $bloodTypeMap,
+            'religion' => $religionMap,
+            'marital_status' => $maritalStatusMap,
+            'marital_certificate' => $certificateMap,
+            'divorce_certificate' => $certificateMap,
+            'family_status' => $familyStatusMap,
+            'mental_disorders' => $certificateMap, // Using certificate map as it has the same Ada/Tidak Ada values
+            'disabilities' => $disabilitiesMap,
+            'education_status' => $educationStatusMap,
+        ];
 
-        // Return the data as JSON
-        return response()->json($cities);
-    } catch (\Exception $e) {
-        Log::error('Error in getCities: ' . $e->getMessage());
-        return response()->json(['error' => 'Failed to fetch cities: ' . $e->getMessage()], 500);
+        // Process each field that needs normalization
+        foreach ($fieldsToNormalize as $field => $mapping) {
+            if (isset($data[$field]) && is_string($data[$field])) {
+                $value = trim($data[$field]);
+
+                // Try to find the value in the mapping
+                if (array_key_exists($value, $mapping)) {
+                    $data[$field] = $mapping[$value];
+                    Log::info("Normalized {$field} from '{$value}' to {$data[$field]}");
+                }
+                // If value already looks numeric, ensure it's an integer
+                else if (is_numeric($value)) {
+                    $data[$field] = (int)$value;
+                }
+                // If we can't map it, log this for debugging
+                else if (!empty($value)) {
+                    Log::warning("Could not normalize {$field} value: '{$value}'");
+                }
+            }
+        }
+
+        return $data;
     }
 
-}
-
-/**
- * Get sub-districts for a city/district
- *
- * @param string $cityCode
- * @return \Illuminate\Http\JsonResponse
- */
-public function getDistricts($cityCode)
-{
-    try {
-        Log::info('BiodataController->getDistricts called with city code: ' . $cityCode);
-
-        // Use the WilayahService to get data from the external API
-        $districts = $this->wilayahService->getKecamatan($cityCode);
-
-        // Return the data as JSON
-        return response()->json($districts);
-    } catch (\Exception $e) {
-        Log::error('Error in getDistricts: ' . $e->getMessage());
-        return response()->json(['error' => 'Failed to fetch districts: ' . $e->getMessage()], 500);
-    }
-}
-
-/**
- * Get villages for a sub-district
- *
- * @param string $districtCode
- * @return \Illuminate\Http\JsonResponse
- */
-public function getVillages($districtCode)
-{
-    try {
-        Log::info('BiodataController->getVillages called with district code: ' . $districtCode);
-
-        // Use the WilayahService to get data from the external API
-        $villages = $this->wilayahService->getDesa($districtCode);
-
-        // Return the data as JSON
-        return response()->json($villages);
-    } catch (\Exception $e) {
-        Log::error('Error in getVillages: ' . $e->getMessage());
-        return response()->json(['error' => 'Failed to fetch villages: ' . $e->getMessage()], 500);
-    }
-}
 }
