@@ -31,9 +31,16 @@ class BiodataController extends Controller
         $page = $request->input('page', 1);
         $search = $request->input('search');
 
-        $citizens = $search
-            ? $this->citizenService->searchCitizens($search)
-            : $this->citizenService->getAllCitizens($page);
+        if ($search) {
+            $citizens = $this->citizenService->searchCitizens($search);
+            // If search returns null or error, fallback to getting all citizens
+            if (!$citizens || isset($citizens['status']) && $citizens['status'] === 'ERROR') {
+                $citizens = $this->citizenService->getAllCitizens($page);
+                session()->flash('warning', 'Search failed, showing all results instead');
+            }
+        } else {
+            $citizens = $this->citizenService->getAllCitizens($page);
+        }
 
         return view('superadmin.biodata.index', compact('citizens', 'search'));
     }

@@ -291,5 +291,40 @@ class CitizenService
             ];
         }
     }
+
+    /**
+     * Search citizens by name
+     *
+     * @param string $name Name to search for
+     * @return array|null
+     */
+    public function searchCitizens($name)
+    {
+        try {
+            $response = Http::withHeaders([
+                'X-API-Key' => $this->apiKey,
+            ])->get("{$this->baseUrl}/api/citizens-search/full_name", [
+                'search' => $name
+            ]);
+
+            if ($response->successful()) {
+                return $response->json();
+            } else {
+                Log::error('API search request failed: ' . $response->status());
+                return [
+                    'status' => 'ERROR',
+                    'message' => 'Failed to search citizens',
+                    'data' => []
+                ];
+            }
+        } catch (\Exception $e) {
+            Log::error('Error searching citizens data: ' . $e->getMessage());
+            return [
+                'status' => 'ERROR',
+                'message' => 'Error: ' . $e->getMessage(),
+                'data' => []
+            ];
+        }
+    }
 }
 

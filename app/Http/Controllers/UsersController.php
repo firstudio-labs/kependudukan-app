@@ -12,9 +12,20 @@ class UsersController extends Controller
     /**
      * Display a listing of the users.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::all();
+        $query = User::query();
+
+        // Add search functionality if needed
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('nik', 'like', "%$search%")
+                  ->orWhere('no_hp', 'like', "%$search%");
+            });
+        }
+
+        $users = $query->paginate(10);
         return view('superadmin.datamaster.users.index', compact('users'));
     }
 

@@ -7,8 +7,7 @@
         @endif
 
         <div class="flex justify-between items-center mb-4">
-            <h1 class="text-2xl font-bold text-gray-800">Data Kabupaten</h1>
-
+            <h1 class="text-2xl font-bold text-gray-800">Data Desa/Kelurahan</h1>
         </div>
 
         <div class="bg-white shadow-md rounded-lg overflow-hidden">
@@ -16,14 +15,14 @@
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kode</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Kabupaten</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Desa/Kelurahan</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
-                    @foreach($kabupaten as $index => $kab)
+                    @foreach($desa as $index => $ds)
                     <tr>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $kab['code'] }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $kab['name'] }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $ds['code'] }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $ds['name'] }}</td>
                     </tr>
                     @endforeach
                 </tbody>
@@ -34,9 +33,9 @@
                 <div class="text-sm text-gray-700 mb-4 sm:mb-0">
                     @php
                         $pagination = [
-                            'current_page' => $kabupaten->currentPage(),
-                            'items_per_page' => $kabupaten->perPage(),
-                            'total_items' => $kabupaten->total()
+                            'current_page' => $desa->currentPage(),
+                            'items_per_page' => $desa->perPage(),
+                            'total_items' => $desa->total()
                         ];
 
                         $currentPage = $pagination['current_page'];
@@ -47,11 +46,11 @@
                     @endphp
                     Showing {{ $startNumber }} to {{ $endNumber }} of {{ $totalItems }} results
                 </div>
-                @if($kabupaten->lastPage() > 1)
+                @if($desa->lastPage() > 1)
                     <nav class="relative z-0 inline-flex shadow-sm -space-x-px" aria-label="Pagination">
                         @php
-                            $totalPages = $kabupaten->lastPage();
-                            $currentPage = $kabupaten->currentPage();
+                            $totalPages = $desa->lastPage();
+                            $currentPage = $desa->currentPage();
 
                             // Logic for showing page numbers
                             $startPage = 1;

@@ -17,10 +17,16 @@ class JobController extends Controller
         $this->jobService = $jobService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        // Get all jobs from the service
-        $allJobs = $this->jobService->getAllJobs();
+        $search = $request->query('search');
+
+        // Get jobs based on search or get all jobs
+        if ($search && !empty(trim($search))) {
+            $allJobs = $this->jobService->searchJobs($search);
+        } else {
+            $allJobs = $this->jobService->getAllJobs();
+        }
 
         // Convert array to collection and paginate
         $perPage = 10; // Number of items per page
@@ -33,7 +39,7 @@ class JobController extends Controller
             ['path' => request()->url(), 'query' => request()->query()]
         );
 
-        return view('superadmin.datamaster.job.index', compact('jobs'));
+        return view('superadmin.datamaster.job.index', compact('jobs', 'search'));
     }
 
     public function create()

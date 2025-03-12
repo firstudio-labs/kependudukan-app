@@ -162,68 +162,255 @@ class WilayahService
         }
     }
 
-    public function getKotaDetail($kotaCode)
+    /**
+     * Get all districts/kabupaten with pagination (no province filter)
+     */
+    public function getKabupatenByPage($page = 1)
     {
         try {
+            // Log the request for debugging
+            Log::info("Requesting districts with page: {$page}", [
+                'url' => "{$this->baseUrl}/api/districts",
+                'params' => ['page' => $page]
+            ]);
+
             $response = Http::withHeaders([
                 'Accept' => 'application/json',
                 'Content-Type' => 'application/json',
                 'X-API-Key' => $this->apiKey,
-            ])->get("{$this->baseUrl}/api/districts/{$kotaCode}");
+            ])->get("{$this->baseUrl}/api/districts", [
+                'page' => $page
+            ]);
+
+            // Log raw response for debugging
+            Log::info("Districts API response code: {$response->status()}", [
+                'body_preview' => substr($response->body(), 0, 500) // Log first 500 chars
+            ]);
 
             if ($response->successful()) {
                 $responseData = $response->json();
-                return isset($responseData['data']) ? $responseData['data'] : null;
+
+                // Log the structure of the response
+                Log::info("Districts API response structure", [
+                    'has_data_key' => isset($responseData['data']),
+                    'data_structure' => json_encode(array_keys($responseData['data'] ?? [])),
+                    'status' => $responseData['status'] ?? 'no status'
+                ]);
+
+                // Check if the structure matches the Postman response
+                if (isset($responseData['data']['districts']) && is_array($responseData['data']['districts'])) {
+                    $districts = collect($responseData['data']['districts'])->map(function ($district) {
+                        return [
+                            'id' => $district['id'] ?? '',
+                            'code' => $district['code'] ?? '',
+                            'name' => $district['name'] ?? 'Unknown District',
+                            'province_code' => $district['province_code'] ?? ''
+                        ];
+                    })->all();
+
+                    // Get pagination from the correct location in the response
+                    $pagination = $responseData['data']['pagination'] ?? null;
+
+                    // Log the processed data
+                    Log::info("Processed districts data", [
+                        'count' => count($districts),
+                        'first_item' => !empty($districts) ? $districts[0] : null,
+                        'pagination' => $pagination
+                    ]);
+
+                    return [
+                        'data' => $districts,
+                        'meta' => [
+                            'current_page' => $pagination['current_page'] ?? 1,
+                            'per_page' => $pagination['items_per_page'] ?? 10,
+                            'total' => $pagination['total_items'] ?? count($districts),
+                            'total_pages' => $pagination['total_page'] ?? 1
+                        ]
+                    ];
+                }
+
+                Log::error('Invalid district response format - missing districts array in data object');
+            } else {
+                Log::error("Districts API request failed: {$response->status()}", [
+                    'error' => $response->body()
+                ]);
             }
 
-            return null;
+            return ['data' => [], 'meta' => null];
         } catch (\Exception $e) {
-            Log::error('Error fetching district details: ' . $e->getMessage());
-            return null;
+            Log::error("Error fetching districts by page: {$e->getMessage()}", [
+                'trace' => $e->getTraceAsString()
+            ]);
+            return ['data' => [], 'meta' => null];
         }
     }
 
-
-
-    public function getProvinceDetail($provinceCode)
+    /**
+     * Get all sub-districts/kecamatan with pagination
+     */
+    public function getKecamatanByPage($page = 1)
     {
         try {
+            // Log the request for debugging
+            Log::info("Requesting sub-districts with page: {$page}", [
+                'url' => "{$this->baseUrl}/api/sub-districts",
+                'params' => ['page' => $page]
+            ]);
+
             $response = Http::withHeaders([
                 'Accept' => 'application/json',
                 'Content-Type' => 'application/json',
                 'X-API-Key' => $this->apiKey,
-            ])->get("{$this->baseUrl}/api/provinces/{$provinceCode}");
+            ])->get("{$this->baseUrl}/api/sub-districts", [
+                'page' => $page
+            ]);
+
+            // Log raw response for debugging
+            Log::info("Sub-districts API raw response", [
+                'status_code' => $response->status(),
+                'raw_body' => substr($response->body(), 0, 1000) // Log the first 1000 chars
+            ]);
 
             if ($response->successful()) {
                 $responseData = $response->json();
-                return isset($responseData['data']) ? $responseData['data'] : null;
+                
+                // Log the structure of the response
+                Log::info("Sub-districts API response structure", [
+                    'has_data_key' => isset($responseData['data']),
+                    'data_keys' => isset($responseData['data']) ? array_keys($responseData['data']) : 'no data keys',
+                    'status' => $responseData['status'] ?? 'no status'
+                ]);
+
+                // IMPORTANT: The API response uses "subs_districts" (with underscore) as the key, not "sub_districts"
+                if (isset($responseData['data']['subs_districts']) && is_array($responseData['data']['subs_districts'])) {
+                    $subDistricts = collect($responseData['data']['subs_districts'])->map(function ($subDistrict) {
+                        return [
+                            'id' => $subDistrict['id'] ?? '',
+                            'code' => $subDistrict['code'] ?? '',
+                            'name' => $subDistrict['name'] ?? 'Unknown Sub District',
+                            'district_code' => $subDistrict['district_code'] ?? ''
+                        ];
+                    })->all();
+
+                    // Get pagination from the correct location in the response
+                    $pagination = $responseData['data']['pagination'] ?? null;
+
+                    // Log the processed data
+                    Log::info("Processed sub-districts data", [
+                        'count' => count($subDistricts),
+                        'first_item' => !empty($subDistricts) ? $subDistricts[0] : null,
+                        'pagination' => $pagination
+                    ]);
+
+                    return [
+                        'data' => $subDistricts,
+                        'meta' => [
+                            'current_page' => $pagination['current_page'] ?? 1,
+                            'per_page' => $pagination['items_per_page'] ?? 10,
+                            'total' => $pagination['total_items'] ?? count($subDistricts),
+                            'total_pages' => $pagination['total_page'] ?? 1
+                        ]
+                    ];
+                }
+
+                Log::error('Invalid sub-district response format - missing subs_districts array in data object', [
+                    'available_keys' => isset($responseData['data']) ? array_keys($responseData['data']) : 'no data'
+                ]);
+            } else {
+                Log::error("Sub-districts API request failed: {$response->status()}", [
+                    'error' => $response->body()
+                ]);
             }
 
-            return null;
+            return ['data' => [], 'meta' => null];
         } catch (\Exception $e) {
-            Log::error('Error fetching province details: ' . $e->getMessage());
-            return null;
+            Log::error("Error fetching sub-districts by page: {$e->getMessage()}", [
+                'trace' => $e->getTraceAsString()
+            ]);
+            return ['data' => [], 'meta' => null];
         }
     }
 
-    public function getKecamatanDetail($kecamatanCode)
+    /**
+     * Get all villages/desa with pagination
+     */
+    public function getDesaByPage($page = 1)
     {
         try {
+            // Log the request for debugging
+            Log::info("Requesting villages with page: {$page}", [
+                'url' => "{$this->baseUrl}/api/villages",
+                'params' => ['page' => $page]
+            ]);
+
             $response = Http::withHeaders([
                 'Accept' => 'application/json',
                 'Content-Type' => 'application/json',
                 'X-API-Key' => $this->apiKey,
-            ])->get("{$this->baseUrl}/api/sub-districts/{$kecamatanCode}");
+            ])->get("{$this->baseUrl}/api/villages", [
+                'page' => $page
+            ]);
+
+            // Log raw response for debugging
+            Log::info("Villages API response code: {$response->status()}", [
+                'body_preview' => substr($response->body(), 0, 500) // Log first 500 chars
+            ]);
 
             if ($response->successful()) {
                 $responseData = $response->json();
-                return isset($responseData['data']) ? $responseData['data'] : null;
+
+                // Log the structure of the response
+                Log::info("Villages API response structure", [
+                    'has_data_key' => isset($responseData['data']),
+                    'data_structure' => json_encode(array_keys($responseData['data'] ?? [])),
+                    'status' => $responseData['status'] ?? 'no status'
+                ]);
+
+                // Check if the structure matches the expected response
+                if (isset($responseData['data']['villages']) && is_array($responseData['data']['villages'])) {
+                    $villages = collect($responseData['data']['villages'])->map(function ($village) {
+                        return [
+                            'id' => $village['id'] ?? '',
+                            'code' => $village['code'] ?? '',
+                            'name' => $village['name'] ?? 'Unknown Village',
+                            'sub_district_code' => $village['sub_district_code'] ?? ''
+                        ];
+                    })->all();
+
+                    // Get pagination from the correct location in the response
+                    $pagination = $responseData['data']['pagination'] ?? null;
+
+                    // Log the processed data
+                    Log::info("Processed villages data", [
+                        'count' => count($villages),
+                        'first_item' => !empty($villages) ? $villages[0] : null,
+                        'pagination' => $pagination
+                    ]);
+
+                    return [
+                        'data' => $villages,
+                        'meta' => [
+                            'current_page' => $pagination['current_page'] ?? 1,
+                            'per_page' => $pagination['items_per_page'] ?? 10,
+                            'total' => $pagination['total_items'] ?? count($villages),
+                            'total_pages' => $pagination['total_page'] ?? 1
+                        ]
+                    ];
+                }
+
+                Log::error('Invalid village response format - missing villages array in data object');
+            } else {
+                Log::error("Villages API request failed: {$response->status()}", [
+                    'error' => $response->body()
+                ]);
             }
 
-            return null;
+            return ['data' => [], 'meta' => null];
         } catch (\Exception $e) {
-            Log::error('Error fetching sub-district details: ' . $e->getMessage());
-            return null;
+            Log::error("Error fetching villages by page: {$e->getMessage()}", [
+                'trace' => $e->getTraceAsString()
+            ]);
+            return ['data' => [], 'meta' => null];
         }
     }
 }

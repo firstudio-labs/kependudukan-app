@@ -40,53 +40,221 @@ class WilayahController extends Controller
         }
     }
 
-    public function showKabupaten($provinceCode)
+    /**
+     * Show all kabupaten/districts with pagination (no province filter)
+     */
+    public function showKabupaten()
     {
         try {
-            $kabupaten = $this->wilayahService->getKabupaten($provinceCode);
-            $province = $this->wilayahService->getProvinceDetail($provinceCode);
+            $page = request()->query('page', 1);
+            Log::info("Showing kabupaten page {$page}");
 
-            // Convert array to collection and paginate
-            $perPage = 10; // Number of items per page
-            $currentPage = request()->query('page', 1);
-            $kabupaten = new \Illuminate\Pagination\LengthAwarePaginator(
-                collect($kabupaten)->forPage($currentPage, $perPage),
-                count($kabupaten),
-                $perPage,
-                $currentPage,
-                ['path' => request()->url(), 'query' => request()->query()]
-            );
+            $result = $this->wilayahService->getKabupatenByPage($page);
 
-            return view('superadmin.datamaster.wilayah.kabupaten.index', compact('kabupaten', 'province'));
+            // Log what we got back from the service
+            Log::info("Service returned data for kabupaten", [
+                'data_count' => count($result['data']),
+                'has_meta' => isset($result['meta']),
+                'meta_info' => $result['meta'] ?? 'No meta information'
+            ]);
+
+            $kabupatenData = $result['data'];
+            $meta = $result['meta'];
+
+            // Double check if we have data to show
+            if (empty($kabupatenData)) {
+                Log::warning("No kabupaten data returned from service for page {$page}");
+            }
+
+            // Check if we have valid pagination meta data
+            if (empty($meta) || !isset($meta['total'])) {
+                Log::warning("No valid pagination metadata. Using fallback pagination.");
+
+                // Prepare data for view using fallback pagination
+                $kabupaten = new \Illuminate\Pagination\LengthAwarePaginator(
+                    $kabupatenData,
+                    count($kabupatenData), // Just use the count of current items as total
+                    10, // Default per page
+                    $page,
+                    ['path' => request()->url(), 'query' => request()->query()]
+                );
+            } else {
+                // Normal pagination with meta data
+                $kabupaten = new \Illuminate\Pagination\LengthAwarePaginator(
+                    $kabupatenData,
+                    $meta['total'],
+                    $meta['per_page'] ?? 10,
+                    $meta['current_page'] ?? $page,
+                    ['path' => request()->url(), 'query' => request()->query()]
+                );
+            }
+
+            // Pass additional debug info to view during troubleshooting
+            return view('superadmin.datamaster.wilayah.kabupaten.index', [
+                'kabupaten' => $kabupaten,
+                'debug_info' => [
+                    'api_returned_data' => !empty($kabupatenData),
+                    'page_requested' => $page,
+                    'items_count' => count($kabupatenData),
+                    'pagination_info' => $meta ?? 'No meta data'
+                ]
+            ]);
         } catch (\Exception $e) {
-            Log::error('Error in showKabupaten: ' . $e->getMessage());
-            return view('superadmin.datamaster.wilayah.kabupaten.index')->with('error', 'Gagal memuat data kabupaten');
+            Log::error("Error in showKabupaten: {$e->getMessage()}", [
+                'trace' => $e->getTraceAsString()
+            ]);
+            return view('superadmin.datamaster.wilayah.kabupaten.index')
+                ->with('error', 'Gagal memuat data kabupaten: ' . $e->getMessage());
         }
     }
 
-    public function showKecamatan($kotaCode)
+    /**
+     * Legacy method for showing kabupaten by province (should be updated in routes)
+     */
+
+
+    /**
+     * Show all kecamatan with pagination
+     */
+    public function showKecamatan()
     {
         try {
-            $kecamatan = $this->wilayahService->getKecamatan($kotaCode);
-            $kota = $this->wilayahService->getKotaDetail($kotaCode);
-            return view('superadmin.datamaster.wilayah.kecamatan.index', compact('kecamatan', 'kota'));
+            $page = request()->query('page', 1);
+            Log::info("Showing kecamatan page {$page}");
+
+            $result = $this->wilayahService->getKecamatanByPage($page);
+
+            // Log what we got back from the service
+            Log::info("Service returned data for kecamatan", [
+                'data_count' => count($result['data']),
+                'has_meta' => isset($result['meta']),
+                'meta_info' => $result['meta'] ?? 'No meta information'
+            ]);
+
+            $kecamatanData = $result['data'];
+            $meta = $result['meta'];
+
+            // Double check if we have data to show
+            if (empty($kecamatanData)) {
+                Log::warning("No kecamatan data returned from service for page {$page}");
+            }
+
+            // Check if we have valid pagination meta data
+            if (empty($meta) || !isset($meta['total'])) {
+                Log::warning("No valid pagination metadata. Using fallback pagination.");
+
+                // Prepare data for view using fallback pagination
+                $kecamatan = new \Illuminate\Pagination\LengthAwarePaginator(
+                    $kecamatanData,
+                    count($kecamatanData), // Just use the count of current items as total
+                    10, // Default per page
+                    $page,
+                    ['path' => request()->url(), 'query' => request()->query()]
+                );
+            } else {
+                // Normal pagination with meta data
+                $kecamatan = new \Illuminate\Pagination\LengthAwarePaginator(
+                    $kecamatanData,
+                    $meta['total'],
+                    $meta['per_page'] ?? 10,
+                    $meta['current_page'] ?? $page,
+                    ['path' => request()->url(), 'query' => request()->query()]
+                );
+            }
+
+            // Pass data to view
+            return view('superadmin.datamaster.wilayah.kecamatan.index', [
+                'kecamatan' => $kecamatan,
+                'debug_info' => [
+                    'api_returned_data' => !empty($kecamatanData),
+                    'page_requested' => $page,
+                    'items_count' => count($kecamatanData),
+                    'pagination_info' => $meta ?? 'No meta data'
+                ]
+            ]);
         } catch (\Exception $e) {
-            Log::error('Error in showKecamatan: ' . $e->getMessage());
-            return view('superadmin.datamaster.wilayah.kecamatan.index')->with('error', 'Gagal memuat data kecamatan');
+            Log::error("Error in showKecamatan: {$e->getMessage()}", [
+                'trace' => $e->getTraceAsString()
+            ]);
+            return view('superadmin.datamaster.wilayah.kecamatan.index')
+                ->with('error', 'Gagal memuat data kecamatan: ' . $e->getMessage());
         }
     }
 
-    public function showDesa($kecamatanCode)
+    /**
+     * Legacy method for showing kecamatan by kabupaten
+     */
+
+    /**
+     * Show all desa with pagination
+     */
+    public function showDesa()
     {
         try {
-            $desa = $this->wilayahService->getDesa($kecamatanCode);
-            $kecamatan = $this->wilayahService->getKecamatanDetail($kecamatanCode);
-            return view('superadmin.datamaster.wilayah.desa.index', compact('desa', 'kecamatan'));
+            $page = request()->query('page', 1);
+            Log::info("Showing desa page {$page}");
+
+            $result = $this->wilayahService->getDesaByPage($page);
+
+            // Log what we got back from the service
+            Log::info("Service returned data for desa", [
+                'data_count' => count($result['data']),
+                'has_meta' => isset($result['meta']),
+                'meta_info' => $result['meta'] ?? 'No meta information'
+            ]);
+
+            $desaData = $result['data'];
+            $meta = $result['meta'];
+
+            // Double check if we have data to show
+            if (empty($desaData)) {
+                Log::warning("No desa data returned from service for page {$page}");
+            }
+
+            // Check if we have valid pagination meta data
+            if (empty($meta) || !isset($meta['total'])) {
+                Log::warning("No valid pagination metadata. Using fallback pagination.");
+
+                // Prepare data for view using fallback pagination
+                $desa = new \Illuminate\Pagination\LengthAwarePaginator(
+                    $desaData,
+                    count($desaData), // Just use the count of current items as total
+                    10, // Default per page
+                    $page,
+                    ['path' => request()->url(), 'query' => request()->query()]
+                );
+            } else {
+                // Normal pagination with meta data
+                $desa = new \Illuminate\Pagination\LengthAwarePaginator(
+                    $desaData,
+                    $meta['total'],
+                    $meta['per_page'] ?? 10,
+                    $meta['current_page'] ?? $page,
+                    ['path' => request()->url(), 'query' => request()->query()]
+                );
+            }
+
+            // Pass data to view
+            return view('superadmin.datamaster.wilayah.desa.index', [
+                'desa' => $desa,
+                'debug_info' => [
+                    'api_returned_data' => !empty($desaData),
+                    'page_requested' => $page,
+                    'items_count' => count($desaData),
+                    'pagination_info' => $meta ?? 'No meta data'
+                ]
+            ]);
         } catch (\Exception $e) {
-            Log::error('Error in showDesa: ' . $e->getMessage());
-            return view('superadmin.datamaster.wilayah.desa.index')->with('error', 'Gagal memuat data desa');
+            Log::error("Error in showDesa: {$e->getMessage()}", [
+                'trace' => $e->getTraceAsString()
+            ]);
+            return view('superadmin.datamaster.wilayah.desa.index')
+                ->with('error', 'Gagal memuat data desa: ' . $e->getMessage());
         }
     }
 
-    
+    /**
+     * Legacy method for showing desa by kecamatan
+     */
+
 }

@@ -134,7 +134,7 @@
                                 </a>
                             </li>
                             <li>
-                                <a href="{{ route('superadmin.datamaster.wilayah.kabupaten.index', ['provinceCode' => '11']) }}"
+                                <a href="{{ route('superadmin.datamaster.wilayah.kabupaten.index') }}"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
                                         {{ request()->routeIs('superadmin.datamaster.wilayah.kabupaten*')
                                             ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
@@ -143,7 +143,7 @@
                                 </a>
                             </li>
                             <li>
-                                <a href="{{ route('superadmin.datamaster.wilayah.kecamatan.index', ['kotaCode' => '1101']) }}"
+                                <a href="{{ route('superadmin.datamaster.wilayah.kecamatan.index') }}"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
                                         {{ request()->routeIs('superadmin.datamaster.wilayah.kecamatan*')
                                             ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
@@ -153,7 +153,7 @@
                             </li>
 
                             <li>
-                                <a href=""
+                                <a href="{{ route('superadmin.datamaster.wilayah.desa.index') }}"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
                                         {{ request()->routeIs('superadmin.datamaster.wilayah.desa*')
                                             ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'

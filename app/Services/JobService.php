@@ -106,4 +106,23 @@ class JobService
             return ['status' => 'ERROR', 'message' => 'Failed to delete job'];
         }
     }
+
+    public function searchJobs($term)
+    {
+        try {
+            $response = Http::withHeaders([
+                'X-API-Key' => $this->apiKey,
+            ])->get("{$this->baseUrl}/api/jobs-search");
+
+            if ($response->successful()) {
+                return $response->json()['data'];
+            } else {
+                Log::error('API search request failed: ' . $response->status());
+                return [];
+            }
+        } catch (\Exception $e) {
+            Log::error('Error searching jobs data: ' . $e->getMessage());
+            return [];
+        }
+    }
 }
