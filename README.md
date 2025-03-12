@@ -8,7 +8,7 @@ Sebelum memulai, pastikan Anda memiliki hal-hal berikut yang terpasang di mesin 
    
 ## Langkah-Langkah Instalasi dan Run
 
-### Langkah 1: Clone Repository
+### Clone Repository
 
 Clone terlebih dahulu menggunakan perintah berikut:
 
@@ -17,37 +17,55 @@ git clone https://github.com/firstudio-labs/kependudukan-app.git
 cd kependudukan-app
 ```
 
-### Langkah 2: Install Dependensi
+### Install Dependensi
 ```bash
 composer install
 ```
 
-### Langkah 3: Buat Database di MySQL
-Buat database baru bernama kependudukan di MySQL:
+### Salin file `.env.example` untuk membuat file `.env` baru:
+
 ```bash
-CREATE DATABASE kependudukan;
+cp .env.example .env
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=sql_pelayanan_de
+DB_USERNAME=sql_pelayanan_de
+DB_PASSWORD=9a5af142796ec
+DB_COLLATION=utf8mb4_unicode_ci
 ```
 
-### Langkah 4: Install Tailwind CSS
+### Generasi kunci aplikasi:
+
 ```bash
-npm install
-npm install -D tailwindcss postcss autoprefixer
-npx tailwindcss init -p
+php artisan key:generate
 ```
 
-### Langkah 5: Build CSS
-```bash
-npm run dev
-```
-
-### Langkah 6: Jalankan Migrasi dan Seeder
+### Jalankan Migrasi dan Seeder
 ```bash
 php artisan migrate --seed
 ```
 
-### Langkah 7: Jalankan Aplikasi
+### Instal dependensi JavaScript menggunakan npm:
+
+```bash
+npm install
+```
+
+### Build CSS
+
+```bash
+npm run build
+```
+
+### Jalankan Aplikasi
 ```bash
 php artisan serve
+```
+### Run CSS/Frontend
+```bash
+npm run dev
 ```
 
 ## Menjalankan Aplikasi
