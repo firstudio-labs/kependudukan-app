@@ -37,4 +37,14 @@ class User extends Authenticatable
             ->orderBy('month')
             ->get();
     }
+
+    // Add this method to your User model
+    public static function getMonthlyRegistrationsByRole()
+    {
+        return self::selectRaw('MONTH(created_at) as month, role, COUNT(*) as count')
+            ->whereYear('created_at', date('Y'))
+            ->groupBy('month', 'role')
+            ->orderBy('month')
+            ->get();
+    }
 }

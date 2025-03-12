@@ -143,8 +143,8 @@
                 <div>
                     <label for="citizen_status" class="block text-sm font-medium text-gray-700">Kewarganegaraan</label>
                     <select id="citizen_status" name="citizen_status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
-                        <option value="1">WNI</option>
-                        <option value="2">WNA</option>
+                        <option value="1">WNA</option>
+                        <option value="2">WNI</option>
                     </select>
                 </div>
 
@@ -792,7 +792,7 @@
                 // Value mapping for text to numeric conversion
                 const valueMappings = {
                     'gender': { 'Laki-Laki': '1', 'laki-laki': '1', 'Perempuan': '2', 'perempuan': '2' },
-                    'citizen_status': { 'WNI': '1', 'wni': '1', 'WNA': '2', 'wna': '2' },
+                    'citizen_status': { 'WNA': '1', 'wna': '1', 'WNI': '2', 'wni': '2' },
                     'birth_certificate': { 'Ada': '1', 'ada': '1', 'Tidak Ada': '2', 'tidak ada': '2' },
                     'blood_type': { 'A': '1', 'B': '2', 'AB': '3', 'O': '4', 'A+': '5', 'A-': '6', 'B+': '7', 'B-': '8', 'AB+': '9', 'AB-': '10', 'O+': '11', 'O-': '12', 'Tidak Tahu': '13' },
                     'religion': { 'Islam': '1', 'islam': '1', 'Kristen': '2', 'kristen': '2', 'Katholik': '3', 'katholik': '3', 'katolik': '3', 'Hindu': '4', 'hindu': '4', 'Buddha': '5', 'buddha': '5', 'Budha': '5', 'budha': '5', 'Kong Hu Cu': '6', 'kong hu cu': '6', 'konghucu': '6', 'Lainnya': '7', 'lainnya': '7' },

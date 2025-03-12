@@ -29,20 +29,25 @@ class DashboardController extends Controller
             'user' => User::where('role', 'user')->count(),
         ];
 
-        // Get monthly registration data from database
-        $monthlyRegistrations = User::getMonthlyRegistrations();
+        // Get monthly registration data by role from database
+        $monthlyRegistrationsByRole = User::getMonthlyRegistrationsByRole();
 
         // Format data for chart
         $months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
         $monthlyData = [
             'labels' => $months,
-            'data' => array_fill(0, 12, 0) // Initialize with zeros
+            'superadmin' => array_fill(0, 12, 0),
+            'admin' => array_fill(0, 12, 0),
+            'operator' => array_fill(0, 12, 0),
+            'user' => array_fill(0, 12, 0),
         ];
 
-        // Fill in actual registration counts
-        foreach ($monthlyRegistrations as $registration) {
+        // Fill in actual registration counts by role
+        foreach ($monthlyRegistrationsByRole as $registration) {
             // Month index is 1-based in database but 0-based in our array
-            $monthlyData['data'][$registration->month - 1] = $registration->count;
+            if (isset($monthlyData[$registration->role])) {
+                $monthlyData[$registration->role][$registration->month - 1] = $registration->count;
+            }
         }
 
         // Get citizen data with better error handling

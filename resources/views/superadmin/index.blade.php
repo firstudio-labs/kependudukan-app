@@ -182,15 +182,40 @@
                 type: 'line',
                 data: {
                     labels: {!! json_encode($monthlyData['labels']) !!},
-                    datasets: [{
-                        label: 'Jumlah Registrasi Pengguna',
-                        data: {!! json_encode($monthlyData['data']) !!},
-                        backgroundColor: 'rgba(169, 181, 223, 0.3)', // #A9B5DF with transparency
-                        borderColor: '#7886C7', // Medium blue-purple from gradient
-                        borderWidth: 2,
-                        tension: 0.3,
-                        fill: true
-                    }]
+                    datasets: [
+                        {
+                            label: 'Superadmin',
+                            data: {!! json_encode($monthlyData['superadmin']) !!},
+                            backgroundColor: 'rgba(45, 51, 107, 0.3)',
+                            borderColor: '#2D336B', // Dark blue
+                            borderWidth: 2,
+                            tension: 0.3
+                        },
+                        {
+                            label: 'Admin',
+                            data: {!! json_encode($monthlyData['admin']) !!},
+                            backgroundColor: 'rgba(120, 134, 199, 0.3)',
+                            borderColor: '#7886C7', // Medium blue-purple
+                            borderWidth: 2,
+                            tension: 0.3
+                        },
+                        {
+                            label: 'Operator',
+                            data: {!! json_encode($monthlyData['operator']) !!},
+                            backgroundColor: 'rgba(169, 181, 223, 0.3)',
+                            borderColor: '#A9B5DF', // Light blue-purple
+                            borderWidth: 2,
+                            tension: 0.3
+                        },
+                        {
+                            label: 'User',
+                            data: {!! json_encode($monthlyData['user']) !!},
+                            backgroundColor: 'rgba(255, 242, 242, 0.3)',
+                            borderColor: '#FF9A9E', // Light pink
+                            borderWidth: 2,
+                            tension: 0.3
+                        }
+                    ]
                 },
                 options: {
                     responsive: true,
