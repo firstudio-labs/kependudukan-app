@@ -40,6 +40,17 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        'penduduk' => [
+            'driver' => 'session',
+            'provider' => 'penduduks',
+        ],
+
+        'api' => [
+            'driver' => 'token',
+            'provider' => 'users',
+            'hash' => false,
+        ],
     ],
 
     /*
@@ -63,6 +74,11 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', App\Models\User::class),
+        ],
+
+        'penduduks' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Penduduk::class,
         ],
 
         // 'users' => [

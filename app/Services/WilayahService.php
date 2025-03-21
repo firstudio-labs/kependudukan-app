@@ -273,7 +273,7 @@ class WilayahService
 
             if ($response->successful()) {
                 $responseData = $response->json();
-                
+
                 // Log the structure of the response
                 Log::info("Sub-districts API response structure", [
                     'has_data_key' => isset($responseData['data']),

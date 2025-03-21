@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Penduduk;
 use App\Models\User;
 use App\Services\CitizenService;
 use Illuminate\Support\Facades\Hash;
@@ -22,6 +23,7 @@ class AuthController extends Controller
     {
         return view('homepage');
     }
+
     /**
      * Menampilkan form login.
      */
@@ -32,9 +34,16 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        if (Auth::attempt(['nik' => $request->nik, 'password' => $request->password])) {
-            $user = Auth::user();
+        // Try to auth as a user (admin, superadmin, operator) first
+        if (Auth::guard('web')->attempt(['nik' => $request->nik, 'password' => $request->password])) {
+            $user = Auth::guard('web')->user();
             return $this->redirectBasedOnRole($user->role);
+        }
+
+        // If not found in users table, try with penduduk guard
+        if (Auth::guard('penduduk')->attempt(['nik' => $request->nik, 'password' => $request->password])) {
+            $penduduk = Auth::guard('penduduk')->user();
+            return redirect()->intended('/');
         }
 
         return back()->with('error', 'NIK atau password salah.');
@@ -54,7 +63,7 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $request->validate([
-            'nik' => 'required|string|unique:users|regex:/^[0-9]+$/', // Hanya angka
+            'nik' => 'required|string|unique:penduduk|regex:/^[0-9]+$/', // Changed table to penduduk
             'password' => 'required|string|min:6',
             'no_hp' => 'nullable|string|regex:/^[0-9]+$/', // Hanya angka
         ], [
@@ -103,15 +112,14 @@ class AuthController extends Controller
                 return redirect()->back()->withErrors(['nik' => 'Hanya Kepala Keluarga yang dapat mendaftar.'])->withInput();
             }
 
-            // If all checks pass, create the user - store NIK as string
-            User::create([
+            // If all checks pass, create the penduduk - store NIK as string
+            Penduduk::create([
                 'nik' => $nikString, // Use the original string NIK
                 'password' => Hash::make($request->password),
                 'no_hp' => $request->no_hp,
-                'role' => 'user', // Default role untuk registrasi
             ]);
 
-            Log::info('User registered successfully with NIK: ' . $nikString);
+            Log::info('Penduduk registered successfully with NIK: ' . $nikString);
             return redirect()->route('login')->with('success', 'Registrasi berhasil! Silakan login.');
         } catch (\Exception $e) {
             Log::error('Registration error: ' . $e->getMessage());
@@ -122,10 +130,19 @@ class AuthController extends Controller
     /**
      * Proses logout.
      */
-    public function logout()
+    public function logout(Request $request)
     {
-        Auth::logout(); // Logout user
-        return redirect('/login'); // Redirect ke halaman login
+        // Check which guard the user is authenticated with
+        if (Auth::guard('web')->check()) {
+            Auth::guard('web')->logout();
+        } else if (Auth::guard('penduduk')->check()) {
+            Auth::guard('penduduk')->logout();
+        }
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect('/login');
     }
 
     /**
@@ -137,11 +154,9 @@ class AuthController extends Controller
             case 'superadmin':
                 return redirect()->intended('/superadmin/index');
             case 'admin':
-                return redirect()->intended('/admin/dashboard');
+                return redirect()->intended('/admin/index');
             case 'operator':
-                return redirect()->intended('/operator/dashboard');
-            case 'user':
-                return redirect()->intended('/user/index');
+                return redirect()->intended('/operator/index');
             default:
                 return redirect()->intended('/');
         }

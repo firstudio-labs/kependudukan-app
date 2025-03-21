@@ -14,7 +14,18 @@ class User extends Authenticatable
     protected $table = 'users'; // Pastikan tabelnya benar
 
     protected $fillable = [
-        'nik', 'password', 'no_hp', 'role',
+        'nik',
+        'username',
+        'email',
+        'password',
+        'no_hp',
+        'role',
+        'alamat',
+        'province_id',
+        'districts_id',
+        'sub_districts_id',
+        'villages_id',
+        'status'
     ];
 
     protected $hidden = [
@@ -25,6 +36,27 @@ class User extends Authenticatable
         'password' => 'hashed',
         'created_at' => 'datetime', // Ensure created_at is cast as datetime
     ];
+
+    // Relationships
+    public function province()
+    {
+        return $this->belongsTo(Province::class, 'province_id');
+    }
+
+    public function district()
+    {
+        return $this->belongsTo(District::class, 'districts_id');
+    }
+
+    public function subDistrict()
+    {
+        return $this->belongsTo(SubDistrict::class, 'sub_districts_id');
+    }
+
+    public function village()
+    {
+        return $this->belongsTo(Village::class, 'villages_id');
+    }
 
     // Add a scope to get monthly registration counts
     public static function getMonthlyRegistrations($year = null)

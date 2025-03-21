@@ -19,17 +19,24 @@ class RoleMiddleware
      */
     public function handle(Request $request, Closure $next, $role)
     {
-        // Cek apakah user sudah login
-        if (!Auth::check()) {
-            return redirect('/login')->with('error', 'Anda harus login terlebih dahulu.');
+        // For web users (admin, superadmin, operator)
+        if (Auth::guard('web')->check()) {
+            $user = Auth::guard('web')->user();
+            if ($user->role === $role) {
+                return $next($request);
+            }
+
+            // If not the correct role, redirect to their appropriate page
+            return redirect('/' . $user->role . '/index')
+                ->with('error', 'Anda tidak memiliki akses ke halaman ini.');
         }
 
-        // Cek apakah role user sesuai
-        $user = Auth::user();
-        if ($user->role !== $role) {
-            return redirect('/')->with('error', 'Anda tidak memiliki akses ke halaman ini.');
+        // For penduduk users (treated as having 'user' role)
+        if ($role === 'user' && Auth::guard('penduduk')->check()) {
+            return $next($request);
         }
 
-        return $next($request);
+        // Not authenticated with either guard
+        return redirect('/login')->with('error', 'Anda harus login terlebih dahulu.');
     }
 }
