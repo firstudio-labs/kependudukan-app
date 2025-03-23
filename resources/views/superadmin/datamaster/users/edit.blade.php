@@ -170,11 +170,19 @@
         const subDistrictSelect = document.getElementById('sub_district_code');
         const villageSelect = document.getElementById('village_code');
 
-        // Hidden inputs for IDs
+        // Hidden inputs for IDs - Update variable names to match the actual HTML IDs
         const provinceIdInput = document.getElementById('province_id');
         const districtIdInput = document.getElementById('districts_id');
         const subDistrictIdInput = document.getElementById('sub_districts_id');
         const villageIdInput = document.getElementById('villages_id');
+
+        // Log the initial values for debugging
+        console.log('Initial location values:', {
+            provinceId: provinceIdInput.value,
+            districtId: districtIdInput.value,
+            subDistrictId: subDistrictIdInput.value,
+            villageId: villageIdInput.value
+        });
 
         // Helper function to reset select options
         function resetSelect(select, defaultText = 'Pilih', hiddenInput = null) {
@@ -215,10 +223,12 @@
         function updateHiddenInput(select, hiddenInput) {
             const selectedOption = select.options[select.selectedIndex];
             if (selectedOption && selectedOption.hasAttribute('data-id')) {
-                hiddenInput.value = selectedOption.getAttribute('data-id');
-                console.log(`Updated ${hiddenInput.id} to ${hiddenInput.value}`);
+                const newId = selectedOption.getAttribute('data-id');
+                hiddenInput.value = newId;
+                console.log(`Updated ${hiddenInput.id} to ${newId}`);
             } else {
                 hiddenInput.value = '';
+                console.log(`Cleared ${hiddenInput.id}`);
             }
         }
 
@@ -235,8 +245,9 @@
                 if (item.select.selectedIndex > 0) {
                     const selectedOption = item.select.options[item.select.selectedIndex];
                     if (selectedOption && selectedOption.hasAttribute('data-id')) {
-                        item.hiddenInput.value = selectedOption.getAttribute('data-id');
-                        console.log(`Initialized ${item.hiddenInput.id} to ${item.hiddenInput.value}`);
+                        const id = selectedOption.getAttribute('data-id');
+                        item.hiddenInput.value = id;
+                        console.log(`Initialized ${item.hiddenInput.id} to ${id}`);
                     }
                 }
             });
@@ -350,36 +361,120 @@
             }
         });
 
-        // Village change handler
+        // Updated Village change handler that ensures ID is set correctly
         villageSelect.addEventListener('change', function() {
-            // Update hidden input with ID
-            updateHiddenInput(this, villageIdInput);
+            // Get the selected option
+            const selectedOption = this.options[this.selectedIndex];
+            const villageCode = this.value;
+
+            console.log(`Village selection changed to: ${this.value}`);
+
+            // Check if a valid selection was made
+            if (this.selectedIndex > 0 && selectedOption) {
+                // Get the data-id attribute value (this is the actual ID we need)
+                const villageId = selectedOption.getAttribute('data-id');
+                console.log(`Selected village ID: ${villageId}, Code: ${villageCode}`);
+
+                if (villageId) {
+                    // Update the hidden input with the village ID
+                    villageIdInput.value = villageId;
+                    console.log(`Updated villages_id input to: ${villageId}`);
+                } else {
+                    console.error("Missing data-id attribute on selected village option!");
+                }
+            } else {
+                // If no selection, clear the hidden input
+                villageIdInput.value = '';
+                console.log("Cleared villages_id input");
+            }
         });
 
-        // Form validation
+        // Add an extra check before form submission
         document.querySelector('form').addEventListener('submit', function(e) {
-            if (provinceSelect.value && !provinceIdInput.value) {
-                e.preventDefault();
-                alert('ID Provinsi tidak valid, silakan pilih ulang provinsi.');
-                return;
+            // Verify that all fields have values before submission
+
+            // Check villages specifically - force update from current selection
+            if (villageSelect.selectedIndex > 0) {
+                const selectedVillage = villageSelect.options[villageSelect.selectedIndex];
+                const villageId = selectedVillage.getAttribute('data-id');
+
+                if (villageId) {
+                    // Ensure we set the ID correctly
+                    villageIdInput.value = villageId;
+                    console.log(`Form submit: Setting villages_id to ${villageId}`);
+                }
             }
-            if (districtSelect.value && !districtIdInput.value) {
+
+            // Check if selections were made but IDs are missing
+            if (villageSelect.selectedIndex > 0 && !villageIdInput.value) {
                 e.preventDefault();
-                alert('ID Kabupaten/Kota tidak valid, silakan pilih ulang kabupaten/kota.');
-                return;
+                console.error("Village selected but villages_id is empty!");
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Data desa tidak valid. Silakan pilih ulang desa.',
+                    confirmButtonColor: '#3085d6'
+                });
+                return false;
             }
-            if (subDistrictSelect.value && !subDistrictIdInput.value) {
-                e.preventDefault();
-                alert('ID Kecamatan tidak valid, silakan pilih ulang kecamatan.');
-                return;
-            }
-            if (villageSelect.value && !villageIdInput.value) {
-                e.preventDefault();
-                alert('ID Desa/Kelurahan tidak valid, silakan pilih ulang desa/kelurahan.');
-                return;
-            }
+
+            // Final debug log of all data being submitted
+            console.log("FORM SUBMISSION DATA:");
+            console.log("Province ID: " + provinceIdInput.value);
+            console.log("District ID: " + districtIdInput.value);
+            console.log("Subdistrict ID: " + subDistrictIdInput.value);
+            console.log("Village ID: " + villageIdInput.value);
         });
+
+        // Add a direct monitor to detect if hidden inputs are being modified
+        // This helps track if something else might be affecting the values
+        const monitorHiddenInput = function(input) {
+            const originalValue = input.value;
+
+            // Use an interval to check if value changes
+            setInterval(function() {
+                if (input.value !== originalValue) {
+                    console.log(`Hidden input ${input.id} value changed from ${originalValue} to ${input.value}`);
+                }
+            }, 1000);
+
+            // Also monitor for programmatic changes using a proxy
+            const descriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+            const originalSetter = descriptor.set;
+
+            Object.defineProperty(input, 'value', {
+                set: function(val) {
+                    console.log(`${input.id} value being set to: ${val}`);
+                    originalSetter.call(this, val);
+                }
+            });
+        };
+
+        // Apply monitoring to village ID input
+        monitorHiddenInput(villageIdInput);
     });
+
+    // Handle success and error messages with SweetAlert
+    @if(session('success'))
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil!',
+            text: "{{ session('success') }}",
+            timer: 3000,
+            showConfirmButton: false
+        });
+    @endif
+
+    @if(session('error'))
+        Swal.fire({
+            icon: 'error',
+            title: 'Gagal!',
+            text: "{{ session('error') }}",
+            timer: 3000,
+            showConfirmButton: false
+        });
+    @endif
     </script>
     @endpush
 </x-layout>

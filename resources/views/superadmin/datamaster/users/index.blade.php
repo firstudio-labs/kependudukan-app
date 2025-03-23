@@ -7,11 +7,7 @@
             </a>
         </div>
 
-        @if(session('success'))
-            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
-                {{ session('success') }}
-            </div>
-        @endif
+        
 
         <div class="mb-6">
             <form method="GET" action="{{ route('superadmin.datamaster.user.index') }}" class="flex flex-col sm:flex-row gap-2">
@@ -80,12 +76,16 @@
                                 </span>
                             </td>
                             <td class="px-4 py-3 whitespace-nowrap text-sm font-medium">
-                                <div class="flex flex-col sm:flex-row gap-2">
-                                    <a href="{{ route('superadmin.datamaster.user.edit', $user->id) }}" class="text-blue-600 hover:text-blue-900 bg-blue-100 px-3 py-1 rounded text-center">Edit</a>
+                                <div class="flex items-center space-x-2">
+                                    <a href="{{ route('superadmin.datamaster.user.edit', $user->id) }}" class="text-yellow-600 hover:text-yellow-800" aria-label="Edit">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </a>
                                     <form action="{{ route('superadmin.datamaster.user.destroy', $user->id) }}" method="POST" class="inline delete-form">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="text-red-600 hover:text-red-900 bg-red-100 px-3 py-1 rounded w-full">Hapus</button>
+                                        <button type="submit" class="text-red-600 hover:text-red-800" aria-label="Hapus">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
                                     </form>
                                 </div>
                             </td>
@@ -105,20 +105,51 @@
         </div>
     </div>
 
-    @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Confirm before deleting
+            // Confirm before deleting using SweetAlert
             const deleteForms = document.querySelectorAll('.delete-form');
             deleteForms.forEach(form => {
                 form.addEventListener('submit', function(e) {
                     e.preventDefault();
-                    if (confirm('Apakah Anda yakin ingin menghapus pengguna ini?')) {
-                        this.submit();
-                    }
+
+                    Swal.fire({
+                        title: 'Apakah Anda yakin?',
+                        text: "Data yang dihapus tidak dapat dikembalikan!",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Ya, hapus!',
+                        cancelButtonText: 'Batal'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            this.submit();
+                        }
+                    });
                 });
             });
+
+            // Display success or error messages
+            @if(session('success'))
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    text: "{{ session('success') }}",
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+            @endif
+
+            @if(session('error'))
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal!',
+                    text: "{{ session('error') }}",
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+            @endif
         });
     </script>
-    @endpush
 </x-layout>

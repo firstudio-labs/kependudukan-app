@@ -84,47 +84,46 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <!-- Province -->
                     <div>
-                        <label for="province_code" class="block text-sm font-medium text-gray-700">Provinsi</label>
-                        <select id="province_code" name="province_code" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                        <label for="province_code" class="block text-sm font-medium text-gray-700">Provinsi <span class="text-red-500">*</span></label>
+                        <select id="province_code" name="province_code" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                             <option value="">Pilih Provinsi</option>
                             @foreach($provinces as $province)
                                 <option value="{{ $province['code'] }}" data-id="{{ $province['id'] }}">{{ $province['name'] }}</option>
                             @endforeach
                         </select>
+                        <!-- Hidden input to store the actual ID for database storage -->
                         <input type="hidden" id="province_id" name="province_id" value="">
-                        @error('province_id')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                     </div>
 
-                    <!-- District/City -->
+                    <!-- Kabupaten -->
                     <div>
-                        <label for="district_code" class="block text-sm font-medium text-gray-700">Kabupaten/Kota</label>
-                        <select id="district_code" name="district_code" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" disabled>
-                            <option value="">Pilih Kabupaten/Kota</option>
+                        <label for="district_code" class="block text-sm font-medium text-gray-700">Kabupaten <span class="text-red-500">*</span></label>
+                        <select id="district_code" name="district_code" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                            <option value="">Pilih Kabupaten</option>
                         </select>
-                        <input type="hidden" id="districts_id" name="districts_id" value="">
-                        @error('districts_id')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
+                        <!-- Hidden input to store the actual ID for database storage -->
+                        <input type="hidden" id="district_id" name="districts_id" value="">
                     </div>
 
-                    <!-- Subdistrict -->
+                    <!-- Kecamatan -->
                     <div>
-                        <label for="sub_district_code" class="block text-sm font-medium text-gray-700">Kecamatan</label>
-                        <select id="sub_district_code" name="sub_district_code" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" disabled>
+                        <label for="sub_district_code" class="block text-sm font-medium text-gray-700">Kecamatan <span class="text-red-500">*</span></label>
+                        <select id="sub_district_code" name="sub_district_code" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                             <option value="">Pilih Kecamatan</option>
                         </select>
-                        <input type="hidden" id="sub_districts_id" name="sub_districts_id" value="">
-                        @error('sub_districts_id')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
+                        <!-- Hidden input to store the actual ID for database storage -->
+                        <input type="hidden" id="sub_district_id" name="sub_districts_id" value="">
                     </div>
 
-                    <!-- Village -->
+                    <!-- Desa -->
                     <div>
-                        <label for="village_code" class="block text-sm font-medium text-gray-700">Desa/Kelurahan</label>
-                        <select id="village_code" name="village_code" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" disabled>
-                            <option value="">Pilih Desa/Kelurahan</option>
+                        <label for="village_code" class="block text-sm font-medium text-gray-700">Desa <span class="text-red-500">*</span></label>
+                        <select id="village_code" name="village_code" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                            <option value="">Pilih Desa</option>
                         </select>
-                        <input type="hidden" id="villages_id" name="villages_id" value="">
-                        @error('villages_id')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
+                        <!-- Hidden input to store the actual ID for database storage -->
+                        <input type="hidden" id="village_id" name="villages_id" value="">
                     </div>
-                </div>
             </div>
 
             <div class="mt-6 flex justify-between">
@@ -136,7 +135,6 @@
         </form>
     </div>
 
-    @push('scripts')
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         const provinceSelect = document.getElementById('province_code');
@@ -144,23 +142,11 @@
         const subDistrictSelect = document.getElementById('sub_district_code');
         const villageSelect = document.getElementById('village_code');
 
-        // Hidden inputs for IDs
+        // Hidden inputs for IDs - References must match the actual HTML element IDs
         const provinceIdInput = document.getElementById('province_id');
-        const districtIdInput = document.getElementById('districts_id');
-        const subDistrictIdInput = document.getElementById('sub_districts_id');
-        const villageIdInput = document.getElementById('villages_id');
-
-        // Log DOM elements to verify they're properly found
-        console.log('DOM Elements:', {
-            provinceSelect,
-            districtSelect,
-            subDistrictSelect,
-            villageSelect,
-            provinceIdInput,
-            districtIdInput,
-            subDistrictIdInput,
-            villageIdInput
-        });
+        const districtIdInput = document.getElementById('district_id');
+        const subDistrictIdInput = document.getElementById('sub_district_id');
+        const villageIdInput = document.getElementById('village_id');
 
         // Helper function to reset select options
         function resetSelect(select, defaultText = 'Pilih', hiddenInput = null) {
@@ -172,21 +158,9 @@
         // Helper function to populate select options with code as value and id as data attribute
         function populateSelect(select, data, defaultText, hiddenInput = null) {
             try {
-                console.log(`Populating ${select.id} with:`, data);
                 select.innerHTML = `<option value="">${defaultText}</option>`;
 
-                // Check if data is available and is an array
-                if (!Array.isArray(data)) {
-                    console.error(`Data for ${select.id} is not an array:`, data);
-                    resetSelect(select, 'Invalid data format', hiddenInput);
-                    return;
-                }
-
                 data.forEach(item => {
-                    if (!item || !item.code || !item.name || !item.id) {
-                        console.warn('Invalid item in data:', item);
-                        return;
-                    }
                     const option = document.createElement('option');
                     option.value = item.code;
                     option.textContent = item.name;
@@ -195,11 +169,10 @@
                 });
 
                 select.disabled = false;
-                console.log(`${select.id} now has ${select.options.length} options`);
 
                 if (hiddenInput) hiddenInput.value = '';
             } catch (error) {
-                console.error(`Error populating ${select.id}:`, error);
+                console.error('Error populating select:', error);
                 select.innerHTML = `<option value="">Error loading data</option>`;
                 select.disabled = true;
                 if (hiddenInput) hiddenInput.value = '';
@@ -210,11 +183,12 @@
         function updateHiddenInput(select, hiddenInput) {
             const selectedOption = select.options[select.selectedIndex];
             if (selectedOption && selectedOption.hasAttribute('data-id')) {
-                hiddenInput.value = selectedOption.getAttribute('data-id');
-                console.log(`Updated ${hiddenInput.id} to ${hiddenInput.value}`);
+                const newId = selectedOption.getAttribute('data-id');
+                hiddenInput.value = newId;
+                console.log(`Updated ${hiddenInput.id} to ${newId}`);
             } else {
                 hiddenInput.value = '';
-                console.log(`Cleared ${hiddenInput.id} value`);
+                console.log(`Cleared ${hiddenInput.id}`);
             }
         }
 
@@ -223,50 +197,22 @@
             const provinceCode = this.value;
             console.log(`Province selected: ${provinceCode}`);
 
-            if (this.selectedIndex > 0) {
-                console.log(`Selected province element:`, this.options[this.selectedIndex]);
-                console.log(`Selected province name:`, this.options[this.selectedIndex].textContent);
-                console.log(`Selected province data-id:`, this.options[this.selectedIndex].getAttribute('data-id'));
-            }
-
             // Update the hidden input with the ID
             updateHiddenInput(this, provinceIdInput);
 
             resetSelect(districtSelect, 'Loading...', districtIdInput);
             resetSelect(subDistrictSelect, 'Pilih Kecamatan', subDistrictIdInput);
-            resetSelect(villageSelect, 'Pilih Desa/Kelurahan', villageIdInput);
+            resetSelect(villageSelect, 'Pilih Desa', villageIdInput);
 
             if (provinceCode) {
-                const url = `{{ url('/location/districts') }}/${provinceCode}`;
-                console.log(`Fetching districts from URL: ${url}`);
-
-                fetch(url)
-                    .then(response => {
-                        console.log('Response status:', response.status);
-                        if (!response.ok) {
-                            throw new Error('Network response was not ok: ' + response.statusText);
-                        }
-                        return response.text();  // Get raw text first for debugging
-                    })
-                    .then(rawText => {
-                        console.log('Raw response:', rawText);
-                        try {
-                            const data = JSON.parse(rawText);
-                            console.log(`Parsed response data:`, data);
-
-                            if (data && Array.isArray(data) && data.length > 0) {
-                                populateSelect(districtSelect, data, 'Pilih Kabupaten/Kota', districtIdInput);
-                                districtSelect.disabled = false;
-                            } else if (data && data.error) {
-                                console.error('API returned error:', data.error);
-                                resetSelect(districtSelect, 'Error: ' + data.error, districtIdInput);
-                            } else {
-                                console.warn('District data is empty or not in expected format');
-                                resetSelect(districtSelect, 'No data available', districtIdInput);
-                            }
-                        } catch (jsonError) {
-                            console.error('JSON parsing error:', jsonError);
-                            resetSelect(districtSelect, 'Error parsing data', districtIdInput);
+                fetch(`{{ url('/location/districts') }}/${provinceCode}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data && data.length > 0) {
+                            populateSelect(districtSelect, data, 'Pilih Kabupaten', districtIdInput);
+                            districtSelect.disabled = false;
+                        } else {
+                            resetSelect(districtSelect, 'No data available', districtIdInput);
                         }
                     })
                     .catch(error => {
@@ -285,18 +231,12 @@
             updateHiddenInput(this, districtIdInput);
 
             resetSelect(subDistrictSelect, 'Loading...', subDistrictIdInput);
-            resetSelect(villageSelect, 'Pilih Desa/Kelurahan', villageIdInput);
+            resetSelect(villageSelect, 'Pilih Desa', villageIdInput);
 
             if (districtCode) {
                 fetch(`{{ url('/location/sub-districts') }}/${districtCode}`)
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Network response was not ok: ' + response.statusText);
-                        }
-                        return response.json();
-                    })
+                    .then(response => response.json())
                     .then(data => {
-                        console.log(`Received ${data.length} sub-districts:`, data);
                         if (data && data.length > 0) {
                             populateSelect(subDistrictSelect, data, 'Pilih Kecamatan', subDistrictIdInput);
                             subDistrictSelect.disabled = false;
@@ -323,16 +263,10 @@
 
             if (subDistrictCode) {
                 fetch(`{{ url('/location/villages') }}/${subDistrictCode}`)
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Network response was not ok: ' + response.statusText);
-                        }
-                        return response.json();
-                    })
+                    .then(response => response.json())
                     .then(data => {
-                        console.log(`Received ${data.length} villages:`, data);
                         if (data && data.length > 0) {
-                            populateSelect(villageSelect, data, 'Pilih Desa/Kelurahan', villageIdInput);
+                            populateSelect(villageSelect, data, 'Pilih Desa', villageIdInput);
                             villageSelect.disabled = false;
                         } else {
                             resetSelect(villageSelect, 'No data available', villageIdInput);
@@ -347,35 +281,76 @@
 
         // Village change handler
         villageSelect.addEventListener('change', function() {
+            console.log(`Village selected: ${this.value}`);
             // Update hidden input with ID
             updateHiddenInput(this, villageIdInput);
         });
 
-        // Form validation
+        // Form validation to check if both IDs and codes are set
         document.querySelector('form').addEventListener('submit', function(e) {
-            // Check if province_id is set but districts_id is missing when a district is selected
-            if (provinceSelect.value && !provinceIdInput.value) {
-                e.preventDefault();
-                alert('ID Provinsi tidak valid, silakan pilih ulang provinsi.');
-                return;
+            // Manually update all hidden inputs one more time before submission
+            if (provinceSelect.selectedIndex > 0) {
+                updateHiddenInput(provinceSelect, provinceIdInput);
             }
-            if (districtSelect.value && !districtIdInput.value) {
-                e.preventDefault();
-                alert('ID Kabupaten/Kota tidak valid, silakan pilih ulang kabupaten/kota.');
-                return;
+            if (districtSelect.selectedIndex > 0) {
+                updateHiddenInput(districtSelect, districtIdInput);
             }
-            if (subDistrictSelect.value && !subDistrictIdInput.value) {
-                e.preventDefault();
-                alert('ID Kecamatan tidak valid, silakan pilih ulang kecamatan.');
-                return;
+            if (subDistrictSelect.selectedIndex > 0) {
+                updateHiddenInput(subDistrictSelect, subDistrictIdInput);
             }
-            if (villageSelect.value && !villageIdInput.value) {
+            if (villageSelect.selectedIndex > 0) {
+                updateHiddenInput(villageSelect, villageIdInput);
+            }
+
+            // Log values before submission for debugging
+            console.log('Form submission - final ID values:', {
+                provinceId: provinceIdInput.value,
+                districtId: districtIdInput.value,
+                subDistrictId: subDistrictIdInput.value,
+                villageId: villageIdInput.value
+            });
+
+            const provinceId = provinceIdInput.value;
+            const districtId = districtIdInput.value;
+            const subDistrictId = subDistrictIdInput.value;
+            const villageId = villageIdInput.value;
+
+            if (!provinceId || !districtId || !subDistrictId || !villageId) {
                 e.preventDefault();
-                alert('ID Desa/Kelurahan tidak valid, silakan pilih ulang desa/kelurahan.');
-                return;
+
+                // Use SweetAlert instead of basic alert
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Data tidak lengkap',
+                    text: 'Silakan pilih Provinsi, Kabupaten, Kecamatan, dan Desa',
+                    confirmButtonColor: '#3085d6',
+                    confirmButtonText: 'OK'
+                });
+
+                return false;
             }
         });
     });
+
+    // Handle success and error messages with SweetAlert
+    @if(session('success'))
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil!',
+            text: "{{ session('success') }}",
+            timer: 3000,
+            showConfirmButton: false
+        });
+    @endif
+
+    @if(session('error'))
+        Swal.fire({
+            icon: 'error',
+            title: 'Gagal!',
+            text: "{{ session('error') }}",
+            timer: 3000,
+            showConfirmButton: false
+        });
+    @endif
     </script>
-    @endpush
 </x-layout>
