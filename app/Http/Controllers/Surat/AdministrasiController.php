@@ -109,7 +109,7 @@ class AdministrasiController extends Controller
             'district_id' => 'required|string',
             'subdistrict_id' => 'required|string',
             'village_id' => 'required|string',
-            'letter_number' => 'nullable|integer',
+            'letter_number' => 'nullable|string',
             'signing' => 'nullable|string',
         ]);
 
@@ -213,7 +213,7 @@ class AdministrasiController extends Controller
             'district_id' => 'required|numeric',
             'subdistrict_id' => 'required|numeric',
             'village_id' => 'required|numeric',
-            'letter_number' => 'nullable|integer',
+            'letter_number' => 'nullable|string',
             'signing' => 'nullable|string',
         ]);
 

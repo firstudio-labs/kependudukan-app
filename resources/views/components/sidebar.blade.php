@@ -67,216 +67,207 @@
                 </a>
             </li>
 
+            <!-- Master User (moved out of Master Data) -->
+            <li class="-ml-5">
+                <a href="{{ route('superadmin.datamaster.user.index') }}"
+                    class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                        {{ request()->routeIs('superadmin.datamaster.user*')
+                            ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                            : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                    <i class="fa-solid fa-users text-lg transition-all duration-300"></i>
+                    <span>Master User</span>
+                </a>
+            </li>
+
+            <!-- Master Penduduk (moved out but keeping its dropdown) -->
             <li class="-ml-5">
                 <button type="button"
                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
-                    onclick="toggleDropdown('masterDataDropdown')">
-                    <i class="fa-solid fa-database text-lg transition-all duration-300"></i>
-                    <span>Master Data</span>
-                    <i id="dropdown-icon-master" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
+                    onclick="toggleDropdown('pendudukDropdown')">
+                    <i class="fa-solid fa-id-card text-lg transition-all duration-300"></i>
+                    <span>Master Penduduk</span>
+                    <i id="dropdown-icon-penduduk" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
                 </button>
-                <ul id="masterDataDropdown" class="hidden space-y-2 pl-6">
+                <ul id="pendudukDropdown" class="hidden space-y-2 pl-6">
                     <li>
-                        <a href="{{ route('superadmin.datamaster.user.index') }}"
+                        <a href="{{ route('superadmin.biodata.index') }}"
                             class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                {{ request()->routeIs('superadmin.datamaster.user*')
+                                {{ request()->routeIs('superadmin.biodata*')
                                     ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
                                     : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
-                            <i class="fa-solid fa-users text-lg transition-all duration-300"></i>
-                            <span>Master User</span>
+                            <span>Biodata</span>
                         </a>
                     </li>
                     <li>
-                        <button type="button"
-                            class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
-                            onclick="toggleDropdown('pendudukDropdown')">
-                            <i class="fa-solid fa-id-card text-lg transition-all duration-300"></i>
-                            <span>Master Penduduk</span>
-                            <i id="dropdown-icon-penduduk" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
-                        </button>
-                        <ul id="pendudukDropdown" class="hidden space-y-2 pl-6">
-                            <li>
-                                <a href="{{ route('superadmin.biodata.index') }}"
-                                    class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                        {{ request()->routeIs('superadmin.biodata*')
-                                            ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-                                            : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
-                                    {{-- <i class="fa-regular fa-clipboard text-lg transition-all duration-300"></i> --}}
-                                    <span>Biodata</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('superadmin.datakk.index') }}"
-                                    class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                        {{ request()->routeIs('superadmin.datakk*')
-                                            ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-                                            : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
-                                    {{-- <i class="fa-solid fa-people-group text-lg transition-all duration-300"></i> --}}
-                                    <span>Data KK</span>
-                                </a>
-                            </li>
-                        </ul>
+                        <a href="{{ route('superadmin.datakk.index') }}"
+                            class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                {{ request()->routeIs('superadmin.datakk*')
+                                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                            <span>Data KK</span>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+
+            <!-- Master Surat (moved out but keeping its dropdown) -->
+            <li class="-ml-5">
+                <button type="button"
+                    class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
+                    onclick="toggleDropdown('suratDropdown')">
+                    <i class="fa-solid fa-envelope text-lg transition-all duration-300"></i>
+                    <span>Master Surat</span>
+                    <i id="dropdown-icon-surat" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
+                </button>
+                <ul id="suratDropdown" class="hidden space-y-2 pl-6">
+                    <li>
+                        <a href="{{ route('superadmin.surat.administrasi.index') }}"
+                            class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                {{ request()->routeIs('superadmin.surat.administrasi*')
+                                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                            <span>Administrasi Umum</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('superadmin.surat.kehilangan.index') }}"
+                            class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                {{ request()->routeIs('superadmin.surat.kehilangan*')
+                                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                            <span>Surat Kehilangan</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('superadmin.surat.skck.index') }}"
+                            class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                {{ request()->routeIs('superadmin.surat.skck*')
+                                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                            <span>Surat SKCK</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('superadmin.surat.domisili.index') }}"
+                            class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                {{ request()->routeIs('superadmin.surat.domisili*') && !request()->routeIs('superadmin.surat.domisili-usaha*')
+                                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                            <span>Keterangan Domisili</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('superadmin.surat.domisili-usaha.index') }}"
+                            class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                {{ request()->routeIs('superadmin.surat.domisili-usaha*')
+                                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                            <span>Domisili Usaha</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('superadmin.surat.ahli-waris.index') }}"
+                            class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                {{ request()->routeIs('superadmin.surat.ahli-waris*')
+                                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                            <span>Surat Ahli Waris</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('superadmin.surat.kelahiran.index') }}"
+                            class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                {{ request()->routeIs('superadmin.surat.kelahiran*')
+                                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                            <span>Keterangan Kelahiran</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('superadmin.surat.kematian.index') }}"
+                            class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                {{ request()->routeIs('superadmin.surat.kematian*')
+                                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                            <span>Keterangan Kematian</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('superadmin.surat.keramaian.index') }}"
+                            class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                {{ request()->routeIs('superadmin.surat.keramaian*')
+                                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                            <span>Izin Keramaian</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('superadmin.surat.rumah-sewa.index') }}"
+                            class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                {{ request()->routeIs('superadmin.surat.rumah-sewa*')
+                                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                            <span>Izin Rumah Sewa</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('superadmin.surat.pengantar-ktp.index') }}"
+                            class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                {{ request()->routeIs('superadmin.surat.pengantar-ktp*')
+                                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                            <span>Pengantar KTP</span>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+
+            <!-- Master Wilayah (moved out but keeping its dropdown) -->
+            <li class="-ml-5">
+                <button type="button"
+                    class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
+                    onclick="toggleDropdown('wilayahDropdown')">
+                    <i class="fa-solid fa-map text-lg transition-all duration-300"></i>
+                    <span>Master Wilayah</span>
+                    <i id="dropdown-icon-wilayah" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
+                </button>
+                <ul id="wilayahDropdown" class="hidden space-y-2 pl-6">
+                    <li>
+                        <a href="{{ route('superadmin.datamaster.wilayah.provinsi.index') }}"
+                            class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                {{ request()->routeIs('superadmin.datamaster.wilayah.provinsi*')
+                                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                            <span>Provinsi</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('superadmin.datamaster.wilayah.kabupaten.index') }}"
+                            class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                {{ request()->routeIs('superadmin.datamaster.wilayah.kabupaten*')
+                                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                            <span>Kabupaten</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('superadmin.datamaster.wilayah.kecamatan.index') }}"
+                            class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                {{ request()->routeIs('superadmin.datamaster.wilayah.kecamatan*')
+                                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                            <span>Kecamatan</span>
+                        </a>
                     </li>
 
-                    <!-- Master Surat menu -->
                     <li>
-                        <button type="button"
-                            class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
-                            onclick="toggleDropdown('suratDropdown')">
-                            <i class="fa-solid fa-envelope text-lg transition-all duration-300"></i>
-                            <span>Master Surat</span>
-                            <i id="dropdown-icon-surat" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
-                        </button>
-                        <ul id="suratDropdown" class="hidden space-y-2 pl-6">
-                            <li>
-                                <a href="{{ route('superadmin.surat.administrasi.index') }}"
-                                    class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                        {{ request()->routeIs('superadmin.surat.administrasi*')
-                                            ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-                                            : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
-                                    <span>Administrasi Umum</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('superadmin.surat.kehilangan.index') }}"
-                                    class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                        {{ request()->routeIs('superadmin.surat.kehilangan*')
-                                            ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-                                            : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
-                                    <span>Surat Kehilangan</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('superadmin.surat.skck.index') }}"
-                                    class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                        {{ request()->routeIs('superadmin.surat.skck*')
-                                            ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-                                            : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
-                                    <span>Surat SKCK</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('superadmin.surat.domisili.index') }}"
-                                    class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                        {{ request()->routeIs('superadmin.surat.domisili*') && !request()->routeIs('superadmin.surat.domisili-usaha*')
-                                            ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-                                            : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
-                                    <span>Keterangan Domisili</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('superadmin.surat.domisili-usaha.index') }}"
-                                    class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                        {{ request()->routeIs('superadmin.surat.domisili-usaha*')
-                                            ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-                                            : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
-                                    <span>Domisili Usaha</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('superadmin.surat.ahli-waris.index') }}"
-                                    class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                        {{ request()->routeIs('superadmin.surat.ahli-waris*')
-                                            ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-                                            : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
-                                    <span>Surat Ahli Waris</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('superadmin.surat.kelahiran.index') }}"
-                                    class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                        {{ request()->routeIs('superadmin.surat.kelahiran*')
-                                            ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-                                            : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
-                                    <span>Keterangan Kelahiran</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('superadmin.surat.kematian.index') }}"
-                                    class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                        {{ request()->routeIs('superadmin.surat.kematian*')
-                                            ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-                                            : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
-                                    <span>Keterangan Kematian</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('superadmin.surat.keramaian.index') }}"
-                                    class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                        {{ request()->routeIs('superadmin.surat.keramaian*')
-                                            ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-                                            : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
-                                    <span>Izin Keramaian</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('superadmin.surat.rumah-sewa.index') }}"
-                                    class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                        {{ request()->routeIs('superadmin.surat.rumah-sewa*')
-                                            ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-                                            : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
-                                    <span>Izin Rumah Sewa</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('superadmin.surat.pengantar-ktp.index') }}"
-                                    class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                        {{ request()->routeIs('superadmin.surat.pengantar-ktp*')
-                                            ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-                                            : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
-                                    <span>Pengantar KTP</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-
-                    <li>
-                        <button type="button"
-                            class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
-                            onclick="toggleDropdown('wilayahDropdown')">
-                            <i class="fa-solid fa-map text-lg transition-all duration-300"></i>
-                            <span>Master Wilayah</span>
-                            <i id="dropdown-icon-wilayah" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
-                        </button>
-                        <ul id="wilayahDropdown" class="hidden space-y-2 pl-6">
-                            <li>
-                                <a href="{{ route('superadmin.datamaster.wilayah.provinsi.index') }}"
-                                    class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                        {{ request()->routeIs('superadmin.datamaster.wilayah.provinsi*')
-                                            ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-                                            : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
-                                    <span>Provinsi</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('superadmin.datamaster.wilayah.kabupaten.index') }}"
-                                    class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                        {{ request()->routeIs('superadmin.datamaster.wilayah.kabupaten*')
-                                            ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-                                            : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
-                                    <span>Kabupaten</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('superadmin.datamaster.wilayah.kecamatan.index') }}"
-                                    class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                        {{ request()->routeIs('superadmin.datamaster.wilayah.kecamatan*')
-                                            ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-                                            : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
-                                    <span>Kecamatan</span>
-                                </a>
-                            </li>
-
-                            <li>
-                                <a href="{{ route('superadmin.datamaster.wilayah.desa.index') }}"
-                                    class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                        {{ request()->routeIs('superadmin.datamaster.wilayah.desa*')
-                                            ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-                                            : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
-                                    <span>Desa</span>
-                                </a>
-                            </li>
-                        </ul>
+                        <a href="{{ route('superadmin.datamaster.wilayah.desa.index') }}"
+                            class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                {{ request()->routeIs('superadmin.datamaster.wilayah.desa*')
+                                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                            <span>Desa</span>
+                        </a>
                     </li>
                 </ul>
             </li>
@@ -342,9 +333,6 @@
             icon.classList.toggle('rotate-180');
         } else if (id === 'wilayahDropdown') {
             const icon = document.getElementById('dropdown-icon-wilayah');
-            icon.classList.toggle('rotate-180');
-        } else if (id === 'masterDataDropdown') {
-            const icon = document.getElementById('dropdown-icon-master');
             icon.classList.toggle('rotate-180');
         } else if (id === 'suratDropdown') {
             const icon = document.getElementById('dropdown-icon-surat');

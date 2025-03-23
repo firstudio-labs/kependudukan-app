@@ -87,7 +87,7 @@
             <div class="mt-5 sm:mt-6">
                 <h2 class="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4">Data Wilayah</h2>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                    <div>
+                    {{-- <div>
                         <label for="province_id" class="block text-sm font-medium text-gray-700">Provinsi</label>
                         <select id="province_id" name="province_code"
                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-lg p-2"
@@ -111,7 +111,7 @@
                         </select>
                         <!-- Hidden field to store district ID for backend -->
                         <input type="hidden" name="district_id" id="district_id_hidden">
-                    </div>
+                    </div> --}}
 
                     <div>
                         <label for="sub_district_id" class="block text-sm font-medium text-gray-700">Kecamatan</label>

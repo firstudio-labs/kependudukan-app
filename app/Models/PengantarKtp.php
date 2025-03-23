@@ -30,7 +30,7 @@ class PengantarKtp extends Model
         'application_type',
         'nik',
         'full_name',
-        'kk', // Changed from family_card_number to kk
+        'kk',
         'address',
         'rt',
         'rw',
@@ -46,6 +46,13 @@ class PengantarKtp extends Model
      * @var array
      */
     protected $casts = [
+        'province_id' => 'integer',
+        'district_id' => 'integer',
+        'subdistrict_id' => 'integer',
+        'village_id' => 'integer',
         'nik' => 'integer',
+        'kk' => 'integer',
+        'village_name' => 'integer',
+        'subdistrict_name' => 'integer',
     ];
 }

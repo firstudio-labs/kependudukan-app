@@ -85,188 +85,255 @@ class PengantarKtpController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'province_id' => 'required|string',
-            'district_id' => 'required|string',
-            'subdistrict_id' => 'required|string',
-            'village_id' => 'required|string',
-            'letter_number' => 'nullable|integer',
+        // Log the request data for debugging
+        \Log::info('PengantarKTP Store Request:', $request->all());
+
+        $validated = $request->validate([
+            'province_id' => 'required|integer',
+            'district_id' => 'required|integer',
+            'subdistrict_id' => 'required|integer',
+            'village_id' => 'required|integer',
+            'letter_number' => 'nullable|string',
             'application_type' => 'required|string|in:Baru,Perpanjang,Pergantian',
-            'nik' => 'required|integer',
+            'nik' => 'required|numeric',
             'full_name' => 'required|string',
-            'kk' => 'required|string', // Changed from family_card_number to kk
+            'kk' => 'required|numeric',
             'address' => 'required|string',
             'rt' => 'required|string',
             'rw' => 'required|string',
             'hamlet' => 'required|string',
-            'village_name' => 'required|string',
-            'subdistrict_name' => 'required|string',
+            'village_name' => 'required|numeric',
+            'subdistrict_name' => 'required|numeric',
             'signing' => 'nullable|string',
         ]);
 
         try {
-            PengantarKtp::create($request->all());
+            // Explicitly create model with validated data
+            $ktp = new PengantarKtp();
+            $ktp->province_id = $validated['province_id'];
+            $ktp->district_id = $validated['district_id'];
+            $ktp->subdistrict_id = $validated['subdistrict_id'];
+            $ktp->village_id = $validated['village_id'];
+            $ktp->letter_number = $validated['letter_number'];
+            $ktp->application_type = $validated['application_type'];
+            $ktp->nik = $validated['nik'];
+            $ktp->full_name = $validated['full_name'];
+            $ktp->kk = $validated['kk'];
+            $ktp->address = $validated['address'];
+            $ktp->rt = $validated['rt'];
+            $ktp->rw = $validated['rw'];
+            $ktp->hamlet = $validated['hamlet'];
+            $ktp->village_name = $validated['village_name'];
+            $ktp->subdistrict_name = $validated['subdistrict_name'];
+            $ktp->signing = $validated['signing'];
+            $ktp->save();
+
+            // Log successful creation
+            \Log::info('PengantarKTP Created Successfully:', $ktp->toArray());
+
             return redirect()->route('superadmin.surat.pengantar-ktp.index')
                 ->with('success', 'Surat pengantar KTP berhasil dibuat!');
         } catch (\Exception $e) {
-            return back()->with('error', 'Gagal membuat surat pengantar KTP: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Display the specified KTP application letter.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        try {
-            $ktp = PengantarKtp::findOrFail($id);
-
-            // Get location names using wilayah service
-            if (!empty($ktp->province_id)) {
-                $province = $this->wilayahService->getProvinceById($ktp->province_id);
-                if ($province) {
-                    $ktp->province_name = $province['name'];
-                }
-            }
-
-            if (!empty($ktp->district_id)) {
-                $district = $this->wilayahService->getDistrictById($ktp->district_id);
-                if ($district) {
-                    $ktp->district_name = $district['name'];
-                }
-            }
-
-            if (!empty($ktp->subdistrict_id)) {
-                $subdistrict = $this->wilayahService->getSubDistrictById($ktp->subdistrict_id);
-                if ($subdistrict) {
-                    $ktp->subdistrict_name_admin = $subdistrict['name'];
-                }
-            }
-
-            if (!empty($ktp->village_id)) {
-                $village = $this->wilayahService->getVillageById($ktp->village_id);
-                if ($village) {
-                    $ktp->village_name_admin = $village['name'];
-                }
-            }
-
-            return response()->json([
-                'success' => true,
-                'ktp' => $ktp
+            // Log the error
+            \Log::error('PengantarKTP Creation Error:', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
             ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Data not found: ' . $e->getMessage()
-            ], 404);
+
+            return back()->withInput()->with('error', 'Gagal membuat surat pengantar KTP: ' . $e->getMessage());
         }
     }
 
     /**
      * Show the form for editing the specified KTP application letter.
      *
-     * @param int $id
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
     public function edit($id)
     {
-        $ktp = PengantarKtp::findOrFail($id);
+        try {
+            $ktp = PengantarKtp::findOrFail($id);
 
-        // Get provinces data from service
-        $provinces = $this->wilayahService->getProvinces();
+            // Get regions data from service
+            $provinces = $this->wilayahService->getProvinces();
 
-        // Initialize arrays for district, sub-district, and village data
-        $districts = [];
-        $subDistricts = [];
-        $villages = [];
-
-        // If we have province_id, try to get districts
-        if (!empty($ktp->province_id)) {
-            try {
-                $provinceData = $this->wilayahService->getProvinceById($ktp->province_id);
-                if ($provinceData && isset($provinceData['code'])) {
-                    $districts = $this->wilayahService->getDistrictsByProvinceCode($provinceData['code']);
+            // Get district data if province_id exists
+            $districts = [];
+            if (!empty($ktp->province_id)) {
+                $provinceCode = null;
+                foreach ($provinces as $province) {
+                    if ($province['id'] == $ktp->province_id) {
+                        $provinceCode = $province['code'];
+                        break;
+                    }
                 }
-            } catch (\Exception $e) {
-                // Log error but continue
-                \Log::error("Error fetching districts: " . $e->getMessage());
-            }
-        }
 
-        // If we have district_id, try to get subdistricts
-        if (!empty($ktp->district_id)) {
-            try {
-                $districtData = $this->wilayahService->getDistrictById($ktp->district_id);
-                if ($districtData && isset($districtData['code'])) {
-                    $subDistricts = $this->wilayahService->getSubDistrictsByDistrictCode($districtData['code']);
+                if ($provinceCode) {
+                    $districts = $this->wilayahService->getKabupaten($provinceCode);
                 }
-            } catch (\Exception $e) {
-                // Log error but continue
-                \Log::error("Error fetching subdistricts: " . $e->getMessage());
             }
-        }
 
-        // If we have subdistrict_id, try to get villages
-        if (!empty($ktp->subdistrict_id)) {
-            try {
-                $subDistrictData = $this->wilayahService->getSubDistrictById($ktp->subdistrict_id);
-                if ($subDistrictData && isset($subDistrictData['code'])) {
-                    $villages = $this->wilayahService->getVillagesBySubDistrictCode($subDistrictData['code']);
+            // Get subdistrict data if district_id exists
+            $subDistricts = [];
+            if (!empty($ktp->district_id) && !empty($districts)) {
+                $districtCode = null;
+                foreach ($districts as $district) {
+                    if ($district['id'] == $ktp->district_id) {
+                        $districtCode = $district['code'];
+                        break;
+                    }
                 }
-            } catch (\Exception $e) {
-                // Log error but continue
-                \Log::error("Error fetching villages: " . $e->getMessage());
-            }
-        }
 
-        return view('superadmin.datamaster.surat.pengantar-ktp.edit', compact(
-            'ktp',
-            'provinces',
-            'districts',
-            'subDistricts',
-            'villages'
-        ));
+                if ($districtCode) {
+                    $subDistricts = $this->wilayahService->getKecamatan($districtCode);
+                }
+            }
+
+            // Get village data if subdistrict_id exists
+            $villages = [];
+            if (!empty($ktp->subdistrict_id) && !empty($subDistricts)) {
+                $subDistrictCode = null;
+                foreach ($subDistricts as $subDistrict) {
+                    if ($subDistrict['id'] == $ktp->subdistrict_id) {
+                        $subDistrictCode = $subDistrict['code'];
+                        break;
+                    }
+                }
+
+                if ($subDistrictCode) {
+                    $villages = $this->wilayahService->getDesa($subDistrictCode);
+                }
+            }
+
+            // Now also fetch the subdistrict data for the bottom address section
+            // We need this for the subdistrict_name field
+            $addressSubDistricts = [];
+            // If we already have the district code from above, reuse it
+            if (!empty($districtCode)) {
+                $addressSubDistricts = $this->wilayahService->getKecamatan($districtCode);
+            }
+
+            // Now also fetch the village data for the bottom address section
+            // We need this for the village_name field
+            $addressVillages = [];
+            // Get the subdistrict code for the address section (might be different from the top section)
+            $addressSubDistrictCode = null;
+            if (!empty($ktp->subdistrict_name)) {
+                foreach ($addressSubDistricts as $subDistrict) {
+                    if ($subDistrict['id'] == $ktp->subdistrict_name) {
+                        $addressSubDistrictCode = $subDistrict['code'];
+                        break;
+                    }
+                }
+
+                if ($addressSubDistrictCode) {
+                    $addressVillages = $this->wilayahService->getDesa($addressSubDistrictCode);
+                }
+            }
+
+            // If we couldn't get the village data from subdistrict_name, try using the top section's subdistrict code
+            if (empty($addressVillages) && !empty($subDistrictCode)) {
+                $addressVillages = $this->wilayahService->getDesa($subDistrictCode);
+            }
+
+            // Merge the address sections with the regular ones if they're empty
+            if (empty($addressSubDistricts)) {
+                $addressSubDistricts = $subDistricts;
+            }
+
+            if (empty($addressVillages)) {
+                $addressVillages = $villages;
+            }
+
+            // Add the address section villages and subdistricts to the view
+            return view('superadmin.datamaster.surat.pengantar-ktp.edit', compact(
+                'ktp',
+                'provinces',
+                'districts',
+                'subDistricts',
+                'villages',
+                'addressSubDistricts',
+                'addressVillages'
+            ));
+        } catch (\Exception $e) {
+            \Log::error('Error in PengantarKtpController@edit: ' . $e->getMessage(), [
+                'id' => $id,
+                'trace' => $e->getTraceAsString()
+            ]);
+            return redirect()->route('superadmin.surat.pengantar-ktp.index')
+                ->with('error', 'Gagal memuat data surat pengantar KTP: ' . $e->getMessage());
+        }
     }
 
     /**
      * Update the specified KTP application letter in storage.
      *
-     * @param \Illuminate\Http\Request $request
-     * @param int $id
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, $id)
     {
-        $request->validate([
-            'province_id' => 'required|string',
-            'district_id' => 'required|string',
-            'subdistrict_id' => 'required|string',
-            'village_id' => 'required|string',
-            'letter_number' => 'nullable|integer',
+        // Log the request data for debugging
+        \Log::info('PengantarKTP Update Request:', $request->all());
+
+        $validated = $request->validate([
+            'province_id' => 'required|integer',
+            'district_id' => 'required|integer',
+            'subdistrict_id' => 'required|integer',
+            'village_id' => 'required|integer',
+            'letter_number' => 'nullable|string',
             'application_type' => 'required|string|in:Baru,Perpanjang,Pergantian',
-            'nik' => 'required|integer',
+            'nik' => 'required|numeric',
             'full_name' => 'required|string',
-            'kk' => 'required|string', // Changed from family_card_number to kk
+            'kk' => 'required|numeric',
             'address' => 'required|string',
             'rt' => 'required|string',
             'rw' => 'required|string',
             'hamlet' => 'required|string',
-            'village_name' => 'required|string',
-            'subdistrict_name' => 'required|string',
+            'village_name' => 'required|numeric',
+            'subdistrict_name' => 'required|numeric',
             'signing' => 'nullable|string',
         ]);
 
         try {
             $ktp = PengantarKtp::findOrFail($id);
-            $ktp->update($request->all());
+
+            // Update model with validated data
+            $ktp->province_id = $validated['province_id'];
+            $ktp->district_id = $validated['district_id'];
+            $ktp->subdistrict_id = $validated['subdistrict_id'];
+            $ktp->village_id = $validated['village_id'];
+            $ktp->letter_number = $validated['letter_number'];
+            $ktp->application_type = $validated['application_type'];
+            $ktp->nik = $validated['nik'];
+            $ktp->full_name = $validated['full_name'];
+            $ktp->kk = $validated['kk'];
+            $ktp->address = $validated['address'];
+            $ktp->rt = $validated['rt'];
+            $ktp->rw = $validated['rw'];
+            $ktp->hamlet = $validated['hamlet'];
+            $ktp->village_name = $validated['village_name'];
+            $ktp->subdistrict_name = $validated['subdistrict_name'];
+            $ktp->signing = $validated['signing'];
+            $ktp->save();
+
+            // Log successful update
+            \Log::info('PengantarKTP Updated Successfully:', $ktp->toArray());
 
             return redirect()->route('superadmin.surat.pengantar-ktp.index')
                 ->with('success', 'Surat pengantar KTP berhasil diperbarui!');
         } catch (\Exception $e) {
-            return back()->with('error', 'Gagal memperbarui surat pengantar KTP: ' . $e->getMessage());
+            // Log the error
+            \Log::error('PengantarKTP Update Error:', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+
+            return back()->withInput()->with('error', 'Gagal memperbarui surat pengantar KTP: ' . $e->getMessage());
         }
     }
 
@@ -286,6 +353,131 @@ class PengantarKtpController extends Controller
                 ->with('success', 'Surat pengantar KTP berhasil dihapus!');
         } catch (\Exception $e) {
             return back()->with('error', 'Gagal menghapus surat pengantar KTP: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Export KTP application to PDF
+     *
+     * @param int $id
+     * @return \Illuminate\Http\Response
+     */
+    public function exportPDF($id)
+    {
+        try {
+            $ktp = PengantarKtp::findOrFail($id);
+
+            // Get location names using wilayah service
+            $provinceName = '';
+            $districtName = '';
+            $subdistrictName = '';
+            $villageName = '';
+
+            // Get province data
+            if (!empty($ktp->province_id)) {
+                $provinces = $this->wilayahService->getProvinces();
+                foreach ($provinces as $province) {
+                    if ($province['id'] == $ktp->province_id) {
+                        $provinceName = $province['name'];
+                        break;
+                    }
+                }
+            }
+
+            // Get district/kabupaten data
+            if (!empty($ktp->district_id)) {
+                $provinceCode = null;
+                foreach ($this->wilayahService->getProvinces() as $province) {
+                    if ($province['id'] == $ktp->province_id) {
+                        $provinceCode = $province['code'];
+                        break;
+                    }
+                }
+
+                if ($provinceCode) {
+                    $districts = $this->wilayahService->getKabupaten($provinceCode);
+                    foreach ($districts as $district) {
+                        if ($district['id'] == $ktp->district_id) {
+                            $districtName = $district['name'];
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Get subdistrict/kecamatan data
+            if (!empty($ktp->subdistrict_id)) {
+                $districtCode = null;
+                if (!empty($provinceCode)) {
+                    $districts = $this->wilayahService->getKabupaten($provinceCode);
+                    foreach ($districts as $district) {
+                        if ($district['id'] == $ktp->district_id) {
+                            $districtCode = $district['code'];
+                            break;
+                        }
+                    }
+                }
+
+                if ($districtCode) {
+                    $subdistricts = $this->wilayahService->getKecamatan($districtCode);
+                    foreach ($subdistricts as $subdistrict) {
+                        if ($subdistrict['id'] == $ktp->subdistrict_id) {
+                            $subdistrictName = $subdistrict['name'];
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Get village/desa data
+            if (!empty($ktp->village_id)) {
+                $subdistrictCode = null;
+                if (!empty($districtCode)) {
+                    $subdistricts = $this->wilayahService->getKecamatan($districtCode);
+                    foreach ($subdistricts as $subdistrict) {
+                        if ($subdistrict['id'] == $ktp->subdistrict_id) {
+                            $subdistrictCode = $subdistrict['code'];
+                            break;
+                        }
+                    }
+                }
+
+                if ($subdistrictCode) {
+                    $villages = $this->wilayahService->getDesa($subdistrictCode);
+                    foreach ($villages as $village) {
+                        if ($village['id'] == $ktp->village_id) {
+                            $villageName = $village['name'];
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Get application type name
+            $applicationType = $ktp->application_type;
+
+            // Prepare the nik and full_name data (could be array or string)
+            $nik = is_array($ktp->nik) ? ($ktp->nik[0] ?? '') : $ktp->nik;
+            $fullName = is_array($ktp->full_name) ? ($ktp->full_name[0] ?? '') : $ktp->full_name;
+
+            // Pass data to the view
+            return view('superadmin.datamaster.surat.pengantar-ktp.PengantarKTP', compact(
+                'ktp',
+                'provinceName',
+                'districtName',
+                'subdistrictName',
+                'villageName',
+                'applicationType',
+                'nik',
+                'fullName'
+            ));
+
+        } catch (\Exception $e) {
+            \Log::error('Error generating PDF for PengantarKTP: ' . $e->getMessage(), [
+                'id' => $id,
+                'trace' => $e->getTraceAsString()
+            ]);
+            return back()->with('error', 'Gagal mengunduh surat pengantar KTP: ' . $e->getMessage());
         }
     }
 }

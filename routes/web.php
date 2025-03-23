@@ -259,6 +259,7 @@ Route::middleware(['auth:web', 'role:superadmin'])->group(function () {
         ->name('superadmin.surat.pengantar-ktp.update');
     Route::delete('/superadmin/surat/pengantar-ktp/{id}', [PengantarKtpController::class, 'destroy'])
         ->name('superadmin.surat.pengantar-ktp.delete');
+    Route::get('/surat/pengantar-ktp/{id}/export-pdf', [PengantarKtpController::class, 'exportPDF'])->name('superadmin.surat.pengantar-ktp.export-pdf');
 });
 
 // Route untuk admin - menggunakan web guard

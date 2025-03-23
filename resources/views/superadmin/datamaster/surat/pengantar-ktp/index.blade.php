@@ -52,20 +52,23 @@
                             @if(isset($ktp->nik) && is_array($ktp->nik) && !empty($ktp->nik))
                                 {{ $ktp->nik[0] ?? '-' }}
                             @else
-                                -
+                                {{ $ktp->nik ?? '-' }}
                             @endif
                         </td>
                         <td class="px-6 py-4">
                             @if(isset($ktp->full_name) && is_array($ktp->full_name) && !empty($ktp->full_name))
                                 {{ $ktp->full_name[0] ?? '-' }}
                             @else
-                                -
+                                {{ $ktp->full_name ?? '-' }}
                             @endif
                         </td>
-                        <td class="px-6 py-4">{{ $ktp->family_card_number ?? '-' }}</td>
+                        <td class="px-6 py-4">{{ $ktp->kk ?? '-' }}</td>
                         <td class="px-6 py-4">{{ $ktp->address ?? '-' }}</td>
                         <td class="px-6 py-4">{{ $ktp->signing ?? '-' }}</td>
                         <td class="flex items-center px-6 py-4 space-x-2">
+                            <a href="{{ route('superadmin.surat.pengantar-ktp.export-pdf', $ktp->id) }}" class="text-blue-600 hover:text-blue-800" aria-label="Export PDF" target="_blank">
+                                <i class="fa-solid fa-file-pdf"></i>
+                            </a>
                             <a href="{{ route('superadmin.surat.pengantar-ktp.edit', $ktp->id) }}" class="text-yellow-600 hover:text-yellow-800" aria-label="Edit">
                                 <i class="fa-solid fa-pen-to-square"></i>
                             </a>

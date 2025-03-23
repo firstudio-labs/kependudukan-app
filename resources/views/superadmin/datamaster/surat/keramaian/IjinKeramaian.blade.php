@@ -40,10 +40,10 @@
                 <div class="w-20 h-20 bg-gray-200 flex items-center justify-center">Logo</div>
             </div>
             <div class="flex-1 text-center">
-                <p class="text-lg font-bold">PEMERINTAH KABUPATEN {{ strtoupper($districtName) }}</p>
+                <p class="text-lg font-bold">PEMERINTAH {{ strtoupper($districtName) }}</p>
                 <p class="text-lg font-bold">KECAMATAN {{ strtoupper($subdistrictName) }}</p>
                 <p class="text-2xl font-bold">KELURAHAN {{ strtoupper($villageName) }}</p>
-                <p class="text-sm">Alamat: Jalan Desa {{ $villageName }} Kecamatan {{ $subdistrictName }} Kabupaten {{ $districtName }}</p>
+                <p class="text-sm">Alamat:</p>
             </div>
             <div class="w-24">
             </div>
@@ -54,13 +54,13 @@
 
         <!-- Document Title -->
         <div class="text-center mb-6">
-            <h1 class="text-lg font-bold underline">SURAT IZIN KERAMAIAN</h1>
+            <h1 class="text-lg font-bold underline">SURAT KETERANGAN IJIN KERAMAIAN</h1>
             <p class="text-sm">Nomor: {{ $keramaian->letter_number ?? '-' }}</p>
         </div>
 
         <!-- Introduction -->
         <div class="mb-6">
-            <p>Yang bertanda tangan di bawah ini, Kepala Desa/Lurah {{ $villageName }} Kecamatan {{ $subdistrictName }} Kabupaten {{ $districtName }}, dengan ini menerangkan bahwa:</p>
+            <p class="mb-4">Kepala Desa/Lurah {{ $villageName }} Kecamatan {{ $subdistrictName }} Kabupaten {{ $districtName }} dengan ini menerangkan bahwa :</p>
         </div>
 
         <!-- Personal Information -->
@@ -68,7 +68,7 @@
             <table class="w-full">
                 <tbody>
                     <tr>
-                        <td class="w-1/3">Nama Pemohon</td>
+                        <td class="w-1/3">Nama Lengkap</td>
                         <td class="w-1/12">:</td>
                         <td>{{ $keramaian->full_name }}</td>
                     </tr>
@@ -78,15 +78,14 @@
                         <td>{{ $keramaian->nik }}</td>
                     </tr>
                     <tr>
-                        <td>Tempat, Tanggal Lahir</td>
+                        <td>Tempat Lahir</td>
                         <td>:</td>
-                        <td>{{ $keramaian->birth_place }},
-                            @if(isset($birthDate) && strpos($birthDate, '-') !== false)
-                                {{ \Carbon\Carbon::createFromFormat('d-m-Y', $birthDate)->locale('id')->isoFormat('D MMMM Y') }}
-                            @else
-                                {{ $birthDate }}
-                            @endif
-                        </td>
+                        <td>{{ $keramaian->birth_place }}</td>
+                    </tr>
+                    <tr>
+                        <td>Tanggal Lahir</td>
+                        <td>:</td>
+                        <td>{{ $birthDate }}</td>
                     </tr>
                     <tr>
                         <td>Jenis Kelamin</td>
@@ -118,9 +117,12 @@
         </div>
 
         <div class="mb-6">
-            <p>Bahwa yang bersangkutan bermaksud untuk mengadakan {{ $keramaian->event }} dengan keterangan sebagai berikut:</p>
+            <p class="mb-2 px-2 py-1"> Yang bersangkutan diatas mengajukan permohonan SURAT IZIN KERAMAIAN yang akan
+                dilaksanakan pada: </p>
         </div>
 
+
+        <!-- Event Information -->
         <div class="mb-6">
             <table class="w-full">
                 <tbody>
@@ -140,14 +142,9 @@
                         <td>{{ \Carbon\Carbon::parse($keramaian->time)->format('H:i') }} WIB</td>
                     </tr>
                     <tr>
-                        <td>Tempat</td>
+                        <td>Undangan</td>
                         <td>:</td>
-                        <td>{{ $keramaian->place }}</td>
-                    </tr>
-                    <tr>
-                        <td>Hiburan</td>
-                        <td>:</td>
-                        <td>{{ $keramaian->entertainment }}</td>
+                        <td>{{ $keramaian->invitation }}</td>
                     </tr>
                     <tr>
                         <td>Acara</td>
@@ -155,20 +152,24 @@
                         <td>{{ $keramaian->event }}</td>
                     </tr>
                     <tr>
-                        <td>Undangan</td>
+                        <td>Hiburan</td>
                         <td>:</td>
-                        <td>{{ $keramaian->invitation }}</td>
+                        <td>{{ $keramaian->entertainment }}</td>
+                    </tr>
+                    <tr>
+                        <td>Tempat</td>
+                        <td>:</td>
+                        <td>{{ $keramaian->place }}</td>
                     </tr>
                 </tbody>
             </table>
         </div>
 
         <div class="mb-6">
-            <p>Demikian surat izin ini diberikan kepada yang bersangkutan untuk dapat dipergunakan sebagaimana mestinya dan kepada pihak yang terkait dimohon bantuan seperlunya.</p>
+            <p>Demikian Surat Keterangan ini dibuat untuk dapat dipergunakan sebagaimana mestinya</p>
         </div>
 
-        <!-- Signature -->
-        <div class="text-right mt-16">
+        <div class="text-center mt-16">
             <div class="mb-4">
                 {{ $villageName }}, {{ \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM Y') }}
             </div>
