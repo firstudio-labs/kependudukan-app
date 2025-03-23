@@ -62,9 +62,9 @@
                         <select id="role" name="role" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                             <option value="">Pilih Role</option>
                             <option value="superadmin">Super Admin</option>
-                            <option value="admin">Admin</option>
+                            <option value="admin desa">Admin Desa</option>
+                            <option value="admin kabupaten">Admin Kabupaten</option>
                             <option value="operator">Operator</option>
-                            <option value="user">User</option>
                         </select>
                         @error('role')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                     </div>

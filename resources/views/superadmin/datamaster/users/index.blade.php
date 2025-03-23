@@ -7,7 +7,7 @@
             </a>
         </div>
 
-        
+
 
         <div class="mb-6">
             <form method="GET" action="{{ route('superadmin.datamaster.user.index') }}" class="flex flex-col sm:flex-row gap-2">
@@ -64,8 +64,9 @@
                             <td class="px-4 py-3 whitespace-nowrap text-sm">
                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
                                 {{ $user->role === 'superadmin' ? 'bg-red-100 text-red-800' :
-                                  ($user->role === 'admin' ? 'bg-blue-100 text-blue-800' :
-                                  ($user->role === 'operator' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800')) }}">
+                                  ($user->role === 'admin desa' ? 'bg-blue-100 text-blue-800' :
+                                  ($user->role === 'admin kabupaten' ? 'bg-purple-100 text-purple-800' :
+                                  'bg-yellow-100 text-yellow-800')) }}">
                                     {{ ucfirst($user->role) }}
                                 </span>
                             </td>

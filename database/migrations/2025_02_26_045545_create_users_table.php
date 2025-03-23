@@ -23,7 +23,7 @@ return new class extends Migration
             $table->unsignedBigInteger('districts_id')->nullable();
             $table->unsignedBigInteger('sub_districts_id')->nullable();
             $table->unsignedBigInteger('villages_id')->nullable();
-            $table->enum('role', ['superadmin', 'admin', 'operator', 'user']);
+            $table->enum('role', ['superadmin', 'admin desa','admin kabupaten', 'operator']);
             $table->enum('status', ['active', 'inactive'])->default('active');
             $table->timestamps();
         });

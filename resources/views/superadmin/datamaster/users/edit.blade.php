@@ -45,9 +45,9 @@
                         <label for="role" class="block text-sm font-medium text-gray-700">Role</label>
                         <select id="role" name="role" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                             <option value="superadmin" {{ old('role', $user->role) == 'superadmin' ? 'selected' : '' }}>Super Admin</option>
-                            <option value="admin" {{ old('role', $user->role) == 'admin' ? 'selected' : '' }}>Admin</option>
+                            <option value="admin desa" {{ old('role', $user->role) == 'admin desa' ? 'selected' : '' }}>Admin Desa</option>
+                            <option value="admin kabupaten" {{ old('role', $user->role) == 'admin kabupaten' ? 'selected' : '' }}>Admin Kabupaten</option>
                             <option value="operator" {{ old('role', $user->role) == 'operator' ? 'selected' : '' }}>Operator</option>
-                            <option value="user" {{ old('role', $user->role) == 'user' ? 'selected' : '' }}>User</option>
                         </select>
                         @error('role')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                     </div>

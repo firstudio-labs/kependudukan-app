@@ -153,10 +153,12 @@ class AuthController extends Controller
         switch ($role) {
             case 'superadmin':
                 return redirect()->intended('/superadmin/index');
-            case 'admin':
-                return redirect()->intended('/admin/index');
+            case 'admin desa':
+                return redirect()->intended('/admin.desa.dashboard');
+            case 'admin kabupaten':
+                return redirect()->intended('/admin.kabupaten.dashboard');
             case 'operator':
-                return redirect()->intended('/operator/index');
+                return redirect()->intended('/operator/dashboard');
             default:
                 return redirect()->intended('/');
         }

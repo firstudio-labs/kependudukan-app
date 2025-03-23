@@ -14,34 +14,52 @@ class UsersSeeder extends Seeder
      */
     public function run(): void
     {
+        // Super Admin
         DB::table('users')->insert([
             'nik' => 'superadmin',
+            'username' => 'superadmin',
             'password' => Hash::make('password'),
             'no_hp' => '081234567890',
             'role' => 'superadmin',
+            'status' => 'active',
             'created_at' => now(),
             'updated_at' => now(),
         ]);
 
-        // Data untuk admin
+        // Admin Desa
         DB::table('users')->insert([
-            'nik' => 'admin',
+            'nik' => 'admindesa',
+            'username' => 'admindesa',
             'password' => Hash::make('password'),
             'no_hp' => '081234567891',
-            'role' => 'admin',
+            'role' => 'admin desa',
+            'status' => 'active',
             'created_at' => now(),
             'updated_at' => now(),
         ]);
 
-        // Data untuk operator
+        // Admin Kabupaten
         DB::table('users')->insert([
-            'nik' => 'operator',
+            'nik' => 'adminkabupaten',
+            'username' => 'adminkabupaten',
             'password' => Hash::make('password'),
             'no_hp' => '081234567892',
+            'role' => 'admin kabupaten',
+            'status' => 'active',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        // Operator
+        DB::table('users')->insert([
+            'nik' => 'operator',
+            'username' => 'operator',
+            'password' => Hash::make('password'),
+            'no_hp' => '081234567893',
             'role' => 'operator',
+            'status' => 'active',
             'created_at' => now(),
             'updated_at' => now(),
         ]);
     }
-
 }

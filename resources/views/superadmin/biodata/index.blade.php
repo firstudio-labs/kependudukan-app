@@ -382,7 +382,7 @@
                             </div>
                             <div id="file-name" class="mt-2 text-sm text-gray-500"></div>
                         </div>
-                        
+
                         <div class="mb-4">
                             <a href="{{ route('superadmin.biodata.template') }}" class="text-sm text-blue-600 hover:underline">Download template Excel</a>
                         </div>
@@ -406,7 +406,7 @@
             // File name display for Excel import
             const fileInput = document.getElementById('excel_file');
             const fileNameDisplay = document.getElementById('file-name');
-            
+
             if (fileInput) {
                 fileInput.addEventListener('change', function() {
                     if (fileInput.files.length > 0) {
@@ -416,7 +416,7 @@
                     }
                 });
             }
-        
+
             // Kode SweetAlert dan fungsi lainnya
             @if(session('success'))
                 Swal.fire({
@@ -437,7 +437,7 @@
                     showConfirmButton: false
                 });
             @endif
-            
+
             @if(session('import_errors'))
                 Swal.fire({
                     icon: 'error',

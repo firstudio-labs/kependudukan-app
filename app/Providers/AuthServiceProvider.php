@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
+use App\Models\User;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -23,19 +24,36 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
-        // Define a 'superadmin' ability
-        Gate::define('superadmin', function ($user) {
+        // Define role-based gates
+        Gate::define('is-superadmin', function (User $user) {
             return $user->role === 'superadmin';
         });
 
-        // Define an 'admin' ability
-        Gate::define('admin', function ($user) {
-            return $user->role === 'admin' || $user->role === 'superadmin';
+        Gate::define('is-admin-desa', function (User $user) {
+            return $user->role === 'admin desa';
         });
 
-        // Define an 'operator' ability
-        Gate::define('operator', function ($user) {
-            return $user->role === 'operator' || $user->role === 'admin' || $user->role === 'superadmin';
+        Gate::define('is-admin-kabupaten', function (User $user) {
+            return $user->role === 'admin kabupaten';
+        });
+
+        Gate::define('is-operator', function (User $user) {
+            return $user->role === 'operator';
+        });
+
+        // Gate for users who can manage users (superadmin + admin kabupaten)
+        Gate::define('manage-users', function (User $user) {
+            return in_array($user->role, ['superadmin', 'admin kabupaten']);
+        });
+
+        // Gate for users who can view village-level data
+        Gate::define('view-village-data', function (User $user) {
+            return in_array($user->role, ['superadmin', 'admin kabupaten', 'admin desa']);
+        });
+
+        // Gate for users who can manage village-level data
+        Gate::define('manage-village-data', function (User $user) {
+            return in_array($user->role, ['superadmin', 'admin desa']);
         });
     }
 }
