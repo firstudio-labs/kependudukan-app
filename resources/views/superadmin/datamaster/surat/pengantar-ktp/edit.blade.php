@@ -271,55 +271,37 @@
 
                     if (!subDistrictId) return;
 
-                    // First, we need to find the district code from the top form
+                    // First, we need district data to get subdistricts
                     const districtId = {{ $ktp->district_id ?? 'null' }};
                     if (!districtId) return;
 
-                    // Get the province data to find the province code
+                    // Get province ID for district data
                     const provinceId = {{ $ktp->province_id ?? 'null' }};
                     if (!provinceId) return;
 
-                    // Load province mappings if not already loaded
-                    if (Object.keys(provinceCodeMap).length === 0) {
-                        await loadProvinceCodeMap();
-                    }
+                    // Load province code mappings
+                    await loadProvinceCodeMap();
 
-                    // Get province code
+                    // Get province code from ID
                     const provinceCode = provinceCodeMap[provinceId];
-                    if (!provinceCode) {
-                        console.warn('Could not find province code for ID:', provinceId);
-                        return;
-                    }
+                    if (!provinceCode) return;
 
-                    // Load district data for this province
+                    // Load districts for this province
                     const districts = await loadDistrictCodeMap(provinceCode);
-                    if (!districts || districts.length === 0) {
-                        console.warn('No districts found for province code:', provinceCode);
-                        return;
-                    }
 
-                    // Find district code
+                    // Find the district data for this district ID
                     const districtData = districts.find(d => d.id === districtId);
-                    if (!districtData) {
-                        console.warn('Could not find district data for ID:', districtId);
-                        return;
-                    }
+                    if (!districtData) return;
 
                     const districtCode = districtData.code;
 
-                    // Now load subdistrict data for this district
+                    // Load subdistricts for this district
                     const subdistricts = await loadSubDistrictCodeMap(districtCode);
-                    if (!subdistricts || subdistricts.length === 0) {
-                        console.warn('No subdistricts found for district code:', districtCode);
-                        return;
-                    }
 
-                    // Find the subdistrict data for our ID
-                    const subDistrictData = subdistricts.find(sd => sd.id === subDistrictId);
+                    // Find matching subdistrict for our subdistrict_name ID
+                    const subDistrictData = subdistricts.find(sd => sd.id == subDistrictId);
                     if (!subDistrictData) {
-                        console.warn('Could not find subdistrict data for ID:', subDistrictId);
-
-                        // Still update the hidden fields with the known IDs so form submission works
+                        // Still set the hidden values
                         $('#sub_district_id_hidden').val(subDistrictId);
                         $('#subdistrict_name_hidden').val(subDistrictId);
                         return;
@@ -328,43 +310,35 @@
                     const subDistrictCode = subDistrictData.code;
                     const subDistrictName = subDistrictData.name;
 
-                    // Update the subdistrict dropdown with all options from the API
+                    // Update the subdistrict dropdown
                     $('#sub_district_selector').html('<option value="">Pilih Kecamatan</option>');
+
+                    // Populate all subdistricts for this district
                     subdistricts.forEach(subdistrict => {
                         const option = $('<option></option>')
                             .val(subdistrict.code)
                             .text(subdistrict.name)
                             .attr('data-id', subdistrict.id);
 
-                        if (subdistrict.id === subDistrictId) {
+                        if (subdistrict.id == subDistrictId) {
                             option.prop('selected', true);
                         }
 
                         $('#sub_district_selector').append(option);
                     });
 
-                    // Ensure the subdistrict is selected and hidden fields are set
+                    // Make sure selected value is set
                     $('#sub_district_selector').val(subDistrictCode);
                     $('#sub_district_id_hidden').val(subDistrictId);
                     $('#subdistrict_name_hidden').val(subDistrictId);
 
                     // Now load village data for this subdistrict
                     const villages = await loadVillageCodeMap(subDistrictCode);
-                    if (!villages || villages.length === 0) {
-                        console.warn('No villages found for subdistrict code:', subDistrictCode);
 
-                        // Still update hidden fields
-                        $('#village_id_hidden').val(villageId);
-                        $('#village_name_hidden').val(villageId);
-                        return;
-                    }
-
-                    // Find village data for our ID
-                    const villageData = villages.find(v => v.id === villageId);
+                    // Find matching village for our village_name ID
+                    const villageData = villages.find(v => v.id == villageId);
                     if (!villageData) {
-                        console.warn('Could not find village data for ID:', villageId);
-
-                        // Still update hidden fields
+                        // Still set the hidden values
                         $('#village_id_hidden').val(villageId);
                         $('#village_name_hidden').val(villageId);
                         return;
@@ -373,39 +347,50 @@
                     const villageCode = villageData.code;
                     const villageName = villageData.name;
 
-                    // Update the village dropdown with all options from the API
+                    // Update the village dropdown
                     $('#village_selector').html('<option value="">Pilih Desa/Kelurahan</option>');
+
+                    // Populate all villages for this subdistrict
                     villages.forEach(village => {
                         const option = $('<option></option>')
                             .val(village.code)
                             .text(village.name)
                             .attr('data-id', village.id);
 
-                        if (village.id === villageId) {
+                        if (village.id == villageId) {
                             option.prop('selected', true);
                         }
 
                         $('#village_selector').append(option);
                     });
 
-                    // Ensure the village is selected and hidden fields are set
+                    // Make sure selected value is set
                     $('#village_selector').val(villageCode);
                     $('#village_id_hidden').val(villageId);
                     $('#village_name_hidden').val(villageId);
 
-                    console.log('Successfully initialized address section selectors with:', {
-                        subDistrict: { id: subDistrictId, code: subDistrictCode, name: subDistrictName },
-                        village: { id: villageId, code: villageCode, name: villageName }
-                    });
-
                 } catch (error) {
                     console.error('Error initializing address selectors:', error);
+
+                    // Set basic values from database as fallback
+                    const subDistrictId = {{ $ktp->subdistrict_name ?? 'null' }};
+                    const villageId = {{ $ktp->village_name ?? 'null' }};
+
+                    $('#sub_district_id_hidden').val(subDistrictId);
+                    $('#subdistrict_name_hidden').val(subDistrictId);
+                    $('#village_id_hidden').val(villageId);
+                    $('#village_name_hidden').val(villageId);
                 }
             }
 
             // Function to load province codes and store the ID-to-code mapping
             async function loadProvinceCodeMap() {
                 try {
+                    // If we already have data, don't reload
+                    if (Object.keys(provinceCodeMap).length > 0) {
+                        return;
+                    }
+
                     const response = await $.ajax({
                         url: `{{ url('/location/provinces') }}`,
                         type: 'GET'
@@ -905,7 +890,6 @@
                         })
                         .catch(error => {
                             districtSelect.innerHTML = '<option value="">Error loading data</option>';
-                            console.error('Error fetching districts:', error);
                         });
                 }
             });
@@ -972,7 +956,6 @@
                         })
                         .catch(error => {
                             subDistrictSelect.innerHTML = '<option value="">Error loading data</option>';
-                            console.error('Error fetching subdistricts:', error);
                         });
                 }
             });
@@ -1035,7 +1018,6 @@
                         })
                         .catch(error => {
                             villageSelect.innerHTML = '<option value="">Error loading data</option>';
-                            console.error('Error fetching villages:', error);
                         });
                 }
             });
@@ -1095,7 +1077,6 @@
                             });
                         })
                         .catch(error => {
-                            console.error('Error fetching villages:', error);
                             $('#village_selector').html('<option value="">Error loading villages</option>').prop('disabled', false);
                         });
                 }
