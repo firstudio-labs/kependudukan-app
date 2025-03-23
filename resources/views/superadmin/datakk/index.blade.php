@@ -22,7 +22,7 @@
                 </button>
             </form>
 
-            <button
+            {{-- <button
                 type="button"
                 onclick="window.location.href='{{ route('superadmin.datakk.create') }}'"
                 class="text-white bg-[#7886C7] hover:bg-[#2D336B] focus:ring-4 focus:ring-[#5C69A7] font-medium rounded-lg text-sm px-5 py-2.5 flex items-center space-x-2"
@@ -31,7 +31,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                 </svg>
                 <span>Tambah Data KK</span>
-            </button>
+            </button> --}}
         </div>
 
         <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
@@ -47,27 +47,40 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($kk as $k)
+                    @php
+                        $pagination = $kk['data']['pagination'] ?? [
+                            'current_page' => 1,
+                            'items_per_page' => 10,
+                            'total_items' => 0
+                        ];
+
+                        $currentPage = $pagination['current_page'];
+                        $itemsPerPage = $pagination['items_per_page'];
+                        $totalItems = $pagination['total_items'];
+                        $startNumber = ($currentPage - 1) * $itemsPerPage + 1;
+                        $endNumber = min($startNumber + $itemsPerPage - 1, $totalItems);
+                    @endphp
+                    @forelse($kk['data']['citizens'] ?? [] as $index => $k)
                     <tr class="bg-white border-gray-300 border-b hover:bg-gray-50">
-                        <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{{ $k->id }}</th>
-                        <td class="px-6 py-4">{{ $k->kk }}</td>
-                        <td class="px-6 py-4">{{ $k->full_name }}</td>
-                        <td class="px-6 py-4">{{ $k->address }}</td>
-                        <td class="px-6 py-4">{{ $k->jml_anggota_kk }}</td>
+                        <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{{ $startNumber + $index }}</th>
+                        <td class="px-6 py-4">{{ $k['kk'] }}</td>
+                        <td class="px-6 py-4">{{ $k['full_name'] }}</td>
+                        <td class="px-6 py-4">{{ $k['address'] }}</td>
+                        <td class="px-6 py-4">{{ $k['jml_anggota_kk'] ?? '-' }}</td>
                         <td class="flex items-center px-6 py-4 space-x-2">
-                            <button onclick="showDetailModal({{ $k->toJson() }})" class="text-blue-600 hover:text-blue-800" aria-label="Detail">
+                            <button onclick="showDetailModal({{ json_encode($k) }})" class="text-blue-600 hover:text-blue-800" aria-label="Detail">
                                 <i class="fa-solid fa-eye"></i>
                             </button>
-                            <a href="{{ route('superadmin.datakk.update', $k->id) }}" class="text-yellow-600 hover:text-yellow-800" aria-label="Edit">
+                            {{-- <a href="{{ route('superadmin.datakk.update', $k['id'] ?? $k['kk']) }}" class="text-yellow-600 hover:text-yellow-800" aria-label="Edit">
                                 <i class="fa-solid fa-pen-to-square"></i>
                             </a>
-                            <form action="{{ route('superadmin.destroy', $k->id) }}" method="POST" class="delete-form" id="delete-form-{{ $k->id }}">
+                            <form action="{{ route('superadmin.destroy', $k['id'] ?? $k['kk']) }}" method="POST" class="delete-form" id="delete-form-{{ $k['id'] ?? $k['kk'] }}">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="font-medium text-red-600 hover:underline ml-3">
                                     <i class="fa-solid fa-trash"></i>
                                 </button>
-                            </form>
+                            </form> --}}
                         </td>
                     </tr>
                     @empty
@@ -77,8 +90,84 @@
                     @endforelse
                 </tbody>
             </table>
-            <div class="mt-4">
-                {!! $kk->links() !!}
+
+            <!-- Pagination Section -->
+            <div class="px-4 py-3 flex flex-col sm:flex-row justify-between items-center">
+                <div class="text-sm text-gray-700 mb-4 sm:mb-0">
+                    Showing {{ $startNumber }} to {{ $endNumber }} of {{ $totalItems }} results
+                </div>
+                @if(isset($kk['data']['pagination']) && $kk['data']['pagination']['total_page'] > 1)
+                    <nav class="relative z-0 inline-flex shadow-sm -space-x-px" aria-label="Pagination">
+                        @php
+                            $totalPages = $kk['data']['pagination']['total_page'];
+                            $currentPage = $kk['data']['pagination']['current_page'];
+
+                            // Logic for showing page numbers
+                            $startPage = 1;
+                            $endPage = $totalPages;
+                            $maxVisible = 7; // Number of visible page links excluding Previous/Next
+
+                            if ($totalPages > $maxVisible) {
+                                $halfVisible = floor($maxVisible / 2);
+                                $startPage = max($currentPage - $halfVisible, 1);
+                                $endPage = min($startPage + $maxVisible - 1, $totalPages);
+
+                                if ($endPage - $startPage < $maxVisible - 1) {
+                                    $startPage = max($endPage - $maxVisible + 1, 1);
+                                }
+                            }
+                        @endphp
+
+                        <!-- Previous Button -->
+                        @if($currentPage > 1)
+                            <a href="?page={{ $currentPage - 1 }}&search={{ request('search') }}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                <span class="sr-only">Previous</span>
+                                Previous
+                            </a>
+                        @endif
+
+                        <!-- First Page -->
+                        @if($startPage > 1)
+                            <a href="?page=1&search={{ request('search') }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                1
+                            </a>
+                            @if($startPage > 2)
+                                <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                                    ...
+                                </span>
+                            @endif
+                        @endif
+
+                        <!-- Page Numbers -->
+                        @for($i = $startPage; $i <= $endPage; $i++)
+                            <a href="?page={{ $i }}&search={{ request('search') }}"
+                               class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium
+                               {{ $i == $currentPage ? 'z-10 bg-blue-50 border-blue-500 text-[#8c93d6]' : 'bg-white text-gray-700 hover:bg-gray-50' }}">
+                                {{ $i }}
+                            </a>
+                        @endfor
+
+                        <!-- Last Page -->
+                        @if($endPage < $totalPages)
+                            @if($endPage < $totalPages - 1)
+                                <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                                    ...
+                                </span>
+                            @endif
+                            <a href="?page={{ $totalPages }}&search={{ request('search') }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                {{ $totalPages }}
+                            </a>
+                        @endif
+
+                        <!-- Next Button -->
+                        @if($currentPage < $totalPages)
+                            <a href="?page={{ $currentPage + 1 }}&search={{ request('search') }}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                <span class="sr-only">Next</span>
+                                Next
+                            </a>
+                        @endif
+                    </nav>
+                @endif
             </div>
         </div>
     </div>
@@ -607,8 +696,19 @@
             // Show the modal
             document.getElementById('detailModal').classList.remove('hidden');
 
-            // Fetch family members early to improve perceived performance
-            fetchFamilyMembers(data.id);
+            // Reset family members section
+            document.getElementById('familyMembersLoading').classList.remove('hidden');
+            document.getElementById('familyMembersContainer').classList.add('hidden');
+            document.getElementById('familyMembersEmpty').classList.add('hidden');
+            document.getElementById('familyMembersError').classList.add('hidden');
+
+            // Fetch family members directly using the KK number instead of ID
+            if (data.kk) {
+                fetchFamilyMembers(data.kk);
+            } else {
+                document.getElementById('familyMembersLoading').classList.add('hidden');
+                document.getElementById('familyMembersEmpty').classList.remove('hidden');
+            }
 
             // Fetch and set location names
             try {
@@ -656,35 +756,56 @@
             document.getElementById('detailModal').classList.add('hidden');
         }
 
-        function fetchFamilyMembers(kkId) {
-            axios.get(`/superadmin/datakk/${kkId}/family-members`)
-                .then(response => {
-                    document.getElementById('familyMembersLoading').classList.add('hidden');
+        function fetchFamilyMembers(kkNumber) {
+            // Check if kkNumber is valid
+            if (!kkNumber) {
+                document.getElementById('familyMembersLoading').classList.add('hidden');
+                document.getElementById('familyMembersEmpty').classList.remove('hidden');
+                return;
+            }
 
-                    if (response.data.status === 'OK' && response.data.data && response.data.data.length > 0) {
-                        const members = response.data.data;
-                        const tableBody = document.getElementById('familyMembersTable');
-                        tableBody.innerHTML = '';
+            // Directly call the API endpoint with our API key
+            axios.get(`${baseUrl}/citizens-family/${kkNumber}`, {
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-API-Key': apiKey
+                }
+            })
+            .then(response => {
+                document.getElementById('familyMembersLoading').classList.add('hidden');
 
-                        members.forEach((member, index) => {
-                            const row = document.createElement('tr');
-                            row.innerHTML = `
-                                <td class="px-4 py-2 whitespace-nowrap">${index + 1}</td>
-                                <td class="px-4 py-2 whitespace-nowrap">${member.full_name || '-'}</td>
-                                <td class="px-4 py-2 whitespace-nowrap">${member.family_status || '-'}</td>
-                            `;
-                            tableBody.appendChild(row);
-                        });
+                if (response.data.status === 'OK' && response.data.data && response.data.data.length > 0) {
+                    const members = response.data.data;
+                    const tableBody = document.getElementById('familyMembersTable');
+                    tableBody.innerHTML = '';
 
-                        document.getElementById('familyMembersContainer').classList.remove('hidden');
-                    } else {
-                        document.getElementById('familyMembersEmpty').classList.remove('hidden');
+                    members.forEach((member, index) => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td class="px-4 py-2 whitespace-nowrap">${index + 1}</td>
+                            <td class="px-4 py-2 whitespace-nowrap">${member.full_name || '-'}</td>
+                            <td class="px-4 py-2 whitespace-nowrap">${member.family_status || '-'}</td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+
+                    document.getElementById('familyMembersContainer').classList.remove('hidden');
+                    
+                    // Update the count in the KK info section if it wasn't already set
+                    const jmlAnggotaElement = document.getElementById('detailJmlAnggota');
+                    if (jmlAnggotaElement.innerText === '-') {
+                        jmlAnggotaElement.innerText = members.length;
                     }
-                })
-                .catch(error => {
-                    document.getElementById('familyMembersLoading').classList.add('hidden');
-                    document.getElementById('familyMembersError').classList.remove('hidden');
-                });
+                } else {
+                    document.getElementById('familyMembersEmpty').classList.remove('hidden');
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching family members:', error);
+                document.getElementById('familyMembersLoading').classList.add('hidden');
+                document.getElementById('familyMembersError').classList.remove('hidden');
+            });
         }
     </script>
 </x-layout>

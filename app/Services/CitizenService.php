@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 
 class CitizenService
 {
@@ -220,14 +221,35 @@ class CitizenService
     public function getFamilyMembersByKK($kk)
     {
         try {
+            // Add logging for debugging
+            Log::info('Fetching family members for KK: ' . $kk);
+
+            $cacheKey = "family_members_kk_{$kk}";
+
+            // Try to get from cache first
+            if (Cache::has($cacheKey)) {
+                Log::info('Returning family members from cache for KK: ' . $kk);
+                return Cache::get($cacheKey);
+            }
+
             $response = Http::withHeaders([
                 'X-API-Key' => $this->apiKey,
             ])->get("{$this->baseUrl}/api/citizens-family/{$kk}");
 
             if ($response->successful()) {
-                return $response->json();
+                $result = $response->json();
+
+                // Log the count of family members found
+                if (isset($result['data']) && is_array($result['data'])) {
+                    Log::info('Found ' . count($result['data']) . ' family members for KK: ' . $kk);
+                }
+
+                // Cache the result for 5 minutes
+                Cache::put($cacheKey, $result, now()->addMinutes(5));
+
+                return $result;
             } else {
-                Log::error('API request failed: ' . $response->status());
+                Log::error('API request failed when fetching family members: ' . $response->status());
                 return null;
             }
         } catch (\Exception $e) {

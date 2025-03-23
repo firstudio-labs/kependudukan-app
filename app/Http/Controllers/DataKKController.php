@@ -23,12 +23,38 @@ class DataKKController extends Controller
 
     public function index(Request $request)
     {
+        $page = $request->input('page', 1);
         $search = $request->input('search');
 
-        $kk = KK::when($search, function ($query, $search) {
-            return $query->where('full_name', 'like', "%{$search}%")
-                ->orWhere('kk', 'like', "%{$search}%");
-        })->paginate(10);
+        if ($search) {
+            $kk = $this->citizenService->searchCitizens($search);
+            // If search returns null or error, fallback to getting all citizens
+            if (!$kk || isset($kk['status']) && $kk['status'] === 'ERROR') {
+                $kk = $this->citizenService->getAllCitizens($page);
+                session()->flash('warning', 'Search failed, showing all results instead');
+            }
+        } else {
+            $kk = $this->citizenService->getAllCitizens($page);
+        }
+
+        // Get family member counts for each KK
+        if (isset($kk['data']['citizens']) && is_array($kk['data']['citizens'])) {
+            foreach ($kk['data']['citizens'] as $index => $citizen) {
+                if (isset($citizen['kk']) && !empty($citizen['kk'])) {
+                    // Get family members for this KK
+                    $familyMembers = $this->citizenService->getFamilyMembersByKK($citizen['kk']);
+
+                    // Set the count if family members were found
+                    if ($familyMembers && isset($familyMembers['data']) && is_array($familyMembers['data'])) {
+                        $kk['data']['citizens'][$index]['jml_anggota_kk'] = count($familyMembers['data']);
+                    } else {
+                        $kk['data']['citizens'][$index]['jml_anggota_kk'] = 0;
+                    }
+                } else {
+                    $kk['data']['citizens'][$index]['jml_anggota_kk'] = 0;
+                }
+            }
+        }
 
         return view('superadmin.datakk.index', compact('kk', 'search'));
     }

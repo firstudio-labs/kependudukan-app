@@ -183,10 +183,22 @@ class UsersController extends Controller
      */
     public function update(Request $request, User $user)
     {
-        // Log received data for debugging
+        // Enhanced logging to diagnose form submission
         Log::info('User update request received', [
             'user_id' => $user->id,
-            'request_data' => $request->all()
+            'request_data' => $request->all(),
+            'location_fields' => [
+                'province_id' => $request->province_id,
+                'districts_id' => $request->districts_id,
+                'sub_districts_id' => $request->sub_districts_id,
+                'villages_id' => $request->villages_id,
+            ],
+            'current_values' => [
+                'province_id' => $user->province_id,
+                'districts_id' => $user->districts_id,
+                'sub_districts_id' => $user->sub_districts_id,
+                'villages_id' => $user->villages_id,
+            ]
         ]);
 
         $validated = $request->validate([
@@ -217,7 +229,27 @@ class UsersController extends Controller
             'validated_data' => $validated
         ]);
 
+        // Store original location values for logging
+        $originalLocation = [
+            'province_id' => $user->province_id,
+            'districts_id' => $user->districts_id,
+            'sub_districts_id' => $user->sub_districts_id,
+            'villages_id' => $user->villages_id,
+        ];
+
         $user->update($validated);
+
+        // Log the location changes
+        Log::info('User location update', [
+            'user_id' => $user->id,
+            'original' => $originalLocation,
+            'updated' => [
+                'province_id' => $user->province_id,
+                'districts_id' => $user->districts_id,
+                'sub_districts_id' => $user->sub_districts_id,
+                'villages_id' => $user->villages_id,
+            ]
+        ]);
 
         return redirect()->route('superadmin.datamaster.user.index')->with('success', 'Data pengguna berhasil diperbarui');
     }
