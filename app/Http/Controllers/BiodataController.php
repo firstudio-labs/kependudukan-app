@@ -9,6 +9,9 @@ use App\Services\JobService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Response;
+use Maatwebsite\Excel\Facades\Excel; // You'll need to install Laravel Excel package
+use App\Imports\CitizensImport; // We'll create this import class
 
 class BiodataController extends Controller
 {
@@ -496,4 +499,56 @@ class BiodataController extends Controller
         return $data;
     }
 
+    /**
+     * Import citizens from Excel file
+     */
+    public function import(Request $request)
+    {
+        try {
+            $request->validate([
+                'excel_file' => 'required|file|mimes:xlsx,xls|max:10240', // 10MB max
+            ]);
+
+            // Process the Excel file
+            $import = new CitizensImport($this->citizenService);
+            Excel::import($import, $request->file('excel_file'));
+
+            if (count($import->errors) > 0) {
+                // If there are errors, show them to the user
+                $errorMessages = "<ul class='text-left'>";
+                foreach ($import->errors as $error) {
+                    $errorMessages .= "<li>• {$error}</li>";
+                }
+                $errorMessages .= "</ul>";
+
+                return redirect()->route('superadmin.biodata.index')
+                    ->with('import_errors', $errorMessages);
+            }
+
+            return redirect()->route('superadmin.biodata.index')
+                ->with('success', 'Import data berhasil! ' . $import->successCount . ' data telah diimport.');
+
+        } catch (\Exception $e) {
+            return redirect()->route('superadmin.biodata.index')
+                ->with('error', 'Gagal import data: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Download Excel template for import
+     */
+    public function downloadTemplate()
+    {
+        $filePath = storage_path('app/templates/biodata_template.xlsx');
+
+        // Check if the file exists
+        if (!file_exists($filePath)) {
+            return redirect()->route('superadmin.biodata.index')
+                ->with('error', 'Template tidak ditemukan.');
+        }
+
+        return Response::download($filePath, 'template_biodata.xlsx', [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
+    }
 }

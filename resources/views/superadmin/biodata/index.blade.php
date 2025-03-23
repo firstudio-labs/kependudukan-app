@@ -19,16 +19,29 @@
                 </button>
             </form>
 
-            <button
-                type="button"
-                onclick="window.location.href='{{ route('superadmin.biodata.create') }}'"
-                class="text-white bg-[#7886C7] hover:bg-[#2D336B] focus:ring-4 focus:ring-[#5C69A7] font-medium rounded-lg text-sm px-5 py-2.5 flex items-center space-x-2"
-            >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-4 h-4">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                </svg>
-                <span>Tambah Data Biodata</span>
-            </button>
+            <div class="flex space-x-2">
+                <button
+                    type="button"
+                    onclick="document.getElementById('importModal').classList.remove('hidden')"
+                    class="text-white bg-green-600 hover:bg-green-700 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 flex items-center space-x-2"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                    </svg>
+                    <span>Import Excel</span>
+                </button>
+
+                <button
+                    type="button"
+                    onclick="window.location.href='{{ route('superadmin.biodata.create') }}'"
+                    class="text-white bg-[#7886C7] hover:bg-[#2D336B] focus:ring-4 focus:ring-[#5C69A7] font-medium rounded-lg text-sm px-5 py-2.5 flex items-center space-x-2"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    <span>Tambah Data Biodata</span>
+                </button>
+            </div>
         </div>
 
         <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
@@ -331,10 +344,81 @@
         </div>
     </div>
 
+    <!-- Modal Import Excel -->
+    <div id="importModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <!-- Modal Backdrop -->
+            <div class="fixed inset-0 bg-black opacity-50"></div>
+
+            <!-- Modal Content -->
+            <div class="relative w-full max-w-md bg-white rounded-lg shadow-xl overflow-hidden">
+                <!-- Modal Header -->
+                <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-[#7886C7] bg-gray-50">
+                    <h3 class="text-xl font-semibold text-[#2D336B]">Import Data Biodata</h3>
+                    <button onclick="document.getElementById('importModal').classList.add('hidden')" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 inline-flex justify-center items-center">
+                        <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="p-4 md:p-5">
+                    <form method="POST" action="{{ route('superadmin.biodata.import') }}" enctype="multipart/form-data">
+                        @csrf
+                        <div class="mb-4">
+                            <label for="excel_file" class="block text-sm font-medium text-gray-700 mb-2">Pilih File Excel</label>
+                            <div class="flex items-center justify-center w-full">
+                                <label for="excel_file" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                                    <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 mb-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                        <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">Klik untuk upload</span> atau drag and drop</p>
+                                        <p class="text-xs text-gray-500">Format: XLS, XLSX (Max. 10MB)</p>
+                                    </div>
+                                    <input id="excel_file" name="excel_file" type="file" class="hidden" accept=".xls,.xlsx" required />
+                                </label>
+                            </div>
+                            <div id="file-name" class="mt-2 text-sm text-gray-500"></div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <a href="{{ route('superadmin.biodata.template') }}" class="text-sm text-blue-600 hover:underline">Download template Excel</a>
+                        </div>
+
+                        <div class="flex justify-end">
+                            <button type="button" onclick="document.getElementById('importModal').classList.add('hidden')" class="mr-2 text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5">
+                                Batal
+                            </button>
+                            <button type="submit" class="text-white bg-[#7886C7] hover:bg-[#2D336B] focus:ring-4 focus:outline-none focus:ring-[#5C69A7] font-medium rounded-lg text-sm px-5 py-2.5">
+                                Import
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-        // Kode SweetAlert dan fungsi lainnya
-        @if(session('success'))
+            // File name display for Excel import
+            const fileInput = document.getElementById('excel_file');
+            const fileNameDisplay = document.getElementById('file-name');
+            
+            if (fileInput) {
+                fileInput.addEventListener('change', function() {
+                    if (fileInput.files.length > 0) {
+                        fileNameDisplay.textContent = 'File selected: ' + fileInput.files[0].name;
+                    } else {
+                        fileNameDisplay.textContent = '';
+                    }
+                });
+            }
+        
+            // Kode SweetAlert dan fungsi lainnya
+            @if(session('success'))
                 Swal.fire({
                     icon: 'success',
                     title: 'Sukses!',
@@ -351,6 +435,15 @@
                     text: "{{ session('error') }}",
                     timer: 3000,
                     showConfirmButton: false
+                });
+            @endif
+            
+            @if(session('import_errors'))
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Import Error',
+                    html: "{!! session('import_errors') !!}",
+                    confirmButtonColor: '#2D336B',
                 });
             @endif
         });

@@ -791,7 +791,7 @@
                     });
 
                     document.getElementById('familyMembersContainer').classList.remove('hidden');
-                    
+
                     // Update the count in the KK info section if it wasn't already set
                     const jmlAnggotaElement = document.getElementById('detailJmlAnggota');
                     if (jmlAnggotaElement.innerText === '-') {
