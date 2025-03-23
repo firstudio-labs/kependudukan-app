@@ -356,5 +356,28 @@
                 sidebar.classList.add('-translate-x-full');
             }
         });
+
+        // Auto-open dropdowns if a child link is active
+        const checkDropdownForActiveItems = (dropdownId, iconId) => {
+            const dropdown = document.getElementById(dropdownId);
+            const icon = document.getElementById(iconId);
+
+            if (!dropdown) return;
+
+            // Check if any child link has the active class (bg-[#2D336B])
+            const hasActiveChild = dropdown.querySelector('a.bg-\\[\\#2D336B\\]');
+
+            if (hasActiveChild) {
+                // Open the dropdown
+                dropdown.classList.remove('hidden');
+                // Rotate the icon
+                if (icon) icon.classList.add('rotate-180');
+            }
+        };
+
+        // Check each dropdown
+        checkDropdownForActiveItems('pendudukDropdown', 'dropdown-icon-penduduk');
+        checkDropdownForActiveItems('suratDropdown', 'dropdown-icon-surat');
+        checkDropdownForActiveItems('wilayahDropdown', 'dropdown-icon-wilayah');
     });
 </script>
