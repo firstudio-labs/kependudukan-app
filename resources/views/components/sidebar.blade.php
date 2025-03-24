@@ -244,9 +244,9 @@
                 </button>
                 <ul id="masterSuratDropdown" class="hidden space-y-2 pl-6">
                     <li>
-                        <a href=""
+                        <a href="{{ route('superadmin.datamaster.surat.penandatangan.index') }}"
                             class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                {{ request()->routeIs('superadmin.surat.penandatangan*')
+                                {{ request()->routeIs('superadmin.datamaster.surat.penandatangan*')
                                     ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
                                     : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                             <span>Penandatangan</span>

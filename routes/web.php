@@ -20,6 +20,7 @@ use App\Http\Controllers\Surat\KematianController;
 use App\Http\Controllers\Surat\IzinKeramaianController;
 use App\Http\Controllers\Surat\RumahSewaController;
 use App\Http\Controllers\Surat\PengantarKtpController;
+use App\Http\Controllers\PenandatangananController;
 
 Route::get('/', function () {
     return view('homepage');
@@ -264,6 +265,20 @@ Route::middleware(['auth:web', 'role:superadmin'])->group(function () {
     // Routes for Excel import
     Route::post('/superadmin/biodata/import', [BiodataController::class, 'import'])->name('superadmin.biodata.import');
     Route::get('/superadmin/biodata/template', [BiodataController::class, 'downloadTemplate'])->name('superadmin.biodata.template');
+
+    // Penandatangan routes
+    Route::get('/superadmin/datamaster/surat/penandatangan', [PenandatangananController::class, 'index'])
+        ->name('superadmin.datamaster.surat.penandatangan.index');
+    Route::get('/superadmin/datamaster/surat/penandatangan/create', [PenandatangananController::class, 'create'])
+        ->name('superadmin.datamaster.surat.penandatangan.create');
+    Route::post('/superadmin/datamaster/surat/penandatangan', [PenandatangananController::class, 'store'])
+        ->name('superadmin.datamaster.surat.penandatangan.store');
+    Route::get('/superadmin/datamaster/surat/penandatangan/{id}/edit', [PenandatangananController::class, 'edit'])
+        ->name('superadmin.datamaster.surat.penandatangan.edit');
+    Route::put('/superadmin/datamaster/surat/penandatangan/{id}', [PenandatangananController::class, 'update'])
+        ->name('superadmin.datamaster.surat.penandatangan.update');
+    Route::delete('/superadmin/datamaster/surat/penandatangan/{id}', [PenandatangananController::class, 'destroy'])
+        ->name('superadmin.datamaster.surat.penandatangan.destroy');
 });
 
 // Route untuk admin - menggunakan web guard
