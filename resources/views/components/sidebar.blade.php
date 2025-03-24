@@ -67,19 +67,30 @@
                 </a>
             </li>
 
-            <!-- Master User (moved out of Master Data) -->
+            <!-- Replace single Master User with Master Users dropdown -->
             <li class="-ml-5">
-                <a href="{{ route('superadmin.datamaster.user.index') }}"
-                    class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                        {{ request()->routeIs('superadmin.datamaster.user*')
-                            ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-                            : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                <button type="button"
+                    class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
+                    onclick="toggleDropdown('masterUsersDropdown')">
                     <i class="fa-solid fa-users text-lg transition-all duration-300"></i>
-                    <span>Master User</span>
-                </a>
+                    <span>Master Users</span>
+                    <i id="dropdown-icon-master-users" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
+                </button>
+                <ul id="masterUsersDropdown" class="hidden space-y-2 pl-6">
+                    <!-- Users submenu -->
+                    <li>
+                        <a href="{{ route('superadmin.datamaster.user.index') }}"
+                            class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                {{ request()->routeIs('superadmin.datamaster.user*')
+                                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                            <span>Users</span>
+                        </a>
+                    </li>
+                </ul>
             </li>
 
-            <!-- Master Penduduk (moved out but keeping its dropdown) -->
+            <!-- Keep Master Penduduk as a separate dropdown -->
             <li class="-ml-5">
                 <button type="button"
                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
@@ -116,7 +127,7 @@
                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
                     onclick="toggleDropdown('suratDropdown')">
                     <i class="fa-solid fa-envelope text-lg transition-all duration-300"></i>
-                    <span>Master Surat</span>
+                    <span>Surat</span>
                     <i id="dropdown-icon-surat" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
                 </button>
                 <ul id="suratDropdown" class="hidden space-y-2 pl-6">
@@ -217,6 +228,28 @@
                                     ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
                                     : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                             <span>Pengantar KTP</span>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+
+            <!-- New Master Surat dropdown -->
+            <li class="-ml-5">
+                <button type="button"
+                    class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
+                    onclick="toggleDropdown('masterSuratDropdown')">
+                    <i class="fa-solid fa-file-signature text-lg transition-all duration-300"></i>
+                    <span>Master Surat</span>
+                    <i id="dropdown-icon-master-surat" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
+                </button>
+                <ul id="masterSuratDropdown" class="hidden space-y-2 pl-6">
+                    <li>
+                        <a href=""
+                            class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                {{ request()->routeIs('superadmin.surat.penandatangan*')
+                                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                            <span>Penandatangan</span>
                         </a>
                     </li>
                 </ul>
@@ -337,6 +370,12 @@
         } else if (id === 'suratDropdown') {
             const icon = document.getElementById('dropdown-icon-surat');
             icon.classList.toggle('rotate-180');
+        } else if (id === 'masterSuratDropdown') {
+            const icon = document.getElementById('dropdown-icon-master-surat');
+            icon.classList.toggle('rotate-180');
+        } else if (id === 'masterUsersDropdown') {
+            const icon = document.getElementById('dropdown-icon-master-users');
+            icon.classList.toggle('rotate-180');
         }
 
         dropdown.classList.toggle('hidden');
@@ -379,5 +418,7 @@
         checkDropdownForActiveItems('pendudukDropdown', 'dropdown-icon-penduduk');
         checkDropdownForActiveItems('suratDropdown', 'dropdown-icon-surat');
         checkDropdownForActiveItems('wilayahDropdown', 'dropdown-icon-wilayah');
+        checkDropdownForActiveItems('masterSuratDropdown', 'dropdown-icon-master-surat');
+        checkDropdownForActiveItems('masterUsersDropdown', 'dropdown-icon-master-users');
     });
 </script>
