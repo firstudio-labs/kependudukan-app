@@ -159,7 +159,6 @@
             <div class="mt-20">
                 <!-- Space for signature -->
                 <p class="font-bold underline">{{ strtoupper($ahliWaris->signing ?? '(NAMA KEPALA DESA)') }}</p>
-                <span class="bg-yellow-200 px-2 py-1">NIP. __________________</span>
             </div>
         </div>
     </div>

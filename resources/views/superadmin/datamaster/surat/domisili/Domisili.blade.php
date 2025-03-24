@@ -162,7 +162,6 @@
             <div class="mt-20">
                 <!-- Space for signature -->
                 <p class="font-bold underline">{{ $domisili->signing ?? 'NAMA KEPALA DESA' }}</p>
-                <p>NIP. __________________</p>
             </div>
         </div>
     </div>

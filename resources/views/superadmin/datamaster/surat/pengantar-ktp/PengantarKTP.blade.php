@@ -239,7 +239,6 @@
                 <p>Lurah {{ $villageName }}</p>
                 <div class="h-16"></div>
                 <p class="underline">{{ $ktp->signing ?? 'KEPALA DESA' }}</p>
-                <p>NIP. __________________</p>
             </div>
         </div>
     </div>

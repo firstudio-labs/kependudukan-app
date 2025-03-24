@@ -144,7 +144,6 @@
             <div class="mt-20">
                 <!-- Space for signature -->
                 <p class="font-bold underline">{{ strtoupper($rumahSewa->signing ?? 'KEPALA DESA') }}</p>
-                <p>NIP. __________________</p>
             </div>
         </div>
     </div>
