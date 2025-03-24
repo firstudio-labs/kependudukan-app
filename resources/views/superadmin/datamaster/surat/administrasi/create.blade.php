@@ -321,6 +321,150 @@
                     $('.select2-results__options').css('max-height', '400px');
                 });
 
+                // Helper function to populate location dropdowns
+                async function populateLocationDropdowns(provinceId, districtId, subDistrictId, villageId) {
+                    try {
+                        // Set the hidden inputs
+                        $('#province_id').val(provinceId || '');
+                        $('#district_id').val(districtId || '');
+                        $('#subdistrict_id').val(subDistrictId || '');
+                        $('#village_id').val(villageId || '');
+
+                        // If we have a province ID, fetch its data
+                        if (provinceId) {
+                            // Get province data from API
+                            const provinceResponse = await fetch('{{ url('/location/provinces') }}');
+                            const provinceData = await provinceResponse.json();
+
+                            // Find province by ID
+                            let province = null;
+                            if (provinceData && Array.isArray(provinceData)) {
+                                province = provinceData.find(p => p.id == provinceId);
+                            } else if (provinceData && provinceData.data && Array.isArray(provinceData.data)) {
+                                province = provinceData.data.find(p => p.id == provinceId);
+                            }
+
+                            if (province) {
+                                // Set province dropdown value
+                                $('#province_code').val(province.code);
+
+                                // If we have a district ID, fetch district data
+                                if (districtId) {
+                                    // Fetch districts for this province
+                                    const districtResponse = await fetch(`{{ url('/location/districts') }}/${province.code}`);
+                                    const districtData = await districtResponse.json();
+
+                                    // Make sure we have valid district data
+                                    let districts = districtData;
+                                    if (districtData && districtData.data && Array.isArray(districtData.data)) {
+                                        districts = districtData.data;
+                                    }
+
+                                    if (Array.isArray(districts) && districts.length > 0) {
+                                        // Clear and populate district select
+                                        const districtSelect = document.getElementById('district_code');
+                                        districtSelect.innerHTML = '<option value="">Pilih Kabupaten</option>';
+
+                                        // Add district options
+                                        districts.forEach(district => {
+                                            const option = document.createElement('option');
+                                            option.value = district.code;
+                                            option.textContent = district.name;
+                                            option.setAttribute('data-id', district.id);
+                                            districtSelect.appendChild(option);
+                                        });
+
+                                        // Find and select the matching district
+                                        const selectedDistrict = districts.find(d => d.id == districtId);
+                                        if (selectedDistrict) {
+                                            $('#district_code').val(selectedDistrict.code);
+
+                                            // If we have a subdistrict ID, fetch subdistrict data
+                                            if (subDistrictId) {
+                                                // Fetch subdistricts for this district
+                                                const subDistrictResponse = await fetch(`{{ url('/location/sub-districts') }}/${selectedDistrict.code}`);
+                                                const subDistrictData = await subDistrictResponse.json();
+
+                                                // Make sure we have valid subdistrict data
+                                                let subDistricts = subDistrictData;
+                                                if (subDistrictData && subDistrictData.data && Array.isArray(subDistrictData.data)) {
+                                                    subDistricts = subDistrictData.data;
+                                                }
+
+                                                if (Array.isArray(subDistricts) && subDistricts.length > 0) {
+                                                    // Clear and populate subdistrict select
+                                                    const subDistrictSelect = document.getElementById('subdistrict_code');
+                                                    subDistrictSelect.innerHTML = '<option value="">Pilih Kecamatan</option>';
+
+                                                    // Add subdistrict options
+                                                    subDistricts.forEach(subDistrict => {
+                                                        const option = document.createElement('option');
+                                                        option.value = subDistrict.code;
+                                                        option.textContent = subDistrict.name;
+                                                        option.setAttribute('data-id', subDistrict.id);
+                                                        subDistrictSelect.appendChild(option);
+                                                    });
+
+                                                    // Find and select the matching subdistrict
+                                                    const selectedSubDistrict = subDistricts.find(sd => sd.id == subDistrictId);
+                                                    if (selectedSubDistrict) {
+                                                        $('#subdistrict_code').val(selectedSubDistrict.code);
+
+                                                        // If we have a village ID, fetch village data
+                                                        if (villageId) {
+                                                            // Fetch villages for this subdistrict
+                                                            const villageResponse = await fetch(`{{ url('/location/villages') }}/${selectedSubDistrict.code}`);
+                                                            const villageData = await villageResponse.json();
+
+                                                            // Make sure we have valid village data
+                                                            let villages = villageData;
+                                                            if (villageData && villageData.data && Array.isArray(villageData.data)) {
+                                                                villages = villageData.data;
+                                                            }
+
+                                                            if (Array.isArray(villages) && villages.length > 0) {
+                                                                // Clear and populate village select
+                                                                const villageSelect = document.getElementById('village_code');
+                                                                villageSelect.innerHTML = '<option value="">Pilih Desa</option>';
+
+                                                                // Add village options
+                                                                villages.forEach(village => {
+                                                                    const option = document.createElement('option');
+                                                                    option.value = village.code;
+                                                                    option.textContent = village.name;
+                                                                    option.setAttribute('data-id', village.id);
+                                                                    villageSelect.appendChild(option);
+                                                                });
+
+                                                                // Find and select the matching village
+                                                                const selectedVillage = villages.find(v => v.id == villageId);
+                                                                if (selectedVillage) {
+                                                                    $('#village_code').val(selectedVillage.code);
+                                                                }
+
+                                                                // Enable the village select
+                                                                $('#village_code').prop('disabled', false);
+                                                            }
+                                                        }
+                                                    }
+
+                                                    // Enable the subdistrict select
+                                                    $('#subdistrict_code').prop('disabled', false);
+                                                }
+                                            }
+                                        }
+
+                                        // Enable the district select
+                                        $('#district_code').prop('disabled', false);
+                                    }
+                                }
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error populating location dropdowns:', error);
+                    }
+                }
+
                 // When NIK is selected, fill in other fields
                 $('#nikSelect').on('select2:select', function (e) {
                     if (isUpdating) return; // Prevent recursion
@@ -399,9 +543,13 @@
                         const rt = citizen.rt ? citizen.rt.toString() : '';
                         $('#rt').val(rt);
 
-                        // REMOVED: Location data auto-population
-                        // The location fields (province, district, subdistrict, village)
-                        // will need to be manually selected by the user
+                        // Auto-populate location dropdowns based on citizen's location IDs
+                        populateLocationDropdowns(
+                            citizen.province_id,
+                            citizen.district_id,
+                            citizen.subdistrict_id || citizen.sub_district_id,
+                            citizen.village_id
+                        );
                     }
 
                     isUpdating = false;
@@ -484,9 +632,13 @@
                         const rt = citizen.rt ? citizen.rt.toString() : '';
                         $('#rt').val(rt);
 
-                        // REMOVED: Location data auto-population
-                        // The location fields (province, district, subdistrict, village)
-                        // will need to be manually selected by the user
+                        // Auto-populate location dropdowns based on citizen's location IDs
+                        populateLocationDropdowns(
+                            citizen.province_id,
+                            citizen.district_id,
+                            citizen.subdistrict_id || citizen.sub_district_id,
+                            citizen.village_id
+                        );
                     }
 
                     isUpdating = false;
