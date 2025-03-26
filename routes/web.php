@@ -26,12 +26,16 @@ Route::get('/', function () {
     return view('homepage');
 });
 
+
 // Rute Autentikasi
-Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [AuthController::class, 'login']);
-Route::get('/register', [AuthController::class, 'showRegistrationForm'])->name('register');
-Route::post('/register', [AuthController::class, 'register']);
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::get('/register', [AuthController::class, 'showRegistrationForm'])->name('register');
+    Route::post('/register', [AuthController::class, 'register']);
+});
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
 
 // Route untuk superadmin - menggunakan web guard
 Route::middleware(['auth:web', 'role:superadmin'])->group(function () {
@@ -295,18 +299,35 @@ Route::middleware(['auth:web', 'role:operator'])->group(function () {
     });
 });
 
-// Route untuk user - dapat diakses baik oleh penduduk atau user dengan role 'user'
-Route::middleware(['role:user'])->group(function () {
+
+// Route untuk penduduk - menggunakan auth penduduk 
+Route::middleware(['auth:penduduk'])->group(function () {
     Route::get('/user/index', function () {
         return view('user.index');
     });
 
-    // Profile routes
-    Route::get('/user/profile', [ProfileController::class, 'index'])->name('user.profile.index');
-    Route::get('/user/profile/edit', [ProfileController::class, 'edit'])->name('user.profile.edit');
-    Route::put('/user/profile', [ProfileController::class, 'update'])->name('user.profile.update');
-    Route::get('/user/profile/create', [ProfileController::class, 'create'])->name('user.profile.create');
-    Route::post('/user/profile', [ProfileController::class, 'store'])->name('user.profile.store');
+    Route::get('/user/profile', [ProfileController::class, 'index'])
+        ->name('user.profile.index');
+    Route::get('/user/profile/edit', [ProfileController::class, 'edit'])
+        ->name('user.profile.edit');
+    Route::put('/user/profile', [ProfileController::class, 'update'])
+        ->name('user.profile.update');
+    Route::get('/user/profile/create', [ProfileController::class, 'create'])
+        ->name('user.profile.create');
+    Route::post('/user/profile', [ProfileController::class, 'store'])
+        ->name('user.profile.store');
+
+    Route::get('/user/family-member/{nik}/documents', [ProfileController::class, 'getFamilyMemberDocuments'])
+        ->name('user.family-member.documents');
+    Route::post('/user/family-member/{nik}/upload-document', [ProfileController::class, 'uploadFamilyMemberDocument'])
+        ->name('user.family-member.upload-document');
+    Route::delete('/user/family-member/{nik}/delete-document/{documentType}', [ProfileController::class, 'deleteFamilyMemberDocument'])
+        ->name('user.family-member.delete-document');
+    Route::get('/user/family-member/{nik}/document/{documentType}/view', [ProfileController::class, 'viewFamilyMemberDocument'])
+        ->name('user.family-member.view-document');
+    Route::post('/user/family-member/{nik}/update-tag-lokasi', [ProfileController::class, 'updateFamilyMemberTagLokasi'])
+        ->name('user.family-member.update-tag-lokasi');
+    Route::delete('/user/family-member/{nik}/delete', [ProfileController::class, 'deleteFamilyMember'])->name('user.family-member.delete');
 });
 
 // User management routes

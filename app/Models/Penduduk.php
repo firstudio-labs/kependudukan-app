@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
+
 class Penduduk extends Authenticatable
 {
     use Notifiable;
@@ -25,6 +26,7 @@ class Penduduk extends Authenticatable
         'nik',
         'password',
         'no_hp',
+       
     ];
 
     /**
