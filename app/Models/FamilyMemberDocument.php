@@ -17,7 +17,6 @@ class FamilyMemberDocument extends Model
         'mime_type',
         'extension',
         'file_size',
-        'tag_lokasi'
     ];
 
     
@@ -32,7 +31,9 @@ class FamilyMemberDocument extends Model
             'foto_diri' => 'Foto Diri',
             'foto_ktp' => 'Foto KTP',
             'foto_akta' => 'Akta Kelahiran',
-            'ijazah' => 'Ijazah'
+            'ijazah' => 'Ijazah',
+            'foto_kk' => 'Foto Kartu Keluarga',
+            'foto_rumah' => 'Foto Rumah'
         ];
 
         return $types[$this->document_type] ?? $this->document_type;

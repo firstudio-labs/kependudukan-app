@@ -325,9 +325,9 @@ Route::middleware(['auth:penduduk'])->group(function () {
         ->name('user.family-member.delete-document');
     Route::get('/user/family-member/{nik}/document/{documentType}/view', [ProfileController::class, 'viewFamilyMemberDocument'])
         ->name('user.family-member.view-document');
-    Route::post('/user/family-member/{nik}/update-tag-lokasi', [ProfileController::class, 'updateFamilyMemberTagLokasi'])
-        ->name('user.family-member.update-tag-lokasi');
-    Route::delete('/user/family-member/{nik}/delete', [ProfileController::class, 'deleteFamilyMember'])->name('user.family-member.delete');
+        
+
+
 });
 
 // User management routes

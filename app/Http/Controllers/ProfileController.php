@@ -234,6 +234,8 @@ class ProfileController extends Controller
                     'foto_ktp' => $documents['foto_ktp'] ?? null,
                     'foto_akta' => $documents['foto_akta'] ?? null,
                     'ijazah' => $documents['ijazah'] ?? null,
+                    'foto_kk' => $documents['foto_kk'] ?? null, 
+                    'foto_rumah' => $documents['foto_rumah'] ?? null,
                 ],
                 'tag_lokasi' => $tagLokasi,
             ]);
@@ -249,12 +251,13 @@ class ProfileController extends Controller
         }
     }
 
+
     public function uploadFamilyMemberDocument(Request $request, $nik)
     {
         try {
             $request->validate([
                 'file' => 'required|file|max:4096',
-                'document_type' => 'required|string|in:foto_diri,foto_ktp,foto_akta,ijazah',
+                'document_type' => 'required|string|in:foto_diri,foto_ktp,foto_akta,ijazah,foto_kk,foto_rumah',
                 'tag_lokasi' => 'nullable|string|max:255',
             ]);
 
@@ -322,6 +325,34 @@ class ProfileController extends Controller
 
             $tagLokasi = $request->tag_lokasi;
 
+            
+            if (!empty($tagLokasi)) {
+                try {
+                  
+                    $data = [
+                        'coordinate' => $tagLokasi
+                    ];
+
+                    Log::info('Updating citizen coordinates via document upload', [
+                        'nik' => $nik,
+                        'coordinate' => $tagLokasi
+                    ]);
+
+                    $response = $this->citizenService->updateCitizen((int) $nik, $data);
+
+                    Log::info('API coordinate update response', [
+                        'nik' => $nik,
+                        'response' => $response
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error('Error updating coordinates in API: ' . $e->getMessage(), [
+                        'nik' => $nik,
+                        'coordinate' => $tagLokasi
+                    ]);
+                    
+                }
+            }
+
             $document = FamilyMemberDocument::updateOrCreate(
                 [
                     'nik' => $nik,
@@ -360,63 +391,10 @@ class ProfileController extends Controller
         }
     }
 
-    public function updateFamilyMemberTagLokasi(Request $request, $nik)
-    {
-
-        try {
-            $request->validate([
-                'tag_lokasi' => 'required|string|max:255',
-                'document_type' => 'nullable|string|in:foto_diri,foto_ktp,foto_akta,ijazah',
-            ]);
-
-            $tagLokasi = $request->tag_lokasi;
-            $documentType = $request->document_type;
-
-            if (!empty($documentType)) {
-                $document = FamilyMemberDocument::where('nik', $nik)
-                    ->where('document_type', $documentType)
-                    ->first();
-
-                if ($document) {
-                    $document->tag_lokasi = $tagLokasi;
-                    $document->save();
-                } else {
-                    FamilyMemberDocument::create([
-                        'nik' => $nik,
-                        'document_type' => $documentType,
-                        'file_path' => '',
-                        'file_name' => '',
-                        'tag_lokasi' => $tagLokasi,
-                    ]);
-                }
-            } else {
-                FamilyMemberDocument::where('nik', $nik)->update(['tag_lokasi' => $tagLokasi]);
-            }
-
-            $penduduk = Penduduk::firstOrNew(['nik' => $nik]);
-            $penduduk->tag_lokasi = $tagLokasi;
-            $penduduk->save();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Tag lokasi berhasil diperbarui',
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Error updating tag lokasi: ' . $e->getMessage());
-            return response()->json(
-                [
-                    'success' => false,
-                    'message' => 'Terjadi kesalahan saat memperbarui tag lokasi: ' . $e->getMessage(),
-                ],
-                500,
-            );
-        }
-    }
-
     public function viewFamilyMemberDocument($nik, $documentType)
     {
         try {
-            if (!in_array($documentType, ['foto_diri', 'foto_ktp', 'foto_akta', 'ijazah'])) {
+            if (!in_array($documentType, ['foto_diri', 'foto_ktp', 'foto_akta', 'ijazah', 'foto_kk', 'foto_rumah'])) {
                 abort(400, 'Invalid document type');
             }
 
@@ -447,7 +425,7 @@ class ProfileController extends Controller
     public function deleteFamilyMemberDocument($nik, $documentType)
     {
         try {
-            if (!in_array($documentType, ['foto_diri', 'foto_ktp', 'foto_akta', 'ijazah'])) {
+            if (!in_array($documentType, ['foto_diri', 'foto_ktp', 'foto_akta', 'ijazah', 'foto_kk', 'foto_rumah'])) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Tipe dokumen tidak valid'
