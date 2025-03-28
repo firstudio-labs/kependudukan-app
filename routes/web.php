@@ -21,6 +21,8 @@ use App\Http\Controllers\Surat\IzinKeramaianController;
 use App\Http\Controllers\Surat\RumahSewaController;
 use App\Http\Controllers\Surat\PengantarKtpController;
 use App\Http\Controllers\PenandatangananController;
+use App\Http\Controllers\KlasifikasiController;
+use App\Http\Controllers\JenisAsetController;
 
 Route::get('/', function () {
     return view('homepage');
@@ -283,6 +285,37 @@ Route::middleware(['auth:web', 'role:superadmin'])->group(function () {
         ->name('superadmin.datamaster.surat.penandatangan.update');
     Route::delete('/superadmin/datamaster/surat/penandatangan/{id}', [PenandatangananController::class, 'destroy'])
         ->name('superadmin.datamaster.surat.penandatangan.destroy');
+
+
+    //Route Kelola Aset
+    // Klasifikasi routes
+    Route::get('/superadmin/datamaster/klasifikasi', [KlasifikasiController::class, 'index'])
+        ->name('superadmin.datamaster.klasifikasi.index');
+    Route::get('/superadmin/datamaster/klasifikasi/create', [KlasifikasiController::class, 'create'])
+        ->name('superadmin.datamaster.klasifikasi.create');
+    Route::post('/superadmin/datamaster/klasifikasi', [KlasifikasiController::class, 'store'])
+        ->name('superadmin.datamaster.klasifikasi.store');
+    Route::get('/superadmin/datamaster/klasifikasi/{id}/edit', [KlasifikasiController::class, 'edit'])
+        ->name('superadmin.datamaster.klasifikasi.edit');
+    Route::put('/superadmin/datamaster/klasifikasi/{id}', [KlasifikasiController::class, 'update'])
+        ->name('superadmin.datamaster.klasifikasi.update');
+    Route::delete('/superadmin/datamaster/klasifikasi/{id}', [KlasifikasiController::class, 'destroy'])
+        ->name('superadmin.datamaster.klasifikasi.destroy');
+
+    // Jenis Aset routes
+    Route::get('/superadmin/datamaster/jenis-aset', [JenisAsetController::class, 'index'])
+        ->name('superadmin.datamaster.jenis-aset.index');
+    Route::get('/superadmin/datamaster/jenis-aset/create', [JenisAsetController::class, 'create'])
+        ->name('superadmin.datamaster.jenis-aset.create');
+    Route::post('/superadmin/datamaster/jenis-aset', [JenisAsetController::class, 'store'])
+        ->name('superadmin.datamaster.jenis-aset.store');
+    Route::get('/superadmin/datamaster/jenis-aset/{id}/edit', [JenisAsetController::class, 'edit'])
+        ->name('superadmin.datamaster.jenis-aset.edit');
+    Route::put('/superadmin/datamaster/jenis-aset/{id}', [JenisAsetController::class, 'update'])
+        ->name('superadmin.datamaster.jenis-aset.update');
+    Route::delete('/superadmin/datamaster/jenis-aset/{id}', [JenisAsetController::class, 'destroy'])
+        ->name('superadmin.datamaster.jenis-aset.destroy');
+    
 });
 
 // Route untuk admin - menggunakan web guard

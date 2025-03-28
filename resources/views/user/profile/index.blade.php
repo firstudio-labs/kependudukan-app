@@ -16,19 +16,17 @@
             @endif
 
             @php
-// Check if user is authenticated
-if (Auth::guard('web')->check()) {
-    $userData = Auth::guard('web')->user();
-    $userType = 'web';
-} elseif (Auth::guard('penduduk')->check()) {
-    $userData = Auth::guard('penduduk')->user();
-    $userType = 'penduduk';
-} else {
-    $userData = null;
-    $userType = null;
-}
+                if (Auth::guard('web')->check()) {
+                    $userData = Auth::guard('web')->user();
+                    $userType = 'web';
+                } elseif (Auth::guard('penduduk')->check()) {
+                    $userData = Auth::guard('penduduk')->user();
+                    $userType = 'penduduk';
+                } else {
+                    $userData = null;
+                    $userType = null;
+                }
             @endphp
-
 
             <!-- Tabel Informasi Pribadi -->
             <div class="bg-white p-6 rounded-lg shadow-md mb-6">
@@ -86,13 +84,13 @@ if (Auth::guard('web')->check()) {
                                     @elseif(isset($userData->citizen_data['family_status']) && $userData->citizen_data['family_status'] == 'KEPALA KELUARGA')
                                         {{ $userData->citizen_data['full_name'] ?? ($userData->citizen_data['nama_kepala_keluarga'] ?? 'Belum diisi') }}
                                     @elseif(isset($userData->family_members))
-                                                                        @php
-    $kepalaKeluarga = collect($userData->family_members)->firstWhere(
-        'family_status',
-        'KEPALA KELUARGA',
-    );
-                                                                        @endphp
-                                                                        {{ $kepalaKeluarga['full_name'] ?? ($userData->citizen_data['nama_kepala_keluarga'] ?? 'Belum diisi') }}
+                                        @php
+                                            $kepalaKeluarga = collect($userData->family_members)->firstWhere(
+                                                'family_status',
+                                                'KEPALA KELUARGA',
+                                            );
+                                        @endphp
+                                        {{ $kepalaKeluarga['full_name'] ?? ($userData->citizen_data['nama_kepala_keluarga'] ?? 'Belum diisi') }}
                                     @else
                                         {{ $userData->citizen_data['nama_kepala_keluarga'] ?? 'Belum diisi' }}
                                     @endif
@@ -270,16 +268,16 @@ if (Auth::guard('web')->check()) {
                 </div>
 
                 @php
-$lat = '';
-$lng = '';
+                    $lat = '';
+                    $lng = '';
 
-if (!empty($userData->tag_lokasi)) {
-    $coordinates = explode(',', $userData->tag_lokasi);
-    if (count($coordinates) >= 2) {
-        $lat = trim($coordinates[0]);
-        $lng = trim($coordinates[1]);
-    }
-}
+                    if (!empty($userData->tag_lokasi)) {
+                        $coordinates = explode(',', $userData->tag_lokasi);
+                        if (count($coordinates) >= 2) {
+                            $lat = trim($coordinates[0]);
+                            $lng = trim($coordinates[1]);
+                        }
+                    }
                 @endphp
 
                 <x-map-input label="Lokasi Tempat Tinggal" addressId="user_address" addressName="user_address"
@@ -402,11 +400,6 @@ if (!empty($userData->tag_lokasi)) {
                     </div>
                 </form>
             </div>
-
-
-
-
-
 
             <!-- Modal Dokumen -->
             <div id="documentModal" tabindex="-1" aria-hidden="true"

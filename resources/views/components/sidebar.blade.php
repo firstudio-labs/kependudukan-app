@@ -34,18 +34,18 @@
     </div>
 </nav>
 @php
-if (Auth::guard('web')->check()) {
-    $user = Auth::guard('web')->user();
-    $userType = 'web';
-} elseif (Auth::guard('penduduk')->check()) {
-    $user = Auth::guard('penduduk')->user();
-    $userType = 'penduduk';
+    if (Auth::guard('web')->check()) {
+        $user = Auth::guard('web')->user();
+        $userType = 'web';
+    } elseif (Auth::guard('penduduk')->check()) {
+        $user = Auth::guard('penduduk')->user();
+        $userType = 'penduduk';
 
-    $user->role = 'user';
-} else {
-    $user = null;
-    $userType = null;
-}
+        $user->role = 'user';
+    } else {
+        $user = null;
+        $userType = null;
+    }
 @endphp
 
 <aside id="sidebar"
@@ -72,9 +72,9 @@ if (Auth::guard('web')->check()) {
             @if ($user->role == 'superadmin')
                     <li class="-ml-5">
                         <a href="{{ route('superadmin.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                {{ request()->routeIs('superadmin.index')
-        ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-        : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                {{ request()->routeIs('superadmin.index')
+                ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                             <i class="fa-solid fa-gauge-high text-lg transition-all duration-300"></i>
                             <span>Dashboard</span>
                         </a>
@@ -94,9 +94,9 @@ if (Auth::guard('web')->check()) {
                             <!-- Users submenu -->
                             <li>
                                 <a href="{{ route('superadmin.datamaster.user.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                        {{ request()->routeIs('superadmin.datamaster.user*')
-        ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-        : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                        {{ request()->routeIs('superadmin.datamaster.user*')
+                ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Users</span>
                                 </a>
                             </li>
@@ -116,18 +116,48 @@ if (Auth::guard('web')->check()) {
                         <ul id="pendudukDropdown" class="hidden space-y-2 pl-6">
                             <li>
                                 <a href="{{ route('superadmin.biodata.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                        {{ request()->routeIs('superadmin.biodata*')
-        ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-        : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                        {{ request()->routeIs('superadmin.biodata*')
+                ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Biodata</span>
                                 </a>
                             </li>
                             <li>
                                 <a href="{{ route('superadmin.datakk.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                        {{ request()->routeIs('superadmin.datakk*')
-        ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-        : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                        {{ request()->routeIs('superadmin.datakk*')
+                ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Data KK</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- Kelola Aset dropdown -->
+                    <li class="-ml-5">
+                        <button type="button"
+                            class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
+                            onclick="toggleDropdown('kelolaAsetDropdown')">
+                            <i class="fa-solid fa-boxes-stacked text-lg transition-all duration-300"></i>
+                            <span>Kelola Aset</span>
+                            <i id="dropdown-icon-kelola-aset"
+                                class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
+                        </button>
+                        <ul id="kelolaAsetDropdown" class="hidden space-y-2 pl-6">
+                            <li>
+                                <a href="{{ route('superadmin.datamaster.klasifikasi.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                                                            {{ request()->routeIs('superadmin.datamaster.klasifikasi*')
+                ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                    <span>Klasifikasi</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('superadmin.datamaster.jenis-aset.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                                                            {{ request()->routeIs('superadmin.datamaster.jenis-aset*')
+                ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                    <span>Jenis Aset</span>
                                 </a>
                             </li>
                         </ul>
@@ -146,92 +176,93 @@ if (Auth::guard('web')->check()) {
                         <ul id="suratDropdown" class="hidden space-y-2 pl-6">
                             <li>
                                 <a href="{{ route('superadmin.surat.administrasi.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                        {{ request()->routeIs('superadmin.surat.administrasi*')
-        ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-        : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                        {{ request()->routeIs('superadmin.surat.administrasi*')
+                ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Administrasi Umum</span>
                                 </a>
                             </li>
                             <li>
                                 <a href="{{ route('superadmin.surat.kehilangan.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                        {{ request()->routeIs('superadmin.surat.kehilangan*')
-        ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-        : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                        {{ request()->routeIs('superadmin.surat.kehilangan*')
+                ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Surat Kehilangan</span>
                                 </a>
                             </li>
                             <li>
                                 <a href="{{ route('superadmin.surat.skck.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                        {{ request()->routeIs('superadmin.surat.skck*')
-        ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-        : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                        {{ request()->routeIs('superadmin.surat.skck*')
+                ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Surat SKCK</span>
                                 </a>
                             </li>
                             <li>
                                 <a href="{{ route('superadmin.surat.domisili.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                        {{ request()->routeIs('superadmin.surat.domisili*') && !request()->routeIs('superadmin.surat.domisili-usaha*')
-        ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-        : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                        {{ request()->routeIs('superadmin.surat.domisili*') && !request()->routeIs('superadmin.surat.domisili-usaha*')
+                ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Keterangan Domisili</span>
                                 </a>
                             </li>
                             <li>
                                 <a href="{{ route('superadmin.surat.domisili-usaha.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                        {{ request()->routeIs('superadmin.surat.domisili-usaha*')
-        ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-        : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                        {{ request()->routeIs('superadmin.surat.domisili-usaha*')
+                ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Domisili Usaha</span>
                                 </a>
                             </li>
                             <li>
                                 <a href="{{ route('superadmin.surat.ahli-waris.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                        {{ request()->routeIs('superadmin.surat.ahli-waris*')
-        ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-        : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                        {{ request()->routeIs('superadmin.surat.ahli-waris*')
+                ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Surat Ahli Waris</span>
                                 </a>
                             </li>
                             <li>
                                 <a href="{{ route('superadmin.surat.kelahiran.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                        {{ request()->routeIs('superadmin.surat.kelahiran*')
-        ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-        : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                        {{ request()->routeIs('superadmin.surat.kelahiran*')
+                ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Keterangan Kelahiran</span>
                                 </a>
                             </li>
                             <li>
                                 <a href="{{ route('superadmin.surat.kematian.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                        {{ request()->routeIs('superadmin.surat.kematian*')
-        ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-        : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                        {{ request()->routeIs('superadmin.surat.kematian*')
+                ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Keterangan Kematian</span>
                                 </a>
                             </li>
                             <li>
                                 <a href="{{ route('superadmin.surat.keramaian.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                        {{ request()->routeIs('superadmin.surat.keramaian*')
-        ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-        : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                        {{ request()->routeIs('superadmin.surat.keramaian*')
+                ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Izin Keramaian</span>
                                 </a>
                             </li>
                             <li>
                                 <a href="{{ route('superadmin.surat.rumah-sewa.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                        {{ request()->routeIs('superadmin.surat.rumah-sewa*')
-        ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-        : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                        {{ request()->routeIs('superadmin.surat.rumah-sewa*')
+                ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Izin Rumah Sewa</span>
                                 </a>
                             </li>
                             <li>
                                 <a href="{{ route('superadmin.surat.pengantar-ktp.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                        {{ request()->routeIs('superadmin.surat.pengantar-ktp*')
-        ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-        : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                        {{ request()->routeIs('superadmin.surat.pengantar-ktp*')
+                ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Pengantar KTP</span>
                                 </a>
                             </li>
+
                         </ul>
                     </li>
 
@@ -248,9 +279,9 @@ if (Auth::guard('web')->check()) {
                         <ul id="masterSuratDropdown" class="hidden space-y-2 pl-6">
                             <li>
                                 <a href="{{ route('superadmin.datamaster.surat.penandatangan.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                        {{ request()->routeIs('superadmin.datamaster.surat.penandatangan*')
-        ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-        : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                        {{ request()->routeIs('superadmin.datamaster.surat.penandatangan*')
+                ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Penandatangan</span>
                                 </a>
                             </li>
@@ -270,34 +301,34 @@ if (Auth::guard('web')->check()) {
                         <ul id="wilayahDropdown" class="hidden space-y-2 pl-6">
                             <li>
                                 <a href="{{ route('superadmin.datamaster.wilayah.provinsi.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                        {{ request()->routeIs('superadmin.datamaster.wilayah.provinsi*')
-        ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-        : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                        {{ request()->routeIs('superadmin.datamaster.wilayah.provinsi*')
+                ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Provinsi</span>
                                 </a>
                             </li>
                             <li>
                                 <a href="{{ route('superadmin.datamaster.wilayah.kabupaten.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                        {{ request()->routeIs('superadmin.datamaster.wilayah.kabupaten*')
-        ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-        : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                        {{ request()->routeIs('superadmin.datamaster.wilayah.kabupaten*')
+                ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Kabupaten</span>
                                 </a>
                             </li>
                             <li>
                                 <a href="{{ route('superadmin.datamaster.wilayah.kecamatan.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                        {{ request()->routeIs('superadmin.datamaster.wilayah.kecamatan*')
-        ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-        : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                        {{ request()->routeIs('superadmin.datamaster.wilayah.kecamatan*')
+                ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Kecamatan</span>
                                 </a>
                             </li>
 
                             <li>
                                 <a href="{{ route('superadmin.datamaster.wilayah.desa.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                        {{ request()->routeIs('superadmin.datamaster.wilayah.desa*')
-        ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-        : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                        {{ request()->routeIs('superadmin.datamaster.wilayah.desa*')
+                ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Desa</span>
                                 </a>
                             </li>
@@ -331,37 +362,37 @@ if (Auth::guard('web')->check()) {
                     </a> --}}
                 </li>
             @elseif ($user->role == 'user')
-                <li class="-ml-5">
-                    <a href="/user/index"
-                        class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                        {{ request()->is('user/index')
-                            ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-                            : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
-                        <i class="fa-regular fa-clipboard text-lg transition-all duration-300"></i>
-                        <span>Dashboard</span>
-                    </a>
-                </li>
+                    <li class="-ml-5">
+                        <a href="/user/index" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                {{ request()->is('user/index')
+                ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                            <i class="fa-regular fa-clipboard text-lg transition-all duration-300"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
 
-                <li class="-ml-5">
-                    <a href="{{ route('user.profile.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                        {{ request()->routeIs('user.profile.*')
-                            ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-                            : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
-                        <i class="fa-regular fa-user text-lg transition-all duration-300"></i>
-                        <span>Profil</span>
-                    </a>
-                </li>
+                    <li class="-ml-5">
+                        <a href="{{ route('user.profile.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                {{ request()->routeIs('user.profile.*')
+                ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                            <i class="fa-regular fa-user text-lg transition-all duration-300"></i>
+                            <span>Profil</span>
+                        </a>
+                    </li>
 
-                <li class="-ml-5 mt-6">
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button type="submit"
-                            class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-red-500 hover:text-white">
-                            <i class="fa-solid fa-sign-out-alt text-lg transition-all duration-300"></i>
-                            <span>Logout</span>
-                        </button>
-                    </form>
-                </li>
+
+                    <li class="-ml-5 mt-6">
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit"
+                                class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-red-500 hover:text-white">
+                                <i class="fa-solid fa-sign-out-alt text-lg transition-all duration-300"></i>
+                                <span>Logout</span>
+                            </button>
+                        </form>
+                    </li>
             @endif
         </ul>
     </div>
@@ -431,5 +462,6 @@ if (Auth::guard('web')->check()) {
         checkDropdownForActiveItems('wilayahDropdown', 'dropdown-icon-wilayah');
         checkDropdownForActiveItems('masterSuratDropdown', 'dropdown-icon-master-surat');
         checkDropdownForActiveItems('masterUsersDropdown', 'dropdown-icon-master-users');
+        checkDropdownForActiveItems('kelolaAsetDropdown', 'dropdown-icon-kelola-aset');
     });
 </script>
