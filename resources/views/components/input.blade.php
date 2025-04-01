@@ -2,7 +2,7 @@
 
 <div>
     <label for="{{ $id }}"
-        class="block mb-2 text-tiny font-medium text-gray-900 dark:text-white">{{ $label }}</label>
+        class="block mb-2 text-tiny font-medium text-gray-900 dark:text-black">{{ $label }}</label>
     <input type="{{ $type }}" id="{{ $id }}" name="{{ $name }}"
         @if ($readonly) readonly @endif
         @if ($disabled) disabled class="text-gray-400 bg-gray-50 border border-gray-300 text-tiny rounded-lg focus:ring-purple-500 focus:border-purple-500 block w-full p-2.5" @endif

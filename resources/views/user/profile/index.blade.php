@@ -1,6 +1,6 @@
 <x-layout>
     <div class="p-4 mt-14">
-        <di class="p-4 border-gray-200 rounded-lg">
+        <di class="border-gray-200 rounded-lg">
             <h1 class="text-2xl font-bold text-gray-800 mb-6">Profil Penduduk</h1>
 
             @if (session('success'))
@@ -317,10 +317,7 @@
                 <div id="fotoKkPreview" class="hidden mb-4">
                     <a href="#" id="viewFotoKk" target="_blank" class="block relative">
                         <img src="" alt="Kartu Keluarga" class="max-h-60 max-w-full rounded-lg border border-gray-200">
-                        <div
-                            class="absolute inset-0 bg-black bg-opacity-0 flex items-center justify-center hover:bg-opacity-30 transition-all rounded-lg">
-                            <span class="text-white opacity-0 hover:opacity-100">Lihat</span>
-                        </div>
+                        
                     </a>
                 </div>
 
@@ -371,10 +368,7 @@
                 <div id="fotoRumahPreview" class="hidden mb-4">
                     <a href="#" id="viewFotoRumah" target="_blank" class="block relative">
                         <img src="" alt="Foto Rumah" class="max-h-60 max-w-full rounded-lg border border-gray-200">
-                        <div
-                            class="absolute inset-0 bg-black bg-opacity-0 flex items-center justify-center hover:bg-opacity-30 transition-all rounded-lg">
-                            <span class="text-white opacity-0 hover:opacity-100">Lihat</span>
-                        </div>
+                        
                     </a>
                 </div>
 
@@ -444,10 +438,7 @@
                                         <a href="#" id="viewFotoDiri" target="_blank" class="block relative">
                                             <img src="" alt="Foto Diri"
                                                 class="max-h-40 max-w-full rounded-lg border border-gray-200">
-                                            <div
-                                                class="absolute inset-0 bg-black bg-opacity-0 flex items-center justify-center hover:bg-opacity-30 transition-all rounded-lg">
-                                                <span class="text-white opacity-0 hover:opacity-100">Lihat</span>
-                                            </div>
+                                            
                                         </a>
                                         <div class="flex space-x-2 mt-2">
                                             <button type="button" onclick="deleteDocument('foto_diri')"
@@ -502,10 +493,7 @@
                                         <a href="#" id="viewFotoKtp" target="_blank" class="block relative">
                                             <img src="" alt="Foto KTP"
                                                 class="max-h-40 max-w-full rounded-lg border border-gray-200">
-                                            <div
-                                                class="absolute inset-0 bg-black bg-opacity-0 flex items-center justify-center hover:bg-opacity-30 transition-all rounded-lg">
-                                                <span class="text-white opacity-0 hover:opacity-100">Lihat</span>
-                                            </div>
+                                            
                                         </a>
                                         <div class="flex space-x-2 mt-2">
                                             <button type="button" onclick="deleteDocument('foto_ktp')"
@@ -559,10 +547,7 @@
                                         <a href="#" id="viewFotoAkta" target="_blank" class="block relative">
                                             <img src="" alt="Akta Kelahiran"
                                                 class="max-h-40 max-w-full rounded-lg border border-gray-200">
-                                            <div
-                                                class="absolute inset-0 bg-black bg-opacity-0 flex items-center justify-center hover:bg-opacity-30 transition-all rounded-lg">
-                                                <span class="text-white opacity-0 hover:opacity-100">Lihat</span>
-                                            </div>
+                                            
                                         </a>
                                         <div class="flex space-x-2 mt-2">
                                             <button type="button" onclick="deleteDocument('foto_akta')"
@@ -617,10 +602,7 @@
                                         <a href="#" id="viewIjazah" target="_blank" class="block relative">
                                             <img src="" alt="Ijazah"
                                                 class="max-h-40 max-w-full rounded-lg border border-gray-200">
-                                            <div
-                                                class="absolute inset-0 bg-black bg-opacity-0 flex items-center justify-center hover:bg-opacity-30 transition-all rounded-lg">
-                                                <span class="text-white opacity-0 hover:opacity-100">Lihat</span>
-                                            </div>
+                                           
                                         </a>
                                         <div class="flex space-x-2 mt-2">
                                             <button type="button" onclick="deleteDocument('ijazah')"

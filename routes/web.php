@@ -23,6 +23,7 @@ use App\Http\Controllers\Surat\PengantarKtpController;
 use App\Http\Controllers\PenandatangananController;
 use App\Http\Controllers\KlasifikasiController;
 use App\Http\Controllers\JenisAsetController;
+use App\Http\Controllers\KelolaAsetController;
 
 Route::get('/', function () {
     return view('homepage');
@@ -315,7 +316,7 @@ Route::middleware(['auth:web', 'role:superadmin'])->group(function () {
         ->name('superadmin.datamaster.jenis-aset.update');
     Route::delete('/superadmin/datamaster/jenis-aset/{id}', [JenisAsetController::class, 'destroy'])
         ->name('superadmin.datamaster.jenis-aset.destroy');
-    
+
 });
 
 // Route untuk admin - menggunakan web guard
@@ -358,8 +359,24 @@ Route::middleware(['auth:penduduk'])->group(function () {
         ->name('user.family-member.delete-document');
     Route::get('/user/family-member/{nik}/document/{documentType}/view', [ProfileController::class, 'viewFamilyMemberDocument'])
         ->name('user.family-member.view-document');
-        
 
+    //Route Kelola Aser
+    Route::get('/user/kelola-aset', [KelolaAsetController::class, 'index'])
+        ->name('user.kelola-aset.index');
+    Route::get('/user/kelola-aset/create', [KelolaAsetController::class, 'create'])
+        ->name('user.kelola-aset.create');
+    Route::post('/user/kelola-aset', [KelolaAsetController::class, 'store'])
+        ->name('user.kelola-aset.store');
+    Route::get('/user/kelola-aset/{id}/edit', [KelolaAsetController::class, 'edit'])
+        ->name('user.kelola-aset.edit');
+    Route::put('/user/kelola-aset/{id}', [KelolaAsetController::class, 'update'])
+        ->name('user.kelola-aset.update');
+    Route::delete('/user/kelola-aset/{id}', [KelolaAsetController::class, 'destroy'])
+        ->name('user.kelola-aset.destroy');
+
+    // Route for searching citizen by NIK for asset management
+    Route::get('/citizens/search-by-nik/{nik}', [KelolaAsetController::class, 'searchByNik'])
+        ->name('citizens.search-by-nik');
 
 });
 

@@ -20,7 +20,7 @@
                 <!-- Nama Lengkap -->
                 <div>
                     <label for="full_name" class="block text-sm font-medium text-gray-700">Nama Lengkap</label>
-                    <input type="text" id="full_name" name="full_name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                    <input type="text" id="name" name="name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                 </div>
 
                 <!-- Jenis Kelamin -->
