@@ -350,6 +350,8 @@ Route::middleware(['auth:penduduk'])->group(function () {
         ->name('user.profile.create');
     Route::post('/user/profile', [ProfileController::class, 'store'])
         ->name('user.profile.store');
+    Route::post('/user/profile/update-location', [ProfileController::class, 'updateLocation'])
+        ->name('user.profile.updateLocation');
 
     Route::get('/user/family-member/{nik}/documents', [ProfileController::class, 'getFamilyMemberDocuments'])
         ->name('user.family-member.documents');

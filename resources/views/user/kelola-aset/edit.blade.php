@@ -211,18 +211,18 @@
                                 <h2 class="text-sm font-medium text-gray-700">Tag Lokasi Aset</h2>
                             </div>
                         </div>
-                
+
                         @php
-// Parse tag_lokasi if it exists
-$latitude = '';
-$longitude = '';
-if ($aset->tag_lokasi) {
-    $coordinates = explode(',', $aset->tag_lokasi);
-    if (count($coordinates) == 2) {
-        $latitude = trim($coordinates[0]);
-        $longitude = trim($coordinates[1]);
-    }
-}
+                        
+                        $latitude = '';
+                        $longitude = '';
+                        if ($aset->tag_lokasi) {
+                            $coordinates = explode(',', $aset->tag_lokasi);
+                            if (count($coordinates) == 2) {
+                                $latitude = trim($coordinates[0]);
+                                $longitude = trim($coordinates[1]);
+                            }
+                        }
                         @endphp
                 
                         <x-map-input label="Lokasi Aset" addressId="asset_location" addressName="asset_location"
@@ -230,8 +230,8 @@ if ($aset->tag_lokasi) {
                             latitude="{{ old('tag_lat', $latitude) }}" longitudeId="tag_lng" longitudeName="tag_lng"
                             longitude="{{ old('tag_lng', $longitude) }}" modalId="" />
                 
-                        <!-- Hidden input to store combined coordinates -->
-                        <input type="hidden" id="tag_lokasi" name="tag_lokasi" value="{{ old('tag_lokasi', $aset->tag_lokasi) }}">
+                       
+                        <input type="hidden" id="tag_lokasi" name="tag_lokasi" value="{{ old('tag_lokasi', $aset->tag_lokasi) ?? '' }}">
                     </div>
                 </div>
             </div>
@@ -270,7 +270,7 @@ if ($aset->tag_lokasi) {
             });
         @endif
 
-        // Store NIK data globally to access it later
+ 
         let nikData = [];
         let selectedNikData = null;
 
@@ -278,7 +278,7 @@ if ($aset->tag_lokasi) {
             try {
                 const nikDropdown = document.getElementById('nik-dropdown');
 
-                // Show loading state
+               
                 nikDropdown.innerHTML = '<div class="px-4 py-2 text-sm text-gray-500">Loading NIK data...</div>';
                 nikDropdown.classList.remove('hidden');
 
@@ -297,18 +297,18 @@ if ($aset->tag_lokasi) {
 
                 const responseData = await response.json();
 
-                // Clear dropdown
+               
                 nikDropdown.innerHTML = '';
 
-                // Check if data is available
+              
                 if (responseData.status === 'OK' && responseData.data && Array.isArray(responseData.data)) {
-                    // Store NIK data globally
+                  
                     nikData = responseData.data;
 
-                    // Sort citizens by NIK for easier lookup
+                  
                     nikData.sort((a, b) => String(a.nik).localeCompare(String(b.nik)));
 
-                    // Add each NIK to the dropdown
+                  
                     nikData.forEach(citizen => {
                         if (citizen.nik) {
                             const option = document.createElement('div');
@@ -336,7 +336,7 @@ if ($aset->tag_lokasi) {
             }
         }
 
-        // Function to select a NIK from dropdown
+        
         function selectNIK(nik, name) {
             const nikInput = document.getElementById('nik-input');
             const namaInput = document.getElementById('nama_pemilik');
@@ -344,46 +344,44 @@ if ($aset->tag_lokasi) {
 
             nikInput.value = nik;
 
-            // Only set the name if it's available and the nama_pemilik field exists
             if (name && namaInput) {
                 namaInput.value = name;
                 selectedNikData = { nik, name };
             }
 
-            // Hide dropdown
             dropdown.classList.add('hidden');
         }
 
-        // Add event listeners when document is loaded
+       
         document.addEventListener('DOMContentLoaded', function () {
             const nikInput = document.getElementById('nik-input');
             const nikDropdown = document.getElementById('nik-dropdown');
             const toggleButton = document.getElementById('toggle-nik-dropdown');
 
-            // Toggle dropdown when button is clicked
+           
             toggleButton.addEventListener('click', function () {
                 nikDropdown.classList.toggle('hidden');
-                // Load NIK data if not already loaded
+               
                 if (nikData.length === 0) {
                     fetchNIKData();
                 }
             });
 
-            // Filter dropdown options when typing in the input
+           
             nikInput.addEventListener('input', function () {
                 const searchText = this.value.toLowerCase();
 
-                // If NIK data is loaded
+               
                 if (nikData.length > 0) {
-                    // Filter the options based on input
+                   
                     const filteredData = nikData.filter(citizen =>
                         String(citizen.nik).toLowerCase().includes(searchText)
                     );
 
-                    // Clear dropdown
+                   
                     nikDropdown.innerHTML = '';
 
-                    // Add filtered options
+                  
                     filteredData.forEach(citizen => {
                         if (citizen.nik) {
                             const option = document.createElement('div');
@@ -398,15 +396,15 @@ if ($aset->tag_lokasi) {
                         }
                     });
 
-                    // Show dropdown
+                   
                     nikDropdown.classList.remove('hidden');
                 } else {
-                    // Load NIK data if not already loaded
+                    
                     fetchNIKData();
                 }
             });
 
-            // Hide dropdown when clicking outside
+            
             document.addEventListener('click', function (event) {
                 if (!nikInput.contains(event.target) &&
                     !nikDropdown.contains(event.target) &&
@@ -415,14 +413,14 @@ if ($aset->tag_lokasi) {
                 }
             });
 
-            // Preload NIK data
+            
             fetchNIKData();
         });
     </script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // Configuration
+
             const config = {
                 baseUrl: 'http://api-kependudukan.desaverse.id:3000/api',
                 apiKey: '{{ config('services.kependudukan.key') }}',
@@ -437,13 +435,12 @@ if ($aset->tag_lokasi) {
 
             console.log('Location IDs:', config.locationIds);
 
-            // DOM Elements
             const provinceSelect = document.getElementById('province_id');
             const districtSelect = document.getElementById('district_id');
             const subDistrictSelect = document.getElementById('sub_district_id');
             const villageSelect = document.getElementById('village_id');
 
-            // API Functions
+           
             const api = {
                 getHeaders() {
                     return {
@@ -506,9 +503,9 @@ if ($aset->tag_lokasi) {
                 }
             };
 
-            // Utility Functions
+            
             function populateSelect(selectElement, options, selectedId = null) {
-                // Keep the first option (placeholder)
+                
                 const placeholder = selectElement.options[0];
                 selectElement.innerHTML = '';
                 selectElement.appendChild(placeholder);
@@ -518,7 +515,6 @@ if ($aset->tag_lokasi) {
                     optionElement.value = option.id;
                     optionElement.textContent = option.name;
 
-                    // Select this option if it matches our selected ID
                     if (selectedId && option.id == selectedId) {
                         optionElement.selected = true;
                     }
@@ -529,11 +525,9 @@ if ($aset->tag_lokasi) {
                 selectElement.disabled = options.length === 0;
             }
 
-            // Event Handlers
             async function handleProvinceChange() {
                 const provinceId = provinceSelect.value;
 
-                // Reset dependent dropdowns
                 districtSelect.innerHTML = '<option value="" selected disabled>Pilih Kabupaten</option>';
                 subDistrictSelect.innerHTML = '<option value="" selected disabled>Pilih Kecamatan</option>';
                 villageSelect.innerHTML = '<option value="" selected disabled>Pilih Desa/Kelurahan</option>';
@@ -542,12 +536,11 @@ if ($aset->tag_lokasi) {
                 subDistrictSelect.disabled = true;
                 villageSelect.disabled = true;
 
-                // Find selected province's code
                 const provinces = await api.fetchProvinces();
                 const selectedProvince = provinces.find(p => p.id == provinceId);
 
                 if (selectedProvince) {
-                    // Fetch districts for the selected province
+                   
                     const districts = await api.fetchDistricts(selectedProvince.code);
                     populateSelect(districtSelect, districts, config.locationIds.districtId);
                     districtSelect.disabled = false;
@@ -557,14 +550,14 @@ if ($aset->tag_lokasi) {
             async function handleDistrictChange() {
                 const districtId = districtSelect.value;
 
-                // Reset dependent dropdowns
+                
                 subDistrictSelect.innerHTML = '<option value="" selected disabled>Pilih Kecamatan</option>';
                 villageSelect.innerHTML = '<option value="" selected disabled>Pilih Desa/Kelurahan</option>';
 
                 subDistrictSelect.disabled = true;
                 villageSelect.disabled = true;
 
-                // Find selected district's code
+               
                 const provinceId = provinceSelect.value;
                 const provinces = await api.fetchProvinces();
                 const selectedProvince = provinces.find(p => p.id == provinceId);
@@ -574,7 +567,7 @@ if ($aset->tag_lokasi) {
                     const selectedDistrict = districts.find(d => d.id == districtId);
 
                     if (selectedDistrict) {
-                        // Fetch sub-districts for the selected district
+                        
                         const subDistricts = await api.fetchSubDistricts(selectedDistrict.code);
                         populateSelect(subDistrictSelect, subDistricts, config.locationIds.subDistrictId);
                         subDistrictSelect.disabled = false;
@@ -585,11 +578,11 @@ if ($aset->tag_lokasi) {
             async function handleSubDistrictChange() {
                 const subDistrictId = subDistrictSelect.value;
 
-                // Reset dependent dropdown
+                
                 villageSelect.innerHTML = '<option value="" selected disabled>Pilih Desa/Kelurahan</option>';
                 villageSelect.disabled = true;
 
-                // Find selected sub-district's code
+                
                 const provinceId = provinceSelect.value;
                 const districtId = districtSelect.value;
 
@@ -605,7 +598,7 @@ if ($aset->tag_lokasi) {
                         const selectedSubDistrict = subDistricts.find(sd => sd.id == subDistrictId);
 
                         if (selectedSubDistrict) {
-                            // Fetch villages for the selected sub-district
+                            
                             const villages = await api.fetchVillages(selectedSubDistrict.code);
                             populateSelect(villageSelect, villages, config.locationIds.villageId);
                             villageSelect.disabled = false;
@@ -614,28 +607,25 @@ if ($aset->tag_lokasi) {
                 }
             }
 
-            // Attach event listeners
+            
             provinceSelect.addEventListener('change', handleProvinceChange);
             districtSelect.addEventListener('change', handleDistrictChange);
             subDistrictSelect.addEventListener('change', handleSubDistrictChange);
 
-            // Initialize cascading dropdowns if we have pre-selected values
+            
             if (config.locationIds.provinceId) {
-                // If we have a pre-selected province, initialize the dropdowns
+              
                 (async function initLocationDropdowns() {
-                    // First, make sure the province is selected
+                    
                     const provinces = await api.fetchProvinces();
                     populateSelect(provinceSelect, provinces, config.locationIds.provinceId);
 
-                    // If we have a district selected, load districts for the province
                     if (config.locationIds.districtId) {
                         await handleProvinceChange();
 
-                        // If we have a sub-district selected, load sub-districts for the district
                         if (config.locationIds.subDistrictId) {
                             await handleDistrictChange();
-
-                            // If we have a village selected, load villages for the sub-district
+                        
                             if (config.locationIds.villageId) {
                                 await handleSubDistrictChange();
                             }
@@ -645,6 +635,48 @@ if ($aset->tag_lokasi) {
             }
         });
     </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+
+            const tagLatInput = document.getElementById('tag_lat');
+            const tagLngInput = document.getElementById('tag_lng');
+            const tagLokasiInput = document.getElementById('tag_lokasi');
+
+            function updateTagLokasi() {
+                const lat = tagLatInput ? tagLatInput.value.trim() : '';
+                const lng = tagLngInput ? tagLngInput.value.trim() : '';
+
+                if (lat && lng && tagLokasiInput) {
+                    tagLokasiInput.value = `${lat}, ${lng}`;
+                    console.log('Tag lokasi updated:', tagLokasiInput.value);
+                } else if (tagLokasiInput) {
+                    tagLokasiInput.value = '';
+                }
+            }
+
+            if (tagLatInput) {
+                tagLatInput.addEventListener('change', updateTagLokasi);
+                tagLatInput.addEventListener('input', updateTagLokasi);
+            }
+
+            if (tagLngInput) {
+                tagLngInput.addEventListener('change', updateTagLokasi);
+                tagLngInput.addEventListener('input', updateTagLokasi);
+            }
+
+            updateTagLokasi();
+
+            const form = document.querySelector('form');
+            if (form) {
+                form.addEventListener('submit', function (e) {
+                    updateTagLokasi();
+                    console.log('Form submitted with tag_lokasi:', tagLokasiInput.value);
+                });
+            }
+        });
+    </script>
+
     
   
 </x-layout>

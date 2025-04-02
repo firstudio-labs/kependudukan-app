@@ -42,7 +42,7 @@ class KelolaAsetController extends Controller
             ->with(['klasifikasi', 'jenisAset'])
             ->paginate(10);
 
-        // Add location names to each asset
+      
         foreach ($assets as $asset) {
             $this->attachLocationNames($asset);
         }
@@ -134,6 +134,8 @@ class KelolaAsetController extends Controller
                 'rw' => 'nullable|string|max:3',
                 'klasifikasi_id' => 'required|integer',
                 'jenis_aset_id' => 'required|integer',
+                'tag_lat' => 'nullable|numeric',
+                'tag_lng' => 'nullable|numeric',
                 'tag_lokasi' => 'nullable|string',
                 'foto_aset_depan' => 'nullable|image|max:2048', 
                 'foto_aset_samping' => 'nullable|image|max:2048',
@@ -150,7 +152,7 @@ class KelolaAsetController extends Controller
                     $timestamp = time();
                     $filename = $timestamp . '_' . $assetName . '_depan.' . $file->getClientOriginalExtension();
 
-                    // Store in the public storage
+                    
                     $path = $file->storeAs('uploads/documents/foto-aset', $filename, 'public');
                     $foto_aset_depan = $path; 
                     Log::info('Foto depan saved', ['path' => $foto_aset_depan]);
@@ -167,7 +169,7 @@ class KelolaAsetController extends Controller
                 try {
                     $file = $request->file('foto_aset_samping');
 
-                    // Generate a better filename with asset name
+                    
                     $assetName = Str::slug(substr($validated['nama_aset'], 0, 30));
                     $timestamp = time();
                     $filename = $timestamp . '_' . $assetName . '_samping.' . $file->getClientOriginalExtension();
@@ -184,6 +186,16 @@ class KelolaAsetController extends Controller
                 }
             }
 
+            $tag_lokasi = null;
+            if ($request->filled('tag_lat') && $request->filled('tag_lng')) {
+                $latitude = number_format((float) $request->tag_lat, 6, '.', '');
+                $longitude = number_format((float) $request->tag_lng, 6, '.', '');
+                $tag_lokasi = "$latitude, $longitude";
+                Log::info('Coordinates formatted from fields', ['tag_lokasi' => $tag_lokasi]);
+            } else if ($request->filled('tag_lokasi')) {
+                $tag_lokasi = $request->tag_lokasi;
+            }
+
             $aset = Aset::create([
                 'nama_aset' => $validated['nama_aset'],  
                 'nik_pemilik' => $validated['nik'] ?? null,
@@ -197,7 +209,7 @@ class KelolaAsetController extends Controller
                 'rw' => $validated['rw'] ?? null,
                 'klasifikasi_id' => $validated['klasifikasi_id'],
                 'jenis_aset_id' => $validated['jenis_aset_id'],
-                'tag_lokasi' => $validated['tag_lokasi'] ?? null,
+                'tag_lokasi' => $tag_lokasi,
                 'foto_aset_depan' => $foto_aset_depan,
                 'foto_aset_samping' => $foto_aset_samping,
             ]);
@@ -223,11 +235,18 @@ class KelolaAsetController extends Controller
     public function edit($id)
     {
         $aset = Aset::findOrFail($id);
+
+       
+        if (!empty($aset->tag_lokasi)) {
+            $aset->tag_lat = $aset->getLatitudeAttribute();
+            $aset->tag_lng = $aset->getLongitudeAttribute();
+        }
+
         $klasifikasi = Klasifikasi::all();
         $jenis_aset = JenisAset::all();
         $provinces = $this->wilayahService->getProvinces();
 
-        // Get location data for pre-selecting dropdowns
+        
         $districts = $this->wilayahService->getKabupaten($aset->province_id);
         $subDistricts = $this->wilayahService->getKecamatan($aset->district_id);
         $villages = $this->wilayahService->getDesa($aset->sub_district_id);
@@ -261,6 +280,8 @@ class KelolaAsetController extends Controller
                 'rw' => 'nullable|string|max:3',
                 'klasifikasi_id' => 'required|integer',
                 'jenis_aset_id' => 'required|integer',
+                'tag_lat' => 'nullable|numeric',
+                'tag_lng' => 'nullable|numeric',
                 'tag_lokasi' => 'nullable|string',
                 'foto_aset_depan' => 'nullable|image|max:2048',
                 'foto_aset_samping' => 'nullable|image|max:2048',
@@ -272,7 +293,7 @@ class KelolaAsetController extends Controller
                     Storage::disk('public')->delete($aset->foto_aset_depan);
                 }
 
-                // Upload new photo
+               
                 $file = $request->file('foto_aset_depan');
                 $assetName = Str::slug(substr($validated['nama_aset'], 0, 30));
                 $timestamp = time();
@@ -297,6 +318,16 @@ class KelolaAsetController extends Controller
             }
 
 
+            $tag_lokasi = null;
+            if ($request->filled('tag_lat') && $request->filled('tag_lng')) {
+                $latitude = number_format((float) $request->tag_lat, 6, '.', '');
+                $longitude = number_format((float) $request->tag_lng, 6, '.', '');
+                $tag_lokasi = "$latitude, $longitude";
+                Log::info('Coordinates updated from fields', ['tag_lokasi' => $tag_lokasi]);
+            } else if ($request->filled('tag_lokasi')) {
+                $tag_lokasi = $request->tag_lokasi;
+            }
+
             $aset->update([
                 'nama_aset' => $validated['nama_aset'],
                 'nik_pemilik' => $validated['nik'] ?? null,
@@ -310,7 +341,7 @@ class KelolaAsetController extends Controller
                 'rw' => $validated['rw'] ?? null,
                 'klasifikasi_id' => $validated['klasifikasi_id'],
                 'jenis_aset_id' => $validated['jenis_aset_id'],
-                'tag_lokasi' => $validated['tag_lokasi'] ?? $aset->tag_lokasi,
+                'tag_lokasi' => $tag_lokasi,
                 'foto_aset_depan' => $validated['foto_aset_depan'] ?? $aset->foto_aset_depan,
                 'foto_aset_samping' => $validated['foto_aset_samping'] ?? $aset->foto_aset_samping,
             ]);
@@ -326,8 +357,6 @@ class KelolaAsetController extends Controller
         }
     }
 
-    
-
     public function show($id)
     {
         $aset = Aset::with(['klasifikasi', 'jenisAset'])->findOrFail($id);
@@ -341,7 +370,7 @@ class KelolaAsetController extends Controller
         try {
             $aset = Aset::findOrFail($id);
 
-            // Delete associated files
+            
             if ($aset->foto_aset_depan && Storage::disk('public')->exists($aset->foto_aset_depan)) {
                 Storage::disk('public')->delete($aset->foto_aset_depan);
             }

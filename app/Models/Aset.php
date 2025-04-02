@@ -29,6 +29,50 @@ class Aset extends Model
         'foto_aset_samping'
     ];
 
+    /**
+     * Get latitude from tag_lokasi
+     * 
+     * @return string|null
+     */
+    public function getLatitudeAttribute()
+    {
+        if (!$this->tag_lokasi) {
+            return null;
+        }
+
+        $parts = explode(',', $this->tag_lokasi);
+        return isset($parts[0]) ? trim($parts[0]) : null;
+    }
+
+    /**
+     * Get longitude from tag_lokasi
+     * 
+     * @return string|null
+     */
+    public function getLongitudeAttribute()
+    {
+        if (!$this->tag_lokasi) {
+            return null;
+        }
+
+        $parts = explode(',', $this->tag_lokasi);
+        return isset($parts[1]) ? trim($parts[1]) : null;
+    }
+
+    /**
+     * Set tag_lokasi from latitude and longitude
+     * 
+     * @param float|string $latitude
+     * @param float|string $longitude
+     * @return void
+     */
+    public function setCoordinates($latitude, $longitude)
+    {
+        if ($latitude && $longitude) {
+            $this->tag_lokasi = "$latitude, $longitude";
+        }
+    }
+
     public function klasifikasi()
     {
         return $this->belongsTo(Klasifikasi::class);

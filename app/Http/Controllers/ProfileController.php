@@ -461,4 +461,58 @@ class ProfileController extends Controller
             ], 500);
         }
     }
+
+    public function updateLocation(Request $request)
+    {
+        try {
+            $request->validate([
+                'tag_lokasi' => 'required|string'
+            ]);
+
+            if (Auth::guard('web')->check()) {
+                $userData = Auth::guard('web')->user();
+            } elseif (Auth::guard('penduduk')->check()) {
+                $userData = Auth::guard('penduduk')->user();
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User not authenticated'
+                ], 401);
+            }
+
+            $userData->tag_lokasi = $request->tag_lokasi;
+            $userData->save();
+
+          
+            if (Auth::guard('penduduk')->check() && !empty($userData->nik)) {
+                try {
+                    $response = $this->citizenService->updateCitizen((int) $userData->nik, [
+                        'coordinate' => $request->tag_lokasi
+                    ]);
+
+                    Log::info('API coordinate update response', [
+                        'nik' => $userData->nik,
+                        'response' => $response
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error('Error updating coordinates in API: ' . $e->getMessage(), [
+                        'nik' => $userData->nik,
+                        'coordinate' => $request->tag_lokasi
+                    ]);
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Lokasi berhasil disimpan'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error updating location: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menyimpan lokasi: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

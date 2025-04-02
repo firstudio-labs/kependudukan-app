@@ -16,16 +16,16 @@
             @endif
 
             @php
-                if (Auth::guard('web')->check()) {
-                    $userData = Auth::guard('web')->user();
-                    $userType = 'web';
-                } elseif (Auth::guard('penduduk')->check()) {
-                    $userData = Auth::guard('penduduk')->user();
-                    $userType = 'penduduk';
-                } else {
-                    $userData = null;
-                    $userType = null;
-                }
+if (Auth::guard('web')->check()) {
+    $userData = Auth::guard('web')->user();
+    $userType = 'web';
+} elseif (Auth::guard('penduduk')->check()) {
+    $userData = Auth::guard('penduduk')->user();
+    $userType = 'penduduk';
+} else {
+    $userData = null;
+    $userType = null;
+}
             @endphp
 
             <!-- Tabel Informasi Pribadi -->
@@ -85,10 +85,10 @@
                                         {{ $userData->citizen_data['full_name'] ?? ($userData->citizen_data['nama_kepala_keluarga'] ?? 'Belum diisi') }}
                                     @elseif(isset($userData->family_members))
                                         @php
-                                            $kepalaKeluarga = collect($userData->family_members)->firstWhere(
-                                                'family_status',
-                                                'KEPALA KELUARGA',
-                                            );
+    $kepalaKeluarga = collect($userData->family_members)->firstWhere(
+        'family_status',
+        'KEPALA KELUARGA',
+    );
                                         @endphp
                                         {{ $kepalaKeluarga['full_name'] ?? ($userData->citizen_data['nama_kepala_keluarga'] ?? 'Belum diisi') }}
                                     @else
@@ -1622,6 +1622,61 @@
                             document.addEventListener('DOMContentLoaded', function () {
                                 const saveLocationBtn = document.getElementById('saveLocationBtn');
                                 const locationSaveStatus = document.getElementById('locationSaveStatus');
+                                const tagLatInput = document.getElementById('tagLat');
+                                const tagLngInput = document.getElementById('tagLng');
+
+                                function initializeExistingLocation() {
+                                   
+                                    const nik = "{{ $userData->nik ?? '' }}";
+                                    if (!nik) {
+                                        console.log('NIK pengguna tidak tersedia, tidak dapat memuat koordinat');
+                                        return;
+                                    }
+
+                                    console.log('Mengambil koordinat untuk NIK:', nik);
+
+                                    fetch(`http://api-kependudukan.desaverse.id:3000/api/citizens/${nik}`, {
+                                        method: 'GET',
+                                        headers: {
+                                            'X-API-Key': '{{ config('services.kependudukan.key') }}',
+                                            'Accept': 'application/json'
+                                        }
+                                    })
+                                        .then(response => {
+                                            if (!response.ok) {
+                                                throw new Error(`HTTP error! Status: ${response.status}`);
+                                            }
+                                            return response.json();
+                                        })
+                                        .then(data => {
+                                            if (data.data && data.data.coordinate) {
+                                                const coordinates = data.data.coordinate.split(',');
+                                                if (coordinates.length === 2) {
+                                                    const lat = coordinates[0].trim();
+                                                    const lng = coordinates[1].trim();
+
+                                                    tagLatInput.value = lat;
+                                                    tagLngInput.value = lng;
+
+                                        
+                                                    if (window.map && window.marker) {
+                                                        window.marker.setLatLng([lat, lng]);
+                                                        window.map.setView([lat, lng], 15);
+                                                    }
+
+                                                    console.log('Berhasil memuat koordinat dari API:', lat, lng);
+                                                }
+                                            } else {
+                                                console.log('Tidak ada koordinat tersimpan untuk pengguna ini');
+                                            }
+                                        })
+                                        .catch(error => {
+                                            console.error('Error loading location:', error);
+                                        });
+                                }
+
+                            
+                                initializeExistingLocation();
 
                                 function resetSaveButton() {
                                     if (saveLocationBtn) {
@@ -1632,7 +1687,7 @@
 
                                 if (saveLocationBtn) {
                                     saveLocationBtn.addEventListener('click', function () {
-                                        // Get latitude and longitude values
+                                 
                                         const lat = document.getElementById('tagLat').value;
                                         const lng = document.getElementById('tagLng').value;
 
@@ -1641,21 +1696,21 @@
                                             return;
                                         }
 
-                                        // Format coordinates for API without any spaces
+                                      
                                         const coordinate = `${lat},${lng}`;
                                         console.log('Sending coordinate:', coordinate);
 
-                                        // Show loading state
+                                       
                                         saveLocationBtn.disabled = true;
                                         saveLocationBtn.innerHTML = `
-            <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            Menyimpan...
-            `;
+                                        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        Menyimpan...
+                                        `;
 
-                                        // Get NIK
+                                        
                                         const nik = "{{ $userData->nik ?? '' }}";
                                         if (!nik) {
                                             showLocationStatus('error', 'NIK pengguna tidak ditemukan');
@@ -1663,7 +1718,7 @@
                                             return;
                                         }
 
-                                        // First, fetch the current user data
+                                        
                                         fetch(`http://api-kependudukan.desaverse.id:3000/api/citizens/${nik}`, {
                                             method: 'GET',
                                             headers: {
@@ -1682,13 +1737,10 @@
                                                     throw new Error('Data tidak ditemukan');
                                                 }
 
-                                                // Convert data to proper format for API
                                                 const citizenData = convertDataToApiFormat(data.data);
 
-                                                // Update with new coordinate
                                                 citizenData.coordinate = coordinate;
 
-                                                // Log the formatted data being sent
                                                 console.log('Formatted data structure:', citizenData);
                                                 console.log('Sending data to API:', JSON.stringify(citizenData));
 
@@ -1705,7 +1757,7 @@
                                             })
                                             .then(response => {
                                                 if (!response.ok) {
-                                                    // Enhanced error handling to get more details
+                                                    
                                                     return response.text().then(text => {
                                                         let errorMessage = `HTTP error! Status: ${response.status}`;
                                                         try {
@@ -1737,20 +1789,20 @@
                                     });
                                 }
 
-                                // Convert data from display format to API format
+                               
                                 function convertDataToApiFormat(data) {
-                                    // Create a copy to avoid mutating the original
+
                                     const result = { ...data };
 
-                                    // Convert gender
+                                    
                                     if (result.gender === 'Laki-Laki') result.gender = 1;
                                     else if (result.gender === 'Perempuan') result.gender = 2;
 
-                                    // Convert citizen status
+                                    
                                     if (result.citizen_status === 'WNI') result.citizen_status = 1;
                                     else if (result.citizen_status === 'WNA') result.citizen_status = 2;
 
-                                    // Convert family_status string to integer (IMPORTANT FIX)
+                                   
                                     const familyStatusMap = {
                                         'ANAK': 1, 'Anak': 1,
                                         'KEPALA KELUARGA': 2, 'Kepala Keluarga': 2,
@@ -1764,7 +1816,6 @@
                                         result.family_status = familyStatusMap[result.family_status];
                                     }
 
-                                    // Continue with the rest of your conversions...
                                     const bloodTypeMap = {
                                         'A': 1, 'B': 2, 'AB': 3, 'O': 4,
                                         'A+': 5, 'A-': 6, 'B+': 7, 'B-': 8,
@@ -1773,7 +1824,6 @@
                                     };
                                     if (bloodTypeMap[result.blood_type]) result.blood_type = bloodTypeMap[result.blood_type];
 
-                                    // Convert religion
                                     const religionMap = {
                                         'Islam': 1, 'Kristen': 2, 'Katolik': 3, 'Katholik': 3,
                                         'Hindu': 4, 'Buddha': 5, 'Budha': 5, 'Kong Hu Cu': 6,
@@ -1781,14 +1831,12 @@
                                     };
                                     if (religionMap[result.religion]) result.religion = religionMap[result.religion];
 
-                                    // Convert marital status
                                     const maritalMap = {
                                         'Belum Kawin': 1, 'Kawin Tercatat': 2, 'Kawin Belum Tercatat': 3,
                                         'Cerai Hidup Tercatat': 4, 'Cerai Hidup Belum Tercatat': 5, 'Cerai Mati': 6
                                     };
                                     if (maritalMap[result.marital_status]) result.marital_status = maritalMap[result.marital_status];
 
-                                    // Convert yes/no fields
                                     if (result.birth_certificate === 'Ada') result.birth_certificate = 1;
                                     else if (result.birth_certificate === 'Tidak Ada') result.birth_certificate = 2;
 
@@ -1801,21 +1849,19 @@
                                     if (result.mental_disorders === 'Ada') result.mental_disorders = 1;
                                     else if (result.mental_disorders === 'Tidak Ada') result.mental_disorders = 2;
 
-                                     // Fix for disabilities field - handle empty string case
                                     const disabilitiesMap = {
                                         'Fisik': 1, 'Netra/Buta': 2, 'Rungu/Wicara': 3,
                                         'Mental/Jiwa': 4, 'Fisik dan Mental': 5, 'Lainnya': 6
                                     };
                                     if (typeof result.disabilities === 'string') {
                                         if (result.disabilities === '' || result.disabilities === ' ') {
-                                            // Default to 6 (Lainnya) if empty string
+
                                             result.disabilities = 6;
                                         } else if (disabilitiesMap[result.disabilities]) {
                                             result.disabilities = disabilitiesMap[result.disabilities];
                                         }
                                     }
 
-                                    // Convert education status
                                     const educationMap = {
                                         'Tidak/Belum Sekolah': 1, 'Belum tamat SD/Sederajat': 2, 'Tamat SD': 3,
                                         'SLTP/SMP/Sederajat': 4, 'SLTA/SMA/Sederajat': 5, 'Diploma I/II': 6,
@@ -1824,7 +1870,6 @@
                                     };
                                     if (educationMap[result.education_status]) result.education_status = educationMap[result.education_status];
 
-                                    // Format dates to YYYY-MM-DD
                                     if (result.birth_date && result.birth_date.includes('/')) {
                                         const parts = result.birth_date.split('/');
                                         if (parts.length === 3) {
@@ -1835,7 +1880,6 @@
                                     if (result.marriage_date === '') result.marriage_date = ' ';
                                     if (result.divorce_certificate_date === '') result.divorce_certificate_date = ' ';
 
-                                    // Handle empty strings
                                     if (result.birth_certificate_no === '') result.birth_certificate_no = ' ';
                                     if (result.marital_certificate_no === '') result.marital_certificate_no = ' ';
                                     if (result.divorce_certificate_no === '') result.divorce_certificate_no = ' ';
@@ -1853,7 +1897,6 @@
                                         locationSaveStatus.classList.add('text-red-600');
                                     }
 
-                                    // Hide status after 5 seconds
                                     setTimeout(() => {
                                         locationSaveStatus.classList.add('hidden');
                                     }, 5000);

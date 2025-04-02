@@ -194,7 +194,7 @@
                             latitude="{{ old('tag_lat') ?? '' }}" longitudeId="tag_lng" longitudeName="tag_lng"
                             longitude="{{ old('tag_lng') ?? '' }}" modalId="" />
                 
-                        <!-- Hidden input to store combined coordinates -->
+                       
                         <input type="hidden" id="tag_lokasi" name="tag_lokasi" value="{{ old('tag_lokasi') ?? '' }}">
                     </div>
                 </div>
@@ -234,7 +234,7 @@
         });
     @endif
 
-    // Store NIK data globally to access it later
+    
     let nikData = [];
     let selectedNikData = null;
 
@@ -242,7 +242,7 @@
         try {
             const nikDropdown = document.getElementById('nik-dropdown');
             
-            // Show loading state
+            
             nikDropdown.innerHTML = '<div class="px-4 py-2 text-sm text-gray-500">Loading NIK data...</div>';
             nikDropdown.classList.remove('hidden');
             
@@ -261,18 +261,18 @@
             
             const responseData = await response.json();
             
-            // Clear dropdown
+           
             nikDropdown.innerHTML = '';
             
-            // Check if data is available
+           
             if (responseData.status === 'OK' && responseData.data && Array.isArray(responseData.data)) {
-                // Store NIK data globally
+                
                 nikData = responseData.data;
                 
-                // Sort citizens by NIK for easier lookup
+                
                 nikData.sort((a, b) => String(a.nik).localeCompare(String(b.nik)));
                 
-                // Add each NIK to the dropdown
+                
                 nikData.forEach(citizen => {
                     if (citizen.nik) {
                         const option = document.createElement('div');
@@ -300,7 +300,7 @@
         }
     }
 
-    // Function to select a NIK from dropdown
+    
     function selectNIK(nik, name) {
         const nikInput = document.getElementById('nik-input');
         const namaInput = document.getElementById('nama_pemilik');
@@ -308,46 +308,45 @@
         
         nikInput.value = nik;
         
-        // Only set the name if it's available and the nama_pemilik field exists
+       
         if (name && namaInput) {
             namaInput.value = name;
             selectedNikData = {nik, name};
         }
         
-        // Hide dropdown
+       
         dropdown.classList.add('hidden');
     }
 
-    // Add event listeners when document is loaded
+    
     document.addEventListener('DOMContentLoaded', function() {
         const nikInput = document.getElementById('nik-input');
         const nikDropdown = document.getElementById('nik-dropdown');
         const toggleButton = document.getElementById('toggle-nik-dropdown');
         
-        // Toggle dropdown when button is clicked
+        
         toggleButton.addEventListener('click', function() {
             nikDropdown.classList.toggle('hidden');
-            // Load NIK data if not already loaded
+            
             if (nikData.length === 0) {
                 fetchNIKData();
             }
         });
         
-        // Filter dropdown options when typing in the input
+        
         nikInput.addEventListener('input', function() {
             const searchText = this.value.toLowerCase();
             
-            // If NIK data is loaded
+          
             if (nikData.length > 0) {
-                // Filter the options based on input
                 const filteredData = nikData.filter(citizen => 
                     String(citizen.nik).toLowerCase().includes(searchText)
                 );
                 
-                // Clear dropdown
+                
                 nikDropdown.innerHTML = '';
                 
-                // Add filtered options
+                
                 filteredData.forEach(citizen => {
                     if (citizen.nik) {
                         const option = document.createElement('div');
@@ -362,15 +361,15 @@
                     }
                 });
                 
-                // Show dropdown
+                
                 nikDropdown.classList.remove('hidden');
             } else {
-                // Load NIK data if not already loaded
+                
                 fetchNIKData();
             }
         });
         
-        // Hide dropdown when clicking outside
+        
         document.addEventListener('click', function(event) {
             if (!nikInput.contains(event.target) && 
                 !nikDropdown.contains(event.target) && 
@@ -379,7 +378,7 @@
             }
         });
         
-        // Preload NIK data
+       
         fetchNIKData();
     });
 </script>
@@ -392,23 +391,24 @@
             const subDistrictSelect = document.getElementById('sub_district_code');
             const villageSelect = document.getElementById('village_code');
 
-            // Hidden inputs for IDs
+            
             const provinceIdInput = document.getElementById('province_id');
             const districtIdInput = document.getElementById('district_id');
             const subDistrictIdInput = document.getElementById('sub_district_id');
             const villageIdInput = document.getElementById('village_id');
 
-           // Set up coordinate combination for tag_lokasi
+           
             const tagLatInput = document.getElementById('tag_lat');
             const tagLngInput = document.getElementById('tag_lng');
             const tagLokasiInput = document.getElementById('tag_lokasi');
             
-            function updateTagLokasi() {
+           function updateTagLokasi() {
                 const lat = tagLatInput ? tagLatInput.value.trim() : '';
                 const lng = tagLngInput ? tagLngInput.value.trim() : '';
-                
+
                 if (lat && lng && tagLokasiInput) {
-                    tagLokasiInput.value = lat + ',' + lng;
+                  
+                    tagLokasiInput.value = lat + ', ' + lng;
                     console.log('Tag lokasi updated:', tagLokasiInput.value);
                 } else if (tagLokasiInput) {
                     tagLokasiInput.value = '';
@@ -418,14 +418,14 @@
             if (tagLatInput) tagLatInput.addEventListener('change', updateTagLokasi);
             if (tagLngInput) tagLngInput.addEventListener('change', updateTagLokasi);
 
-            // Helper function to reset select options
+           
             function resetSelect(select, defaultText = 'Pilih', hiddenInput = null) {
                 select.innerHTML = `<option value="">${defaultText}</option>`;
                 select.disabled = true;
                 if (hiddenInput) hiddenInput.value = '';
             }
 
-            // Helper function to populate select options with code as value and id as data attribute
+           
             function populateSelect(select, data, defaultText, hiddenInput = null) {
                 try {
                     select.innerHTML = `<option value="">${defaultText}</option>`;
@@ -448,7 +448,7 @@
                 }
             }
 
-            // Update hidden input when selection changes
+           
             function updateHiddenInput(select, hiddenInput) {
                 const selectedOption = select.options[select.selectedIndex];
                 if (selectedOption && selectedOption.hasAttribute('data-id')) {
@@ -458,11 +458,11 @@
                 }
             }
 
-           // Province change handler
+           
             provinceSelect.addEventListener('change', function () {
                 const provinceCode = this.value;
 
-                // Update the hidden input with the ID
+                
                 updateHiddenInput(this, provinceIdInput);
 
                 resetSelect(districtSelect, 'Loading...', districtIdInput);
@@ -486,10 +486,10 @@
                 }
             });
 
-            // District change handler
+           
             districtSelect.addEventListener('change', function () {
                 const districtCode = this.value;
-                // Update hidden input with ID
+               
                 updateHiddenInput(this, districtIdInput);
 
                 resetSelect(subDistrictSelect, 'Loading...', subDistrictIdInput);
@@ -512,10 +512,10 @@
                 }
             });
 
-            // Sub-district change handler
+            
             subDistrictSelect.addEventListener('change', function () {
                 const subDistrictCode = this.value;
-                // Update hidden input with ID
+              
                 updateHiddenInput(this, subDistrictIdInput);
 
                 resetSelect(villageSelect, 'Loading...', villageIdInput);
@@ -537,13 +537,11 @@
                 }
             });
 
-            // Village change handler
             villageSelect.addEventListener('change', function () {
-                // Update hidden input with ID
+                
                 updateHiddenInput(this, villageIdInput);
             });
 
-            // Form validation
             document.querySelector('form').addEventListener('submit', function (e) {
                 const provinceId = document.getElementById('province_id').value;
                 const districtId = document.getElementById('district_id').value;
@@ -560,7 +558,46 @@
                     return false;
                 }
                 
-                // Update tag_lokasi before submit
+                updateTagLokasi();
+            });
+        });
+    </script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Set up coordinate combination for tag_lokasi
+            const tagLatInput = document.getElementById('tag_lat');
+            const tagLngInput = document.getElementById('tag_lng');
+            const tagLokasiInput = document.getElementById('tag_lokasi');
+
+            function updateTagLokasi() {
+                const lat = tagLatInput ? tagLatInput.value.trim() : '';
+                const lng = tagLngInput ? tagLngInput.value.trim() : '';
+
+                if (lat && lng && tagLokasiInput) {
+                    tagLokasiInput.value = `${lat}, ${lng}`;
+                    console.log('Tag lokasi updated:', tagLokasiInput.value);
+                } else if (tagLokasiInput) {
+                    tagLokasiInput.value = '';
+                }
+            }
+
+            // Update combined coordinates whenever latitude or longitude changes
+            if (tagLatInput) {
+                tagLatInput.addEventListener('change', updateTagLokasi);
+                tagLatInput.addEventListener('input', updateTagLokasi);
+            }
+
+            if (tagLngInput) {
+                tagLngInput.addEventListener('change', updateTagLokasi);
+                tagLngInput.addEventListener('input', updateTagLokasi);
+            }
+
+            // Initialize combined value if coordinates already exist
+            updateTagLokasi();
+
+            // Also update right before form submission
+            document.querySelector('form').addEventListener('submit', function (e) {
                 updateTagLokasi();
             });
         });
