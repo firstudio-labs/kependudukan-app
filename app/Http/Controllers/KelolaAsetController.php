@@ -73,8 +73,7 @@ class KelolaAsetController extends Controller
     public function store(Request $request)
     {
         try {
-            Log::info('Asset creation started', ['all_data' => $request->all()]);
-
+           
             $validated = $request->validate([
                 'nama_aset' => 'required|string|max:255', 
                 'nik' => 'nullable|string|max:16',
@@ -95,8 +94,6 @@ class KelolaAsetController extends Controller
                 'foto_aset_samping' => 'nullable|image|max:2048',
             ]);
 
-            Log::info('Validation passed', ['validated' => $validated]);
-
             $foto_aset_depan = null;
             if ($request->hasFile('foto_aset_depan')) {
                 try {
@@ -109,11 +106,10 @@ class KelolaAsetController extends Controller
                     
                     $path = $file->storeAs('uploads/documents/foto-aset', $filename, 'public');
                     $foto_aset_depan = $path; 
-                    Log::info('Foto depan saved', ['path' => $foto_aset_depan]);
+                   
                 } catch (\Exception $e) {
                     Log::error('Error saving foto depan', [
-                        'error' => $e->getMessage(),
-                        'trace' => $e->getTraceAsString()
+                        'error' => $e->getMessage()
                     ]);
                 }
             }
@@ -128,14 +124,12 @@ class KelolaAsetController extends Controller
                     $timestamp = time();
                     $filename = $timestamp . '_' . $assetName . '_samping.' . $file->getClientOriginalExtension();
 
-                    // Store in the public storage
                     $path = $file->storeAs('uploads/documents/foto-aset', $filename, 'public');
                     $foto_aset_samping = $path; 
-                    Log::info('Foto samping saved', ['path' => $foto_aset_samping]);
+                   
                 } catch (\Exception $e) {
                     Log::error('Error saving foto samping', [
-                        'error' => $e->getMessage(),
-                        'trace' => $e->getTraceAsString()
+                        'error' => $e->getMessage()
                     ]);
                 }
             }
@@ -145,7 +139,6 @@ class KelolaAsetController extends Controller
                 $latitude = number_format((float) $request->tag_lat, 6, '.', '');
                 $longitude = number_format((float) $request->tag_lng, 6, '.', '');
                 $tag_lokasi = "$latitude, $longitude";
-                Log::info('Coordinates formatted from fields', ['tag_lokasi' => $tag_lokasi]);
             } else if ($request->filled('tag_lokasi')) {
                 $tag_lokasi = $request->tag_lokasi;
             }
@@ -169,17 +162,14 @@ class KelolaAsetController extends Controller
                 'foto_aset_samping' => $foto_aset_samping,
             ]);
 
-            Log::info('Asset created successfully', ['asset_id' => $aset->id]);
+            Log::info('Asset created', ['id' => $aset->id]);
 
             return redirect()
                 ->route('user.kelola-aset.index')
                 ->with('success', 'Data aset berhasil disimpan');
 
         } catch (\Exception $e) {
-            Log::error('Error creating asset', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
+            Log::error('Error creating asset: ' . $e->getMessage());
 
             return back()
                 ->withInput()
@@ -252,7 +242,6 @@ class KelolaAsetController extends Controller
                     Storage::disk('public')->delete($aset->foto_aset_depan);
                 }
 
-               
                 $file = $request->file('foto_aset_depan');
                 $assetName = Str::slug(substr($validated['nama_aset'], 0, 30));
                 $timestamp = time();
@@ -267,7 +256,6 @@ class KelolaAsetController extends Controller
                     Storage::disk('public')->delete($aset->foto_aset_samping);
                 }
 
-              
                 $file = $request->file('foto_aset_samping');
                 $assetName = Str::slug(substr($validated['nama_aset'], 0, 30));
                 $timestamp = time();
@@ -281,7 +269,6 @@ class KelolaAsetController extends Controller
                 $latitude = number_format((float) $request->tag_lat, 6, '.', '');
                 $longitude = number_format((float) $request->tag_lng, 6, '.', '');
                 $tag_lokasi = "$latitude, $longitude";
-                Log::info('Coordinates updated from fields', ['tag_lokasi' => $tag_lokasi]);
             } else if ($request->filled('tag_lokasi')) {
                 $tag_lokasi = $request->tag_lokasi;
             }

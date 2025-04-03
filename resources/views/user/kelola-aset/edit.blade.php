@@ -119,8 +119,6 @@
                     </select>
                 </div>
 
-               
-
                 <!-- RT -->
                 <div>
                     <label for="rt" class="block text-sm font-medium text-gray-700">RT</label>
@@ -323,7 +321,6 @@
                         }
                     });
 
-                    console.log(`Loaded ${nikData.length} NIKs from API`);
                 } else {
                     console.error('Invalid or empty data format in API response:', responseData);
                     nikDropdown.innerHTML = '<div class="px-4 py-2 text-sm text-gray-500">Tidak ada data NIK tersedia</div>';
@@ -433,7 +430,6 @@
                 }
             };
 
-            console.log('Location IDs:', config.locationIds);
 
             const provinceSelect = document.getElementById('province_id');
             const districtSelect = document.getElementById('district_id');
@@ -671,7 +667,7 @@
             if (form) {
                 form.addEventListener('submit', function (e) {
                     updateTagLokasi();
-                    console.log('Form submitted with tag_lokasi:', tagLokasiInput.value);
+                    
                 });
             }
         });

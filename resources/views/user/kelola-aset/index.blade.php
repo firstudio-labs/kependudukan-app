@@ -281,7 +281,6 @@
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // Configuration
             const config = {
                 baseUrl: 'http://api-kependudukan.desaverse.id:3000/api',
                 apiKey: '{{ config('services.kependudukan.key') }}',
@@ -308,9 +307,8 @@
                 }
             };
 
-            // Original showDetailModal function
             window.showDetailModal = function (asset) {
-                // Use the existing location names if available from the controller
+
                 document.getElementById('detailNIK').textContent = asset.nik_pemilik || '-';
                 document.getElementById('detailNamaPemilik').textContent = asset.nama_pemilik || '-';
                 document.getElementById('detailNamaAset').textContent = asset.nama_aset || '-';
@@ -324,7 +322,6 @@
                 document.getElementById('detailJenisAset').textContent = asset.jenis_aset ? asset.jenis_aset.jenis_aset : '-';
                 document.getElementById('detailTagLokasi').textContent = asset.tag_lokasi || '-';
 
-                // Display asset photos
                 const fotoContainer = document.getElementById('detailFotoAset');
                 fotoContainer.innerHTML = '';
 
@@ -348,20 +345,19 @@
                     fotoContainer.innerHTML = '<p class="text-sm text-gray-500">Tidak ada foto</p>';
                 }
 
-                // If location names are missing, fetch them
+                
                 if (!asset.province_name || !asset.district_name || !asset.sub_district_name || !asset.village_name) {
                     fetchLocationNames(asset);
                 }
 
-                // Show the modal
+                
                 document.getElementById('detailModal').classList.remove('hidden');
             };
 
-            // Function to fetch location names
             async function fetchLocationNames(asset) {
                 if (asset.province_id) {
                     try {
-                        // Get province name
+                        
                         const provinces = await api.request(`${config.baseUrl}/provinces`);
                         const province = provinces.find(p => p.id == asset.province_id);
                         if (province) {
@@ -370,7 +366,7 @@
                         }
 
                         if (asset.district_id) {
-                            // Get district name
+                            
                             const districts = await api.request(`${config.baseUrl}/districts/${province.code}`);
                             const district = districts.find(d => d.id == asset.district_id);
                             if (district) {
@@ -378,7 +374,7 @@
                                 asset.district_name = district.name;
 
                                 if (asset.sub_district_id) {
-                                    // Get sub-district name
+                                    
                                     const subDistricts = await api.request(`${config.baseUrl}/sub-districts/${district.code}`);
                                     const subDistrict = subDistricts.find(sd => sd.id == asset.sub_district_id);
                                     if (subDistrict) {
@@ -386,7 +382,7 @@
                                         asset.sub_district_name = subDistrict.name;
 
                                         if (asset.village_id) {
-                                            // Get village name
+                                            
                                             const villages = await api.request(`${config.baseUrl}/villages/${subDistrict.code}`);
                                             const village = villages.find(v => v.id == asset.village_id);
                                             if (village) {
@@ -421,7 +417,7 @@
 
     <script>
         function showDetailModal(asset) {
-            // Populate modal with asset details
+           
             document.getElementById('detailNIK').textContent = asset.nik_pemilik || '-';
             document.getElementById('detailNamaPemilik').textContent = asset.nama_pemilik || '-';
             document.getElementById('detailNamaAset').textContent = asset.nama_aset || '-';
@@ -435,7 +431,7 @@
             document.getElementById('detailJenisAset').textContent = asset.jenis_aset ? asset.jenis_aset.jenis_aset : '-';
             document.getElementById('detailTagLokasi').textContent = asset.tag_lokasi || '-';
 
-            // Display asset photos
+            
             const fotoContainer = document.getElementById('detailFotoAset');
             fotoContainer.innerHTML = '';
 

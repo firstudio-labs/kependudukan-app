@@ -268,16 +268,16 @@ if (Auth::guard('web')->check()) {
                 </div>
 
                 @php
-                    $lat = '';
-                    $lng = '';
+$lat = '';
+$lng = '';
 
-                    if (!empty($userData->tag_lokasi)) {
-                        $coordinates = explode(',', $userData->tag_lokasi);
-                        if (count($coordinates) >= 2) {
-                            $lat = trim($coordinates[0]);
-                            $lng = trim($coordinates[1]);
-                        }
-                    }
+if (!empty($userData->tag_lokasi)) {
+    $coordinates = explode(',', $userData->tag_lokasi);
+    if (count($coordinates) >= 2) {
+        $lat = trim($coordinates[0]);
+        $lng = trim($coordinates[1]);
+    }
+}
                 @endphp
 
                 <x-map-input label="Lokasi Tempat Tinggal" addressId="user_address" addressName="user_address"
@@ -665,7 +665,6 @@ if (Auth::guard('web')->check()) {
                                 }
                                 };
 
-                                console.log('Location IDs:', config.locationIds);
 
                                 const api = {
                                     getHeaders() {
@@ -681,7 +680,7 @@ if (Auth::guard('web')->check()) {
                                             const response = await axios.get(url, { headers: this.getHeaders() });
                                             return response.data?.data || [];
                                         } catch (error) {
-                                            console.error(`API request error (${url}):`, error.message);
+                                            console.error(`API request error occurred`);
                                             return [];
                                         }
                                     }
@@ -908,7 +907,7 @@ if (Auth::guard('web')->check()) {
                                                 return null;
                                         }
                                     } catch (error) {
-                                        console.error(`Error fetching ${type} data:`, error);
+                                        console.error(`Error fetching location data`);
                                         return null;
                                     }
                                 }
@@ -936,13 +935,12 @@ if (Auth::guard('web')->check()) {
 
                                             if (data) {
                                                 element.innerText = data.name;
-                                                console.log(`${type.charAt(0).toUpperCase() + type.slice(1)} data loaded:`, data.name);
                                             } else {
                                                 element.innerText = 'Data tidak tersedia';
                                             }
                                         } catch (error) {
                                             element.innerText = 'Gagal memuat data';
-                                            console.error(`Error loading ${type} data:`, error);
+                                            console.error(`Failed to load location data`);
                                         }
 
                                         updatesCompleted++;
@@ -966,7 +964,6 @@ if (Auth::guard('web')->check()) {
                                         )
                                     ]);
 
-                                    console.log(`Location updates completed: ${updatesCompleted}/${updatesNeeded}`);
                                 }
 
 
@@ -1205,7 +1202,7 @@ if (Auth::guard('web')->check()) {
                                             updateDocumentStatus('fotoAkta', data.documents?.foto_akta || null);
                                             updateDocumentStatus('ijazah', data.documents?.ijazah || null);
                                         } else {
-                                            console.error('Error in document data response:', data);
+                                            console.error('Error retrieving document data. Please try again later.');
                                         }
                                     })
                                     .catch(error => {
@@ -1436,7 +1433,7 @@ if (Auth::guard('web')->check()) {
                                                 updateStandaloneDocumentStatus('fotoKk', data.documents?.foto_kk || null);
                                                 updateStandaloneDocumentStatus('fotoRumah', data.documents?.foto_rumah || null);
                                             } else {
-                                                console.error('Error in document data response:', data);
+                                                console.error('Error in document data response:');
                                             }
                                         })
                                         .catch(error => {
@@ -1633,7 +1630,7 @@ if (Auth::guard('web')->check()) {
                                         return;
                                     }
 
-                                    console.log('Mengambil koordinat untuk NIK:', nik);
+                                    
 
                                     fetch(`http://api-kependudukan.desaverse.id:3000/api/citizens/${nik}`, {
                                         method: 'GET',
@@ -1664,7 +1661,6 @@ if (Auth::guard('web')->check()) {
                                                         window.map.setView([lat, lng], 15);
                                                     }
 
-                                                    console.log('Berhasil memuat koordinat dari API:', lat, lng);
                                                 }
                                             } else {
                                                 console.log('Tidak ada koordinat tersimpan untuk pengguna ini');
@@ -1741,8 +1737,6 @@ if (Auth::guard('web')->check()) {
 
                                                 citizenData.coordinate = coordinate;
 
-                                                console.log('Formatted data structure:', citizenData);
-                                                console.log('Sending data to API:', JSON.stringify(citizenData));
 
                                                 // Update the citizen data
                                                 return fetch(`http://api-kependudukan.desaverse.id:3000/api/citizens/${nik}`, {
