@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Penduduk;
 use App\Models\Aset;
 use App\Services\CitizenService;
 use App\Models\Klasifikasi;
@@ -12,6 +11,7 @@ use Illuminate\Support\Facades\Log;
 use App\Services\WilayahService;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 
 class KelolaAsetController extends Controller
 {
@@ -27,13 +27,13 @@ class KelolaAsetController extends Controller
     }
 
 
-
     public function index(Request $request)
     {
         $search = $request->input('search');
         $page = $request->input('page', 1);
 
         $assets = Aset::query()
+            ->where('user_id', Auth::id())
             ->when($search, function ($query, $search) {
                 return $query->where('nama_aset', 'like', "%{$search}%")
                     ->orWhere('nik_pemilik', 'like', "%{$search}%")
@@ -48,52 +48,6 @@ class KelolaAsetController extends Controller
         }
 
         return view('user.kelola-aset.index', compact('assets'));
-    }
-
-    
-    private function attachLocationNames($asset)
-    {
-        try {
-            // Province
-            $provinces = $this->wilayahService->getProvinces();
-            foreach ($provinces as $province) {
-                if ($province['id'] == $asset->province_id) {
-                    $asset->province_name = $province['name'];
-                    break;
-                }
-            }
-
-            // District/Kabupaten
-            $districts = $this->wilayahService->getKabupaten($asset->province_id);
-            foreach ($districts as $district) {
-                if ($district['id'] == $asset->district_id) {
-                    $asset->district_name = $district['name'];
-                    break;
-                }
-            }
-
-            // Sub-district/Kecamatan
-            $subDistricts = $this->wilayahService->getKecamatan($asset->district_id);
-            foreach ($subDistricts as $subDistrict) {
-                if ($subDistrict['id'] == $asset->sub_district_id) {
-                    $asset->sub_district_name = $subDistrict['name'];
-                    break;
-                }
-            }
-
-            // Village/Desa
-            $villages = $this->wilayahService->getDesa($asset->sub_district_id);
-            foreach ($villages as $village) {
-                if ($village['id'] == $asset->village_id) {
-                    $asset->village_name = $village['name'];
-                    break;
-                }
-            }
-        } catch (\Exception $e) {
-            Log::error('Error fetching location names: ' . $e->getMessage());
-        }
-
-        return $asset;
     }
 
     public function create()
@@ -197,6 +151,7 @@ class KelolaAsetController extends Controller
             }
 
             $aset = Aset::create([
+                'user_id' => Auth::id(),
                 'nama_aset' => $validated['nama_aset'],  
                 'nik_pemilik' => $validated['nik'] ?? null,
                 'nama_pemilik' => $validated['nama_pemilik'] ?? null,
@@ -234,7 +189,9 @@ class KelolaAsetController extends Controller
 
     public function edit($id)
     {
-        $aset = Aset::findOrFail($id);
+        $aset = Aset::where('id', $id)
+            ->where('user_id', Auth::id()) 
+            ->firstOrFail();
 
        
         if (!empty($aset->tag_lokasi)) {
@@ -265,7 +222,9 @@ class KelolaAsetController extends Controller
     public function update(Request $request, $id)
     {
         try {
-            $aset = Aset::findOrFail($id);
+            $aset = Aset::where('id', $id)
+                ->where('user_id', Auth::id()) 
+                ->firstOrFail();
 
             $validated = $request->validate([
                 'nama_aset' => 'required|string|max:255',  
@@ -317,7 +276,6 @@ class KelolaAsetController extends Controller
                 $validated['foto_aset_samping'] = $path;
             }
 
-
             $tag_lokasi = null;
             if ($request->filled('tag_lat') && $request->filled('tag_lng')) {
                 $latitude = number_format((float) $request->tag_lat, 6, '.', '');
@@ -357,18 +315,57 @@ class KelolaAsetController extends Controller
         }
     }
 
-    public function show($id)
+    private function attachLocationNames($asset)
     {
-        $aset = Aset::with(['klasifikasi', 'jenisAset'])->findOrFail($id);
-        $this->attachLocationNames($aset);
+        try {
+            // Province
+            $provinces = $this->wilayahService->getProvinces();
+            foreach ($provinces as $province) {
+                if ($province['id'] == $asset->province_id) {
+                    $asset->province_name = $province['name'];
+                    break;
+                }
+            }
 
-        return view('user.kelola-aset.show', compact('aset'));
+            // District/Kabupaten
+            $districts = $this->wilayahService->getKabupaten($asset->province_id);
+            foreach ($districts as $district) {
+                if ($district['id'] == $asset->district_id) {
+                    $asset->district_name = $district['name'];
+                    break;
+                }
+            }
+
+            // Sub-district/Kecamatan
+            $subDistricts = $this->wilayahService->getKecamatan($asset->district_id);
+            foreach ($subDistricts as $subDistrict) {
+                if ($subDistrict['id'] == $asset->sub_district_id) {
+                    $asset->sub_district_name = $subDistrict['name'];
+                    break;
+                }
+            }
+
+            // Village/Desa
+            $villages = $this->wilayahService->getDesa($asset->sub_district_id);
+            foreach ($villages as $village) {
+                if ($village['id'] == $asset->village_id) {
+                    $asset->village_name = $village['name'];
+                    break;
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error('Error fetching location names: ' . $e->getMessage());
+        }
+
+        return $asset;
     }
 
     public function destroy($id)
     {
         try {
-            $aset = Aset::findOrFail($id);
+            $aset = Aset::where('id', $id)
+                ->where('user_id', Auth::id()) 
+                ->firstOrFail();
 
             
             if ($aset->foto_aset_depan && Storage::disk('public')->exists($aset->foto_aset_depan)) {

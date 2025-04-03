@@ -12,6 +12,7 @@ class Aset extends Model
     protected $table = 'aset';
 
     protected $fillable = [
+        'user_id',
         'nama_aset',
         'nik_pemilik',
         'nama_pemilik',
@@ -29,11 +30,12 @@ class Aset extends Model
         'foto_aset_samping'
     ];
 
-    /**
-     * Get latitude from tag_lokasi
-     * 
-     * @return string|null
-     */
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+
     public function getLatitudeAttribute()
     {
         if (!$this->tag_lokasi) {
@@ -44,11 +46,7 @@ class Aset extends Model
         return isset($parts[0]) ? trim($parts[0]) : null;
     }
 
-    /**
-     * Get longitude from tag_lokasi
-     * 
-     * @return string|null
-     */
+    
     public function getLongitudeAttribute()
     {
         if (!$this->tag_lokasi) {
@@ -59,13 +57,7 @@ class Aset extends Model
         return isset($parts[1]) ? trim($parts[1]) : null;
     }
 
-    /**
-     * Set tag_lokasi from latitude and longitude
-     * 
-     * @param float|string $latitude
-     * @param float|string $longitude
-     * @return void
-     */
+    
     public function setCoordinates($latitude, $longitude)
     {
         if ($latitude && $longitude) {
