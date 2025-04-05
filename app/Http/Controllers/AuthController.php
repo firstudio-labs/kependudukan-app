@@ -43,7 +43,7 @@ class AuthController extends Controller
         // If not found in users table, try with penduduk guard
         if (Auth::guard('penduduk')->attempt(['nik' => $request->nik, 'password' => $request->password])) {
             $penduduk = Auth::guard('penduduk')->user();
-            return redirect()->intended('/');
+            return redirect()->intended('/user/index');
         }
 
         return back()->with('error', 'NIK atau password salah.');

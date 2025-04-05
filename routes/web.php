@@ -21,17 +21,24 @@ use App\Http\Controllers\Surat\IzinKeramaianController;
 use App\Http\Controllers\Surat\RumahSewaController;
 use App\Http\Controllers\Surat\PengantarKtpController;
 use App\Http\Controllers\PenandatangananController;
+use App\Http\Controllers\KlasifikasiController;
+use App\Http\Controllers\JenisAsetController;
+use App\Http\Controllers\KelolaAsetController;
 
 Route::get('/', function () {
     return view('homepage');
 });
 
+
 // Rute Autentikasi
-Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [AuthController::class, 'login']);
-Route::get('/register', [AuthController::class, 'showRegistrationForm'])->name('register');
-Route::post('/register', [AuthController::class, 'register']);
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::get('/register', [AuthController::class, 'showRegistrationForm'])->name('register');
+    Route::post('/register', [AuthController::class, 'register']);
+});
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
 
 // Route untuk superadmin - menggunakan web guard
 Route::middleware(['auth:web', 'role:superadmin'])->group(function () {
@@ -280,6 +287,39 @@ Route::middleware(['auth:web', 'role:superadmin'])->group(function () {
     Route::delete('/superadmin/datamaster/surat/penandatangan/{id}', [PenandatangananController::class, 'destroy'])
         ->name('superadmin.datamaster.surat.penandatangan.destroy');
     Route::get('/penandatangan/dropdown', [PenandatangananController::class, 'getForDropdown'])->name('penandatangan.dropdown');
+
+
+
+    //Route Kelola Aset
+    // Klasifikasi routes
+    Route::get('/superadmin/datamaster/klasifikasi', [KlasifikasiController::class, 'index'])
+        ->name('superadmin.datamaster.klasifikasi.index');
+    Route::get('/superadmin/datamaster/klasifikasi/create', [KlasifikasiController::class, 'create'])
+        ->name('superadmin.datamaster.klasifikasi.create');
+    Route::post('/superadmin/datamaster/klasifikasi', [KlasifikasiController::class, 'store'])
+        ->name('superadmin.datamaster.klasifikasi.store');
+    Route::get('/superadmin/datamaster/klasifikasi/{id}/edit', [KlasifikasiController::class, 'edit'])
+        ->name('superadmin.datamaster.klasifikasi.edit');
+    Route::put('/superadmin/datamaster/klasifikasi/{id}', [KlasifikasiController::class, 'update'])
+        ->name('superadmin.datamaster.klasifikasi.update');
+    Route::delete('/superadmin/datamaster/klasifikasi/{id}', [KlasifikasiController::class, 'destroy'])
+        ->name('superadmin.datamaster.klasifikasi.destroy');
+
+    // Jenis Aset routes
+    Route::get('/superadmin/datamaster/jenis-aset', [JenisAsetController::class, 'index'])
+        ->name('superadmin.datamaster.jenis-aset.index');
+    Route::get('/superadmin/datamaster/jenis-aset/create', [JenisAsetController::class, 'create'])
+        ->name('superadmin.datamaster.jenis-aset.create');
+    Route::post('/superadmin/datamaster/jenis-aset', [JenisAsetController::class, 'store'])
+        ->name('superadmin.datamaster.jenis-aset.store');
+    Route::get('/superadmin/datamaster/jenis-aset/{id}/edit', [JenisAsetController::class, 'edit'])
+        ->name('superadmin.datamaster.jenis-aset.edit');
+    Route::put('/superadmin/datamaster/jenis-aset/{id}', [JenisAsetController::class, 'update'])
+        ->name('superadmin.datamaster.jenis-aset.update');
+    Route::delete('/superadmin/datamaster/jenis-aset/{id}', [JenisAsetController::class, 'destroy'])
+        ->name('superadmin.datamaster.jenis-aset.destroy');
+
+
 });
 
 // Route untuk admin - menggunakan web guard
@@ -296,18 +336,53 @@ Route::middleware(['auth:web', 'role:operator'])->group(function () {
     });
 });
 
-// Route untuk user - dapat diakses baik oleh penduduk atau user dengan role 'user'
-Route::middleware(['role:user'])->group(function () {
+
+// Route untuk penduduk - menggunakan auth penduduk
+Route::middleware(['auth:penduduk'])->group(function () {
     Route::get('/user/index', function () {
         return view('user.index');
     });
 
-    // Profile routes
-    Route::get('/user/profile', [ProfileController::class, 'index'])->name('user.profile.index');
-    Route::get('/user/profile/edit', [ProfileController::class, 'edit'])->name('user.profile.edit');
-    Route::put('/user/profile', [ProfileController::class, 'update'])->name('user.profile.update');
-    Route::get('/user/profile/create', [ProfileController::class, 'create'])->name('user.profile.create');
-    Route::post('/user/profile', [ProfileController::class, 'store'])->name('user.profile.store');
+    Route::get('/user/profile', [ProfileController::class, 'index'])
+        ->name('user.profile.index');
+    Route::get('/user/profile/edit', [ProfileController::class, 'edit'])
+        ->name('user.profile.edit');
+    Route::put('/user/profile', [ProfileController::class, 'update'])
+        ->name('user.profile.update');
+    Route::get('/user/profile/create', [ProfileController::class, 'create'])
+        ->name('user.profile.create');
+    Route::post('/user/profile', [ProfileController::class, 'store'])
+        ->name('user.profile.store');
+    Route::post('/user/profile/update-location', [ProfileController::class, 'updateLocation'])
+        ->name('user.profile.updateLocation');
+
+    Route::get('/user/family-member/{nik}/documents', [ProfileController::class, 'getFamilyMemberDocuments'])
+        ->name('user.family-member.documents');
+    Route::post('/user/family-member/{nik}/upload-document', [ProfileController::class, 'uploadFamilyMemberDocument'])
+        ->name('user.family-member.upload-document');
+    Route::delete('/user/family-member/{nik}/delete-document/{documentType}', [ProfileController::class, 'deleteFamilyMemberDocument'])
+        ->name('user.family-member.delete-document');
+    Route::get('/user/family-member/{nik}/document/{documentType}/view', [ProfileController::class, 'viewFamilyMemberDocument'])
+        ->name('user.family-member.view-document');
+
+    //Route Kelola Aser
+    Route::get('/user/kelola-aset', [KelolaAsetController::class, 'index'])
+        ->name('user.kelola-aset.index');
+    Route::get('/user/kelola-aset/create', [KelolaAsetController::class, 'create'])
+        ->name('user.kelola-aset.create');
+    Route::post('/user/kelola-aset', [KelolaAsetController::class, 'store'])
+        ->name('user.kelola-aset.store');
+    Route::get('/user/kelola-aset/{id}/edit', [KelolaAsetController::class, 'edit'])
+        ->name('user.kelola-aset.edit');
+    Route::put('/user/kelola-aset/{id}', [KelolaAsetController::class, 'update'])
+        ->name('user.kelola-aset.update');
+    Route::delete('/user/kelola-aset/{id}', [KelolaAsetController::class, 'destroy'])
+        ->name('user.kelola-aset.destroy');
+
+    // Route for searching citizen by NIK for asset management
+    Route::get('/citizens/search-by-nik/{nik}', [KelolaAsetController::class, 'searchByNik'])
+        ->name('citizens.search-by-nik');
+
 });
 
 // User management routes
