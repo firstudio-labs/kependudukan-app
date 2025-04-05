@@ -64,11 +64,10 @@ class KematianController extends Controller
      */
     public function create()
     {
-        // Get regions data from service
+        // Get jobs and regions data from services
         $provinces = $this->wilayahService->getProvinces();
-
-        // Get job types
         $jobs = $this->jobService->getAllJobs();
+        $signers = \App\Models\Penandatangan::all(); // Fetch signers
 
         // Initialize empty arrays for district, sub-district, and village data
         $districts = [];
@@ -76,11 +75,12 @@ class KematianController extends Controller
         $villages = [];
 
         return view('superadmin.datamaster.surat.kematian.create', compact(
+            'jobs',
             'provinces',
             'districts',
             'subDistricts',
             'villages',
-            'jobs'
+            'signers'
         ));
     }
 
@@ -189,24 +189,24 @@ class KematianController extends Controller
     {
         $kematian = Kematian::findOrFail($id);
 
-        // Get provinces data from service
+        // Get jobs and provinces data from services
         $provinces = $this->wilayahService->getProvinces();
         $jobs = $this->jobService->getAllJobs();
+        $signers = \App\Models\Penandatangan::all(); // Fetch signers
 
         // Initialize arrays for district, sub-district, and village data
         $districts = [];
         $subDistricts = [];
         $villages = [];
 
-
-
         return view('superadmin.datamaster.surat.kematian.edit', compact(
             'kematian',
+            'jobs',
             'provinces',
             'districts',
             'subDistricts',
             'villages',
-            'jobs'
+            'signers'
         ));
     }
 
@@ -432,22 +432,31 @@ class KematianController extends Controller
             $deathDate = \Carbon\Carbon::parse($kematian->death_date)->format('d F Y');
             $rtLetterDate = $kematian->rt_letter_date ? \Carbon\Carbon::parse($kematian->rt_letter_date)->format('d F Y') : null;
 
-            // Return view directly instead of generating PDF
-            return view('superadmin.datamaster.surat.kematian.Kematian', compact(
-                'kematian',
-                'provinceName',
-                'districtName',
-                'subdistrictName',
-                'villageName',
-                'jobName',
-                'religionName',
-                'genderName',
-                'citizenStatusName',
-                'birthDate',
-                'deathDate',
-                'rtLetterDate'
-            ));
+            // Get the signing name (keterangan) from Penandatangan model
+            $signing_name = null;
+            if (!empty($kematian->signing)) {
+                $penandatangan = \App\Models\Penandatangan::find($kematian->signing);
+                if ($penandatangan) {
+                    $signing_name = $penandatangan->keterangan;
+                }
+            }
 
+            // Return view directly instead of generating PDF
+            return view('superadmin.datamaster.surat.kematian.Kematian', [
+                'kematian' => $kematian,
+                'provinceName' => $provinceName,
+                'districtName' => $districtName,
+                'subdistrictName' => $subdistrictName,
+                'villageName' => $villageName,
+                'jobName' => $jobName,
+                'religionName' => $religionName,
+                'genderName' => $genderName,
+                'citizenStatusName' => $citizenStatusName,
+                'birthDate' => $birthDate,
+                'deathDate' => $deathDate,
+                'rtLetterDate' => $rtLetterDate,
+                'signing_name' => $signing_name // Pass the signing name to the view
+            ]);
         } catch (\Exception $e) {
             \Log::error('Error generating PDF: ' . $e->getMessage(), [
                 'id' => $id,

@@ -279,6 +279,7 @@ Route::middleware(['auth:web', 'role:superadmin'])->group(function () {
         ->name('superadmin.datamaster.surat.penandatangan.update');
     Route::delete('/superadmin/datamaster/surat/penandatangan/{id}', [PenandatangananController::class, 'destroy'])
         ->name('superadmin.datamaster.surat.penandatangan.destroy');
+    Route::get('/penandatangan/dropdown', [PenandatangananController::class, 'getForDropdown'])->name('penandatangan.dropdown');
 });
 
 // Route untuk admin - menggunakan web guard

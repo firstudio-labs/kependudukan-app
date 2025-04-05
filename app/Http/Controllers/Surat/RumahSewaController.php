@@ -5,26 +5,31 @@ namespace App\Http\Controllers\Surat;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\RumahSewa;
+use App\Models\Penandatangan;
 use App\Services\JobService;
 use App\Services\WilayahService;
 use App\Services\CitizenService;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Exception;
 
 class RumahSewaController extends Controller
 {
     protected $wilayahService;
     protected $citizenService;
+    protected $jobService;
 
     /**
      * Create a new controller instance.
      *
      * @param WilayahService $wilayahService
      * @param CitizenService $citizenService
+     * @param JobService $jobService
      */
-    public function __construct(WilayahService $wilayahService, CitizenService $citizenService)
+    public function __construct(WilayahService $wilayahService, CitizenService $citizenService, JobService $jobService)
     {
         $this->wilayahService = $wilayahService;
         $this->citizenService = $citizenService;
+        $this->jobService = $jobService;
     }
 
     /**
@@ -41,7 +46,7 @@ class RumahSewaController extends Controller
         if ($request->has('search') && !empty($request->search)) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('full_name', 'like', "%{$search}%") // Changed from organizer_name
+                $q->where('full_name', 'like', "%{$search}%")
                   ->orWhere('nik', 'like', "%{$search}%")
                   ->orWhere('responsible_name', 'like', "%{$search}%")
                   ->orWhere('rental_address', 'like', "%{$search}%")
@@ -61,19 +66,21 @@ class RumahSewaController extends Controller
      */
     public function create()
     {
-        // Get regions data from service
+        // Get jobs and regions data from services
         $provinces = $this->wilayahService->getProvinces();
+        $jobs = $this->jobService->getAllJobs();
 
-        // Initialize empty arrays for district, sub-district, and village data
-        $districts = [];
-        $subDistricts = [];
-        $villages = [];
+        try {
+            $signers = Penandatangan::all();
+        } catch (Exception $e) {
+            Log::error('Error fetching signers: ' . $e->getMessage());
+            $signers = collect();
+        }
 
         return view('superadmin.datamaster.surat.rumah-sewa.create', compact(
+            'jobs',
             'provinces',
-            'districts',
-            'subDistricts',
-            'villages'
+            'signers'
         ));
     }
 
@@ -85,39 +92,55 @@ class RumahSewaController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'province_id' => 'required|numeric', // Changed from string to numeric to match bigInteger
-            'district_id' => 'required|numeric', // Changed from string to numeric to match bigInteger
-            'subdistrict_id' => 'required|numeric', // Changed from string to numeric to match bigInteger
-            'village_id' => 'required|numeric', // Changed from string to numeric to match bigInteger
-            'letter_number' => 'nullable|string', // Changed from integer to string to match string column
-            'nik' => 'required|numeric', // Changed from string to numeric to match bigInteger
+        // Log incoming request data for debugging
+        Log::info('RumahSewa Store Request:', $request->all());
+
+        // Validation rules that match the form fields exactly
+        $validated = $request->validate([
+            // Location fields
+            'province_id' => 'required',
+            'district_id' => 'required',
+            'subdistrict_id' => 'required',
+            'village_id' => 'required',
+
+            // Personal information fields
+            'nik' => 'required|string',
             'full_name' => 'required|string|max:255',
             'address' => 'required|string',
             'responsible_name' => 'required|string|max:255',
+
+            // Rental property details
             'rental_address' => 'required|string',
             'street' => 'required|string|max:255',
             'village_name' => 'required|string|max:255',
             'alley_number' => 'required|string|max:50',
-            'rt' => 'required|string', // RT field as string to support values like "001", "002", etc.
+            'rt' => 'required|string',
             'building_area' => 'required|string|max:50',
-            'room_count' => 'required|integer', // Matches integer
+            'room_count' => 'required|integer|min:1',
             'rental_type' => 'required|string|max:255',
-            'valid_until' => 'nullable|date', // Matches date
+            'valid_until' => 'nullable|date',
+
+            // Letter information fields
+            'letter_number' => 'nullable|string',
             'signing' => 'nullable|string|max:255',
         ]);
 
         try {
-            // Map form fields to database fields if necessary
-            $formData = $request->all();
-
-            // Store the mapped data
-            RumahSewa::create($formData);
+            // Create new rental house record
+            $rumahSewa = new RumahSewa();
+            $rumahSewa->fill($validated);
+            $rumahSewa->save();
 
             return redirect()->route('superadmin.surat.rumah-sewa.index')
                 ->with('success', 'Izin rumah sewa berhasil dibuat!');
-        } catch (\Exception $e) {
-            return back()->with('error', 'Gagal membuat izin rumah sewa: ' . $e->getMessage());
+        } catch (Exception $e) {
+            // Log the error
+            Log::error('Failed to create Rumah Sewa: ' . $e->getMessage());
+            Log::error('Exception trace: ' . $e->getTraceAsString());
+
+            return back()
+                ->withInput()
+                ->with('error', 'Gagal membuat izin rumah sewa: ' . $e->getMessage());
         }
     }
 
@@ -183,23 +206,16 @@ class RumahSewaController extends Controller
     {
         $rumahSewa = RumahSewa::findOrFail($id);
 
-        // Get provinces data from service
+        // Get jobs and provinces data from services
         $provinces = $this->wilayahService->getProvinces();
-
-        // Initialize arrays for district, sub-district, and village data
-        $districts = [];
-        $subDistricts = [];
-        $villages = [];
-
-        // If we have province_id, try to get districts
-
+        $jobs = $this->jobService->getAllJobs();
+        $signers = Penandatangan::all();
 
         return view('superadmin.datamaster.surat.rumah-sewa.edit', compact(
             'rumahSewa',
+            'jobs',
             'provinces',
-            'districts',
-            'subDistricts',
-            'villages'
+            'signers'
         ));
     }
 
@@ -212,41 +228,46 @@ class RumahSewaController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $request->validate([
-            'province_id' => 'required|numeric', // Changed from string to numeric to match bigInteger
-            'district_id' => 'required|numeric', // Changed from string to numeric to match bigInteger
-            'subdistrict_id' => 'required|numeric', // Changed from string to numeric to match bigInteger
-            'village_id' => 'required|numeric', // Changed from string to numeric to match bigInteger
-            'letter_number' => 'nullable|string', // Changed from integer to string to match string column
-            'nik' => 'required|numeric', // Changed from string to numeric to match bigInteger
+        // Same validation rules as store to ensure consistency
+        $validated = $request->validate([
+            // Location fields
+            'province_id' => 'required',
+            'district_id' => 'required',
+            'subdistrict_id' => 'required',
+            'village_id' => 'required',
+
+            // Personal information fields
+            'nik' => 'required|string',
             'full_name' => 'required|string|max:255',
             'address' => 'required|string',
             'responsible_name' => 'required|string|max:255',
+
+            // Rental property details
             'rental_address' => 'required|string',
             'street' => 'required|string|max:255',
             'village_name' => 'required|string|max:255',
             'alley_number' => 'required|string|max:50',
-            'rt' => 'required|string', // RT field as string to support values like "001", "002", etc.
+            'rt' => 'required|string',
             'building_area' => 'required|string|max:50',
-            'room_count' => 'required|integer', // Matches integer
+            'room_count' => 'required|integer|min:1',
             'rental_type' => 'required|string|max:255',
-            'valid_until' => 'nullable|date', // Matches date
+            'valid_until' => 'nullable|date',
+
+            // Letter information fields
+            'letter_number' => 'nullable|string',
             'signing' => 'nullable|string|max:255',
         ]);
 
         try {
             $rumahSewa = RumahSewa::findOrFail($id);
-
-            // Map form fields to database fields if necessary
-            $formData = $request->all();
-
-            // Update with the mapped data
-            $rumahSewa->update($formData);
+            $rumahSewa->update($validated);
 
             return redirect()->route('superadmin.surat.rumah-sewa.index')
                 ->with('success', 'Izin rumah sewa berhasil diperbarui!');
-        } catch (\Exception $e) {
-            return back()->with('error', 'Gagal memperbarui izin rumah sewa: ' . $e->getMessage());
+        } catch (Exception $e) {
+            return back()
+                ->withInput()
+                ->with('error', 'Gagal memperbarui izin rumah sewa: ' . $e->getMessage());
         }
     }
 
@@ -281,7 +302,6 @@ class RumahSewaController extends Controller
             $rumahSewa = RumahSewa::findOrFail($id);
 
             // Ensure RT is displayed exactly as stored in the database
-            // This avoids any automatic type conversion
             $rtValue = $rumahSewa->rt;
 
             // Get location names using wilayah service
@@ -292,7 +312,6 @@ class RumahSewaController extends Controller
 
             // Get province data
             if (!empty($rumahSewa->province_id)) {
-                // Get all provinces and filter
                 $provinces = $this->wilayahService->getProvinces();
                 foreach ($provinces as $province) {
                     if ($province['id'] == $rumahSewa->province_id) {
@@ -304,7 +323,6 @@ class RumahSewaController extends Controller
 
             // Get district/kabupaten data
             if (!empty($rumahSewa->district_id) && !empty($provinceName)) {
-                // First try with province code if available
                 $provinceCode = null;
                 foreach ($this->wilayahService->getProvinces() as $province) {
                     if ($province['id'] == $rumahSewa->province_id) {
@@ -326,7 +344,6 @@ class RumahSewaController extends Controller
 
             // Get subdistrict/kecamatan data
             if (!empty($rumahSewa->subdistrict_id) && !empty($districtName)) {
-                // Get district code first
                 $districtCode = null;
                 if (!empty($provinceCode)) {
                     $districts = $this->wilayahService->getKabupaten($provinceCode);
@@ -351,7 +368,6 @@ class RumahSewaController extends Controller
 
             // Get village/desa data
             if (!empty($rumahSewa->village_id) && !empty($subdistrictName)) {
-                // Get subdistrict code first
                 $subdistrictCode = null;
                 if (!empty($districtCode)) {
                     $subdistricts = $this->wilayahService->getKecamatan($districtCode);
@@ -377,6 +393,15 @@ class RumahSewaController extends Controller
             // Format date
             $validUntilDate = $rumahSewa->valid_until ? \Carbon\Carbon::parse($rumahSewa->valid_until)->locale('id')->isoFormat('D MMMM Y') : '-';
 
+            // Get the signing name (keterangan) from Penandatangan model
+            $signing_name = null;
+            if (!empty($rumahSewa->signing)) {
+                $penandatangan = \App\Models\Penandatangan::find($rumahSewa->signing);
+                if ($penandatangan) {
+                    $signing_name = $penandatangan->keterangan;
+                }
+            }
+
             // Return view directly instead of generating PDF
             return view('superadmin.datamaster.surat.rumah-sewa.IjinRumahSewa', compact(
                 'rumahSewa',
@@ -385,11 +410,12 @@ class RumahSewaController extends Controller
                 'subdistrictName',
                 'villageName',
                 'validUntilDate',
-                'rtValue'  // Add the explicit RT value
+                'rtValue',
+                'signing_name'
             ));
 
         } catch (\Exception $e) {
-            \Log::error('Error generating PDF: ' . $e->getMessage(), [
+            Log::error('Error generating PDF: ' . $e->getMessage(), [
                 'id' => $id,
                 'trace' => $e->getTraceAsString()
             ]);

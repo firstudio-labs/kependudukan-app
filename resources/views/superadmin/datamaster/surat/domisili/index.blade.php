@@ -62,7 +62,9 @@
                             </div>
                         </td>
                         <td class="px-6 py-4">{{ \Carbon\Carbon::parse($domisili->letter_date)->format('d-m-Y') }}</td>
-                        <td class="px-6 py-4">{{ $domisili->signing ?? '-' }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ $domisili->signer ? $domisili->signer->judul : $domisili->signing }}
+                        </td>
                         <td class="flex items-center px-6 py-4 space-x-2">
                             <!-- PDF Export Button -->
                             <a href="{{ route('superadmin.surat.domisili.pdf', $domisili->id) }}" class="text-blue-600 hover:text-blue-800" target="_blank" aria-label="Export PDF">

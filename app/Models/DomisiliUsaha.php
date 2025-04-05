@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Penandatangan;
 
 class DomisiliUsaha extends Model
 {
@@ -44,4 +45,9 @@ class DomisiliUsaha extends Model
         'purpose',
         'signing'
     ];
+
+    public function signer()
+    {
+        return $this->belongsTo(Penandatangan::class, 'signing');
+    }
 }

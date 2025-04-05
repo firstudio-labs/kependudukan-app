@@ -37,12 +37,21 @@
 
         <div class="flex items-center mb-4">
             <div class="w-24 mr-4">
-                <div class="w-20 h-20 bg-gray-200 flex items-center justify-center">Logo</div>
+                <img src="/api/placeholder/100/100" alt="Logo Kota" class="w-full h-auto">
             </div>
             <div class="flex-1 text-center">
-                <p class="text-lg font-bold">PEMERINTAH KABUPATEN {{ strtoupper($districtName) }}</p>
+                <p class="text-lg font-bold">PEMERINTAH {{ strtoupper($districtName) }}</p>
                 <p class="text-lg font-bold">KECAMATAN {{ strtoupper($subdistrictName) }}</p>
-                <p class="text-2xl font-bold">KELURAHAN {{ strtoupper($villageName) }}</p>
+                <p class="text-2xl font-bold">
+                    @if(isset($villageCode) && substr($villageCode, 0, 1) === '1')
+                        KELURAHAN
+                    @elseif(isset($villageCode) && substr($villageCode, 0, 1) === '2')
+                        DESA
+                    @else
+                        {{ isset($administrationData) && isset($administrationData['village_type']) ? strtoupper($administrationData['village_type']) : 'DESA/KELURAHAN' }}
+                    @endif
+                    {{ strtoupper($villageName ?? 'XXXX') }}
+                </p>
                 <p class="text-sm">Alamat: </p>
             </div>
             <div class="w-24">
@@ -59,7 +68,7 @@
         </div>
 
         <div class="content">
-            <p>Yang bertanda tangan di bawah ini, Lurah/Kepala Desa {{ $villageName }} Kecamatan {{ $subdistrictName }} Kabupaten {{ $districtName }}, dengan ini menerangkan bahwa:</p>
+            <p>Lurah/Kepala Desa {{ $villageName }} Kecamatan {{ $subdistrictName }} , dengan ini menerangkan bahwa:</p>
         </div>
 
         <div class="mb-6 mt-4">
@@ -98,18 +107,39 @@
                     <tr>
                         <td>Alamat</td>
                         <td>:</td>
-                        <td>{{ $kematian->address }}</td>
+                        <td>
+                            {{ $kematian->address ?? '-' }}
+                            RT {{ $kematian->rt ?? '0' }},
+                            {{ !empty($villageName) ? $villageName : 'Desa/Kelurahan' }},
+                            {{ !empty($subdistrictName) ? $subdistrictName : 'Kecamatan' }},
+                            {{ !empty($districtName) ? $districtName : 'Kabupaten' }},
+                            {{ !empty($provinceName) ? $provinceName : 'Provinsi' }}
+                        </td>
                     </tr>
                 </tbody>
             </table>
         </div>
 
         <div class="mb-6">
-            <p class="mb-2">Berdasarkan {{ $kematian->info }} dari Ketua RT {{ $kematian->rt ?? '-' }} Desa/Kelurahan {{ $villageName }}, Kecamatan {{ $subdistrictName }},
-            @if($kematian->rt_letter_date)
-               Tanggal {{ \Carbon\Carbon::parse($kematian->rt_letter_date)->locale('id')->isoFormat('D MMMM Y') }}
-            @endif
-            bahwa benar yang bersangkutan saat ini telah meninggal dunia:</p>
+            <p class="mb-2">
+                Berdasarkan {{ $kematian->info ?? 'Surat Keterangan' }} dari Ketua RT {{ $kematian->rt ?? 'XX' }}
+                @if(isset($villageCode) && substr($villageCode, 0, 1) === '1')
+                    Kelurahan
+                @elseif(isset($villageCode) && substr($villageCode, 0, 1) === '2')
+                    Desa
+                @else
+                    Desa/Kelurahan
+                @endif
+                {{ $villageName ?? 'XXXX' }}, Kecamatan {{ $subdistrictName ?? 'XXXX' }},
+                Tanggal
+                @if(isset($kematian->rt_letter_date) && !empty($kematian->rt_letter_date))
+                    {{ \Carbon\Carbon::parse($kematian->rt_letter_date)->locale('id')->isoFormat('D MMMM Y') }}
+                @else
+                    XX-XX-XXXX
+                @endif
+                bahwa:
+            </p>
+            <p class="mb-4">benar yang bersangkutan saat ini telah meninggal dunia.</p>
         </div>
 
         <div class="mb-6">
@@ -138,7 +168,25 @@
                     <tr>
                         <td>Hubungan Pelapor dengan yang meninggal</td>
                         <td>:</td>
-                        <td>{{ $kematian->reporter_relation }}</td>
+                        <td>
+                            @php
+                                // Map relationship ID to human-readable name
+                                $relationships = [
+                                    1 => 'Suami',
+                                    2 => 'Istri',
+                                    3 => 'Anak',
+                                    4 => 'Orang Tua',
+                                    5 => 'Saudara',
+                                    6 => 'Kerabat',
+                                    7 => 'Tetangga',
+                                    8 => 'Lainnya'
+                                ];
+
+                                // Get relationship name or show original value if not found in the map
+                                $relationshipName = $relationships[$kematian->reporter_relation] ?? $kematian->reporter_relation;
+                            @endphp
+                            {{ $relationshipName }}
+                        </td>
                     </tr>
                 </tbody>
             </table>
@@ -153,11 +201,9 @@
             <div class="mb-4">
                 {{ $villageName }}, {{ \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM Y') }}
             </div>
-            <p class="font-bold">KEPALA DESA {{ strtoupper($villageName) }}</p>
-            <div class="mt-20">
-                <!-- Space for signature -->
-                <p class="font-bold underline">{{ strtoupper($kematian->signing ?? 'KEPALA DESA') }}</p>
-            </div>
+            <p class="font-bold">
+                <p class="font-bold underline">{{ strtoupper($signing_name ?? 'NAMA KEPALA DESA') }}</p>
+            </p>
         </div>
     </div>
 

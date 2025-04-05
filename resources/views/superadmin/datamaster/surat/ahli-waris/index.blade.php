@@ -52,7 +52,9 @@
                         <td class="px-6 py-4">{{ $ahliWaris->deceased_name }}</td>
                         <td class="px-6 py-4">{{ $ahliWaris->inheritance_type }}</td>
                         <td class="px-6 py-4">{{ $ahliWaris->inheritance_letter_date ? \Carbon\Carbon::parse($ahliWaris->inheritance_letter_date)->format('d-m-Y') : '-' }}</td>
-                        <td class="px-6 py-4">{{ $ahliWaris->signing ?? '-' }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ $ahliWaris->signer ? $ahliWaris->signer->judul : $ahliWaris->signing }}
+                        </td>
                         <td class="flex items-center px-6 py-4 space-x-2">
                             <!-- Add PDF Export Button -->
                             <a href="{{ route('superadmin.surat.ahli-waris.pdf', $ahliWaris->id) }}" class="text-blue-600 hover:text-blue-800" target="_blank" aria-label="Export PDF">

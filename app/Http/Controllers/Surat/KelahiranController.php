@@ -64,11 +64,10 @@ class KelahiranController extends Controller
      */
     public function create()
     {
-        // Get regions data from service
+        // Get jobs and regions data from services
         $provinces = $this->wilayahService->getProvinces();
-
-        // Get job types
         $jobTypes = $this->jobService->getAllJobs();
+        $signers = \App\Models\Penandatangan::all(); // Fetch signers
 
         // Initialize empty arrays for district, sub-district, and village data
         $districts = [];
@@ -76,11 +75,12 @@ class KelahiranController extends Controller
         $villages = [];
 
         return view('superadmin.datamaster.surat.kelahiran.create', compact(
+            'jobTypes',
             'provinces',
             'districts',
             'subDistricts',
             'villages',
-            'jobTypes'
+            'signers'
         ));
     }
 
@@ -214,11 +214,10 @@ class KelahiranController extends Controller
     {
         $kelahiran = Kelahiran::findOrFail($id);
 
-        // Get provinces data from service
+        // Get jobs and provinces data from services
         $provinces = $this->wilayahService->getProvinces();
-
-        // Get job types
         $jobTypes = $this->jobService->getAllJobs();
+        $signers = \App\Models\Penandatangan::all(); // Fetch signers
 
         // Initialize arrays for district, sub-district, and village data
         $districts = [];
@@ -227,11 +226,12 @@ class KelahiranController extends Controller
 
         return view('superadmin.datamaster.surat.kelahiran.edit', compact(
             'kelahiran',
+            'jobTypes',
             'provinces',
             'districts',
             'subDistricts',
             'villages',
-            'jobTypes'
+            'signers'
         ));
     }
 
@@ -446,7 +446,20 @@ class KelahiranController extends Controller
             $tahun = date('Y');
             $currentDate = "$tanggal $bulan $tahun";
 
-            return view('superadmin.datamaster.surat.kelahiran.Kelahiran', compact('kelahiran', 'currentDate'));
+            // Get the signing name (keterangan) from Penandatangan model
+            $signing_name = null;
+            if (!empty($kelahiran->signing)) {
+                $penandatangan = \App\Models\Penandatangan::find($kelahiran->signing);
+                if ($penandatangan) {
+                    $signing_name = $penandatangan->keterangan;
+                }
+            }
+
+            return view('superadmin.datamaster.surat.kelahiran.Kelahiran', [
+                'kelahiran' => $kelahiran,
+                'currentDate' => $currentDate,
+                'signing_name' => $signing_name // Pass the signing name to the view
+            ]);
         } catch (\Exception $e) {
             Log::error('Error generating birth certificate PDF: ' . $e->getMessage());
             return back()->with('error', 'Gagal membuat PDF: ' . $e->getMessage());

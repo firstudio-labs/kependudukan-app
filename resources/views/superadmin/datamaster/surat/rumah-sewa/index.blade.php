@@ -52,7 +52,9 @@
                         <td class="px-6 py-4">{{ $rumahSewa->full_name ?? '-' }}</td>
                         <td class="px-6 py-4">{{ $rumahSewa->responsible_name ?? '-' }}</td>
                         <td class="px-6 py-4">{{ $rumahSewa->rental_address ?? '-' }}</td>
-                        <td class="px-6 py-4">{{ $rumahSewa->signing ?? '-' }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ $rumahSewa->signer ? $rumahSewa->signer->judul : $rumahSewa->signing }}
+                        </td>
                         <td class="flex items-center px-6 py-4 space-x-2">
                             <a href="{{ route('superadmin.surat.rumah-sewa.export-pdf', $rumahSewa->id) }}" class="text-blue-600 hover:text-blue-800" aria-label="Export PDF" target="_blank">
                                 <i class="fa-solid fa-file-pdf"></i>

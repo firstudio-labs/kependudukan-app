@@ -65,6 +65,7 @@ class KehilanganController extends Controller
         // Get jobs and regions data from services
         $provinces = $this->wilayahService->getProvinces();
         $jobs = $this->jobService->getAllJobs();
+        $signers = \App\Models\Penandatangan::all(); // Fetch signers
 
         // Initialize empty arrays for district, sub-district, and village data
         $districts = [];
@@ -76,7 +77,8 @@ class KehilanganController extends Controller
             'provinces',
             'districts',
             'subDistricts',
-            'villages'
+            'villages',
+            'signers'
         ));
     }
 
@@ -131,6 +133,7 @@ class KehilanganController extends Controller
         // Get jobs and provinces data from services
         $provinces = $this->wilayahService->getProvinces();
         $jobs = $this->jobService->getAllJobs();
+        $signers = \App\Models\Penandatangan::all(); // Fetch signers
 
         // Initialize arrays for district, sub-district, and village data
         $districts = [];
@@ -143,7 +146,8 @@ class KehilanganController extends Controller
             'provinces',
             'districts',
             'subDistricts',
-            'villages'
+            'villages',
+            'signers'
         ));
     }
 
@@ -352,19 +356,29 @@ class KehilanganController extends Controller
             $birthDate = \Carbon\Carbon::parse($kehilangan->birth_date)->format('d-m-Y');
             $letterDate = \Carbon\Carbon::parse($kehilangan->letter_date)->format('d-m-Y');
 
-            return view('superadmin.datamaster.surat.kehilangan.Kehilangan', compact(
-                'kehilangan',
-                'jobName',
-                'provinceName',
-                'districtName',
-                'subdistrictName',
-                'villageName',
-                'gender',
-                'religion',
-                'citizenship',
-                'birthDate',
-                'letterDate'
-            ));
+            // Get the signing name (keterangan) from Penandatangan model
+            $signing_name = null;
+            if (!empty($kehilangan->signing)) {
+                $penandatangan = \App\Models\Penandatangan::find($kehilangan->signing);
+                if ($penandatangan) {
+                    $signing_name = $penandatangan->keterangan;
+                }
+            }
+
+            return view('superadmin.datamaster.surat.kehilangan.Kehilangan', [
+                'kehilangan' => $kehilangan,
+                'provinceName' => $provinceName,
+                'districtName' => $districtName,
+                'subdistrictName' => $subdistrictName,
+                'villageName' => $villageName,
+                'jobName' => $jobName,
+                'gender' => $gender,
+                'religion' => $religion,
+                'citizenship' => $citizenship,
+                'birthDate' => $birthDate,
+                'letterDate' => $letterDate,
+                'signing_name' => $signing_name // Pass the signing name to the view
+            ]);
         } catch (\Exception $e) {
             \Log::error('Error generating PDF: ' . $e->getMessage(), [
                 'id' => $id,

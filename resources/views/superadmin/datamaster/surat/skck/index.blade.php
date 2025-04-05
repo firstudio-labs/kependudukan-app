@@ -56,7 +56,9 @@
                             </div>
                         </td>
                         <td class="px-6 py-4">{{ \Carbon\Carbon::parse($skck->letter_date)->format('d-m-Y') }}</td>
-                        <td class="px-6 py-4">{{ $skck->signing ?? '-' }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ $skck->signer ? $skck->signer->judul : $skck->signing }}
+                        </td>
                         <td class="flex items-center px-6 py-4 space-x-2">
 
                             <a href="{{ route('superadmin.surat.skck.pdf', $skck->id) }}" class="text-blue-600 hover:text-blue-800" target="_blank" aria-label="Export PDF">

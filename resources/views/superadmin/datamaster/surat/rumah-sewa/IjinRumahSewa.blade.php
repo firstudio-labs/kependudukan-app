@@ -35,18 +35,28 @@
             </button>
         </div>
 
+        <!-- Header Section -->
         <div class="flex items-center mb-4">
             <div class="w-24 mr-4">
-                <div class="w-20 h-20 bg-gray-200 flex items-center justify-center">Logo</div>
+                <img src="/api/placeholder/100/100" alt="Logo Kota" class="w-full h-auto">
             </div>
+
             <div class="flex-1 text-center">
-                <p class="text-lg font-bold">PEMERINTAH KABUPATEN {{ strtoupper($districtName) }}</p>
+                <p class="text-lg font-bold">PEMERINTAH {{ strtoupper($districtName) }}</p>
                 <p class="text-lg font-bold">KECAMATAN {{ strtoupper($subdistrictName) }}</p>
-                <p class="text-2xl font-bold">KELURAHAN {{ strtoupper($villageName) }}</p>
-                <p class="text-sm">Alamat: Jalan Desa {{ $villageName }} Kecamatan {{ $subdistrictName }} Kabupaten {{ $districtName }}</p>
+                <p class="text-2xl font-bold">
+                    @if(isset($villageCode) && substr($villageCode, 0, 1) === '1')
+                        KELURAHAN
+                    @elseif(isset($villageCode) && substr($villageCode, 0, 1) === '2')
+                        DESA
+                    @else
+                        {{ isset($administrationData) && isset($administrationData['village_type']) ? strtoupper($administrationData['village_type']) : 'DESA/KELURAHAN' }}
+                    @endif
+                    {{ strtoupper($villageName ?? 'XXXX') }}
+                </p>
+                <p class="text-sm">Alamat: </p>
             </div>
-            <div class="w-24">
-            </div>
+            <div class="w-24"></div>
         </div>
 
         <!-- Divider -->
@@ -63,6 +73,8 @@
             <p class="mb-4">Kepala Desa/Lurah {{ $villageName }} Kecamatan {{ $subdistrictName }} dengan ini menerangkan bahwa:</p>
         </div>
 
+
+
         <!-- Personal Information -->
         <div class="mb-6">
             <table class="w-full">
@@ -75,7 +87,14 @@
                     <tr>
                         <td>Alamat Penyelenggara</td>
                         <td>:</td>
-                        <td>{{ $rumahSewa->address }}</td>
+                        <td>
+                            {{ $rumahSewa->address ?? '-' }}
+                            RT {{ $rumahSewa->rt ?? '0' }},
+                            {{ !empty($villageName) ? $villageName : 'Desa/Kelurahan' }},
+                            {{ !empty($subdistrictName) ? $subdistrictName : 'Kecamatan' }},
+                            {{ !empty($districtName) ? $districtName : 'Kabupaten' }},
+                            {{ !empty($provinceName) ? $provinceName : 'Provinsi' }}
+                        </td>
                     </tr>
                     <tr>
                         <td>Nama Penanggungjawab</td>
@@ -85,7 +104,14 @@
                     <tr>
                         <td>Alamat Rumah/Kamar</td>
                         <td>:</td>
-                        <td>{{ $rumahSewa->rental_address }}</td>
+                        <td>
+                            {{ $rumahSewa->rental_address ?? '-' }}
+                            RT {{ $rtValue ?? $rumahSewa->rt ?? '0' }},
+                            {{ !empty($villageName) ? $villageName : 'Desa/Kelurahan' }},
+                            {{ !empty($subdistrictName) ? $subdistrictName : 'Kecamatan' }},
+                            {{ !empty($districtName) ? $districtName : 'Kabupaten' }},
+                            {{ !empty($provinceName) ? $provinceName : 'Provinsi' }}
+                        </td>
                     </tr>
                     <tr>
                         <td>Jalan</td>
@@ -100,7 +126,7 @@
                     <tr>
                         <td>RT</td>
                         <td>:</td>
-                        <td>{{ $rtValue ?? $rumahSewa->rt }}</td>}</td>
+                        <td>{{ $rtValue ?? $rumahSewa->rt }}</td>
                     </tr>
                     <tr>
                         <td>Kelurahan</td>
@@ -131,20 +157,20 @@
             </table>
         </div>
 
+        <!-- Closing Statement -->
         <div class="mb-6">
             <p>Demikian surat izin ini diberikan kepada yang bersangkutan untuk dapat dipergunakan sebagaimana mestinya dan kepada yang berkepentingan dimohon bantuan seperlunya.</p>
         </div>
 
         <!-- Signature -->
-        <div class="text-right mt-16">
+        <div class="text-center mt-16">
             <div class="mb-4">
                 {{ $villageName }}, {{ \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM Y') }}
             </div>
-            <p class="font-bold">KEPALA DESA {{ strtoupper($villageName) }}</p>
-            <div class="mt-20">
-                <!-- Space for signature -->
-                <p class="font-bold underline">{{ strtoupper($rumahSewa->signing ?? 'KEPALA DESA') }}</p>
-            </div>
+            
+            <p class="font-bold">
+                <p class="font-bold underline">{{ strtoupper($signing_name ?? 'NAMA KEPALA DESA') }}</p>
+            </p>
         </div>
     </div>
 

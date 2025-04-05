@@ -4,109 +4,9 @@
 
         <form method="POST" action="{{ route('superadmin.surat.ahli-waris.store') }}" class="bg-white p-6 rounded-lg shadow-md">
             @csrf
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Nama Ahli Waris -->
-                <div>
-                    <label for="heir_name" class="block text-sm font-medium text-gray-700">Nama Ahli Waris <span class="text-red-500">*</span></label>
-                    <input type="text" id="heir_name" name="heir_name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
-                </div>
 
-                <!-- Nama Almarhum -->
-                <div>
-                    <label for="deceased_name" class="block text-sm font-medium text-gray-700">Nama Almarhum <span class="text-red-500">*</span></label>
-                    <input type="text" id="deceased_name" name="deceased_name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
-                </div>
-
-                <!-- Tempat Meninggal -->
-                <div>
-                    <label for="death_place" class="block text-sm font-medium text-gray-700">Tempat Meninggal <span class="text-red-500">*</span></label>
-                    <input type="text" id="death_place" name="death_place" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
-                </div>
-
-                <!-- Tanggal Meninggal -->
-                <div>
-                    <label for="death_date" class="block text-sm font-medium text-gray-700">Tanggal Meninggal <span class="text-red-500">*</span></label>
-                    <input type="date" id="death_date" name="death_date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
-                </div>
-
-                <!-- Nomor Akte Kematian -->
-                <div>
-                    <label for="death_certificate_number" class="block text-sm font-medium text-gray-700">Nomor Akte Kematian</label>
-                    <input type="number" id="death_certificate_number" name="death_certificate_number" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
-                </div>
-
-                <!-- Tanggal Akte Kematian -->
-                <div>
-                    <label for="death_certificate_date" class="block text-sm font-medium text-gray-700">Tanggal Akte Kematian</label>
-                    <input type="date" id="death_certificate_date" name="death_certificate_date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
-                </div>
-
-                <!-- Tanggal Surat Waris -->
-                <div>
-                    <label for="inheritance_letter_date" class="block text-sm font-medium text-gray-700">Tanggal Surat Waris</label>
-                    <input type="date" id="inheritance_letter_date" name="inheritance_letter_date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
-                </div>
-
-                <!-- Jenis Warisan -->
-                <div>
-                    <label for="inheritance_type" class="block text-sm font-medium text-gray-700">Jenis Warisan <span class="text-red-500">*</span></label>
-                    <input type="text" id="inheritance_type" name="inheritance_type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
-                </div>
-
-                <!-- Nomor Surat -->
-                <div>
-                    <label for="letter_number" class="block text-sm font-medium text-gray-700">Nomor Surat</label>
-                    <input type="text" id="letter_number" name="letter_number" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
-                </div>
-
-                <!-- Pejabat Penandatangan -->
-                <div>
-                    <label for="signing" class="block text-sm font-medium text-gray-700">Pejabat Penandatangan</label>
-                    <input type="text" id="signing" name="signing" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
-                </div>
-
-                <!-- Provinsi section -->
-                <div>
-                    <label for="province_code" class="block text-sm font-medium text-gray-700">Provinsi <span class="text-red-500">*</span></label>
-                    <select id="province_code" name="province_code" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
-                        <option value="">Pilih Provinsi</option>
-                        @foreach($provinces as $province)
-                            <option value="{{ $province['code'] }}" data-id="{{ $province['id'] }}">{{ $province['name'] }}</option>
-                        @endforeach
-                    </select>
-                    <input type="hidden" id="province_id" name="province_id" value="">
-                </div>
-
-                <!-- Kabupaten -->
-                <div>
-                    <label for="district_code" class="block text-sm font-medium text-gray-700">Kabupaten <span class="text-red-500">*</span></label>
-                    <select id="district_code" name="district_code" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" disabled required>
-                        <option value="">Pilih Kabupaten</option>
-                    </select>
-                    <input type="hidden" id="district_id" name="district_id" value="">
-                </div>
-
-                <!-- Kecamatan -->
-                <div>
-                    <label for="subdistrict_code" class="block text-sm font-medium text-gray-700">Kecamatan <span class="text-red-500">*</span></label>
-                    <select id="subdistrict_code" name="subdistrict_code" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" disabled required>
-                        <option value="">Pilih Kecamatan</option>
-                    </select>
-                    <input type="hidden" id="subdistrict_id" name="subdistrict_id" value="">
-                </div>
-
-                <!-- Desa -->
-                <div>
-                    <label for="village_code" class="block text-sm font-medium text-gray-700">Desa <span class="text-red-500">*</span></label>
-                    <select id="village_code" name="village_code" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" disabled required>
-                        <option value="">Pilih Desa</option>
-                    </select>
-                    <input type="hidden" id="village_id" name="village_id" value="">
-                </div>
-            </div>
-
-            <!-- Daftar Ahli Waris Section -->
-            <div class="mt-8">
+            <!-- Daftar Ahli Waris Section (Moved to top) -->
+            <div>
                 <h2 class="text-lg font-semibold text-gray-700 mb-3">Daftar Ahli Waris</h2>
                 <div id="heirs-container">
                     <!-- Template for heir row, will be cloned by JavaScript -->
@@ -204,6 +104,122 @@
                 </div>
             </div>
 
+            <!-- Data Wilayah Section -->
+            <div class="mt-8">
+                <h2 class="text-lg font-semibold text-gray-700 mb-3">Data Wilayah</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 border p-4 rounded-md mb-4 bg-gray-50">
+                    <!-- Provinsi -->
+                    <div>
+                        <label for="province_code" class="block text-sm font-medium text-gray-700">Provinsi <span class="text-red-500">*</span></label>
+                        <select id="province_code" name="province_code" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                            <option value="">Pilih Provinsi</option>
+                            @foreach($provinces as $province)
+                                <option value="{{ $province['code'] }}" data-id="{{ $province['id'] }}">{{ $province['name'] }}</option>
+                            @endforeach
+                        </select>
+                        <input type="hidden" id="province_id" name="province_id" value="">
+                    </div>
+
+                    <!-- Kabupaten -->
+                    <div>
+                        <label for="district_code" class="block text-sm font-medium text-gray-700">Kabupaten <span class="text-red-500">*</span></label>
+                        <select id="district_code" name="district_code" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" disabled required>
+                            <option value="">Pilih Kabupaten</option>
+                        </select>
+                        <input type="hidden" id="district_id" name="district_id" value="">
+                    </div>
+
+                    <!-- Kecamatan -->
+                    <div>
+                        <label for="subdistrict_code" class="block text-sm font-medium text-gray-700">Kecamatan <span class="text-red-500">*</span></label>
+                        <select id="subdistrict_code" name="subdistrict_code" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" disabled required>
+                            <option value="">Pilih Kecamatan</option>
+                        </select>
+                        <input type="hidden" id="subdistrict_id" name="subdistrict_id" value="">
+                    </div>
+
+                    <!-- Desa -->
+                    <div>
+                        <label for="village_code" class="block text-sm font-medium text-gray-700">Desa <span class="text-red-500">*</span></label>
+                        <select id="village_code" name="village_code" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" disabled required>
+                            <option value="">Pilih Desa</option>
+                        </select>
+                        <input type="hidden" id="village_id" name="village_id" value="">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Informasi Surat Section -->
+            <div class="mt-8">
+                <h2 class="text-lg font-semibold text-gray-700 mb-3">Informasi Surat</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 border p-4 rounded-md mb-4 bg-gray-50">
+                    <!-- Nama Ahli Waris -->
+                    <div>
+                        <label for="heir_name" class="block text-sm font-medium text-gray-700">Nama Ahli Waris <span class="text-red-500">*</span></label>
+                        <input type="text" id="heir_name" name="heir_name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                    </div>
+
+                    <!-- Nama Almarhum -->
+                    <div>
+                        <label for="deceased_name" class="block text-sm font-medium text-gray-700">Nama Almarhum <span class="text-red-500">*</span></label>
+                        <input type="text" id="deceased_name" name="deceased_name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                    </div>
+
+                    <!-- Tempat Meninggal -->
+                    <div>
+                        <label for="death_place" class="block text-sm font-medium text-gray-700">Tempat Meninggal <span class="text-red-500">*</span></label>
+                        <input type="text" id="death_place" name="death_place" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                    </div>
+
+                    <!-- Tanggal Meninggal -->
+                    <div>
+                        <label for="death_date" class="block text-sm font-medium text-gray-700">Tanggal Meninggal <span class="text-red-500">*</span></label>
+                        <input type="date" id="death_date" name="death_date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                    </div>
+
+                    <!-- Nomor Akte Kematian -->
+                    <div>
+                        <label for="death_certificate_number" class="block text-sm font-medium text-gray-700">Nomor Akte Kematian</label>
+                        <input type="number" id="death_certificate_number" name="death_certificate_number" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                    </div>
+
+                    <!-- Tanggal Akte Kematian -->
+                    <div>
+                        <label for="death_certificate_date" class="block text-sm font-medium text-gray-700">Tanggal Akte Kematian</label>
+                        <input type="date" id="death_certificate_date" name="death_certificate_date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                    </div>
+
+                    <!-- Tanggal Surat Waris -->
+                    <div>
+                        <label for="inheritance_letter_date" class="block text-sm font-medium text-gray-700">Tanggal Surat Waris</label>
+                        <input type="date" id="inheritance_letter_date" name="inheritance_letter_date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                    </div>
+
+                    <!-- Jenis Warisan -->
+                    <div>
+                        <label for="inheritance_type" class="block text-sm font-medium text-gray-700">Jenis Warisan <span class="text-red-500">*</span></label>
+                        <input type="text" id="inheritance_type" name="inheritance_type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                    </div>
+
+                    <!-- Nomor Surat -->
+                    <div>
+                        <label for="letter_number" class="block text-sm font-medium text-gray-700">Nomor Surat</label>
+                        <input type="text" id="letter_number" name="letter_number" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                    </div>
+
+                    <!-- Pejabat Penandatangan dropdown -->
+                    <div>
+                        <label for="signing" class="block text-sm font-medium text-gray-700">Pejabat Penandatangan</label>
+                        <select id="signing" name="signing" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                            <option value="">Pilih Pejabat</option>
+                            @foreach($signers as $signer)
+                                <option value="{{ $signer->id }}">{{ $signer->judul }} - {{ $signer->keterangan }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+            </div>
+
             <div class="mt-8 flex justify-end space-x-4">
                 <button type="button" onclick="window.history.back()" class="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-lg">
                     Batal
@@ -215,6 +231,7 @@
         </form>
     </div>
 
+    <script src="{{ asset('js/location-dropdowns.js') }}"></script>
     <script>
         @if(session('success'))
             Swal.fire({
@@ -269,7 +286,6 @@
                     }
 
                     allCitizens = processedData;
-                    console.log(`Loaded ${allCitizens.length} citizens`);
 
                     // Now setup the heirs interface
                     setupHeirsInterface();
@@ -282,137 +298,8 @@
             });
 
             function setupHeirsInterface() {
-                // Province/district/subdistrict/village cascading selects
-                const provinceSelect = document.getElementById('province_code');
-                const districtSelect = document.getElementById('district_code');
-                const subDistrictSelect = document.getElementById('subdistrict_code');
-                const villageSelect = document.getElementById('village_code');
-
-                // Hidden inputs for IDs
-                const provinceIdInput = document.getElementById('province_id');
-                const districtIdInput = document.getElementById('district_id');
-                const subDistrictIdInput = document.getElementById('subdistrict_id');
-                const villageIdInput = document.getElementById('village_id');
-
-                // Helper function to reset select options
-                function resetSelect(select, defaultText = 'Pilih', hiddenInput = null) {
-                    select.innerHTML = `<option value="">${defaultText}</option>`;
-                    select.disabled = true;
-                    if (hiddenInput) hiddenInput.value = '';
-                }
-
-                // Helper function to populate select options
-                function populateSelect(select, data, defaultText, hiddenInput = null) {
-                    try {
-                        select.innerHTML = `<option value="">${defaultText}</option>`;
-
-                        data.forEach(item => {
-                            const option = document.createElement('option');
-                            option.value = item.code;
-                            option.textContent = item.name;
-                            option.setAttribute('data-id', item.id);
-                            select.appendChild(option);
-                        });
-
-                        select.disabled = false;
-
-                        if (hiddenInput) hiddenInput.value = '';
-                    } catch (error) {
-                        select.innerHTML = `<option value="">Error loading data</option>`;
-                        select.disabled = true;
-                        if (hiddenInput) hiddenInput.value = '';
-                    }
-                }
-
-                // Update hidden input when selection changes
-                function updateHiddenInput(select, hiddenInput) {
-                    const selectedOption = select.options[select.selectedIndex];
-                    if (selectedOption && selectedOption.hasAttribute('data-id')) {
-                        hiddenInput.value = selectedOption.getAttribute('data-id');
-                    } else {
-                        hiddenInput.value = '';
-                    }
-                }
-
-                // Province change handler
-                provinceSelect.addEventListener('change', function() {
-                    const provinceCode = this.value;
-                    updateHiddenInput(this, provinceIdInput);
-
-                    resetSelect(districtSelect, 'Loading...', districtIdInput);
-                    resetSelect(subDistrictSelect, 'Pilih Kecamatan', subDistrictIdInput);
-                    resetSelect(villageSelect, 'Pilih Desa', villageIdInput);
-
-                    if (provinceCode) {
-                        fetch(`{{ url('/location/districts') }}/${provinceCode}`)
-                            .then(response => response.json())
-                            .then(data => {
-                                if (data && data.length > 0) {
-                                    populateSelect(districtSelect, data, 'Pilih Kabupaten', districtIdInput);
-                                    districtSelect.disabled = false;
-                                } else {
-                                    resetSelect(districtSelect, 'No data available', districtIdInput);
-                                }
-                            })
-                            .catch(error => {
-                                resetSelect(districtSelect, 'Error loading data', districtIdInput);
-                            });
-                    }
-                });
-
-                // District change handler
-                districtSelect.addEventListener('change', function() {
-                    const districtCode = this.value;
-                    updateHiddenInput(this, districtIdInput);
-
-                    resetSelect(subDistrictSelect, 'Loading...', subDistrictIdInput);
-                    resetSelect(villageSelect, 'Pilih Desa', villageIdInput);
-
-                    if (districtCode) {
-                        fetch(`{{ url('/location/sub-districts') }}/${districtCode}`)
-                            .then(response => response.json())
-                            .then(data => {
-                                if (data && data.length > 0) {
-                                    populateSelect(subDistrictSelect, data, 'Pilih Kecamatan', subDistrictIdInput);
-                                    subDistrictSelect.disabled = false;
-                                } else {
-                                    resetSelect(subDistrictSelect, 'No data available', subDistrictIdInput);
-                                }
-                            })
-                            .catch(error => {
-                                resetSelect(subDistrictSelect, 'Error loading data', subDistrictIdInput);
-                            });
-                    }
-                });
-
-                // Sub-district change handler
-                subDistrictSelect.addEventListener('change', function() {
-                    const subDistrictCode = this.value;
-                    updateHiddenInput(this, subDistrictIdInput);
-
-                    resetSelect(villageSelect, 'Loading...', villageIdInput);
-
-                    if (subDistrictCode) {
-                        fetch(`{{ url('/location/villages') }}/${subDistrictCode}`)
-                            .then(response => response.json())
-                            .then(data => {
-                                if (data && data.length > 0) {
-                                    populateSelect(villageSelect, data, 'Pilih Desa', villageIdInput);
-                                    villageSelect.disabled = false;
-                                } else {
-                                    resetSelect(villageSelect, 'No data available', villageIdInput);
-                                }
-                            })
-                            .catch(error => {
-                                resetSelect(villageSelect, 'Error loading data', villageIdInput);
-                            });
-                    }
-                });
-
-                // Village change handler
-                villageSelect.addEventListener('change', function() {
-                    updateHiddenInput(this, villageIdInput);
-                });
+                // Setup location dropdowns using the imported function
+                setupLocationDropdowns({!! json_encode($provinces) !!});
 
                 // Handle adding more heirs
                 const heirsContainer = document.getElementById('heirs-container');
@@ -522,6 +409,20 @@
 
                             // Fill personal data fields - only personal info
                             populateHeirFieldsFromCitizen(row, citizen);
+
+                            // Auto-fill location data if it's not already set
+                            if (!$('#province_id').val() || !$('#district_id').val() ||
+                                !$('#subdistrict_id').val() || !$('#village_id').val()) {
+                                // Use the function from location-dropdowns.js
+                                populateLocationDropdowns(
+                                    citizen.province_id,
+                                    citizen.district_id,
+                                    citizen.subdistrict_id || citizen.sub_district_id,
+                                    citizen.village_id
+                                );
+                            }
+
+                            // Do NOT set the signing field here - this should be manually selected
                         }
 
                         isUpdating = false;
@@ -543,6 +444,20 @@
 
                             // Fill personal data fields - only personal info
                             populateHeirFieldsFromCitizen(row, citizen);
+
+                            // Auto-fill location data if it's not already set
+                            if (!$('#province_id').val() || !$('#district_id').val() ||
+                                !$('#subdistrict_id').val() || !$('#village_id').val()) {
+                                // Use the function from location-dropdowns.js
+                                populateLocationDropdowns(
+                                    citizen.province_id,
+                                    citizen.district_id,
+                                    citizen.subdistrict_id || citizen.sub_district_id,
+                                    citizen.village_id
+                                );
+                            }
+
+                            // Do NOT set the signing field here - this should be manually selected
                         }
 
                         isUpdating = false;
@@ -652,26 +567,10 @@
                 addHeirButton.addEventListener('click', addHeirRow);
 
                 // Form validation for required fields and location data
-                document.querySelector('form').addEventListener('submit', function(e) {
-                    const provinceId = document.getElementById('province_id').value;
-                    const districtId = document.getElementById('district_id').value;
-                    const subDistrictId = document.getElementById('subdistrict_id').value;
-                    const villageId = document.getElementById('village_id').value;
+                setupFormValidation();
 
-                    if (!provinceId || !districtId || !subDistrictId || !villageId) {
-                        e.preventDefault();
-                        alert('Silakan pilih Provinsi, Kabupaten, Kecamatan, dan Desa');
-                        return false;
-                    }
-
-                    // Check if at least one heir is added
-                    const heirRows = document.querySelectorAll('#heirs-container .heir-row');
-                    if (heirRows.length === 0) {
-                        e.preventDefault();
-                        alert('Harap menambahkan setidaknya satu ahli waris');
-                        return false;
-                    }
-                });
+                // Make the signing dropdown easier to use with basic styling
+                $('#signing').css('width', '100%');
             }
         });
     </script>

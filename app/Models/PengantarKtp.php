@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Penandatangan;
 
 class PengantarKtp extends Model
 {
@@ -35,8 +36,6 @@ class PengantarKtp extends Model
         'rt',
         'rw',
         'hamlet',
-        'village_name',
-        'subdistrict_name',
         'signing'
     ];
 
@@ -52,7 +51,10 @@ class PengantarKtp extends Model
         'village_id' => 'integer',
         'nik' => 'integer',
         'kk' => 'integer',
-        'village_name' => 'integer',
-        'subdistrict_name' => 'integer',
     ];
+
+    public function signer()
+    {
+        return $this->belongsTo(Penandatangan::class, 'signing');
+    }
 }

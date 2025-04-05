@@ -62,7 +62,9 @@
                             </div>
                         </td>
                         <td class="px-6 py-4">{{ \Carbon\Carbon::parse($administration->letter_date)->format('d-m-Y') }}</td>
-                        <td class="px-6 py-4">{{ $administration->signing ?? '-' }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ $administration->signer ? $administration->signer->judul : $administration->signing }}
+                        </td>
                         <td class="flex items-center px-6 py-4 space-x-2">
                             <a href="{{ route('superadmin.surat.administrasi.pdf', $administration->id) }}" class="text-blue-600 hover:text-blue-800" aria-label="Export PDF" target="_blank" title="Export PDF">
                                 <i class="fa-solid fa-file-pdf"></i>
@@ -70,7 +72,7 @@
                             <a href="{{ route('superadmin.surat.administrasi.edit', $administration->id) }}" class="text-yellow-600 hover:text-yellow-800" aria-label="Edit">
                                 <i class="fa-solid fa-pen-to-square"></i>
                             </a>
-                            <form action="{{ route('superadmin.surat.administrasi.delete', $administration->id) }}" method="POST" onsubmit="return confirmDelete(event)">
+                            <form action="{{ route('superadmin.surat.administrasi.delete', $administration->id) }}" method="POST" class="delete-form">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="font-medium text-red-600 hover:underline ml-3">
@@ -99,51 +101,5 @@
         </div>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Kode SweetAlert dan fungsi lainnya
-            @if(session('success'))
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Sukses!',
-                    text: "{{ session('success') }}",
-                    timer: 3000,
-                    showConfirmButton: false
-                });
-            @endif
-
-            @if(session('error'))
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Gagal!',
-                    text: "{{ session('error') }}",
-                    timer: 3000,
-                    showConfirmButton: false
-                });
-            @endif
-        });
-
-        // Delete confirmation function
-        function confirmDelete(event) {
-            event.preventDefault(); // Menghentikan pengiriman form default
-            const form = event.target; // Form yang akan di-submit
-
-            Swal.fire({
-                title: 'Apakah anda yakin?',
-                text: "Data yang dihapus tidak dapat dikembalikan!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#2D336B',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Ya, hapus!',
-                cancelButtonText: 'Batal'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    form.submit(); // Lanjutkan dengan pengiriman form jika dikonfirmasi
-                }
-            });
-
-            return false; // Menghentikan pengiriman form
-        }
-    </script>
+    <script src="{{ asset('js/sweet-alert-utils.js') }}"></script>
 </x-layout>

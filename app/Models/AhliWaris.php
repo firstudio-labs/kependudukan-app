@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Penandatangan;
 
 class AhliWaris extends Model
 {
@@ -64,4 +65,9 @@ class AhliWaris extends Model
         'death_certificate_date' => 'date',
         'inheritance_letter_date' => 'date',
     ];
+
+    public function signer()
+    {
+        return $this->belongsTo(Penandatangan::class, 'signing');
+    }
 }

@@ -64,7 +64,9 @@
                         </td>
                         <td class="px-6 py-4">{{ $ktp->kk ?? '-' }}</td>
                         <td class="px-6 py-4">{{ $ktp->address ?? '-' }}</td>
-                        <td class="px-6 py-4">{{ $ktp->signing ?? '-' }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ $ktp->signer ? $ktp->signer->judul : $ktp->signing }}
+                        </td>
                         <td class="flex items-center px-6 py-4 space-x-2">
                             <a href="{{ route('superadmin.surat.pengantar-ktp.export-pdf', $ktp->id) }}" class="text-blue-600 hover:text-blue-800" aria-label="Export PDF" target="_blank">
                                 <i class="fa-solid fa-file-pdf"></i>

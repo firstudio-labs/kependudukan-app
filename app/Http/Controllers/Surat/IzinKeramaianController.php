@@ -66,9 +66,10 @@ class IzinKeramaianController extends Controller
      */
     public function create()
     {
-        // Get regions data from service
+        // Get jobs and regions data from services
         $provinces = $this->wilayahService->getProvinces();
         $jobs = $this->jobService->getAllJobs();
+        $signers = \App\Models\Penandatangan::all(); // Fetch signers
 
         // Initialize empty arrays for district, sub-district, and village data
         $districts = [];
@@ -80,7 +81,8 @@ class IzinKeramaianController extends Controller
             'provinces',
             'districts',
             'subDistricts',
-            'villages'
+            'villages',
+            'signers'
         ));
     }
 
@@ -188,24 +190,24 @@ class IzinKeramaianController extends Controller
     {
         $keramaian = IzinKeramaian::findOrFail($id);
 
-        // Get provinces data from service
+        // Get jobs and provinces data from services
         $provinces = $this->wilayahService->getProvinces();
         $jobs = $this->jobService->getAllJobs();
+        $signers = \App\Models\Penandatangan::all(); // Fetch signers
 
         // Initialize arrays for district, sub-district, and village data
         $districts = [];
         $subDistricts = [];
         $villages = [];
 
-
-
         return view('superadmin.datamaster.surat.keramaian.edit', compact(
             'keramaian',
+            'jobs',
             'provinces',
             'districts',
             'subDistricts',
             'villages',
-            'jobs'
+            'signers'
         ));
     }
 
@@ -414,6 +416,15 @@ class IzinKeramaianController extends Controller
             $birthDate = \Carbon\Carbon::parse($keramaian->birth_date)->locale('id')->isoFormat('D MMMM Y');
             $eventDate = \Carbon\Carbon::parse($keramaian->event_date)->locale('id')->isoFormat('D MMMM Y');
 
+            // Get the signing name (keterangan) from Penandatangan model
+            $signing_name = null;
+            if (!empty($keramaian->signing)) {
+                $penandatangan = \App\Models\Penandatangan::find($keramaian->signing);
+                if ($penandatangan) {
+                    $signing_name = $penandatangan->keterangan;
+                }
+            }
+
             // Return view directly instead of generating PDF
             return view('superadmin.datamaster.surat.keramaian.IjinKeramaian', compact(
                 'keramaian',
@@ -426,7 +437,8 @@ class IzinKeramaianController extends Controller
                 'genderName',
                 'citizenStatusName',
                 'birthDate',
-                'eventDate'
+                'eventDate',
+                'signing_name'
             ));
 
         } catch (\Exception $e) {

@@ -39,14 +39,23 @@
 
         <div class="flex items-center mb-4">
             <div class="w-24 mr-4">
-                <div class="w-20 h-20 bg-gray-200 flex items-center justify-center">Logo</div>
+                <img src="/api/placeholder/100/100" alt="Logo Kota" class="w-full h-auto">
             </div>
+
             <div class="flex-1 text-center">
                 <p class="text-lg font-bold">PEMERINTAH {{ strtoupper($districtName ?? 'TARAKAN') }}</p>
                 <p class="text-lg font-bold">KECAMATAN {{ strtoupper($subdistrictName ?? 'TARAKAN BARAT') }}</p>
-                <p class="text-2xl font-bold">KELURAHAN {{ strtoupper($villageName ?? 'KARANG ANYAR') }}</p>
-                <p class="text-sm">Alamat: {{ $kehilangan->address ?? 'Jl. Kelurahan No. 1' }}</p>
-                <p class="text-xl font-bold">{{ strtoupper($districtName ?? 'TARAKAN') }}</p>
+                <p class="text-2xl font-bold">
+                    @if(isset($villageCode) && substr($villageCode, 0, 1) === '1')
+                        KELURAHAN
+                    @elseif(isset($villageCode) && substr($villageCode, 0, 1) === '2')
+                        DESA
+                    @else
+                        {{ isset($administrationData) && isset($administrationData['village_type']) ? strtoupper($administrationData['village_type']) : 'DESA/KELURAHAN' }}
+                    @endif
+                    {{ strtoupper($villageName ?? 'KARANG ANYAR') }}
+                </p>
+                <p class="text-sm">Alamat: </p>
             </div>
             <div class="w-24">
             </div>
@@ -119,7 +128,14 @@
                     <tr>
                         <td>Alamat</td>
                         <td>:</td>
-                        <td>{{ $kehilangan->address }} RT. {{ $kehilangan->rt }}</td>
+                        <td>
+                            {{ $kehilangan->address ?? '-' }}
+                            RT {{ $kehilangan->rt ?? '0' }},
+                            {{ !empty($villageName) ? $villageName : 'Desa/Kelurahan' }},
+                            {{ !empty($subdistrictName) ? $subdistrictName : 'Kecamatan' }},
+                            {{ !empty($districtName) ? $districtName : 'Kabupaten' }},
+                            {{ !empty($provinceName) ? $provinceName : 'Provinsi' }}
+                        </td>
                     </tr>
                 </tbody>
             </table>
@@ -127,8 +143,26 @@
 
         <!-- Statement -->
         <div class="mb-6">
-            <p class="mb-2">Berdasarkan Surat Keterangan dari Ketua RT {{ $kehilangan->rt }} Desa/Kelurahan {{ $villageName ?? 'Karang Anyar' }}, Kecamatan {{ $subdistrictName ?? 'Tarakan Barat' }}, Tanggal {{ $letterDate }} dan menurut keterangan yang bersangkutan telah kehilangan:</p>
-            <p class="mb-4">{{ $kehilangan->lost_items }}</p>
+            <p class="mb-2">
+                Berdasarkan Surat Keterangan dari Ketua RT {{ $kehilangan->rt ?? 'XX' }}
+                @if(isset($villageCode) && substr($villageCode, 0, 1) === '1')
+                    Kelurahan
+                @elseif(isset($villageCode) && substr($villageCode, 0, 1) === '2')
+                    Desa
+                @else
+                    Desa/Kelurahan
+                @endif
+                {{ $villageName ?? 'XXXX' }}, Kecamatan {{ $subdistrictName ?? 'XXXX' }},
+                Tanggal
+                @if(isset($letterDate) && !empty($letterDate))
+                    {{ \Carbon\Carbon::parse($letterDate)->locale('id')->isoFormat('D MMMM Y') }}
+                @else
+                    XX-XX-XXXX
+                @endif
+                dan menurut keterangan yang bersangkutan telah kehilangan
+                {{ $kehilangan->lost_items ?? 'XXXX' }}
+
+            </p>
             <p>Demikian Surat Keterangan ini dibuat untuk dapat dipergunakan sebagaimana mestinya.</p>
         </div>
 
@@ -142,11 +176,9 @@
                     {{ $letterDate ?? \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM Y') }}
                 @endif
             </div>
-            <p class="font-bold">KEPALA DESA {{ strtoupper($villageName ?? 'KARANG ANYAR') }}</p>
-            <div class="mt-20">
-                <!-- Space for signature -->
-                <p class="font-bold underline">{{ strtoupper($kehilangan->signing ?? 'NAMA KEPALA DESA') }}</p>
-            </div>
+            <p class="font-bold">
+                <p class="font-bold underline">{{ strtoupper($signing_name ?? 'NAMA KEPALA DESA') }}</p>
+            </p>
         </div>
     </div>
 

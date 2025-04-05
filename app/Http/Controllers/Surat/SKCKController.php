@@ -65,6 +65,7 @@ class SKCKController extends Controller
         // Get jobs and regions data from services
         $provinces = $this->wilayahService->getProvinces();
         $jobs = $this->jobService->getAllJobs();
+        $signers = \App\Models\Penandatangan::all(); // Fetch signers
 
         // Initialize empty arrays for district, sub-district, and village data
         $districts = [];
@@ -76,7 +77,8 @@ class SKCKController extends Controller
             'provinces',
             'districts',
             'subDistricts',
-            'villages'
+            'villages',
+            'signers'
         ));
     }
 
@@ -191,14 +193,12 @@ class SKCKController extends Controller
         // Get jobs and provinces data from services
         $provinces = $this->wilayahService->getProvinces();
         $jobs = $this->jobService->getAllJobs();
+        $signers = \App\Models\Penandatangan::all(); // Fetch signers
 
         // Initialize arrays for district, sub-district, and village data
         $districts = [];
         $subDistricts = [];
         $villages = [];
-
-        // If we have province_id, try to get districts
-
 
         return view('superadmin.datamaster.surat.skck.edit', compact(
             'skck',
@@ -206,7 +206,8 @@ class SKCKController extends Controller
             'provinces',
             'districts',
             'subDistricts',
-            'villages'
+            'villages',
+            'signers'
         ));
     }
 
@@ -414,6 +415,15 @@ class SKCKController extends Controller
             $birthDate = \Carbon\Carbon::parse($skck->birth_date)->format('d-m-Y');
             $letterDate = \Carbon\Carbon::parse($skck->letter_date)->format('d-m-Y');
 
+            // Get the signing name (keterangan) from Penandatangan model
+            $signing_name = null;
+            if (!empty($skck->signing)) {
+                $penandatangan = \App\Models\Penandatangan::find($skck->signing);
+                if ($penandatangan) {
+                    $signing_name = $penandatangan->keterangan;
+                }
+            }
+
             return view('superadmin.datamaster.surat.skck.SKCK', [
                 'skck' => $skck,
                 'job_name' => $jobName,
@@ -426,6 +436,7 @@ class SKCKController extends Controller
                 'citizenship' => $citizenship,
                 'formatted_birth_date' => $birthDate,
                 'formatted_letter_date' => $letterDate,
+                'signing_name' => $signing_name // Pass the signing name to the view
             ]);
 
         } catch (\Exception $e) {

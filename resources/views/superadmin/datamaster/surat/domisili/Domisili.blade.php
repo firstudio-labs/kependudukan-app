@@ -61,8 +61,17 @@
             <div class="flex-1 text-center">
                 <p class="text-lg font-bold">PEMERINTAH {{ strtoupper($district_name ?? 'KABUPATEN') }}</p>
                 <p class="text-lg font-bold">KECAMATAN {{ strtoupper($subdistrict_name ?? 'KECAMATAN') }}</p>
-                <p class="text-2xl font-bold">KELURAHAN {{ strtoupper($village_name ?? 'KELURAHAN') }}</p>
-                <p class="text-sm">Alamat: {{ $domisili->address ?? 'Alamat Kelurahan' }}</p>
+                <p class="text-2xl font-bold">
+                    @if(isset($villageCode) && substr($villageCode, 0, 1) === '1')
+                        KELURAHAN
+                    @elseif(isset($villageCode) && substr($villageCode, 0, 1) === '2')
+                        DESA
+                    @else
+                        {{ isset($administrationData) && isset($administrationData['village_type']) ? strtoupper($administrationData['village_type']) : 'DESA/KELURAHAN' }}
+                    @endif
+                    {{ strtoupper($villageName ?? 'XXXX') }}
+                </p>
+                <p class="text-sm">Alamat: </p>
             </div>
             <div class="w-24">
             </div>
@@ -143,7 +152,24 @@
 
         <!-- Statement -->
         <div class="mb-6">
-            <p class="mb-2">Berdasarkan Surat Keterangan dari Ketua RT {{ $domisili->rt ?? '0' }} {{ $village_name ?? 'Desa/Kelurahan' }}, {{ $subdistrict_name ?? 'Kecamatan' }}, Tanggal {{ $formatted_letter_date ?? date('d-m-Y') }} bahwa benar yang bersangkutan saat ini berdomisili di {{ $domisili->domicile_address ?? '-' }}.</p>
+            <p class="mb-2">
+                Berdasarkan Surat Keterangan dari Ketua RT {{ $domisili->rt ?? 'XX' }}
+                @if(isset($villageCode) && substr($villageCode, 0, 1) === '1')
+                    Kelurahan
+                @elseif(isset($villageCode) && substr($villageCode, 0, 1) === '2')
+                    Desa
+                @else
+                    Desa/Kelurahan
+                @endif
+                {{ $villageName ?? 'XXXX' }}, Kecamatan {{ $subdistrict_name ?? 'XXXX' }},
+                Tanggal
+                @if(isset($formatted_letter_date) && !empty($formatted_letter_date))
+                    {{ \Carbon\Carbon::parse($formatted_letter_date)->locale('id')->isoFormat('D MMMM Y') }}
+                @else
+                    XX-XX-XXXX
+                @endif
+                bahwa benar yang bersangkutan saat ini berdomisili di {{ $domisili->domicile_address ?? '-' }}.
+            </p>
             <p>Demikian Surat Keterangan ini dibuat untuk dapat dipergunakan {{ $domisili->purpose ?? 'sebagaimana mestinya' }}.</p>
         </div>
 
@@ -158,17 +184,11 @@
                    @endif
                 </p>
             </div>
-            <p class="font-bold">KEPALA DESA</p>
-            <div class="mt-20">
-                <!-- Space for signature -->
-                <p class="font-bold underline">{{ $domisili->signing ?? 'NAMA KEPALA DESA' }}</p>
-            </div>
+            <p class="font-bold">
+                <p class="font-bold underline">{{ strtoupper($signing_name ?? 'NAMA KEPALA DESA') }}</p>
+            </p>
         </div>
-    </div>
 
-    <!-- Footer for pagination (will be styled by print CSS) -->
-    <div class="no-print text-center text-xs text-gray-500 mt-8">
-        <p>Halaman ini akan menampilkan nomor halaman saat dicetak</p>
     </div>
 </body>
 

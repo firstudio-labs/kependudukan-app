@@ -64,7 +64,9 @@
                         </td>
                         <td class="px-6 py-4">{{ $kelahiran->child_name }}</td>
                         <td class="px-6 py-4">{{ \Carbon\Carbon::parse($kelahiran->child_birth_date)->format('d-m-Y') }}</td>
-                        <td class="px-6 py-4">{{ $kelahiran->signing ?? '-' }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ $kelahiran->signer ? $kelahiran->signer->judul : $kelahiran->signing }}
+                        </td>
                         <td class="flex items-center px-6 py-4 space-x-2">
                             <a href="{{ route('superadmin.surat.kelahiran.pdf', $kelahiran->id) }}" class="text-blue-600 hover:text-blue-800 mr-3" aria-label="Export PDF" target="_blank">
                                 <i class="fa-solid fa-file-pdf"></i>

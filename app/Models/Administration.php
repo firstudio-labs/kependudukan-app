@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Penandatangan;
 
 class Administration extends Model
 {
@@ -44,42 +45,10 @@ class Administration extends Model
     ];
 
     /**
-     * Get the job associated with this administration.
+     * Get the signer associated with this administration.
      */
-    // public function job()
-    // {
-    //     return $this->belongsTo(Job::class);
-    // }
-
-    // /**
-    //  * Get the province associated with this administration.
-    //  */
-    // public function province()
-    // {
-    //     return $this->belongsTo(Province::class);
-    // }
-
-    // /**
-    //  * Get the district associated with this administration.
-    //  */
-    // public function district()
-    // {
-    //     return $this->belongsTo(District::class);
-    // }
-
-    // /**
-    //  * Get the subdistrict associated with this administration.
-    //  */
-    // public function subdistrict()
-    // {
-    //     return $this->belongsTo(Subdistrict::class);
-    // }
-
-    // /**
-    //  * Get the village associated with this administration.
-    //  */
-    // public function village()
-    // {
-    //     return $this->belongsTo(Village::class);
-    // }
+    public function signer()
+    {
+        return $this->belongsTo(Penandatangan::class, 'signing');
+    }
 }

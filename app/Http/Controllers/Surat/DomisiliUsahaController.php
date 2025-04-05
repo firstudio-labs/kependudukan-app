@@ -68,6 +68,7 @@ class DomisiliUsahaController extends Controller
         // Get jobs and regions data from services
         $provinces = $this->wilayahService->getProvinces();
         $jobs = $this->jobService->getAllJobs();
+        $signers = \App\Models\Penandatangan::all(); // Fetch signers
 
         // Initialize empty arrays for district, sub-district, and village data
         $districts = [];
@@ -79,7 +80,8 @@ class DomisiliUsahaController extends Controller
             'provinces',
             'districts',
             'subDistricts',
-            'villages'
+            'villages',
+            'signers'
         ));
     }
 
@@ -235,13 +237,12 @@ class DomisiliUsahaController extends Controller
         // Get jobs and provinces data from services
         $provinces = $this->wilayahService->getProvinces();
         $jobs = $this->jobService->getAllJobs();
+        $signers = \App\Models\Penandatangan::all(); // Fetch signers
 
         // Initialize arrays for district, sub-district, and village data
         $districts = [];
         $subDistricts = [];
         $villages = [];
-
-
 
         return view('superadmin.datamaster.surat.domisili-usaha.edit', compact(
             'domisiliUsaha',
@@ -249,7 +250,8 @@ class DomisiliUsahaController extends Controller
             'provinces',
             'districts',
             'subDistricts',
-            'villages'
+            'villages',
+            'signers'
         ));
     }
 
@@ -493,6 +495,15 @@ class DomisiliUsahaController extends Controller
             // Don't modify the RT value, leave it exactly as stored in the database
             // so if it's stored as '001', it will appear as '001' in the PDF
 
+            // Get the signing name (keterangan) from Penandatangan model
+            $signing_name = null;
+            if (!empty($domisiliUsaha->signing)) {
+                $penandatangan = \App\Models\Penandatangan::find($domisiliUsaha->signing);
+                if ($penandatangan) {
+                    $signing_name = $penandatangan->keterangan;
+                }
+            }
+
             return view('superadmin.datamaster.surat.domisili-usaha.DomisiliUsaha', [
                 'domisiliUsaha' => $domisiliUsaha,
                 'job_name' => $jobName,
@@ -505,6 +516,7 @@ class DomisiliUsahaController extends Controller
                 'citizenship' => $citizenship,
                 'formatted_birth_date' => $birthDate,
                 'formatted_letter_date' => $letterDate,
+                'signing_name' => $signing_name // Pass the signing name to the view
             ]);
 
         } catch (\Exception $e) {

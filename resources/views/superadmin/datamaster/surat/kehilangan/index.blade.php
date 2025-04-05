@@ -56,7 +56,9 @@
                             </div>
                         </td>
                         <td class="px-6 py-4">{{ \Carbon\Carbon::parse($kehilangan->letter_date)->format('d-m-Y') }}</td>
-                        <td class="px-6 py-4">{{ $kehilangan->signing ?? '-' }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ $kehilangan->signer ? $kehilangan->signer->judul : $kehilangan->signing }}
+                        </td>
                         <td class="flex items-center px-6 py-4 space-x-2">
                             <!-- Add the PDF link -->
                             <a href="{{ route('superadmin.surat.kehilangan.pdf', $kehilangan->id) }}" class="text-blue-600 hover:text-blue-800" aria-label="Export PDF" target="_blank" title="Export PDF">

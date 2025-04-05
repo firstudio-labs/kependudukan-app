@@ -1,156 +1,123 @@
 <x-layout>
-    <div class="p-2 sm:p-4 mt-14">
-        <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
-            <h1 class="text-xl sm:text-2xl font-bold text-gray-800">Daftar Pengguna</h1>
-            <a href="{{ route('superadmin.datamaster.user.create') }}" class="bg-[#7886C7] hover:bg-[#2D336B] text-white px-4 py-2 rounded-md flex items-center w-full sm:w-auto justify-center">
-                <span class="mr-2">+</span> Tambah Pengguna
-            </a>
-        </div>
+    <div class="p-4 mt-14">
 
 
+        <!-- Judul H1 -->
+        <h1 class="text-2xl font-bold text-gray-800 mb-6">Master Users</h1>
 
-        <div class="mb-6">
-            <form method="GET" action="{{ route('superadmin.datamaster.user.index') }}" class="flex flex-col sm:flex-row gap-2">
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari NIK, username, email atau No HP..."
-                       class="border border-gray-300 rounded-md p-2 flex-grow w-full">
-                <div class="flex gap-2">
-                    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-md whitespace-nowrap">Cari</button>
-                    @if(request('search'))
-                        <a href="{{ route('superadmin.datamaster.user.index') }}" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md whitespace-nowrap">Reset</a>
-                    @endif
-                </div>
+        <!-- Bar untuk Search dan Tambah Pasien -->
+        <div class="flex justify-between items-center mb-4">
+            <!-- Input Pencarian -->
+            <form method="GET" action="{{ route('superadmin.datamaster.user.index') }}" class="relative">
+                <input
+                    type="text"
+                    name="search"
+                    id="search"
+                    value="{{ request('search') }}"
+                    class="block p-2 pl-10 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Cari data users..."
+                />
+                <button type="submit" class="absolute top-1/2 left-2 w-5 h-5 text-gray-400 transform -translate-y-1/2">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35m0 0a7.5 7.5 0 1110.15-10.15 7.5 7.5 0 01-10.15 10.15z" />
+                    </svg>
+                </button>
             </form>
+
+            <button
+                type="button"
+                onclick="window.location.href='{{ route('superadmin.datamaster.user.create') }}'"
+                class="text-white bg-[#7886C7] hover:bg-[#2D336B] focus:ring-4 focus:ring-[#5C69A7] font-medium rounded-lg text-sm px-5 py-2.5 flex items-center space-x-2"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-4 h-4">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                <span>Tambah Data User</span>
+            </button>
+
+
         </div>
 
-        <!-- Responsive Table -->
-        <div class="bg-white rounded-lg shadow overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
+
+        <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
+            <table class="w-full text-sm text-left text-gray-500">
+                <thead class="text-xs text-gray-700 uppercase bg-[#e6e8ed]">
                     <tr>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NIK</th>
-                        <th class="hidden md:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
-                        <th class="hidden md:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                        <th class="hidden md:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No HP</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                        <th scope="col" class="px-6 py-3">No</th>
+                        <th scope="col" class="px-6 py-3">NIK</th>
+                        <th scope="col" class="px-6 py-3">Username</th>
+                        <th scope="col" class="px-6 py-3">Email</th>
+                        <th scope="col" class="px-6 py-3">No HP</th>
+                        <th scope="col" class="px-6 py-3">Role</th>
+                        <th scope="col" class="px-6 py-3">Status</th>
+                        <th scope="col" class="px-6 py-3">Aksi</th>
+
+
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
+                <tbody>
                     @forelse($users as $index => $user)
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                                {{ ($users->currentPage() - 1) * $users->perPage() + $index + 1 }}
-                            </td>
-                            <td class="px-4 py-3 text-sm text-gray-500">
-                                <div class="font-medium">{{ $user->nik }}</div>
-                                <!-- Mobile-only info -->
-                                <div class="md:hidden mt-1 space-y-1">
-                                    <div><span class="font-semibold">Username:</span> {{ $user->username ?? '-' }}</div>
-                                    <div><span class="font-semibold">Email:</span> {{ $user->email ?? '-' }}</div>
-                                    <div><span class="font-semibold">No HP:</span> {{ $user->no_hp ?? '-' }}</div>
-                                </div>
-                            </td>
-                            <td class="hidden md:table-cell px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                                {{ $user->username ?? '-' }}
-                            </td>
-                            <td class="hidden md:table-cell px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                                {{ $user->email ?? '-' }}
-                            </td>
-                            <td class="hidden md:table-cell px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                                {{ $user->no_hp ?? '-' }}
-                            </td>
-                            <td class="px-4 py-3 whitespace-nowrap text-sm">
-                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                                {{ $user->role === 'superadmin' ? 'bg-red-100 text-red-800' :
-                                  ($user->role === 'admin desa' ? 'bg-blue-100 text-blue-800' :
-                                  ($user->role === 'admin kabupaten' ? 'bg-purple-100 text-purple-800' :
-                                  'bg-yellow-100 text-yellow-800')) }}">
-                                    {{ ucfirst($user->role) }}
-                                </span>
-                            </td>
-                            <td class="px-4 py-3 whitespace-nowrap text-sm">
-                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                                {{ $user->status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                    {{ $user->status === 'active' ? 'Aktif' : 'Non-aktif' }}
-                                </span>
-                            </td>
-                            <td class="px-4 py-3 whitespace-nowrap text-sm font-medium">
-                                <div class="flex items-center space-x-2">
-                                    <a href="{{ route('superadmin.datamaster.user.edit', $user->id) }}" class="text-yellow-600 hover:text-yellow-800" aria-label="Edit">
+
+                        @if (!empty($user) && isset($user->id))
+                            <tr class="bg-white border-gray-300 border-b hover:bg-gray-50">
+                                <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{{ $user->id }}</th>
+                                <td class="px-6 py-4">{{ $user->nik }}</td>
+                                <td class="px-6 py-4">{{ $user->username }}</td>
+                                <td class="px-6 py-4">{{ $user->email }}</td>
+                                <td class="px-6 py-4">{{ $user->no_hp }}</td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center">
+                                        <div class="w-2.5 h-2.5 rounded-full mr-2
+                                        {{ $user->role === 'superadmin' ? 'bg-purple-600' :
+                                           ($user->role === 'admin desa' ? 'bg-blue-600' :
+                                           ($user->role === 'admin kabupaten' ? 'bg-indigo-600' :
+                                           ($user->role === 'operator' ? 'bg-teal-600' :
+                                           'bg-gray-600'))) }}"></div>
+                                        {{ ucfirst($user->role) }}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center">
+                                        <div class="w-2.5 h-2.5 rounded-full mr-2
+                                        {{ $user->status === 'active' ? 'bg-green-600' : 'bg-red-600' }}"></div>
+                                        {{ $user->status === 'active' ? 'Aktif' : 'Non-aktif' }}
+                                    </div>
+                                </td>
+
+                                <td class="flex items-center px-6 py-4 space-x-2">
+                                    <a href="{{ route('superadmin.datamaster.user.edit', $user->id) }}" class="text-yellow-600 hover:text-yellow-800">
                                         <i class="fa-solid fa-pen-to-square"></i>
                                     </a>
-                                    <form action="{{ route('superadmin.datamaster.user.destroy', $user->id) }}" method="POST" class="inline delete-form">
+
+                                    <form id="delete-form-{{ $user->id }}" action="{{ route('superadmin.datamaster.user.destroy', $user->id) }}" method="POST" onsubmit="confirmDelete(event, {{ $user->id }})">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="text-red-600 hover:text-red-800" aria-label="Hapus">
+                                        <button type="submit" class="font-medium text-red-600 hover:underline ml-3">
                                             <i class="fa-solid fa-trash"></i>
                                         </button>
                                     </form>
-                                </div>
-                            </td>
-                        </tr>
+                                </td>
+                            </tr>
+                        @else
+                            <tr>
+                                <td colspan="8" class="text-center py-4 text-gray-500">Data tidak valid.</td>
+                            </tr>
+                        @endif
                     @empty
                         <tr>
-                            <td colspan="8" class="px-4 py-3 whitespace-nowrap text-sm text-gray-500 text-center">
-                                Tidak ada data pengguna
-                            </td>
+                            <td colspan="8" class="text-center py-4">Tidak ada data.</td>
                         </tr>
                     @endforelse
                 </tbody>
+
             </table>
-            <div class="p-4">
-                {{ $users->links() }}
-            </div>
+
+            <!-- Pagination Section -->
+            <x-pagination :data="$users" />
         </div>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Confirm before deleting using SweetAlert
-            const deleteForms = document.querySelectorAll('.delete-form');
-            deleteForms.forEach(form => {
-                form.addEventListener('submit', function(e) {
-                    e.preventDefault();
+    <script src="{{ asset('js/sweet-alert-utils.js') }}"></script>
 
-                    Swal.fire({
-                        title: 'Apakah Anda yakin?',
-                        text: "Data yang dihapus tidak dapat dikembalikan!",
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonColor: '#3085d6',
-                        cancelButtonColor: '#d33',
-                        confirmButtonText: 'Ya, hapus!',
-                        cancelButtonText: 'Batal'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            this.submit();
-                        }
-                    });
-                });
-            });
-
-            // Display success or error messages
-            @if(session('success'))
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Berhasil!',
-                    text: "{{ session('success') }}",
-                    timer: 3000,
-                    showConfirmButton: false
-                });
-            @endif
-
-            @if(session('error'))
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Gagal!',
-                    text: "{{ session('error') }}",
-                    timer: 3000,
-                    showConfirmButton: false
-                });
-            @endif
-        });
-    </script>
 </x-layout>
+

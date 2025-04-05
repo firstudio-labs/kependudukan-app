@@ -42,7 +42,16 @@
             <div class="flex-1 text-center">
                 <p class="text-lg font-bold">PEMERINTAH {{ strtoupper($kelahiran->district_name ?? '') }}</p>
                 <p class="text-lg font-bold">KECAMATAN {{ strtoupper($kelahiran->subdistrict_name ?? '') }}</p>
-                <p class="text-xl font-bold">DESA {{ strtoupper($kelahiran->village_name ?? '') }}</p>
+                <p class="text-xl font-bold">
+                    @if(isset($kelahiran->village_code) && substr($kelahiran->village_code, 0, 1) === '1')
+                        KELURAHAN
+                    @elseif(isset($kelahiran->village_code) && substr($kelahiran->village_code, 0, 1) === '2')
+                        DESA
+                    @else
+                        {{ isset($kelahiran) && isset($kelahiran->village_type) ? strtoupper($kelahiran->village_type) : 'DESA/KELURAHAN' }}
+                    @endif
+                    {{ strtoupper($kelahiran->village_name ?? '') }}
+                </p>
                 <p class="text-xs">Alamat: </p>
             </div>
             <div class="w-20">
@@ -106,7 +115,14 @@
                     <tr>
                         <td>Alamat</td>
                         <td>:</td>
-                        <td>{{ $kelahiran->father_address ?? '-' }}</td>
+                        <td>
+                            {{ $kelahiran->father_address ?? '-' }}
+                            RT {{ $kelahiran->father_rt ?? '0' }},
+                            {{ !empty($kelahiran->village_name) ? $kelahiran->village_name : 'Desa/Kelurahan' }},
+                            {{ !empty($kelahiran->subdistrict_name) ? $kelahiran->subdistrict_name : 'Kecamatan' }},
+                            {{ !empty($kelahiran->district_name) ? $kelahiran->district_name : 'Kabupaten' }},
+                            {{ !empty($kelahiran->province_name) ? $kelahiran->province_name : 'Provinsi' }}
+                        </td>
                     </tr>
                 </tbody>
             </table>
@@ -155,7 +171,14 @@
                     <tr>
                         <td>Alamat</td>
                         <td>:</td>
-                        <td>{{ $kelahiran->mother_address ?? '-' }}</td>
+                        <td>
+                            {{ $kelahiran->mother_address ?? '-' }}
+                            RT {{ $kelahiran->mother_rt ?? '0' }},
+                            {{ !empty($kelahiran->village_name) ? $kelahiran->village_name : 'Desa/Kelurahan' }},
+                            {{ !empty($kelahiran->subdistrict_name) ? $kelahiran->subdistrict_name : 'Kecamatan' }},
+                            {{ !empty($kelahiran->district_name) ? $kelahiran->district_name : 'Kabupaten' }},
+                            {{ !empty($kelahiran->province_name) ? $kelahiran->province_name : 'Provinsi' }}
+                        </td>
                     </tr>
                 </tbody>
             </table>
@@ -204,7 +227,14 @@
                     <tr>
                         <td>Alamat</td>
                         <td>:</td>
-                        <td>{{ $kelahiran->child_address ?? '-' }}</td>
+                        <td>
+                            {{ $kelahiran->child_address ?? '-' }}
+                            RT {{ $kelahiran->child_rt ?? '0' }},
+                            {{ !empty($kelahiran->village_name) ? $kelahiran->village_name : 'Desa/Kelurahan' }},
+                            {{ !empty($kelahiran->subdistrict_name) ? $kelahiran->subdistrict_name : 'Kecamatan' }},
+                            {{ !empty($kelahiran->district_name) ? $kelahiran->district_name : 'Kabupaten' }},
+                            {{ !empty($kelahiran->province_name) ? $kelahiran->province_name : 'Provinsi' }}
+                        </td>
                     </tr>
                     <tr>
                         <td>Anak Ke</td>
@@ -224,11 +254,10 @@
             <div class="mb-3">
                 <p>{{ $kelahiran->village_name ?? '' }}, {{ $currentDate ?? \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM Y') }}</p>
             </div>
-            <p class="font-bold">KEPALA DESA {{ strtoupper($kelahiran->village_name ?? '') }}</p>
-            <div class="mt-10">
-                <!-- Space for signature -->
-                <p class="font-bold underline">{{ $kelahiran->signing ?? 'NAMA KEPALA DESA' }}</p>
-            </div>
+            <p class="font-bold">
+                <p class="font-bold underline">{{ strtoupper($signing_name ?? 'NAMA KEPALA DESA') }}</p>
+            </p>
+
         </div>
 
         <!-- Removed the bottom print button since we've added it to the top -->

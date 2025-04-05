@@ -37,13 +37,22 @@
 
         <div class="flex items-center mb-4">
             <div class="w-24 mr-4">
-                <div class="w-20 h-20 bg-gray-200 flex items-center justify-center">Logo</div>
+                <img src="/api/placeholder/100/100" alt="Logo Kota" class="w-full h-auto">
             </div>
             <div class="flex-1 text-center">
                 <p class="text-lg font-bold">PEMERINTAH {{ strtoupper($districtName) }}</p>
                 <p class="text-lg font-bold">KECAMATAN {{ strtoupper($subdistrictName) }}</p>
-                <p class="text-2xl font-bold">KELURAHAN {{ strtoupper($villageName) }}</p>
-                <p class="text-sm">Alamat:</p>
+                <p class="text-2xl font-bold">
+                    @if(isset($villageCode) && substr($villageCode, 0, 1) === '1')
+                        KELURAHAN
+                    @elseif(isset($villageCode) && substr($villageCode, 0, 1) === '2')
+                        DESA
+                    @else
+                        {{ isset($administrationData) && isset($administrationData['village_type']) ? strtoupper($administrationData['village_type']) : 'DESA/KELURAHAN' }}
+                    @endif
+                    {{ strtoupper($villageName ?? 'XXXX') }}
+                </p>
+                <p class="text-sm">Alamat: </p>
             </div>
             <div class="w-24">
             </div>
@@ -60,7 +69,7 @@
 
         <!-- Introduction -->
         <div class="mb-6">
-            <p class="mb-4">Kepala Desa/Lurah {{ $villageName }} Kecamatan {{ $subdistrictName }} Kabupaten {{ $districtName }} dengan ini menerangkan bahwa :</p>
+            <p class="mb-4">Kepala Desa/Lurah {{ $villageName }} Kecamatan {{ $subdistrictName }}  dengan ini menerangkan bahwa :</p>
         </div>
 
         <!-- Personal Information -->
@@ -110,17 +119,23 @@
                     <tr>
                         <td>Alamat</td>
                         <td>:</td>
-                        <td>{{ $keramaian->address }}</td>
+                        <td>
+                            {{ $keramaian->address ?? '-' }}
+                            RT {{ $keramaian->rt ?? '0' }},
+                            {{ !empty($villageName) ? $villageName : 'Desa/Kelurahan' }},
+                            {{ !empty($subdistrictName) ? $subdistrictName : 'Kecamatan' }},
+                            {{ !empty($districtName) ? $districtName : 'Kabupaten' }},
+                            {{ !empty($provinceName) ? $provinceName : 'Provinsi' }}
+                        </td>
                     </tr>
                 </tbody>
             </table>
         </div>
 
         <div class="mb-6">
-            <p class="mb-2 px-2 py-1"> Yang bersangkutan diatas mengajukan permohonan SURAT IZIN KERAMAIAN yang akan
-                dilaksanakan pada: </p>
-        </div>
 
+            <p class="mb-4">yang bersangkutan diatas mengajukan permohonan SURAT IZIN KERAMAIAN yang akan dilaksanakan pada:</p>
+        </div>
 
         <!-- Event Information -->
         <div class="mb-6">
@@ -169,15 +184,14 @@
             <p>Demikian Surat Keterangan ini dibuat untuk dapat dipergunakan sebagaimana mestinya</p>
         </div>
 
+        <!-- Signature -->
         <div class="text-center mt-16">
             <div class="mb-4">
                 {{ $villageName }}, {{ \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM Y') }}
             </div>
-            <p class="font-bold">KEPALA DESA {{ strtoupper($villageName) }}</p>
-            <div class="mt-20">
-                <!-- Space for signature -->
-                <p class="font-bold underline">{{ strtoupper($keramaian->signing ?? 'KEPALA DESA') }}</p>
-            </div>
+            <p class="font-bold">
+                <p class="font-bold underline">{{ strtoupper($signing_name ?? 'NAMA KEPALA DESA') }}</p>
+            </p>
         </div>
     </div>
 

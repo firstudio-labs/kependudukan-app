@@ -37,13 +37,25 @@
 
         <div class="flex items-center mb-4">
             <div class="w-24 mr-4">
-                <img src="/api/placeholder/100/100" alt="Logo Kota" class="w-full h-auto">
+                <!-- Replace placeholder with existing logo from your public folder -->
+                <img src="{{ asset('images/logo.png') }}" alt="Logo Kota" class="w-full h-auto">
+                <!-- If you don't have a logo yet, use this empty div instead of img tag -->
+                <!-- <div class="w-24 h-24"></div> -->
             </div>
             <div class="flex-1 text-center">
-                <p class="text-lg font-bold">PEMERINTAH {{ strtoupper($districtName ?? 'XXXX') }}</p>
-                <p class="text-lg font-bold">KECAMATAN {{ strtoupper($subdistrictName ?? 'XXXX') }}</p>
-                <p class="text-2xl font-bold">KELURAHAN {{ strtoupper($villageName ?? 'XXXX') }}</p>
-                <p class="text-sm">Alamat: {{ $administration->address ?? 'XXXX' }}</p>
+                <p class="text-lg font-bold">PEMERINTAH {{ strtoupper($district_name ?? 'XXXX') }}</p>
+                <p class="text-lg font-bold">KECAMATAN {{ strtoupper($subdistrict_name ?? 'XXXX') }}</p>
+                <p class="text-2xl font-bold">
+                    @if(isset($village_code) && substr($village_code, 0, 1) === '1')
+                        KELURAHAN
+                    @elseif(isset($village_code) && substr($village_code, 0, 1) === '2')
+                        DESA
+                    @else
+                        {{ isset($administrationData) && isset($administrationData['village_type']) ? strtoupper($administrationData['village_type']) : 'DESA/KELURAHAN' }}
+                    @endif
+                    {{ strtoupper($village_name ?? 'XXXX') }}
+                </p>
+                <p class="text-sm">Alamat: </p>
             </div>
             <div class="w-24">
             </div>
@@ -60,7 +72,16 @@
 
         <!-- Introduction -->
         <div class="mb-6">
-            <p class="mb-4">Lurah {{ $villageName ?? 'XXXX' }} Kecamatan {{ $subdistrictName ?? 'XXXX' }} dengan ini menerangkan bahwa :</p>
+            <p class="mb-4">
+                @if(isset($village_code) && substr($village_code, 0, 1) === '1')
+                    Lurah
+                @elseif(isset($village_code) && substr($village_code, 0, 1) === '2')
+                    Kepala Desa
+                @else
+                    {{ isset($administrationData) && isset($administrationData['village_head_title']) ? $administrationData['village_head_title'] : 'Lurah/Kepala Desa' }}
+                @endif
+                {{ $village_name ?? 'XXXX' }} Kecamatan {{ $subdistrict_name ?? 'XXXX' }} dengan ini menerangkan bahwa :
+            </p>
         </div>
 
         <!-- Personal Information -->
@@ -86,10 +107,10 @@
                         <td>Tanggal Lahir</td>
                         <td>:</td>
                         <td>
-                            @if(isset($birthDate) && strpos($birthDate, '-') !== false)
-                                {{ \Carbon\Carbon::createFromFormat('d-m-Y', $birthDate)->locale('id')->isoFormat('D MMMM Y') }}
+                            @if(isset($formatted_birth_date) && strpos($formatted_birth_date, '-') !== false)
+                                {{ \Carbon\Carbon::createFromFormat('d-m-Y', $formatted_birth_date)->locale('id')->isoFormat('D MMMM Y') }}
                             @else
-                                {{ $birthDate ?? 'XXXX' }}
+                                {{ $formatted_birth_date ?? 'XXXX' }}
                             @endif
                         </td>
                     </tr>
@@ -101,7 +122,7 @@
                     <tr>
                         <td>Pekerjaan</td>
                         <td>:</td>
-                        <td>{{ $jobName ?? 'XXXX' }}</td>
+                        <td>{{ $job_name ?? 'XXXX' }}</td>
                     </tr>
                     <tr>
                         <td>Agama</td>
@@ -116,7 +137,14 @@
                     <tr>
                         <td>Alamat</td>
                         <td>:</td>
-                        <td>{{ $administration->address ?? 'XXXX' }} RT. {{ $administration->rt ?? 'XX' }}</td>
+                        <td>
+                            {{ $administration->address ?? '-' }}
+                            RT {{ $administration->rt ?? '0' }},
+                            {{ !empty($village_name) ? $village_name : 'Desa/Kelurahan' }},
+                            {{ !empty($subdistrict_name) ? $subdistrict_name : 'Kecamatan' }},
+                            {{ !empty($district_name) ? $district_name : 'Kabupaten' }},
+                            {{ !empty($province_name) ? $province_name : 'Provinsi' }}
+                        </td>
                     </tr>
                 </tbody>
             </table>
@@ -124,7 +152,24 @@
 
         <!-- Statement -->
         <div class="mb-6">
-            <p class="mb-2">Berdasarkan Surat Keterangan dari Ketua RT {{ $administration->rt ?? 'XX' }} Desa/Kelurahan {{ $villageName ?? 'XXXX' }}, Kecamatan {{ $subdistrictName ?? 'XXXX' }}, Tanggal {{ $letterDate ?? 'XX-XX-XXXX' }} bahwa</p>
+            <p class="mb-2">
+                Berdasarkan Surat Keterangan dari Ketua RT {{ $administration->rt ?? 'XX' }}
+                @if(isset($village_code) && substr($village_code, 0, 1) === '1')
+                    Kelurahan
+                @elseif(isset($village_code) && substr($village_code, 0, 1) === '2')
+                    Desa
+                @else
+                    Desa/Kelurahan
+                @endif
+                {{ $village_name ?? 'XXXX' }}, Kecamatan {{ $subdistrict_name ?? 'XXXX' }},
+                Tanggal
+                @if(isset($formatted_letter_date) && !empty($formatted_letter_date))
+                    {{ \Carbon\Carbon::parse($formatted_letter_date)->locale('id')->isoFormat('D MMMM Y') }}
+                @else
+                    XX-XX-XXXX
+                @endif
+                bahwa:
+            </p>
             <p class="mb-4">{{ $administration->statement_content ?? 'XXXX' }}</p>
             <p>Demikian Surat Keterangan ini dibuat untuk dapat dipergunakan {{ $administration->purpose ?? 'XXXX' }}</p>
         </div>
@@ -132,18 +177,16 @@
         <!-- Signature -->
         <div class="text-center mt-16">
             <div class="mb-4">
-                {{ $villageName ?? 'XXXX' }},
-                @if(isset($letterDate) && strpos($letterDate, '-') !== false)
-                    {{ \Carbon\Carbon::createFromFormat('d-m-Y', $letterDate)->locale('id')->isoFormat('D MMMM Y') }}
+                {{ $village_name ?? 'XXXX' }},
+                @if(isset($formatted_letter_date) && !empty($formatted_letter_date))
+                    {{ \Carbon\Carbon::parse($formatted_letter_date)->locale('id')->isoFormat('D MMMM Y') }}
                 @else
-                    {{ $letterDate ?? \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM Y') }}
+                    {{ \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM Y') }}
                 @endif
             </div>
-            <p class="font-bold">KEPALA DESA {{ strtoupper($villageName ?? 'XXXX') }}</p>
-            <div class="mt-20">
-                <!-- Space for signature -->
-                <p class="font-bold underline">{{ strtoupper($administration->signing ?? 'NAMA KEPALA DESA') }}</p>
-            </div>
+            <p class="font-bold">
+                <p class="font-bold underline">{{ strtoupper($signing_name ?? 'NAMA KEPALA DESA') }}</p>
+            </p>
         </div>
     </div>
 
@@ -155,5 +198,4 @@
         };
     </script>
 </body>
-
 </html>

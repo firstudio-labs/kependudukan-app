@@ -66,7 +66,9 @@
                         <td class="px-6 py-4">{{ $kematian->death_cause ?? '-' }}</td>
                         <td class="px-6 py-4">{{ $kematian->reporter_name ?? '-' }}</td>
                         <td class="px-6 py-4">{{ \Carbon\Carbon::parse($kematian->death_date)->format('d-m-Y') }}</td>
-                        <td class="px-6 py-4">{{ $kematian->signing ?? '-' }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ $kematian->signer ? $kematian->signer->judul : $kematian->signing }}
+                        </td>
                         <td class="flex items-center px-6 py-4 space-x-2">
 
                             <a href="{{ route('superadmin.surat.kematian.export-pdf', $kematian->id) }}" class="text-blue-600 hover:text-blue-800" aria-label="Export PDF" target="_blank">

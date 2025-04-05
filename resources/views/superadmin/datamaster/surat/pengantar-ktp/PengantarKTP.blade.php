@@ -62,7 +62,12 @@
             <div class="flex mb-1">
                 <div class="w-1/4">KELURAHAN</div>
                 <div class="w-1/12 text-center">:</div>
-                <div class="w-3/5 border border-black px-2 py-1">{{ strtoupper($villageName) }}</div>
+                <div class="w-3/5 border border-black px-2 py-1">
+                    <p class="text-xl ">
+
+                        {{ strtoupper($villageName ?? 'XXXX') }}
+                    </p>
+                </div>
             </div>
             <div class="flex mb-1">
                 <div class="w-1/4">PERMOHONAN KTP</div>
@@ -161,7 +166,14 @@
             <div class="flex mb-2">
                 <div class="w-1/5 border border-black p-1 mr-4">Alamat</div>
                 <div class="w-4/5 ml-2">
-                    <div class="border border-black h-8 p-1">{{ $ktp->address ?? '' }}</div>
+                    <div class="border border-black h-8 p-1">
+                        {{ $ktp->address ?? '' }}
+                        RT {{ $ktp->rt ?? '0' }},
+                        {{ !empty($villageName) ? $villageName : 'Desa/Kelurahan' }},
+                        {{ !empty($subdistrictName) ? $subdistrictName : 'Kecamatan' }},
+                        {{ !empty($districtName) ? $districtName : 'Kabupaten' }},
+                        {{ !empty($provinceName) ? $provinceName : 'Provinsi' }}
+                    </div>
                 </div>
             </div>
 
@@ -236,10 +248,10 @@
                 <div class="h-16"></div>
                 <p class="underline">{{ $fullName }}</p>
                 <p class="mt-6">Mengetahui,</p>
-                <p>Lurah {{ $villageName }}</p>
-                <div class="h-16"></div>
-                <p class="underline">{{ $ktp->signing ?? 'KEPALA DESA' }}</p>
-            </div>
+                <p class="font-bold">
+                    <p class="font-bold underline">{{ strtoupper($signing_name ?? 'NAMA KEPALA DESA') }}</p>
+                </p>
+                </div>
         </div>
     </div>
 

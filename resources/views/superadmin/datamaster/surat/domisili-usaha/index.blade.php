@@ -52,7 +52,9 @@
                         <td class="px-6 py-4">{{ $domisiliUsaha->full_name }}</td>
                         <td class="px-6 py-4">{{ $domisiliUsaha->business_type }}</td>
                         <td class="px-6 py-4">{{ \Carbon\Carbon::parse($domisiliUsaha->letter_date)->format('d-m-Y') }}</td>
-                        <td class="px-6 py-4">{{ $domisiliUsaha->signing ?? '-' }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ $domisiliUsaha->signer ? $domisiliUsaha->signer->judul : $domisiliUsaha->signing }}
+                        </td>
                         <td class="flex items-center px-6 py-4 space-x-2">
                             <a href="{{ route('superadmin.surat.domisili-usaha.pdf', $domisiliUsaha->id) }}" class="text-blue-600 hover:text-blue-800" target="_blank" aria-label="Export PDF">
                                 <i class="fa-solid fa-file-pdf"></i>

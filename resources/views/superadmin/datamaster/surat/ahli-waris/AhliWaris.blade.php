@@ -27,6 +27,7 @@
 </head>
 
 <body class="bg-white p-8">
+
     <div class="max-w-4xl mx-auto bg-white p-8">
         <!-- Print Button - Only visible on screen -->
         <div class="no-print mb-4 flex justify-end">
@@ -40,11 +41,19 @@
                 <img src="/api/placeholder/100/100" alt="Logo Kota" class="w-full h-auto">
             </div>
             <div class="flex-1 text-center">
-                <p class="text-lg font-bold">PEMERINTAH KABUPATEN {{ strtoupper($district_name) }}</p>
+                <p class="text-lg font-bold">PEMERINTAH {{ strtoupper($district_name) }}</p>
                 <p class="text-lg font-bold">KECAMATAN {{ strtoupper($subdistrict_name) }}</p>
-                <p class="text-2xl font-bold">KELURAHAN {{ strtoupper($village_name) }}</p>
-                <p class="text-sm">Alamat:</p>
-
+                <p class="text-2xl font-bold">
+                    @if(isset($villageCode) && substr($villageCode, 0, 1) === '1')
+                        KELURAHAN
+                    @elseif(isset($villageCode) && substr($villageCode, 0, 1) === '2')
+                        DESA
+                    @else
+                        {{ isset($administrationData) && isset($administrationData['village_type']) ? strtoupper($administrationData['village_type']) : 'DESA/KELURAHAN' }}
+                    @endif
+                    {{ strtoupper($village_name ?? 'XXXX') }}
+                </p>
+                <p class="text-sm">Alamat: </p>
             </div>
             <div class="w-24">
             </div>
@@ -101,7 +110,14 @@
                     <tr>
                         <td>Alamat</td>
                         <td>:</td>
-                        <td>{{ is_string($ahliWaris->address ?? '') ? $ahliWaris->address : (isset($heirs[0]['address']) && is_string($heirs[0]['address']) ? $heirs[0]['address'] : '-') }}</td>
+                        <td>
+                            {{ is_string($ahliWaris->address ?? '') ? $ahliWaris->address : (isset($heirs[0]['address']) && is_string($heirs[0]['address']) ? $heirs[0]['address'] : '-') }}
+                            RT {{ $ahliWaris->rt ?? '0' }},
+                            {{ !empty($village_name) ? $village_name : 'Desa/Kelurahan' }},
+                            {{ !empty($subdistrict_name) ? $subdistrict_name : 'Kecamatan' }},
+                            {{ !empty($district_name) ? $district_name : 'Kabupaten' }},
+                            {{ !empty($province_name) ? $province_name : 'Provinsi' }}
+                        </td>
                     </tr>
                 </tbody>
             </table>
@@ -144,7 +160,14 @@
                     <tr>
                         <td>Alamat</td>
                         <td>:</td>
-                        <td>{{ isset($heirs[1]['address']) && is_string($heirs[1]['address']) ? $heirs[1]['address'] : '-' }}</td>
+                        <td>
+                            {{ isset($heirs[1]['address']) && is_string($heirs[1]['address']) ? $heirs[1]['address'] : '-' }}
+                            RT {{ isset($heirs[1]['rt']) ? $heirs[1]['rt'] : '0' }},
+                            {{ !empty($village_name) ? $village_name : 'Desa/Kelurahan' }},
+                            {{ !empty($subdistrict_name) ? $subdistrict_name : 'Kecamatan' }},
+                            {{ !empty($district_name) ? $district_name : 'Kabupaten' }},
+                            {{ !empty($province_name) ? $province_name : 'Provinsi' }}
+                        </td>
                     </tr>
                 </tbody>
             </table>
@@ -155,11 +178,9 @@
             <div class="mb-4">
                 {{ $village_name }}, {{ \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM Y') }}
             </div>
-            <p class="font-bold">KEPALA DESA</p>
-            <div class="mt-20">
-                <!-- Space for signature -->
-                <p class="font-bold underline">{{ strtoupper($ahliWaris->signing ?? '(NAMA KEPALA DESA)') }}</p>
-            </div>
+            <p class="font-bold">
+                <p class="font-bold underline">{{ strtoupper($signing_name ?? 'NAMA KEPALA DESA') }}</p>
+            </p>
         </div>
     </div>
 

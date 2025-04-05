@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Penandatangan;
 
 class Kehilangan extends Model
 {
@@ -41,4 +42,9 @@ class Kehilangan extends Model
         'letter_date',
         'lost_items'
     ];
+
+    public function signer()
+    {
+        return $this->belongsTo(Penandatangan::class, 'signing');
+    }
 }

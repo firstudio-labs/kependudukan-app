@@ -4,55 +4,6 @@
 
         <form method="POST" action="{{ route('superadmin.surat.kelahiran.store') }}" class="bg-white p-6 rounded-lg shadow-md">
             @csrf
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Location Section -->
-                <div>
-                    <label for="province_code" class="block text-sm font-medium text-gray-700">Provinsi <span class="text-red-500">*</span></label>
-                    <select id="province_code" name="province_code" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
-                        <option value="">Pilih Provinsi</option>
-                        @foreach($provinces as $province)
-                            <option value="{{ $province['code'] }}" data-id="{{ $province['id'] }}">{{ $province['name'] }}</option>
-                        @endforeach
-                    </select>
-                    <input type="hidden" id="province_id" name="province_id" value="">
-                </div>
-
-                <div>
-                    <label for="district_code" class="block text-sm font-medium text-gray-700">Kabupaten <span class="text-red-500">*</span></label>
-                    <select id="district_code" name="district_code" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" disabled required>
-                        <option value="">Pilih Kabupaten</option>
-                    </select>
-                    <input type="hidden" id="district_id" name="district_id" value="">
-                </div>
-
-                <div>
-                    <label for="subdistrict_code" class="block text-sm font-medium text-gray-700">Kecamatan <span class="text-red-500">*</span></label>
-                    <select id="subdistrict_code" name="subdistrict_code" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" disabled required>
-                        <option value="">Pilih Kecamatan</option>
-                    </select>
-                    <input type="hidden" id="subdistrict_id" name="subdistrict_id" value="">
-                </div>
-
-                <div>
-                    <label for="village_code" class="block text-sm font-medium text-gray-700">Desa <span class="text-red-500">*</span></label>
-                    <select id="village_code" name="village_code" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" disabled required>
-                        <option value="">Pilih Desa</option>
-                    </select>
-                    <input type="hidden" id="village_id" name="village_id" value="">
-                </div>
-
-                <!-- Nomor Surat -->
-                <div>
-                    <label for="letter_number" class="block text-sm font-medium text-gray-700">Nomor Surat</label>
-                    <input type="text" id="letter_number" name="letter_number" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
-                </div>
-
-                <!-- Pejabat Penandatangan -->
-                <div>
-                    <label for="signing" class="block text-sm font-medium text-gray-700">Pejabat Penandatangan</label>
-                    <input type="text" id="signing" name="signing" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
-                </div>
-            </div>
 
             <!-- Father Information Section -->
             <div class="mt-8">
@@ -206,6 +157,53 @@
                 </div>
             </div>
 
+            <!-- Data Wilayah Section -->
+            <div class="mt-8">
+                <h2 class="text-lg font-semibold text-gray-700 mb-3">Data Wilayah</h2>
+                <div class="border p-4 rounded-md mb-4 bg-gray-50">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Provinsi -->
+                        <div>
+                            <label for="province_code" class="block text-sm font-medium text-gray-700">Provinsi <span class="text-red-500">*</span></label>
+                            <select id="province_code" name="province_code" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                                <option value="">Pilih Provinsi</option>
+                                @foreach($provinces as $province)
+                                    <option value="{{ $province['code'] }}" data-id="{{ $province['id'] }}">{{ $province['name'] }}</option>
+                                @endforeach
+                            </select>
+                            <input type="hidden" id="province_id" name="province_id" value="">
+                        </div>
+
+                        <!-- Kabupaten -->
+                        <div>
+                            <label for="district_code" class="block text-sm font-medium text-gray-700">Kabupaten <span class="text-red-500">*</span></label>
+                            <select id="district_code" name="district_code" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" disabled required>
+                                <option value="">Pilih Kabupaten</option>
+                            </select>
+                            <input type="hidden" id="district_id" name="district_id" value="">
+                        </div>
+
+                        <!-- Kecamatan -->
+                        <div>
+                            <label for="subdistrict_code" class="block text-sm font-medium text-gray-700">Kecamatan <span class="text-red-500">*</span></label>
+                            <select id="subdistrict_code" name="subdistrict_code" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" disabled required>
+                                <option value="">Pilih Kecamatan</option>
+                            </select>
+                            <input type="hidden" id="subdistrict_id" name="subdistrict_id" value="">
+                        </div>
+
+                        <!-- Desa -->
+                        <div>
+                            <label for="village_code" class="block text-sm font-medium text-gray-700">Desa <span class="text-red-500">*</span></label>
+                            <select id="village_code" name="village_code" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" disabled required>
+                                <option value="">Pilih Desa</option>
+                            </select>
+                            <input type="hidden" id="village_id" name="village_id" value="">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Child Information Section -->
             <div class="mt-8">
                 <h2 class="text-lg font-semibold text-gray-700 mb-3">Data Anak</h2>
@@ -249,7 +247,7 @@
                             <input type="number" id="child_order" name="child_order" min="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                         </div>
 
-                        <!-- Add missing child_religion field -->
+                        <!-- Agama Anak -->
                         <div>
                             <label for="child_religion" class="block text-sm font-medium text-gray-700">Agama Anak <span class="text-red-500">*</span></label>
                             <select id="child_religion" name="child_religion" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
@@ -270,6 +268,31 @@
                         <div>
                             <label for="child_address" class="block text-sm font-medium text-gray-700">Alamat <span class="text-red-500">*</span></label>
                             <textarea id="child_address" name="child_address" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Informasi Surat Section -->
+            <div class="mt-8">
+                <h2 class="text-lg font-semibold text-gray-700 mb-3">Informasi Surat</h2>
+                <div class="border p-4 rounded-md mb-4 bg-gray-50">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Nomor Surat -->
+                        <div>
+                            <label for="letter_number" class="block text-sm font-medium text-gray-700">Nomor Surat</label>
+                            <input type="text" id="letter_number" name="letter_number" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                        </div>
+
+                        <!-- Penandatangan -->
+                        <div>
+                            <label for="signing" class="block text-sm font-medium text-gray-700">Pejabat Penandatangan</label>
+                            <select id="signing" name="signing" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                                <option value="">Pilih Pejabat</option>
+                                @foreach($signers as $signer)
+                                    <option value="{{ $signer->id }}">{{ $signer->judul }} - {{ $signer->keterangan }}</option>
+                                @endforeach
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -675,6 +698,16 @@
                         $('#father_full_name').val(citizen.full_name).trigger('change.select2'); // Just update UI, not trigger full change
 
                         populateParentFields(citizen, 'father');
+
+                        // Auto-fill location fields with father's location data
+                        if (citizen.province_id && citizen.district_id && (citizen.subdistrict_id || citizen.sub_district_id) && citizen.village_id) {
+                            populateLocationFromCitizen(citizen, 'ayah');
+
+                            // Also populate child address from father's address
+                            if (citizen.address) {
+                                $('#child_address').val(citizen.address);
+                            }
+                        }
                     }
 
                     isUpdating = false;
@@ -693,6 +726,11 @@
                         $('#father_nik').val(nikValue).trigger('change.select2');  // Just update the UI
 
                         populateParentFields(citizen, 'father');
+
+                        // Auto-fill location fields with father's location data
+                        if (citizen.province_id && citizen.district_id && (citizen.subdistrict_id || citizen.sub_district_id) && citizen.village_id) {
+                            populateLocationFromCitizen(citizen, 'ayah');
+                        }
                     }
 
                     isUpdating = false;
@@ -711,6 +749,16 @@
                         $('#mother_full_name').val(citizen.full_name).trigger('change.select2'); // Just update UI, not trigger full change
 
                         populateParentFields(citizen, 'mother');
+
+                        // Auto-fill location fields with mother's location data
+                        if (citizen.province_id && citizen.district_id && (citizen.subdistrict_id || citizen.sub_district_id) && citizen.village_id) {
+                            populateLocationFromCitizen(citizen, 'ibu');
+
+                            // Also populate child address from mother's address
+                            if (citizen.address) {
+                                $('#child_address').val(citizen.address);
+                            }
+                        }
                     }
 
                     isUpdating = false;
@@ -729,6 +777,11 @@
                         $('#mother_nik').val(nikValue).trigger('change.select2');  // Just update the UI
 
                         populateParentFields(citizen, 'mother');
+
+                        // Auto-fill location fields with mother's location data
+                        if (citizen.province_id && citizen.district_id && (citizen.subdistrict_id || citizen.sub_district_id) && citizen.village_id) {
+                            populateLocationFromCitizen(citizen, 'ibu');
+                        }
                     }
 
                     isUpdating = false;
@@ -778,6 +831,182 @@
                 document.getElementById(`${parentType}_job`).value = citizen.job_type_id;
             }
         }
+
+        // Function to populate location fields from citizen data
+        function populateLocationFromCitizen(citizen, parentType) {
+            // Support both naming conventions for subdistrict
+            const subDistrictId = citizen.subdistrict_id || citizen.sub_district_id;
+
+            // Only attempt to populate if we have valid location data
+            if (!citizen.province_id || !citizen.district_id || !subDistrictId || !citizen.village_id) {
+                return;
+            }
+
+            // Set hidden ID fields directly without confirmation
+            $('#province_id').val(citizen.province_id);
+            $('#district_id').val(citizen.district_id);
+            $('#subdistrict_id').val(subDistrictId);
+            $('#village_id').val(citizen.village_id);
+
+            // Find and select the correct province option
+            const provinceSelect = document.getElementById('province_code');
+            let provinceFound = false;
+
+            for (let i = 0; i < provinceSelect.options.length; i++) {
+                const option = provinceSelect.options[i];
+                if (option.getAttribute('data-id') == citizen.province_id) {
+                    provinceSelect.value = option.value;
+                    provinceFound = true;
+
+                    // Now load districts with improved error handling
+                    fetch(`{{ url('/location/districts') }}/${option.value}`)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok: ' + response.status);
+                            }
+                            return response.json();
+                        })
+                        .then(districts => {
+                            if (!districts || !Array.isArray(districts) || districts.length === 0) {
+                                return;
+                            }
+
+                            // Populate district dropdown
+                            const districtSelect = document.getElementById('district_code');
+                            districtSelect.innerHTML = '<option value="">Pilih Kabupaten</option>';
+
+                            let districtFound = false;
+                            let selectedDistrictCode = null;
+
+                            districts.forEach(district => {
+                                const districtOption = document.createElement('option');
+                                districtOption.value = district.code;
+                                districtOption.textContent = district.name;
+                                districtOption.setAttribute('data-id', district.id);
+
+                                if (district.id == citizen.district_id) {
+                                    districtOption.selected = true;
+                                    selectedDistrictCode = district.code;
+                                    districtFound = true;
+                                }
+
+                                districtSelect.appendChild(districtOption);
+                            });
+
+                            districtSelect.disabled = false;
+
+                            if (districtFound && selectedDistrictCode) {
+                                // Load the subdistricts and villages
+                                loadSubdistrictsAndVillages(selectedDistrictCode, subDistrictId, citizen.village_id);
+                            }
+                        })
+                        .catch(error => {
+                            const districtSelect = document.getElementById('district_code');
+                            districtSelect.innerHTML = '<option value="">Error loading data</option>';
+                        });
+
+                    break;
+                }
+            }
+        }
+
+        // Helper function to load subdistricts and villages
+        function loadSubdistrictsAndVillages(districtCode, subDistrictId, villageId) {
+            fetch(`{{ url('/location/sub-districts') }}/${districtCode}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(subdistricts => {
+                    if (!subdistricts || !Array.isArray(subdistricts) || subdistricts.length === 0) {
+                        return;
+                    }
+
+                    // Populate subdistrict dropdown
+                    const subdistrictSelect = document.getElementById('subdistrict_code');
+                    subdistrictSelect.innerHTML = '<option value="">Pilih Kecamatan</option>';
+                    subdistricts.forEach(subdistrict => {
+                        const subdistrictOption = document.createElement('option');
+                        subdistrictOption.value = subdistrict.code;
+                        subdistrictOption.textContent = subdistrict.name;
+                        subdistrictOption.setAttribute('data-id', subdistrict.id);
+                        if (subdistrict.id == subDistrictId) {
+                            subdistrictOption.selected = true;
+                        }
+                        subdistrictSelect.appendChild(subdistrictOption);
+                    });
+                    subdistrictSelect.disabled = false;
+
+                    // Ensure we update the hidden input for subdistrict
+                    if (subdistrictSelect.selectedIndex > 0) {
+                        const selectedOption = subdistrictSelect.options[subdistrictSelect.selectedIndex];
+                        $('#subdistrict_id').val(selectedOption.getAttribute('data-id'));
+
+                        // Find the selected subdistrict code to load villages
+                        const selectedSubdistrictCode = selectedOption.value;
+
+                        if (selectedSubdistrictCode) {
+                            loadVillages(selectedSubdistrictCode, villageId);
+                        }
+                    } else {
+                        // Try to find matching subdistrict
+                        for (let i = 0; i < subdistrictSelect.options.length; i++) {
+                            if (subdistrictSelect.options[i].getAttribute('data-id') == subDistrictId) {
+                                subdistrictSelect.selectedIndex = i;
+                                $('#subdistrict_id').val(subDistrictId);
+                                loadVillages(subdistrictSelect.options[i].value, villageId);
+                                break;
+                            }
+                        }
+                    }
+                })
+                .catch(error => {
+                    const subdistrictSelect = document.getElementById('subdistrict_code');
+                    subdistrictSelect.innerHTML = '<option value="">Error loading data</option>';
+                });
+        }
+
+        // Separate function to load villages for better organization
+        function loadVillages(subdistrictCode, villageId) {
+            fetch(`{{ url('/location/villages') }}/${subdistrictCode}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(villages => {
+                    if (!villages || !Array.isArray(villages) || villages.length === 0) {
+                        return;
+                    }
+
+                    // Populate village dropdown
+                    const villageSelect = document.getElementById('village_code');
+                    villageSelect.innerHTML = '<option value="">Pilih Desa</option>';
+                    villages.forEach(village => {
+                        const villageOption = document.createElement('option');
+                        villageOption.value = village.code;
+                        villageOption.textContent = village.name;
+                        villageOption.setAttribute('data-id', village.id);
+                        if (village.id == villageId) {
+                            villageOption.selected = true;
+                        }
+                        villageSelect.appendChild(villageOption);
+                    });
+                    villageSelect.disabled = false;
+
+                    // Ensure we update the hidden input for village
+                    if (villageSelect.selectedIndex > 0) {
+                        const selectedOption = villageSelect.options[villageSelect.selectedIndex];
+                        $('#village_id').val(selectedOption.getAttribute('data-id'));
+                    }
+                })
+                .catch(error => {
+                    const villageSelect = document.getElementById('village_code');
+                    villageSelect.innerHTML = '<option value="">Error loading data</option>';
+                });
+        }
     </script>
 </x-layout>
-

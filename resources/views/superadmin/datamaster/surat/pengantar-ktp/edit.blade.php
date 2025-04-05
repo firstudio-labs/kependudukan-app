@@ -5,87 +5,10 @@
         <form method="POST" action="{{ route('superadmin.surat.pengantar-ktp.update', $ktp->id) }}" class="bg-white p-6 rounded-lg shadow-md">
             @csrf
             @method('PUT')
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Location Section -->
-                <div>
-                    <label for="province_code" class="block text-sm font-medium text-gray-700">Provinsi <span class="text-red-500">*</span></label>
-                    <select id="province_code" name="province_code" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
-                        <option value="">Pilih Provinsi</option>
-                        @foreach($provinces as $province)
-                            <option value="{{ $province['code'] }}" data-id="{{ $province['id'] }}" {{ $province['id'] == $ktp->province_id ? 'selected' : '' }}>{{ $province['name'] }}</option>
-                        @endforeach
-                    </select>
-                    <input type="hidden" id="province_id" name="province_id" value="{{ $ktp->province_id }}">
-                </div>
 
-                <div>
-                    <label for="district_code" class="block text-sm font-medium text-gray-700">Kabupaten <span class="text-red-500">*</span></label>
-                    <select id="district_code" name="district_code" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
-                        <option value="">Pilih Kabupaten</option>
-                        @foreach($districts as $district)
-                            <option value="{{ $district['code'] }}" data-id="{{ $district['id'] }}" {{ $district['id'] == $ktp->district_id ? 'selected' : '' }}>{{ $district['name'] }}</option>
-                        @endforeach
-                    </select>
-                    <input type="hidden" id="district_id" name="district_id" value="{{ $ktp->district_id }}">
-                </div>
-
-                <div>
-                    <label for="subdistrict_code" class="block text-sm font-medium text-gray-700">Kecamatan <span class="text-red-500">*</span></label>
-                    <select id="subdistrict_code" name="subdistrict_code" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
-                        <option value="">Pilih Kecamatan</option>
-                        @foreach($subDistricts as $subDistrict)
-                            <option value="{{ $subDistrict['code'] }}" data-id="{{ $subDistrict['id'] }}" {{ $subDistrict['id'] == $ktp->subdistrict_id ? 'selected' : '' }}>{{ $subDistrict['name'] }}</option>
-                        @endforeach
-                    </select>
-                    <input type="hidden" id="subdistrict_id" name="subdistrict_id" value="{{ $ktp->subdistrict_id }}">
-                </div>
-
-                <div>
-                    <label for="village_code" class="block text-sm font-medium text-gray-700">Desa <span class="text-red-500">*</span></label>
-                    <select id="village_code" name="village_code" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
-                        <option value="">Pilih Desa</option>
-                        @foreach($villages as $village)
-                            <option value="{{ $village['code'] }}" data-id="{{ $village['id'] }}" {{ $village['id'] == $ktp->village_id ? 'selected' : '' }}>{{ $village['name'] }}</option>
-                        @endforeach
-                    </select>
-                    <input type="hidden" id="village_id" name="village_id" value="{{ $ktp->village_id }}">
-                </div>
-
-                <!-- Nomor Surat -->
-                <div>
-                    <label for="letter_number" class="block text-sm font-medium text-gray-700">Nomor Surat</label>
-                    <input type="text" id="letter_number" name="letter_number" value="{{ $ktp->letter_number }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
-                </div>
-
-                <!-- Pejabat Penandatangan -->
-                <div>
-                    <label for="signing" class="block text-sm font-medium text-gray-700">Pejabat Penandatangan</label>
-                    <input type="text" id="signing" name="signing" value="{{ $ktp->signing }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
-                </div>
-            </div>
-
-            <!-- Jenis Permohonan -->
-            <div class="mt-8">
-                <h2 class="text-lg font-semibold text-gray-700 mb-3">Jenis Permohonan</h2>
-                <div class="border p-4 rounded-md mb-4 bg-gray-50">
-                    <div>
-                        <label for="application_type" class="block text-sm font-medium text-gray-700">Permohonan KTP <span class="text-red-500">*</span></label>
-                        <select id="application_type" name="application_type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
-                            <option value="">Pilih Jenis Permohonan</option>
-                            <option value="Baru" {{ $ktp->application_type == 'Baru' ? 'selected' : '' }}>Baru</option>
-                            <option value="Perpanjang" {{ $ktp->application_type == 'Perpanjang' ? 'selected' : '' }}>Perpanjang</option>
-                            <option value="Pergantian" {{ $ktp->application_type == 'Pergantian' ? 'selected' : '' }}>Pergantian</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Pemohon KTP -->
-            <div class="mt-8">
-                <div class="flex justify-between items-center mb-3">
-                    <h2 class="text-lg font-semibold text-gray-700">Data Pemohon</h2>
-                </div>
-
+            <!-- Data Pemohon Section -->
+            <div class="mt-4">
+                <h2 class="text-lg font-semibold text-gray-700 mb-3">Data Pemohon</h2>
                 <div class="border p-4 rounded-md mb-4 bg-gray-50">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <!-- NIK with Search -->
@@ -106,18 +29,12 @@
                             </select>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <!-- KK dan Alamat Information -->
-            <div class="mt-8">
-                <h2 class="text-lg font-semibold text-gray-700 mb-3">Informasi Kartu Keluarga & Alamat</h2>
-                <div class="border p-4 rounded-md mb-4 bg-gray-50">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <!-- Nomor Kartu Keluarga - now a simple text input -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+                        <!-- Nomor Kartu Keluarga -->
                         <div>
                             <label for="kk" class="block text-sm font-medium text-gray-700">Nomor Kartu Keluarga <span class="text-red-500">*</span></label>
-                            <input type="number" id="kk" name="kk" value="{{ $ktp->kk }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                            <input type="text" id="kk" name="kk" value="{{ $ktp->kk }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                         </div>
 
                         <!-- Alamat -->
@@ -132,12 +49,14 @@
                         <div>
                             <label for="rt" class="block text-sm font-medium text-gray-700">RT <span class="text-red-500">*</span></label>
                             <input type="text" id="rt" name="rt" value="{{ $ktp->rt }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                            <small class="text-gray-500">Contoh: 001, 002, dll.</small>
                         </div>
 
                         <!-- RW -->
                         <div>
                             <label for="rw" class="block text-sm font-medium text-gray-700">RW <span class="text-red-500">*</span></label>
                             <input type="text" id="rw" name="rw" value="{{ $ktp->rw }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                            <small class="text-gray-500">Contoh: 001, 002, dll.</small>
                         </div>
 
                         <!-- Dusun -->
@@ -146,39 +65,96 @@
                             <input type="text" id="hamlet" name="hamlet" value="{{ $ktp->hamlet }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                         </div>
                     </div>
+                </div>
+            </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
-                        <!-- Changed: Kecamatan as select that will be populated from API -->
+            <!-- Data Wilayah Section -->
+            <div class="mt-6">
+                <h2 class="text-lg font-semibold text-gray-700 mb-3">Data Wilayah</h2>
+                <div class="border p-4 rounded-md mb-4 bg-gray-50">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Provinsi -->
                         <div>
-                            <label for="sub_district_selector" class="block text-sm font-medium text-gray-700">Kecamatan</label>
-                            <select id="sub_district_selector"
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-lg p-2"
-                                required>
-                                <option value="">Pilih Kecamatan</option>
-                                @foreach(isset($addressSubDistricts) ? $addressSubDistricts : $subDistricts as $subDistrict)
-                                    <option value="{{ $subDistrict['code'] }}" data-id="{{ $subDistrict['id'] }}" {{ $subDistrict['id'] == $ktp->subdistrict_name ? 'selected' : '' }}>{{ $subDistrict['name'] }}</option>
+                            <label for="province_code" class="block text-sm font-medium text-gray-700">Provinsi <span class="text-red-500">*</span></label>
+                            <select id="province_code" name="province_code" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                                <option value="">Pilih Provinsi</option>
+                                @foreach($provinces as $province)
+                                    <option value="{{ $province['code'] }}" data-id="{{ $province['id'] }}" {{ $province['id'] == $ktp->province_id ? 'selected' : '' }}>{{ $province['name'] }}</option>
                                 @endforeach
                             </select>
-                            <!-- Hidden field to store sub_district ID -->
-                            <input type="hidden" id="sub_district_id_hidden" value="{{ $ktp->subdistrict_name }}">
-                            <!-- This is the field that will be submitted with the form -->
-                            <input type="hidden" name="subdistrict_name" id="subdistrict_name_hidden" value="{{ $ktp->subdistrict_name }}">
+                            <input type="hidden" id="province_id" name="province_id" value="{{ $ktp->province_id }}">
                         </div>
 
+                        <!-- Kabupaten -->
                         <div>
-                            <label for="village_selector" class="block text-sm font-medium text-gray-700">Desa/Kelurahan</label>
-                            <select id="village_selector"
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-lg p-2"
-                                required>
-                                <option value="">Pilih Desa/Kelurahan</option>
-                                @foreach(isset($addressVillages) ? $addressVillages : $villages as $village)
-                                    <option value="{{ $village['code'] }}" data-id="{{ $village['id'] }}" {{ $village['id'] == $ktp->village_name ? 'selected' : '' }}>{{ $village['name'] }}</option>
+                            <label for="district_code" class="block text-sm font-medium text-gray-700">Kabupaten <span class="text-red-500">*</span></label>
+                            <select id="district_code" name="district_code" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                                <option value="">Pilih Kabupaten</option>
+                                @foreach($districts as $district)
+                                    <option value="{{ $district['code'] }}" data-id="{{ $district['id'] }}" {{ $district['id'] == $ktp->district_id ? 'selected' : '' }}>{{ $district['name'] }}</option>
                                 @endforeach
                             </select>
-                            <!-- Hidden field to store village ID -->
-                            <input type="hidden" id="village_id_hidden" value="{{ $ktp->village_name }}">
-                            <!-- This is the field that will be submitted with the form -->
-                            <input type="hidden" name="village_name" id="village_name_hidden" value="{{ $ktp->village_name }}">
+                            <input type="hidden" id="district_id" name="district_id" value="{{ $ktp->district_id }}">
+                        </div>
+
+                        <!-- Kecamatan -->
+                        <div>
+                            <label for="subdistrict_code" class="block text-sm font-medium text-gray-700">Kecamatan <span class="text-red-500">*</span></label>
+                            <select id="subdistrict_code" name="subdistrict_code" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                                <option value="">Pilih Kecamatan</option>
+                                @foreach($subDistricts as $subDistrict)
+                                    <option value="{{ $subDistrict['code'] }}" data-id="{{ $subDistrict['id'] }}" {{ $subDistrict['id'] == $ktp->subdistrict_id ? 'selected' : '' }}>{{ $subDistrict['name'] }}</option>
+                                @endforeach
+                            </select>
+                            <input type="hidden" id="subdistrict_id" name="subdistrict_id" value="{{ $ktp->subdistrict_id }}">
+                        </div>
+
+                        <!-- Desa -->
+                        <div>
+                            <label for="village_code" class="block text-sm font-medium text-gray-700">Desa <span class="text-red-500">*</span></label>
+                            <select id="village_code" name="village_code" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                                <option value="">Pilih Desa</option>
+                                @foreach($villages as $village)
+                                    <option value="{{ $village['code'] }}" data-id="{{ $village['id'] }}" {{ $village['id'] == $ktp->village_id ? 'selected' : '' }}>{{ $village['name'] }}</option>
+                                @endforeach
+                            </select>
+                            <input type="hidden" id="village_id" name="village_id" value="{{ $ktp->village_id }}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Informasi Surat Section -->
+            <div class="mt-6">
+                <h2 class="text-lg font-semibold text-gray-700 mb-3">Informasi Surat</h2>
+                <div class="border p-4 rounded-md mb-4 bg-gray-50">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <!-- Jenis Permohonan -->
+                        <div>
+                            <label for="application_type" class="block text-sm font-medium text-gray-700">Permohonan KTP <span class="text-red-500">*</span></label>
+                            <select id="application_type" name="application_type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                                <option value="">Pilih Jenis Permohonan</option>
+                                <option value="Baru" {{ $ktp->application_type == 'Baru' ? 'selected' : '' }}>Baru</option>
+                                <option value="Perpanjang" {{ $ktp->application_type == 'Perpanjang' ? 'selected' : '' }}>Perpanjang</option>
+                                <option value="Pergantian" {{ $ktp->application_type == 'Pergantian' ? 'selected' : '' }}>Pergantian</option>
+                            </select>
+                        </div>
+
+                        <!-- Nomor Surat -->
+                        <div>
+                            <label for="letter_number" class="block text-sm font-medium text-gray-700">Nomor Surat</label>
+                            <input type="text" id="letter_number" name="letter_number" value="{{ $ktp->letter_number }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                        </div>
+
+                        <!-- Pejabat Penandatangan -->
+                        <div>
+                            <label for="signing" class="block text-sm font-medium text-gray-700">Pejabat Penandatangan</label>
+                            <select id="signing" name="signing" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                                <option value="">Pilih Pejabat</option>
+                                @foreach($signers as $signer)
+                                    <option value="{{ $signer->id }}" {{ $ktp->signing == $signer->id ? 'selected' : '' }}>{{ $signer->judul }} - {{ $signer->keterangan }}</option>
+                                @endforeach
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -217,23 +193,18 @@
         @endif
 
         document.addEventListener('DOMContentLoaded', function() {
-            // Define isUpdating in the global scope so all handlers can access it
+            // Ensure the signing field is correctly submitted as an ID
+            const form = document.querySelector('form');
+            form.addEventListener('submit', function(e) {
+                const signingSelect = document.getElementById('signing');
+                if (signingSelect.value) {
+                    // Make sure it's treated as a numeric ID
+                    signingSelect.value = parseInt(signingSelect.value, 10) || signingSelect.value;
+                }
+            });
+
             let isUpdating = false;
-
-            // Store the loaded citizens for reuse
             let allCitizens = [];
-
-            // Create mapping objects to convert between IDs and codes
-            let provinceCodeMap = {};
-            let districtCodeMap = {};
-            let subDistrictCodeMap = {};
-            let villageCodeMap = {};
-
-            // Reverse maps to get ID from code
-            let provinceIdMap = {};
-            let districtIdMap = {};
-            let subDistrictIdMap = {};
-            let villageIdMap = {};
 
             // Initialize Select2 for NIK and Full Name selects
             $('#nikSelect').select2({
@@ -261,258 +232,6 @@
                     }
                 }
             });
-
-            // Function to initialize the address section selectors with correct values
-            async function initializeAddressSelectors() {
-                try {
-                    // Get the subdistrict and village IDs from the database record
-                    const subDistrictId = {{ $ktp->subdistrict_name ?? 'null' }};
-                    const villageId = {{ $ktp->village_name ?? 'null' }};
-
-                    if (!subDistrictId) return;
-
-                    // First, we need district data to get subdistricts
-                    const districtId = {{ $ktp->district_id ?? 'null' }};
-                    if (!districtId) return;
-
-                    // Get province ID for district data
-                    const provinceId = {{ $ktp->province_id ?? 'null' }};
-                    if (!provinceId) return;
-
-                    // Load province code mappings
-                    await loadProvinceCodeMap();
-
-                    // Get province code from ID
-                    const provinceCode = provinceCodeMap[provinceId];
-                    if (!provinceCode) return;
-
-                    // Load districts for this province
-                    const districts = await loadDistrictCodeMap(provinceCode);
-
-                    // Find the district data for this district ID
-                    const districtData = districts.find(d => d.id === districtId);
-                    if (!districtData) return;
-
-                    const districtCode = districtData.code;
-
-                    // Load subdistricts for this district
-                    const subdistricts = await loadSubDistrictCodeMap(districtCode);
-
-                    // Find matching subdistrict for our subdistrict_name ID
-                    const subDistrictData = subdistricts.find(sd => sd.id == subDistrictId);
-                    if (!subDistrictData) {
-                        // Still set the hidden values
-                        $('#sub_district_id_hidden').val(subDistrictId);
-                        $('#subdistrict_name_hidden').val(subDistrictId);
-                        return;
-                    }
-
-                    const subDistrictCode = subDistrictData.code;
-                    const subDistrictName = subDistrictData.name;
-
-                    // Update the subdistrict dropdown
-                    $('#sub_district_selector').html('<option value="">Pilih Kecamatan</option>');
-
-                    // Populate all subdistricts for this district
-                    subdistricts.forEach(subdistrict => {
-                        const option = $('<option></option>')
-                            .val(subdistrict.code)
-                            .text(subdistrict.name)
-                            .attr('data-id', subdistrict.id);
-
-                        if (subdistrict.id == subDistrictId) {
-                            option.prop('selected', true);
-                        }
-
-                        $('#sub_district_selector').append(option);
-                    });
-
-                    // Make sure selected value is set
-                    $('#sub_district_selector').val(subDistrictCode);
-                    $('#sub_district_id_hidden').val(subDistrictId);
-                    $('#subdistrict_name_hidden').val(subDistrictId);
-
-                    // Now load village data for this subdistrict
-                    const villages = await loadVillageCodeMap(subDistrictCode);
-
-                    // Find matching village for our village_name ID
-                    const villageData = villages.find(v => v.id == villageId);
-                    if (!villageData) {
-                        // Still set the hidden values
-                        $('#village_id_hidden').val(villageId);
-                        $('#village_name_hidden').val(villageId);
-                        return;
-                    }
-
-                    const villageCode = villageData.code;
-                    const villageName = villageData.name;
-
-                    // Update the village dropdown
-                    $('#village_selector').html('<option value="">Pilih Desa/Kelurahan</option>');
-
-                    // Populate all villages for this subdistrict
-                    villages.forEach(village => {
-                        const option = $('<option></option>')
-                            .val(village.code)
-                            .text(village.name)
-                            .attr('data-id', village.id);
-
-                        if (village.id == villageId) {
-                            option.prop('selected', true);
-                        }
-
-                        $('#village_selector').append(option);
-                    });
-
-                    // Make sure selected value is set
-                    $('#village_selector').val(villageCode);
-                    $('#village_id_hidden').val(villageId);
-                    $('#village_name_hidden').val(villageId);
-
-                } catch (error) {
-                    console.error('Error initializing address selectors:', error);
-
-                    // Set basic values from database as fallback
-                    const subDistrictId = {{ $ktp->subdistrict_name ?? 'null' }};
-                    const villageId = {{ $ktp->village_name ?? 'null' }};
-
-                    $('#sub_district_id_hidden').val(subDistrictId);
-                    $('#subdistrict_name_hidden').val(subDistrictId);
-                    $('#village_id_hidden').val(villageId);
-                    $('#village_name_hidden').val(villageId);
-                }
-            }
-
-            // Function to load province codes and store the ID-to-code mapping
-            async function loadProvinceCodeMap() {
-                try {
-                    // If we already have data, don't reload
-                    if (Object.keys(provinceCodeMap).length > 0) {
-                        return;
-                    }
-
-                    const response = await $.ajax({
-                        url: `{{ url('/location/provinces') }}`,
-                        type: 'GET'
-                    });
-
-                    let provinces = [];
-                    if (response && Array.isArray(response)) {
-                        provinces = response;
-                    } else if (response && response.data && Array.isArray(response.data)) {
-                        provinces = response.data;
-                    }
-
-                    if (provinces.length > 0) {
-                        // Create mappings in both directions
-                        provinces.forEach(province => {
-                            provinceCodeMap[province.id] = province.code;
-                            provinceIdMap[province.code] = province.id;
-                        });
-                    }
-                } catch (error) {
-                    console.error('Error loading province maps:', error);
-                }
-            }
-
-            // Function to get district code map for a specific province
-            async function loadDistrictCodeMap(provinceCode) {
-                try {
-                    const response = await $.ajax({
-                        url: `{{ url('/location/districts') }}/${provinceCode}`,
-                        type: 'GET'
-                    });
-
-                    let districts = [];
-                    if (response && Array.isArray(response)) {
-                        districts = response;
-                    } else if (response && response.data && Array.isArray(response.data)) {
-                        districts = response.data;
-                    }
-
-                    // Reset the maps before adding new data
-                    districtCodeMap = {};
-                    districtIdMap = {};
-
-                    if (districts.length > 0) {
-                        // Create mappings in both directions
-                        districts.forEach(district => {
-                            districtCodeMap[district.id] = district.code;
-                            districtIdMap[district.code] = district.id;
-                        });
-                    }
-                    return districts;
-                } catch (error) {
-                    console.error('Error loading district maps:', error);
-                    return [];
-                }
-            }
-
-            // Function to get subdistrict code map for a specific district
-            async function loadSubDistrictCodeMap(districtCode) {
-                try {
-                    const response = await $.ajax({
-                        url: `{{ url('/location/sub-districts') }}/${districtCode}`,
-                        type: 'GET'
-                    });
-
-                    let subDistricts = [];
-                    if (response && Array.isArray(response)) {
-                        subDistricts = response;
-                    } else if (response && response.data && Array.isArray(response.data)) {
-                        subDistricts = response.data;
-                    }
-
-                    // Reset the maps before adding new data
-                    subDistrictCodeMap = {};
-                    subDistrictIdMap = {};
-
-                    if (subDistricts.length > 0) {
-                        // Create mappings in both directions
-                        subDistricts.forEach(subDistrict => {
-                            subDistrictCodeMap[subDistrict.id] = subDistrict.code;
-                            subDistrictIdMap[subDistrict.code] = subDistrict.id;
-                        });
-                    }
-                    return subDistricts;
-                } catch (error) {
-                    console.error('Error loading subdistrict maps:', error);
-                    return [];
-                }
-            }
-
-            // Function to get village code map for a specific subdistrict
-            async function loadVillageCodeMap(subDistrictCode) {
-                try {
-                    const response = await $.ajax({
-                        url: `{{ url('/location/villages') }}/${subDistrictCode}`,
-                        type: 'GET'
-                    });
-
-                    let villages = [];
-                    if (response && Array.isArray(response)) {
-                        villages = response;
-                    } else if (response && response.data && Array.isArray(response.data)) {
-                        villages = response.data;
-                    }
-
-                    // Reset the maps before adding new data
-                    villageCodeMap = {};
-                    villageIdMap = {};
-
-                    if (villages.length > 0) {
-                        // Create mappings in both directions
-                        villages.forEach(village => {
-                            villageCodeMap[village.id] = village.code;
-                            villageIdMap[village.code] = village.id;
-                        });
-                    }
-                    return villages;
-                } catch (error) {
-                    console.error('Error loading village maps:', error);
-                    return [];
-                }
-            }
 
             // Load citizens data from the administrasi route
             async function fetchCitizens() {
@@ -543,14 +262,6 @@
 
                     // Process citizens data and populate dropdowns
                     populateCitizensDropdowns(citizensList);
-
-                    // Also load the province code mappings
-                    await loadProvinceCodeMap();
-
-                    // Initialize the address section selectors once data is loaded
-                    initializeAddressSelectors();
-
-                    return citizensList;
                 } catch (error) {
                     console.error('Error fetching citizens data:', error);
                 }
@@ -561,8 +272,8 @@
                 if (!citizens || !Array.isArray(citizens)) return;
 
                 // Clear existing options first but keep selected ones
-                const currentNik = $('#nikSelect').val();
-                const currentName = $('#fullNameSelect').val();
+                const currentNik = '{{ $ktp->nik }}';
+                const currentName = '{{ $ktp->full_name }}';
 
                 $('#nikSelect').empty().append('<option value="">Pilih NIK</option>');
                 $('#fullNameSelect').empty().append('<option value="">Pilih Nama Lengkap</option>');
@@ -635,108 +346,8 @@
                 });
             }
 
-            // Function to populate location dropdowns using ID or code
-            async function populateLocationDropdowns(provinceId, districtId, subDistrictId, villageId) {
-                try {
-                    // Update the address section selectors hidden fields
-                    $('#sub_district_id_hidden').val(subDistrictId || '');
-                    $('#village_id_hidden').val(villageId || '');
-
-                    // Also set the ID values to the name fields (not the actual names)
-                    $('#subdistrict_name_hidden').val(subDistrictId || '');
-                    $('#village_name_hidden').val(villageId || '');
-
-                    // If we have province ID but not the code, we need to load it
-                    if (provinceId && !provinceCodeMap[provinceId]) {
-                        await loadProvinceCodeMap();
-                    }
-
-                    // Get the province code
-                    const provinceCode = provinceCodeMap[provinceId];
-                    if (!provinceCode) {
-                        return;
-                    }
-
-                    // Now load district data for this province without changing the top dropdown
-                    const districts = await loadDistrictCodeMap(provinceCode);
-
-                    // Get the district code
-                    const districtCode = districtCodeMap[districtId];
-                    if (!districtCode) {
-                        return;
-                    }
-
-                    // Now load subdistrict data for this district
-                    const subdistricts = await loadSubDistrictCodeMap(districtCode);
-
-                    // Get the subdistrict code
-                    const subDistrictCode = subDistrictCodeMap[subDistrictId];
-                    if (!subDistrictCode) {
-                        return;
-                    }
-
-                    // Now load village data for this subdistrict
-                    const villages = await loadVillageCodeMap(subDistrictCode);
-
-                    // Get the village code
-                    const villageCode = villageCodeMap[villageId];
-                    if (!villageCode) {
-                        return;
-                    }
-
-                    // Update only the address info section fields
-
-                    // Update subdistrict in address section
-                    const selectedSubdistrict = subdistricts.find(sd => sd.id == subDistrictId);
-                    if (selectedSubdistrict) {
-                        // Ensure we're setting the ID in the hidden field
-                        $('#subdistrict_name_hidden').val(subDistrictId);
-
-                        // Update the sub_district_selector dropdown with available options
-                        $('#sub_district_selector').html('<option value="">Pilih Kecamatan</option>');
-                        subdistricts.forEach(subdistrict => {
-                            const option = $('<option></option>')
-                                .val(subdistrict.code)
-                                .text(subdistrict.name)
-                                .attr('data-id', subdistrict.id);
-
-                            if (subdistrict.id == subDistrictId) {
-                                option.prop('selected', true);
-                            }
-
-                            $('#sub_district_selector').append(option);
-                        });
-                    }
-
-                    // Update village in address section
-                    const selectedVillage = villages.find(v => v.id == villageId);
-                    if (selectedVillage) {
-                        // Ensure we're setting the ID in the hidden field
-                        $('#village_name_hidden').val(villageId);
-
-                        // Update the village_selector dropdown with available options
-                        $('#village_selector').html('<option value="">Pilih Desa</option>');
-                        villages.forEach(village => {
-                            const option = $('<option></option>')
-                                .val(village.code)
-                                .text(village.name)
-                                .attr('data-id', village.id);
-
-                            if (village.id == villageId) {
-                                option.prop('selected', true);
-                            }
-
-                            $('#village_selector').append(option);
-                        });
-                    }
-
-                } catch (error) {
-                    console.error('Error populating location dropdowns:', error);
-                }
-            }
-
             // Handle NIK select change - Update all related fields including KK, address, etc.
-            $('#nikSelect').on('select2:select', async function (e) {
+            $('#nikSelect').on('select2:select', function (e) {
                 if (isUpdating) return; // Prevent recursion
                 isUpdating = true;
 
@@ -761,9 +372,25 @@
                         const subDistrictId = citizen.subdistrict_id || citizen.sub_district_id;
                         const villageId = citizen.village_id;
 
-                        // If we have location IDs, populate ONLY the address section location dropdowns
-                        if (subDistrictId || villageId) {
-                            await populateLocationDropdowns(provinceId, districtId, subDistrictId, villageId);
+                        // Update the main location fields (top section)
+                        if (provinceId) {
+                            // Set the province_id hidden input
+                            $('#province_id').val(provinceId);
+
+                            // Find and select the correct province in the dropdown
+                            let provinceFound = false;
+                            const provinceSelect = document.getElementById('province_code');
+                            for (let i = 0; i < provinceSelect.options.length; i++) {
+                                const option = provinceSelect.options[i];
+                                if (option.getAttribute('data-id') == provinceId) {
+                                    provinceSelect.value = option.value;
+                                    provinceFound = true;
+
+                                    // Trigger a change event to load district data
+                                    $(provinceSelect).trigger('change');
+                                    break;
+                                }
+                            }
                         }
                     }
                 } catch (error) {
@@ -773,8 +400,8 @@
                 }
             });
 
-            // Handle Full Name select change - Update NIK and all related fields
-            $('#fullNameSelect').on('select2:select', async function (e) {
+            // Full name select change handler - similar to NIK but starting with name
+            $('#fullNameSelect').on('select2:select', function (e) {
                 if (isUpdating) return; // Prevent recursion
                 isUpdating = true;
 
@@ -793,16 +420,31 @@
                         $('#rw').val(citizen.rw || '');
                         $('#hamlet').val(citizen.hamlet || citizen.dusun || '');
 
-
                         // Set location IDs from citizen data
                         const provinceId = citizen.province_id;
                         const districtId = citizen.district_id;
                         const subDistrictId = citizen.subdistrict_id || citizen.sub_district_id;
                         const villageId = citizen.village_id;
 
-                        // If we have location IDs, populate the location dropdowns
-                        if (subDistrictId || villageId) {
-                            await populateLocationDropdowns(provinceId, districtId, subDistrictId, villageId);
+                        // Update the main location fields (top section)
+                        if (provinceId) {
+                            // Set the province_id hidden input
+                            $('#province_id').val(provinceId);
+
+                            // Find and select the correct province in the dropdown
+                            let provinceFound = false;
+                            const provinceSelect = document.getElementById('province_code');
+                            for (let i = 0; i < provinceSelect.options.length; i++) {
+                                const option = provinceSelect.options[i];
+                                if (option.getAttribute('data-id') == provinceId) {
+                                    provinceSelect.value = option.value;
+                                    provinceFound = true;
+
+                                    // Trigger a change event to load district data
+                                    $(provinceSelect).trigger('change');
+                                    break;
+                                }
+                            }
                         }
                     }
                 } catch (error) {
@@ -836,60 +478,50 @@
                     provinceIdInput.value = '';
                 }
 
-                // Reset and disable dependent dropdowns
-                districtSelect.innerHTML = '<option value="">Pilih Kabupaten</option>';
-                districtSelect.disabled = !provinceCode;
+                if (provinceCode && !districtSelect.disabled) {
+                    // The districts are already loaded, so we don't need to reload them
+                    return;
+                }
 
-                subDistrictSelect.innerHTML = '<option value="">Pilih Kecamatan</option>';
-                subDistrictSelect.disabled = true;
-
-                villageSelect.innerHTML = '<option value="">Pilih Desa</option>';
-                villageSelect.disabled = true;
-
-                // Clear dependent hidden inputs
-                districtIdInput.value = '';
-                subDistrictIdInput.value = '';
-                villageIdInput.value = '';
-
+                // If we need to load new districts...
                 if (provinceCode) {
                     // Show loading state
                     districtSelect.innerHTML = '<option value="">Loading...</option>';
+                    districtSelect.disabled = false;
 
                     // Fetch districts for this province
                     fetch(`{{ url('/location/districts') }}/${provinceCode}`)
                         .then(response => response.json())
                         .then(data => {
-                            let districts = [];
-                            if (data && Array.isArray(data)) {
-                                districts = data;
-                            } else if (data && data.data && Array.isArray(data.data)) {
-                                districts = data.data;
-                            }
-
                             districtSelect.innerHTML = '<option value="">Pilih Kabupaten</option>';
 
-                            if (districts.length > 0) {
-                                // Update district maps
-                                districtCodeMap = {};
-                                districtIdMap = {};
-
-                                districts.forEach(district => {
+                            if (data && data.length > 0) {
+                                data.forEach(district => {
                                     const option = document.createElement('option');
                                     option.value = district.code;
                                     option.textContent = district.name;
                                     option.setAttribute('data-id', district.id);
-                                    districtSelect.appendChild(option);
 
-                                    // Update district maps
-                                    districtCodeMap[district.id] = district.code;
-                                    districtIdMap[district.code] = district.id;
+                                    // Check if this district matches the one we want to select
+                                    if (district.id == {{ $ktp->district_id ?? 'null' }}) {
+                                        option.selected = true;
+                                        districtIdInput.value = district.id;
+                                    }
+
+                                    districtSelect.appendChild(option);
                                 });
 
                                 districtSelect.disabled = false;
+
+                                // If we selected a district, trigger a change event to load subdisticts
+                                if (districtIdInput.value) {
+                                    $(districtSelect).trigger('change');
+                                }
                             }
                         })
                         .catch(error => {
                             districtSelect.innerHTML = '<option value="">Error loading data</option>';
+                            console.error('Error fetching districts:', error);
                         });
                 }
             });
@@ -906,56 +538,50 @@
                     districtIdInput.value = '';
                 }
 
-                // Reset and disable dependent dropdowns
-                subDistrictSelect.innerHTML = '<option value="">Pilih Kecamatan</option>';
-                subDistrictSelect.disabled = !districtCode;
+                if (districtCode && !subDistrictSelect.disabled) {
+                    // The subdistricts are already loaded, so we don't need to reload them
+                    return;
+                }
 
-                villageSelect.innerHTML = '<option value="">Pilih Desa</option>';
-                villageSelect.disabled = true;
-
-                // Clear dependent hidden inputs
-                subDistrictIdInput.value = '';
-                villageIdInput.value = '';
-
+                // If we need to load new subdistricts...
                 if (districtCode) {
                     // Show loading state
                     subDistrictSelect.innerHTML = '<option value="">Loading...</option>';
+                    subDistrictSelect.disabled = false;
 
                     // Fetch subdistricts for this district
                     fetch(`{{ url('/location/sub-districts') }}/${districtCode}`)
                         .then(response => response.json())
                         .then(data => {
-                            let subdistricts = [];
-                            if (data && Array.isArray(data)) {
-                                subdistricts = data;
-                            } else if (data && data.data && Array.isArray(data.data)) {
-                                subdistricts = data.data;
-                            }
-
                             subDistrictSelect.innerHTML = '<option value="">Pilih Kecamatan</option>';
 
-                            if (subdistricts.length > 0) {
-                                // Update subdistrict maps
-                                subDistrictCodeMap = {};
-                                subDistrictIdMap = {};
-
-                                subdistricts.forEach(subDistrict => {
+                            if (data && data.length > 0) {
+                                data.forEach(subdistrict => {
                                     const option = document.createElement('option');
-                                    option.value = subDistrict.code;
-                                    option.textContent = subDistrict.name;
-                                    option.setAttribute('data-id', subDistrict.id);
-                                    subDistrictSelect.appendChild(option);
+                                    option.value = subdistrict.code;
+                                    option.textContent = subdistrict.name;
+                                    option.setAttribute('data-id', subdistrict.id);
 
-                                    // Update subdistrict maps
-                                    subDistrictCodeMap[subDistrict.id] = subDistrict.code;
-                                    subDistrictIdMap[subDistrict.code] = subDistrict.id;
+                                    // Check if this subdistrict matches the one we want to select
+                                    if (subdistrict.id == {{ $ktp->subdistrict_id ?? 'null' }}) {
+                                        option.selected = true;
+                                        subDistrictIdInput.value = subdistrict.id;
+                                    }
+
+                                    subDistrictSelect.appendChild(option);
                                 });
 
                                 subDistrictSelect.disabled = false;
+
+                                // If we selected a subdistrict, trigger a change event to load villages
+                                if (subDistrictIdInput.value) {
+                                    $(subDistrictSelect).trigger('change');
+                                }
                             }
                         })
                         .catch(error => {
                             subDistrictSelect.innerHTML = '<option value="">Error loading data</option>';
+                            console.error('Error fetching subdistricts:', error);
                         });
                 }
             });
@@ -972,45 +598,37 @@
                     subDistrictIdInput.value = '';
                 }
 
-                // Reset and disable dependent dropdown
-                villageSelect.innerHTML = '<option value="">Pilih Desa</option>';
-                villageSelect.disabled = !subDistrictCode;
+                if (subDistrictCode && !villageSelect.disabled) {
+                    // The villages are already loaded, so we don't need to reload them
+                    return;
+                }
 
-                // Clear dependent hidden input
-                villageIdInput.value = '';
-
+                // If we need to load new villages...
                 if (subDistrictCode) {
                     // Show loading state
                     villageSelect.innerHTML = '<option value="">Loading...</option>';
+                    villageSelect.disabled = false;
 
                     // Fetch villages for this subdistrict
                     fetch(`{{ url('/location/villages') }}/${subDistrictCode}`)
                         .then(response => response.json())
                         .then(data => {
-                            let villages = [];
-                            if (data && Array.isArray(data)) {
-                                villages = data;
-                            } else if (data && data.data && Array.isArray(data.data)) {
-                                villages = data.data;
-                            }
-
                             villageSelect.innerHTML = '<option value="">Pilih Desa</option>';
 
-                            if (villages.length > 0) {
-                                // Update village maps
-                                villageCodeMap = {};
-                                villageIdMap = {};
-
-                                villages.forEach(village => {
+                            if (data && data.length > 0) {
+                                data.forEach(village => {
                                     const option = document.createElement('option');
                                     option.value = village.code;
                                     option.textContent = village.name;
                                     option.setAttribute('data-id', village.id);
-                                    villageSelect.appendChild(option);
 
-                                    // Update village maps
-                                    villageCodeMap[village.id] = village.code;
-                                    villageIdMap[village.code] = village.id;
+                                    // Check if this village matches the one we want to select
+                                    if (village.id == {{ $ktp->village_id ?? 'null' }}) {
+                                        option.selected = true;
+                                        villageIdInput.value = village.id;
+                                    }
+
+                                    villageSelect.appendChild(option);
                                 });
 
                                 villageSelect.disabled = false;
@@ -1018,6 +636,7 @@
                         })
                         .catch(error => {
                             villageSelect.innerHTML = '<option value="">Error loading data</option>';
+                            console.error('Error fetching villages:', error);
                         });
                 }
             });
@@ -1034,91 +653,8 @@
                 }
             });
 
-            // Add event handlers for sub_district_selector and village_selector
-            $('#sub_district_selector').on('change', function() {
-                const selectedOption = $(this).find('option:selected');
-                const subDistrictId = selectedOption.attr('data-id');
-                const subDistrictCode = $(this).val();
-                const subDistrictName = selectedOption.text();
-
-                // Store the ID, not the name
-                $('#sub_district_id_hidden').val(subDistrictId || '');
-                $('#subdistrict_name_hidden').val(subDistrictId || '');
-
-                // If we have a subdistrict code but no villages, load villages
-                if (subDistrictCode) {
-                    // Show loading state
-                    $('#village_selector').html('<option value="">Loading...</option>').prop('disabled', true);
-
-                    // Fetch villages for this subdistrict
-                    fetch(`{{ url('/location/villages') }}/${subDistrictCode}`)
-                        .then(response => response.json())
-                        .then(data => {
-                            let villages = [];
-                            if (data && Array.isArray(data)) {
-                                villages = data;
-                            } else if (data && data.data && Array.isArray(data.data)) {
-                                villages = data.data;
-                            }
-
-                            // Clear and repopulate village dropdown
-                            $('#village_selector').html('<option value="">Pilih Desa</option>').prop('disabled', false);
-
-                            villages.forEach(village => {
-                                const option = document.createElement('option');
-                                option.value = village.code;
-                                option.textContent = village.name;
-                                option.setAttribute('data-id', village.id);
-                                document.getElementById('village_selector').appendChild(option);
-
-                                // Also update the village maps
-                                villageCodeMap[village.id] = village.code;
-                                villageIdMap[village.code] = village.id;
-                            });
-                        })
-                        .catch(error => {
-                            $('#village_selector').html('<option value="">Error loading villages</option>').prop('disabled', false);
-                        });
-                }
-            });
-
-            $('#village_selector').on('change', function() {
-                const selectedOption = $(this).find('option:selected');
-                const villageId = selectedOption.attr('data-id');
-                const villageCode = $(this).val();
-                const villageName = selectedOption.text();
-
-                // Store the ID, not the name
-                $('#village_id_hidden').val(villageId || '');
-                $('#village_name_hidden').val(villageId || '');
-            });
-
             // Load citizens data when the page loads
             fetchCitizens();
-
-            // Final form validation before submission
-            document.querySelector('form').addEventListener('submit', function(e) {
-                // Prevent default to check values
-                e.preventDefault();
-
-                // Get the values from hidden fields
-                const subdistrictName = document.getElementById('subdistrict_name_hidden').value;
-                const villageName = document.getElementById('village_name_hidden').value;
-
-                // Ensure we have valid numeric IDs
-                if (!subdistrictName || isNaN(parseInt(subdistrictName))) {
-                    alert('Error: Kecamatan tidak valid. Silakan pilih kecamatan yang valid.');
-                    return false;
-                }
-
-                if (!villageName || isNaN(parseInt(villageName))) {
-                    alert('Error: Desa tidak valid. Silakan pilih desa yang valid.');
-                    return false;
-                }
-
-                // If everything is correct, submit the form
-                this.submit();
-            });
         });
     </script>
 </x-layout>

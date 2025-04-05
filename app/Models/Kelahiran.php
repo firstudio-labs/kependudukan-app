@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Penandatangan;
 
 class Kelahiran extends Model
 {
@@ -22,7 +23,7 @@ class Kelahiran extends Model
      * @var array
      */
     protected $fillable = [
-        'province_id',
+'province_id',
         'district_id',
         'subdistrict_id',
         'village_id',
@@ -41,18 +42,18 @@ class Kelahiran extends Model
         'mother_job',
         'mother_religion',
         'mother_address',
-        'child_name',
+                'child_name',
         'child_gender',
-        'child_birth_date',
+'child_birth_date',
         'child_birth_place',
-        'child_religion',
+                'child_religion',
         'child_address',
         'child_order',
-        'signing'
+                'signing'
     ];
 
     /**
-     * The attributes that should be cast.
+     * The attributes that should be cast to native types.
      *
      * @var array
      */
@@ -60,5 +61,13 @@ class Kelahiran extends Model
         'father_birth_date' => 'date',
         'mother_birth_date' => 'date',
         'child_birth_date' => 'date',
-    ];
+            ];
+
+    /**
+     * Get the signer associated with this birth certificate.
+     */
+    public function signer()
+    {
+        return $this->belongsTo(Penandatangan::class, 'signing');
+    }
 }

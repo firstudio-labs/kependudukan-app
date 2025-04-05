@@ -14,17 +14,20 @@ class PengantarKtpController extends Controller
 {
     protected $wilayahService;
     protected $citizenService;
+    protected $jobService;
 
     /**
      * Create a new controller instance.
      *
      * @param WilayahService $wilayahService
      * @param CitizenService $citizenService
+     * @param JobService $jobService
      */
-    public function __construct(WilayahService $wilayahService, CitizenService $citizenService)
+    public function __construct(WilayahService $wilayahService, CitizenService $citizenService, JobService $jobService)
     {
         $this->wilayahService = $wilayahService;
         $this->citizenService = $citizenService;
+        $this->jobService = $jobService;
     }
 
     /**
@@ -61,8 +64,10 @@ class PengantarKtpController extends Controller
      */
     public function create()
     {
-        // Get regions data from service
+        // Get jobs and regions data from services
         $provinces = $this->wilayahService->getProvinces();
+        $jobs = $this->jobService->getAllJobs();
+        $signers = \App\Models\Penandatangan::all(); // Fetch signers
 
         // Initialize empty arrays for district, sub-district, and village data
         $districts = [];
@@ -70,10 +75,12 @@ class PengantarKtpController extends Controller
         $villages = [];
 
         return view('superadmin.datamaster.surat.pengantar-ktp.create', compact(
+            'jobs',
             'provinces',
             'districts',
             'subDistricts',
-            'villages'
+            'villages',
+            'signers'
         ));
     }
 
@@ -88,11 +95,12 @@ class PengantarKtpController extends Controller
         // Log the request data for debugging
         \Log::info('PengantarKTP Store Request:', $request->all());
 
+        // Validate all required fields based on the database schema
         $validated = $request->validate([
-            'province_id' => 'required|integer',
-            'district_id' => 'required|integer',
-            'subdistrict_id' => 'required|integer',
-            'village_id' => 'required|integer',
+            'province_id' => 'required|numeric',
+            'district_id' => 'required|numeric',
+            'subdistrict_id' => 'required|numeric',
+            'village_id' => 'required|numeric',
             'letter_number' => 'nullable|string',
             'application_type' => 'required|string|in:Baru,Perpanjang,Pergantian',
             'nik' => 'required|numeric',
@@ -101,14 +109,12 @@ class PengantarKtpController extends Controller
             'address' => 'required|string',
             'rt' => 'required|string',
             'rw' => 'required|string',
-            'hamlet' => 'required|string',
-            'village_name' => 'required|numeric',
-            'subdistrict_name' => 'required|numeric',
+            'hamlet' => 'required|string', // Dusun
             'signing' => 'nullable|string',
         ]);
 
         try {
-            // Explicitly create model with validated data
+            // Create new PengantarKtp instance with validated data
             $ktp = new PengantarKtp();
             $ktp->province_id = $validated['province_id'];
             $ktp->district_id = $validated['district_id'];
@@ -123,8 +129,6 @@ class PengantarKtpController extends Controller
             $ktp->rt = $validated['rt'];
             $ktp->rw = $validated['rw'];
             $ktp->hamlet = $validated['hamlet'];
-            $ktp->village_name = $validated['village_name'];
-            $ktp->subdistrict_name = $validated['subdistrict_name'];
             $ktp->signing = $validated['signing'];
             $ktp->save();
 
@@ -156,8 +160,10 @@ class PengantarKtpController extends Controller
         try {
             $ktp = PengantarKtp::findOrFail($id);
 
-            // Get regions data from service
+            // Get jobs and provinces data from services
             $provinces = $this->wilayahService->getProvinces();
+            $jobs = $this->jobService->getAllJobs();
+            $signers = \App\Models\Penandatangan::all(); // Fetch signers
 
             // Get district data if province_id exists
             $districts = [];
@@ -250,12 +256,14 @@ class PengantarKtpController extends Controller
             // Add the address section villages and subdistricts to the view
             return view('superadmin.datamaster.surat.pengantar-ktp.edit', compact(
                 'ktp',
+                'jobs',
                 'provinces',
                 'districts',
                 'subDistricts',
                 'villages',
                 'addressSubDistricts',
-                'addressVillages'
+                'addressVillages',
+                'signers'
             ));
         } catch (\Exception $e) {
             \Log::error('Error in PengantarKtpController@edit: ' . $e->getMessage(), [
@@ -279,11 +287,12 @@ class PengantarKtpController extends Controller
         // Log the request data for debugging
         \Log::info('PengantarKTP Update Request:', $request->all());
 
+        // Use the same validation rules as the store method
         $validated = $request->validate([
-            'province_id' => 'required|integer',
-            'district_id' => 'required|integer',
-            'subdistrict_id' => 'required|integer',
-            'village_id' => 'required|integer',
+            'province_id' => 'required|numeric',
+            'district_id' => 'required|numeric',
+            'subdistrict_id' => 'required|numeric',
+            'village_id' => 'required|numeric',
             'letter_number' => 'nullable|string',
             'application_type' => 'required|string|in:Baru,Perpanjang,Pergantian',
             'nik' => 'required|numeric',
@@ -292,9 +301,7 @@ class PengantarKtpController extends Controller
             'address' => 'required|string',
             'rt' => 'required|string',
             'rw' => 'required|string',
-            'hamlet' => 'required|string',
-            'village_name' => 'required|numeric',
-            'subdistrict_name' => 'required|numeric',
+            'hamlet' => 'required|string', // Dusun
             'signing' => 'nullable|string',
         ]);
 
@@ -315,8 +322,6 @@ class PengantarKtpController extends Controller
             $ktp->rt = $validated['rt'];
             $ktp->rw = $validated['rw'];
             $ktp->hamlet = $validated['hamlet'];
-            $ktp->village_name = $validated['village_name'];
-            $ktp->subdistrict_name = $validated['subdistrict_name'];
             $ktp->signing = $validated['signing'];
             $ktp->save();
 
@@ -366,6 +371,15 @@ class PengantarKtpController extends Controller
     {
         try {
             $ktp = PengantarKtp::findOrFail($id);
+
+            // Get the signing name (keterangan) from Penandatangan model
+            $signing_name = null;
+            if (!empty($ktp->signing)) {
+                $penandatangan = \App\Models\Penandatangan::find($ktp->signing);
+                if ($penandatangan) {
+                    $signing_name = $penandatangan->keterangan;
+                }
+            }
 
             // Get location names using wilayah service
             $provinceName = '';
@@ -469,7 +483,8 @@ class PengantarKtpController extends Controller
                 'villageName',
                 'applicationType',
                 'nik',
-                'fullName'
+                'fullName',
+                'signing_name' // Add the signing_name variable
             ));
 
         } catch (\Exception $e) {
@@ -478,6 +493,35 @@ class PengantarKtpController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
             return back()->with('error', 'Gagal mengunduh surat pengantar KTP: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Generate PDF for the specified KTP introduction letter.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function generatePDF($id)
+    {
+        try {
+            $ktp = PengantarKtp::findOrFail($id);
+
+            // Get the signing name (keterangan) from Penandatangan model
+            $signing_name = null;
+            if (!empty($ktp->signing)) {
+                $penandatangan = \App\Models\Penandatangan::find($ktp->signing);
+                if ($penandatangan) {
+                    $signing_name = $penandatangan->keterangan;
+                }
+            }
+
+            return view('superadmin.datamaster.surat.pengantar-ktp.PengantarKTP', [
+                'ktp' => $ktp,
+                'signing_name' => $signing_name // Pass the signing name to the view
+            ]);
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal menghasilkan PDF: ' . $e->getMessage());
         }
     }
 }

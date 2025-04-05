@@ -5,24 +5,29 @@ namespace App\Http\Controllers\Surat;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\AhliWaris;
+use App\Models\Penandatangan;
 use App\Services\JobService;
 use App\Services\WilayahService;
 use App\Services\CitizenService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class AhliWarisController extends Controller
 {
+    protected $jobService;
     protected $wilayahService;
     protected $citizenService;
 
     /**
      * Create a new controller instance.
      *
+     * @param JobService $jobService
      * @param WilayahService $wilayahService
      * @param CitizenService $citizenService
      */
-    public function __construct(WilayahService $wilayahService, CitizenService $citizenService)
+    public function __construct(JobService $jobService, WilayahService $wilayahService, CitizenService $citizenService)
     {
+        $this->jobService = $jobService;
         $this->wilayahService = $wilayahService;
         $this->citizenService = $citizenService;
     }
@@ -61,8 +66,18 @@ class AhliWarisController extends Controller
      */
     public function create()
     {
-        // Get regions data from service
+        // Get jobs and regions data from services
         $provinces = $this->wilayahService->getProvinces();
+        $jobs = $this->jobService->getAllJobs();
+
+        // Fetch signers
+        try {
+            $signers = Penandatangan::all();
+            Log::info('Signers fetched successfully', ['count' => $signers->count()]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching signers', ['error' => $e->getMessage()]);
+            $signers = collect(); // Empty collection as fallback
+        }
 
         // Initialize empty arrays for district, sub-district, and village data
         $districts = [];
@@ -70,10 +85,12 @@ class AhliWarisController extends Controller
         $villages = [];
 
         return view('superadmin.datamaster.surat.ahli-waris.create', compact(
+            'jobs',
             'provinces',
             'districts',
             'subDistricts',
-            'villages'
+            'villages',
+            'signers'
         ));
     }
 
@@ -181,23 +198,32 @@ class AhliWarisController extends Controller
     {
         $ahliWaris = AhliWaris::findOrFail($id);
 
-        // Get provinces data from service
+        // Get jobs and provinces data from services
         $provinces = $this->wilayahService->getProvinces();
+        $jobs = $this->jobService->getAllJobs();
+
+        // Fetch signers
+        try {
+            $signers = Penandatangan::all();
+            Log::info('Signers fetched successfully for edit', ['count' => $signers->count()]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching signers for edit', ['error' => $e->getMessage()]);
+            $signers = collect(); // Empty collection as fallback
+        }
 
         // Initialize arrays for district, sub-district, and village data
         $districts = [];
         $subDistricts = [];
         $villages = [];
 
-        // If we have province_id, try to get districts
-
-
         return view('superadmin.datamaster.surat.ahli-waris.edit', compact(
             'ahliWaris',
+            'jobs',
             'provinces',
             'districts',
             'subDistricts',
-            'villages'
+            'villages',
+            'signers'
         ));
     }
 
@@ -431,6 +457,15 @@ class AhliWarisController extends Controller
                 ];
             }
 
+            // Get the signing name (keterangan) from Penandatangan model
+            $signing_name = null;
+            if (!empty($ahliWaris->signing)) {
+                $penandatangan = \App\Models\Penandatangan::find($ahliWaris->signing);
+                if ($penandatangan) {
+                    $signing_name = $penandatangan->keterangan;
+                }
+            }
+
             return view('superadmin.datamaster.surat.ahli-waris.AhliWaris', [
                 'ahliWaris' => $ahliWaris,
                 'province_name' => $provinceName,
@@ -440,11 +475,12 @@ class AhliWarisController extends Controller
                 'heirs' => $heirs,
                 'formatted_death_date' => $deathDate,
                 'formatted_death_certificate_date' => $deathCertDate,
-                'formatted_inheritance_letter_date' => $inheritanceLetterDate
+                'formatted_inheritance_letter_date' => $inheritanceLetterDate,
+                'signing_name' => $signing_name // Pass the signing name to the view
             ]);
 
         } catch (\Exception $e) {
-            \Log::error('Error generating PDF for AhliWaris: ' . $e->getMessage(), [
+            Log::error('Error generating PDF for AhliWaris: ' . $e->getMessage(), [
                 'id' => $id,
                 'trace' => $e->getTraceAsString()
             ]);

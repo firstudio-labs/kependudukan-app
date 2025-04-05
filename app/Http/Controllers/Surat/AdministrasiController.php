@@ -10,6 +10,7 @@ use App\Services\WilayahService;
 use App\Services\CitizenService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
+use App\Models\Penandatangan;
 
 class AdministrasiController extends Controller
 {
@@ -67,6 +68,8 @@ class AdministrasiController extends Controller
         // Get jobs and regions data from services
         $provinces = $this->wilayahService->getProvinces();
         $jobs = $this->jobService->getAllJobs();
+        $signers = Penandatangan::all(); // Fetch all signers from the penandatanganan table
+
 
         // Initialize empty arrays for district, sub-district, and village data
         $districts = [];
@@ -79,7 +82,9 @@ class AdministrasiController extends Controller
             'provinces',
             'districts',
             'subDistricts',
-            'villages'
+            'villages',
+            'signers',
+
         ));
     }
 
@@ -137,6 +142,7 @@ class AdministrasiController extends Controller
         // Get jobs and provinces data from services
         $provinces = $this->wilayahService->getProvinces();
         $jobs = $this->jobService->getAllJobs();
+        $signers = Penandatangan::all(); // Add this line to fetch signers
 
         // For debugging - get location names
         $provinceName = '';
@@ -176,7 +182,8 @@ class AdministrasiController extends Controller
             'provinces',
             'districts',
             'subDistricts',
-            'villages'
+            'villages',
+            'signers' // Add this line to pass signers to the view
         ));
     }
 
@@ -349,7 +356,6 @@ class AdministrasiController extends Controller
         try {
             $administration = Administration::findOrFail($id);
 
-            // Get additional data needed for the PDF
             // Get job name from job service
             $jobName = '';
             if (!empty($administration->job_type_id)) {
@@ -359,7 +365,7 @@ class AdministrasiController extends Controller
                 }
             }
 
-            // Get location names using wilayah service
+            // Get location names using wilayah service - Improved location data retrieval
             $provinceName = '';
             $districtName = '';
             $subdistrictName = '';
@@ -367,89 +373,58 @@ class AdministrasiController extends Controller
 
             // Get province data
             if (!empty($administration->province_id)) {
-                // Since the service doesn't have getProvinceById, we'll get all provinces and filter
                 $provinces = $this->wilayahService->getProvinces();
                 foreach ($provinces as $province) {
                     if ($province['id'] == $administration->province_id) {
                         $provinceName = $province['name'];
-                        break;
-                    }
-                }
-            }
 
-            // Get district/kabupaten data
-            if (!empty($administration->district_id) && !empty($provinceName)) {
-                // First try with province code if available
-                $provinceCode = null;
-                foreach ($this->wilayahService->getProvinces() as $province) {
-                    if ($province['id'] == $administration->province_id) {
+                        // Get province code for further queries
                         $provinceCode = $province['code'];
+
+                        // Now get district data using province code
+                        if (!empty($administration->district_id) && !empty($provinceCode)) {
+                            $districts = $this->wilayahService->getKabupaten($provinceCode);
+                            foreach ($districts as $district) {
+                                if ($district['id'] == $administration->district_id) {
+                                    $districtName = $district['name'];
+
+                                    // Get district code for further queries
+                                    $districtCode = $district['code'];
+
+                                    // Now get subdistrict data using district code
+                                    if (!empty($administration->subdistrict_id) && !empty($districtCode)) {
+                                        $subdistricts = $this->wilayahService->getKecamatan($districtCode);
+                                        foreach ($subdistricts as $subdistrict) {
+                                            if ($subdistrict['id'] == $administration->subdistrict_id) {
+                                                $subdistrictName = $subdistrict['name'];
+
+                                                // Get subdistrict code for further queries
+                                                $subdistrictCode = $subdistrict['code'];
+
+                                                // Finally get village data using subdistrict code
+                                                if (!empty($administration->village_id) && !empty($subdistrictCode)) {
+                                                    $villages = $this->wilayahService->getDesa($subdistrictCode);
+                                                    foreach ($villages as $village) {
+                                                        if ($village['id'] == $administration->village_id) {
+                                                            $villageName = $village['name'];
+                                                            break;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    break;
+                                }
+                            }
+                        }
                         break;
                     }
                 }
-
-                if ($provinceCode) {
-                    $districts = $this->wilayahService->getKabupaten($provinceCode);
-                    foreach ($districts as $district) {
-                        if ($district['id'] == $administration->district_id) {
-                            $districtName = $district['name'];
-                            break;
-                        }
-                    }
-                }
             }
 
-            // Get subdistrict/kecamatan data
-            if (!empty($administration->subdistrict_id) && !empty($districtName)) {
-                // Get district code first
-                $districtCode = null;
-                if (!empty($provinceCode)) {
-                    $districts = $this->wilayahService->getKabupaten($provinceCode);
-                    foreach ($districts as $district) {
-                        if ($district['id'] == $administration->district_id) {
-                            $districtCode = $district['code'];
-                            break;
-                        }
-                    }
-                }
-
-                if ($districtCode) {
-                    $subdistricts = $this->wilayahService->getKecamatan($districtCode);
-                    foreach ($subdistricts as $subdistrict) {
-                        if ($subdistrict['id'] == $administration->subdistrict_id) {
-                            $subdistrictName = $subdistrict['name'];
-                            break;
-                        }
-                    }
-                }
-            }
-
-            // Get village/desa data
-            if (!empty($administration->village_id) && !empty($subdistrictName)) {
-                // Get subdistrict code first
-                $subdistrictCode = null;
-                if (!empty($districtCode)) {
-                    $subdistricts = $this->wilayahService->getKecamatan($districtCode);
-                    foreach ($subdistricts as $subdistrict) {
-                        if ($subdistrict['id'] == $administration->subdistrict_id) {
-                            $subdistrictCode = $subdistrict['code'];
-                            break;
-                        }
-                    }
-                }
-
-                if ($subdistrictCode) {
-                    $villages = $this->wilayahService->getDesa($subdistrictCode);
-                    foreach ($villages as $village) {
-                        if ($village['id'] == $administration->village_id) {
-                            $villageName = $village['name'];
-                            break;
-                        }
-                    }
-                }
-            }
-
-            // Log location data to help with debugging
+            // Log location data for debugging
             \Log::info('Location data for administration ID: ' . $id, [
                 'province_id' => $administration->province_id,
                 'district_id' => $administration->district_id,
@@ -461,41 +436,57 @@ class AdministrasiController extends Controller
                 'village_name' => $villageName
             ]);
 
-            // Convert gender numeric to text
+            // Format gender
             $gender = $administration->gender == 1 ? 'Laki-Laki' : 'Perempuan';
 
-            // Convert religion numeric to text
+            // Format religion
             $religions = [
-                '1' => 'Islam',
-                '2' => 'Kristen',
-                '3' => 'Katholik',
-                '4' => 'Hindu',
-                '5' => 'Buddha',
-                '6' => 'Kong Hu Cu',
-                '7' => 'Lainnya'
+                1 => 'Islam',
+                2 => 'Kristen',
+                3 => 'Katholik',
+                4 => 'Hindu',
+                5 => 'Buddha',
+                6 => 'Kong Hu Cu',
+                7 => 'Lainnya'
             ];
             $religion = $religions[$administration->religion] ?? '';
 
-            // Convert citizenship numeric to text
+            // Format citizenship
             $citizenship = $administration->citizen_status == 1 ? 'WNA' : 'WNI';
 
-            // Format date
+            // Format date for display
             $birthDate = \Carbon\Carbon::parse($administration->birth_date)->format('d-m-Y');
             $letterDate = \Carbon\Carbon::parse($administration->letter_date)->format('d-m-Y');
 
-            return view('superadmin.datamaster.surat.administrasi.AdministrasiUmum', compact(
-                'administration',
-                'jobName',
-                'provinceName',
-                'districtName',
-                'subdistrictName',
-                'villageName',
-                'gender',
-                'religion',
-                'citizenship',
-                'birthDate',
-                'letterDate'
-            ));
+            // Don't modify the RT value, leave it exactly as stored in the database
+            $rt = $administration->rt;
+
+            // Get the signing name (keterangan) from Penandatangan model
+            $signing_name = null;
+            if (!empty($administration->signing)) {
+                $penandatangan = \App\Models\Penandatangan::find($administration->signing);
+                if ($penandatangan) {
+                    $signing_name = $penandatangan->keterangan;
+                }
+            }
+
+            return view('superadmin.datamaster.surat.administrasi.AdministrasiUmum', [
+                'administration' => $administration,
+                'job_name' => $jobName,
+                'province_name' => $provinceName,
+                'district_name' => $districtName,
+                'subdistrict_name' => $subdistrictName,
+                'village_name' => $villageName,
+                'village_code' => $subdistrictCode ? substr($subdistrictCode, 0, 1) : null, // Add this line to pass village_code
+                'gender' => $gender,
+                'religion' => $religion,
+                'citizenship' => $citizenship,
+                'formatted_birth_date' => $birthDate,
+                'formatted_letter_date' => $letterDate,
+                'rt' => $rt,
+                'signing_name' => $signing_name // Pass the signing name to the view
+            ]);
+
         } catch (\Exception $e) {
             \Log::error('Error generating PDF: ' . $e->getMessage(), [
                 'id' => $id,

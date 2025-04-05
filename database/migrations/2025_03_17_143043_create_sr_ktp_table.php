@@ -30,8 +30,6 @@ return new class extends Migration
             $table->longText('rt');
             $table->longText('rw');
             $table->string('hamlet'); // Dusun
-            $table->bigInteger('village_name'); // Using village_name instead of duplicate village_id
-            $table->bigInteger('subdistrict_name'); // Using subdistrict_name instead of duplicate subdistrict_id
 
             // Signing official
             $table->string('signing')->nullable();
