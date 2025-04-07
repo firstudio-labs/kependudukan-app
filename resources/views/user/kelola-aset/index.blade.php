@@ -99,81 +99,81 @@
                     Showing {{ $startNumber }} to {{ $endNumber }} of {{ $totalItems }} results
                 </div>
                 @if(isset($assets['data']['pagination']) && $assets['data']['pagination']['total_page'] > 1)
-                    <nav class="relative z-0 inline-flex shadow-sm -space-x-px" aria-label="Pagination">
-                        @php
-                            $totalPages = $assets['data']['pagination']['total_page'];
-                            $currentPage = $assets['data']['pagination']['current_page'];
+                                <nav class="relative z-0 inline-flex shadow-sm -space-x-px" aria-label="Pagination">
+                                    @php
+                                        $totalPages = $assets['data']['pagination']['total_page'];
+                                        $currentPage = $assets['data']['pagination']['current_page'];
 
-                            $startPage = 1;
-                            $endPage = $totalPages;
-                            $maxVisible = 7; 
+                                        $startPage = 1;
+                                        $endPage = $totalPages;
+                                        $maxVisible = 7;
 
-                            if ($totalPages > $maxVisible) {
-                                $halfVisible = floor($maxVisible / 2);
-                                $startPage = max($currentPage - $halfVisible, 1);
-                                $endPage = min($startPage + $maxVisible - 1, $totalPages);
+                                        if ($totalPages > $maxVisible) {
+                                            $halfVisible = floor($maxVisible / 2);
+                                            $startPage = max($currentPage - $halfVisible, 1);
+                                            $endPage = min($startPage + $maxVisible - 1, $totalPages);
 
-                                if ($endPage - $startPage < $maxVisible - 1) {
-                                    $startPage = max($endPage - $maxVisible + 1, 1);
-                                }
-                            }
-                        @endphp
+                                            if ($endPage - $startPage < $maxVisible - 1) {
+                                                $startPage = max($endPage - $maxVisible + 1, 1);
+                                            }
+                                        }
+                                    @endphp
 
-                        <!-- Previous Button -->
-                        @if($currentPage > 1)
-                            <a href="?page={{ $currentPage - 1 }}&search={{ request('search') }}"
-                                class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                                <span class="sr-only">Previous</span>
-                                Previous
-                            </a>
-                        @endif
+                                    <!-- Previous Button -->
+                                    @if($currentPage > 1)
+                                        <a href="?page={{ $currentPage - 1 }}&search={{ request('search') }}"
+                                            class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                            <span class="sr-only">Previous</span>
+                                            Previous
+                                        </a>
+                                    @endif
 
-                        <!-- First Page -->
-                        @if($startPage > 1)
-                            <a href="?page=1&search={{ request('search') }}"
-                                class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-                                1
-                            </a>
-                            @if($startPage > 2)
-                                <span
-                                    class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
-                                    ...
-                                </span>
-                            @endif
-                        @endif
+                                    <!-- First Page -->
+                                    @if($startPage > 1)
+                                        <a href="?page=1&search={{ request('search') }}"
+                                            class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                            1
+                                        </a>
+                                        @if($startPage > 2)
+                                            <span
+                                                class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                                                ...
+                                            </span>
+                                        @endif
+                                    @endif
 
-                        <!-- Page Numbers -->
-                        @for($i = $startPage; $i <= $endPage; $i++)
-                            <a href="?page={{ $i }}&search={{ request('search') }}"
-                                class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium
-                                                {{ $i == $currentPage ? 'z-10 bg-blue-50 border-blue-500 text-[#8c93d6]' : 'bg-white text-gray-700 hover:bg-gray-50' }}">
-                                {{ $i }}
-                            </a>
-                        @endfor
+                                    <!-- Page Numbers -->
+                                    @for($i = $startPage; $i <= $endPage; $i++)
+                                        <a href="?page={{ $i }}&search={{ request('search') }}"
+                                            class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium
+                                                                    {{ $i == $currentPage ? 'z-10 bg-blue-50 border-blue-500 text-[#8c93d6]' : 'bg-white text-gray-700 hover:bg-gray-50' }}">
+                                            {{ $i }}
+                                        </a>
+                                    @endfor
 
-                        <!-- Last Page -->
-                        @if($endPage < $totalPages)
-                            @if($endPage < $totalPages - 1)
-                                <span
-                                    class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
-                                    ...
-                                </span>
-                            @endif
-                            <a href="?page={{ $totalPages }}&search={{ request('search') }}"
-                                class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-                                {{ $totalPages }}
-                            </a>
-                        @endif
+                                    <!-- Last Page -->
+                                    @if($endPage < $totalPages)
+                                        @if($endPage < $totalPages - 1)
+                                            <span
+                                                class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                                                ...
+                                            </span>
+                                        @endif
+                                        <a href="?page={{ $totalPages }}&search={{ request('search') }}"
+                                            class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                            {{ $totalPages }}
+                                        </a>
+                                    @endif
 
-                        <!-- Next Button -->
-                        @if($currentPage < $totalPages)
-                            <a href="?page={{ $currentPage + 1 }}&search={{ request('search') }}"
-                                class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                                <span class="sr-only">Next</span>
-                                Next
-                            </a>
-                        @endif
-                    </nav>
+                                    <!-- Next Button -->
+                                    @if($currentPage < $totalPages)
+                                        <a href="?page={{ $currentPage + 1 }}&search={{ request('search') }}"
+                                            class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                            <span class="sr-only">Next</span>
+                                            Next
+                                        </a>
+                                    @endif
+                                </nav>
                 @endif
             </div>
         </div>
@@ -276,36 +276,9 @@
         </div>
     </div>
 
-    
 
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const config = {
-                baseUrl: 'http://api-kependudukan.desaverse.id:3000/api',
-                apiKey: '{{ config('services.kependudukan.key') }}',
-                locationCache: {}
-            };
-
-            const api = {
-                getHeaders() {
-                    return {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                        'X-API-Key': config.apiKey
-                    };
-                },
-
-                async request(url) {
-                    try {
-                        const response = await axios.get(url, { headers: this.getHeaders() });
-                        return response.data?.data || [];
-                    } catch (error) {
-                        console.error(`API request error (${url}):`, error.message);
-                        return [];
-                    }
-                }
-            };
 
             window.showDetailModal = function (asset) {
 
@@ -328,6 +301,7 @@
                 if (asset.foto_aset_depan) {
                     const imgDepan = document.createElement('div');
                     imgDepan.innerHTML = `
+                        <p class="text-xs text-gray-500 mb-1">Foto Depan</p>
                         <img src="/storage/${asset.foto_aset_depan}" class="w-full h-auto max-h-48 object-cover rounded" alt="Foto Depan">
                     `;
                     fotoContainer.appendChild(imgDepan);
@@ -336,6 +310,7 @@
                 if (asset.foto_aset_samping) {
                     const imgSamping = document.createElement('div');
                     imgSamping.innerHTML = `
+                        <p class="text-xs text-gray-500 mb-1">Foto Samping</p>
                         <img src="/storage/${asset.foto_aset_samping}" class="w-full h-auto max-h-48 object-cover rounded" alt="Foto Samping">
                     `;
                     fotoContainer.appendChild(imgSamping);
@@ -345,122 +320,55 @@
                     fotoContainer.innerHTML = '<p class="text-sm text-gray-500">Tidak ada foto</p>';
                 }
 
-                
                 if (!asset.province_name || !asset.district_name || !asset.sub_district_name || !asset.village_name) {
-                    fetchLocationNames(asset);
+                    fetchLocationDetails(asset);
                 }
 
-                
                 document.getElementById('detailModal').classList.remove('hidden');
             };
 
-            async function fetchLocationNames(asset) {
-                if (asset.province_id) {
-                    try {
-                        
-                        const provinces = await api.request(`${config.baseUrl}/provinces`);
-                        const province = provinces.find(p => p.id == asset.province_id);
-                        if (province) {
-                            document.getElementById('detailProvinsi').textContent = province.name;
-                            asset.province_name = province.name;
-                        }
+            async function fetchLocationDetails(asset) {
+                try {
 
-                        if (asset.district_id) {
-                            
-                            const districts = await api.request(`${config.baseUrl}/districts/${province.code}`);
-                            const district = districts.find(d => d.id == asset.district_id);
-                            if (district) {
-                                document.getElementById('detailKabupaten').textContent = district.name;
-                                asset.district_name = district.name;
+                    const response = await fetch(`{{ route('api.location-details') }}?province_id=${asset.province_id}&district_id=${asset.district_id}&sub_district_id=${asset.sub_district_id}&village_id=${asset.village_id}`);
 
-                                if (asset.sub_district_id) {
-                                    
-                                    const subDistricts = await api.request(`${config.baseUrl}/sub-districts/${district.code}`);
-                                    const subDistrict = subDistricts.find(sd => sd.id == asset.sub_district_id);
-                                    if (subDistrict) {
-                                        document.getElementById('detailKecamatan').textContent = subDistrict.name;
-                                        asset.sub_district_name = subDistrict.name;
-
-                                        if (asset.village_id) {
-                                            
-                                            const villages = await api.request(`${config.baseUrl}/villages/${subDistrict.code}`);
-                                            const village = villages.find(v => v.id == asset.village_id);
-                                            if (village) {
-                                                document.getElementById('detailDesa').textContent = village.name;
-                                                asset.village_name = village.name;
-                                            } else {
-                                                document.getElementById('detailDesa').textContent = 'Data tidak tersedia';
-                                            }
-                                        }
-                                    } else {
-                                        document.getElementById('detailKecamatan').textContent = 'Data tidak tersedia';
-                                        document.getElementById('detailDesa').textContent = 'Data tidak tersedia';
-                                    }
-                                }
-                            } else {
-                                document.getElementById('detailKabupaten').textContent = 'Data tidak tersedia';
-                                document.getElementById('detailKecamatan').textContent = 'Data tidak tersedia';
-                                document.getElementById('detailDesa').textContent = 'Data tidak tersedia';
-                            }
-                        }
-                    } catch (error) {
-                        console.error('Error fetching location data:', error);
-                        document.getElementById('detailProvinsi').textContent = 'Error loading data';
-                        document.getElementById('detailKabupaten').textContent = 'Error loading data';
-                        document.getElementById('detailKecamatan').textContent = 'Error loading data';
-                        document.getElementById('detailDesa').textContent = 'Error loading data';
+                    if (!response.ok) {
+                        throw new Error(`Error fetching location data: ${response.status}`);
                     }
+
+                    const locationData = await response.json();
+
+                    if (locationData.province_name) {
+                        document.getElementById('detailProvinsi').textContent = locationData.province_name;
+                        asset.province_name = locationData.province_name;
+                    }
+
+                    if (locationData.district_name) {
+                        document.getElementById('detailKabupaten').textContent = locationData.district_name;
+                        asset.district_name = locationData.district_name;
+                    }
+
+                    if (locationData.sub_district_name) {
+                        document.getElementById('detailKecamatan').textContent = locationData.sub_district_name;
+                        asset.sub_district_name = locationData.sub_district_name;
+                    }
+
+                    if (locationData.village_name) {
+                        document.getElementById('detailDesa').textContent = locationData.village_name;
+                        asset.village_name = locationData.village_name;
+                    }
+                } catch (error) {
+                    console.error('Error fetching location details:', error);
+                    document.getElementById('detailProvinsi').textContent = 'Error loading data';
+                    document.getElementById('detailKabupaten').textContent = 'Error loading data';
+                    document.getElementById('detailKecamatan').textContent = 'Error loading data';
+                    document.getElementById('detailDesa').textContent = 'Error loading data';
                 }
             }
         });
     </script>
 
     <script>
-        function showDetailModal(asset) {
-           
-            document.getElementById('detailNIK').textContent = asset.nik_pemilik || '-';
-            document.getElementById('detailNamaPemilik').textContent = asset.nama_pemilik || '-';
-            document.getElementById('detailNamaAset').textContent = asset.nama_aset || '-';
-            document.getElementById('detailAlamat').textContent = asset.address || '-';
-            document.getElementById('detailProvinsi').textContent = asset.province_name || '-';
-            document.getElementById('detailKabupaten').textContent = asset.district_name || '-';
-            document.getElementById('detailKecamatan').textContent = asset.sub_district_name || '-';
-            document.getElementById('detailDesa').textContent = asset.village_name || '-';
-            document.getElementById('detailRTRW').textContent = (asset.rt || '-') + ' / ' + (asset.rw || '-');
-            document.getElementById('detailKlasifikasi').textContent = asset.klasifikasi ? asset.klasifikasi.jenis_klasifikasi : '-';
-            document.getElementById('detailJenisAset').textContent = asset.jenis_aset ? asset.jenis_aset.jenis_aset : '-';
-            document.getElementById('detailTagLokasi').textContent = asset.tag_lokasi || '-';
-
-            
-            const fotoContainer = document.getElementById('detailFotoAset');
-            fotoContainer.innerHTML = '';
-
-            if (asset.foto_aset_depan) {
-                const imgDepan = document.createElement('div');
-                imgDepan.innerHTML = `
-                    <p class="text-xs text-gray-500 mb-1">Foto Depan</p>
-                    <img src="/storage/${asset.foto_aset_depan}" class="w-full h-auto max-h-48 object-cover rounded" alt="Foto Depan">
-                `;
-                fotoContainer.appendChild(imgDepan);
-            }
-
-            if (asset.foto_aset_samping) {
-                const imgSamping = document.createElement('div');
-                imgSamping.innerHTML = `
-                    <p class="text-xs text-gray-500 mb-1">Foto Samping</p>
-                    <img src="/storage/${asset.foto_aset_samping}" class="w-full h-auto max-h-48 object-cover rounded" alt="Foto Samping">
-                `;
-                fotoContainer.appendChild(imgSamping);
-            }
-
-            if (!asset.foto_aset_depan && !asset.foto_aset_samping) {
-                fotoContainer.innerHTML = '<p class="text-sm text-gray-500">Tidak ada foto</p>';
-            }
-
-            // Show the modal
-            document.getElementById('detailModal').classList.remove('hidden');
-        }
-
         function closeDetailModal() {
             document.getElementById('detailModal').classList.add('hidden');
         }

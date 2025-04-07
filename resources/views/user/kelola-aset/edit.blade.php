@@ -211,16 +211,16 @@
                         </div>
 
                         @php
-                        
-                        $latitude = '';
-                        $longitude = '';
-                        if ($aset->tag_lokasi) {
-                            $coordinates = explode(',', $aset->tag_lokasi);
-                            if (count($coordinates) == 2) {
-                                $latitude = trim($coordinates[0]);
-                                $longitude = trim($coordinates[1]);
-                            }
-                        }
+
+$latitude = '';
+$longitude = '';
+if ($aset->tag_lokasi) {
+    $coordinates = explode(',', $aset->tag_lokasi);
+    if (count($coordinates) == 2) {
+        $latitude = trim($coordinates[0]);
+        $longitude = trim($coordinates[1]);
+    }
+}
                         @endphp
                 
                         <x-map-input label="Lokasi Aset" addressId="asset_location" addressName="asset_location"
@@ -268,7 +268,7 @@
             });
         @endif
 
- 
+
         let nikData = [];
         let selectedNikData = null;
 
@@ -276,37 +276,32 @@
             try {
                 const nikDropdown = document.getElementById('nik-dropdown');
 
-               
                 nikDropdown.innerHTML = '<div class="px-4 py-2 text-sm text-gray-500">Loading NIK data...</div>';
                 nikDropdown.classList.remove('hidden');
 
-                const response = await fetch('http://api-kependudukan.desaverse.id:3000/api/all-citizens', {
+               
+                const response = await fetch('{{ route("api.all-citizens") }}', {
                     method: 'GET',
                     headers: {
                         'Accept': 'application/json',
                         'Content-Type': 'application/json',
-                        'X-API-Key': 'KORIE'
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     }
                 });
 
                 if (!response.ok) {
-                    throw new Error(`API request failed: ${response.status}`);
+                    throw new Error(`Request failed: ${response.status}`);
                 }
 
                 const responseData = await response.json();
 
-               
                 nikDropdown.innerHTML = '';
 
-              
                 if (responseData.status === 'OK' && responseData.data && Array.isArray(responseData.data)) {
-                  
                     nikData = responseData.data;
 
-                  
                     nikData.sort((a, b) => String(a.nik).localeCompare(String(b.nik)));
 
-                  
                     nikData.forEach(citizen => {
                         if (citizen.nik) {
                             const option = document.createElement('div');
@@ -321,8 +316,9 @@
                         }
                     });
 
+
                 } else {
-                    console.error('Invalid or empty data format in API response:', responseData);
+                    console.error('Invalid or empty data format in response');
                     nikDropdown.innerHTML = '<div class="px-4 py-2 text-sm text-gray-500">Tidak ada data NIK tersedia</div>';
                 }
             } catch (error) {
@@ -333,7 +329,6 @@
             }
         }
 
-        
         function selectNIK(nik, name) {
             const nikInput = document.getElementById('nik-input');
             const namaInput = document.getElementById('nama_pemilik');
@@ -349,36 +344,29 @@
             dropdown.classList.add('hidden');
         }
 
-       
         document.addEventListener('DOMContentLoaded', function () {
             const nikInput = document.getElementById('nik-input');
             const nikDropdown = document.getElementById('nik-dropdown');
             const toggleButton = document.getElementById('toggle-nik-dropdown');
 
-           
             toggleButton.addEventListener('click', function () {
                 nikDropdown.classList.toggle('hidden');
-               
+
                 if (nikData.length === 0) {
                     fetchNIKData();
                 }
             });
 
-           
             nikInput.addEventListener('input', function () {
                 const searchText = this.value.toLowerCase();
 
-               
                 if (nikData.length > 0) {
-                   
                     const filteredData = nikData.filter(citizen =>
                         String(citizen.nik).toLowerCase().includes(searchText)
                     );
 
-                   
                     nikDropdown.innerHTML = '';
 
-                  
                     filteredData.forEach(citizen => {
                         if (citizen.nik) {
                             const option = document.createElement('div');
@@ -393,15 +381,12 @@
                         }
                     });
 
-                   
                     nikDropdown.classList.remove('hidden');
                 } else {
-                    
                     fetchNIKData();
                 }
             });
 
-            
             document.addEventListener('click', function (event) {
                 if (!nikInput.contains(event.target) &&
                     !nikDropdown.contains(event.target) &&
@@ -410,17 +395,15 @@
                 }
             });
 
-            
             fetchNIKData();
         });
     </script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-
+                
             const config = {
-                baseUrl: 'http://api-kependudukan.desaverse.id:3000/api',
-                apiKey: '{{ config('services.kependudukan.key') }}',
+
                 locationCache: {},
                 locationIds: {
                     provinceId: {{ $aset->province_id ?? 'null' }},
@@ -436,20 +419,14 @@
             const subDistrictSelect = document.getElementById('sub_district_id');
             const villageSelect = document.getElementById('village_id');
 
-           
             const api = {
-                getHeaders() {
-                    return {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                        'X-API-Key': config.apiKey
-                    };
-                },
-
                 async fetchProvinces() {
                     try {
-                        const response = await fetch(`${config.baseUrl}/provinces`, {
-                            headers: this.getHeaders()
+                        const response = await fetch('{{ route("api.provinces") }}', {
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            }
                         });
                         const data = await response.json();
                         return data.data || [];
@@ -461,45 +438,53 @@
 
                 async fetchDistricts(provinceCode) {
                     try {
-                        const response = await fetch(`${config.baseUrl}/districts/${provinceCode}`, {
-                            headers: this.getHeaders()
+                        const response = await fetch(`{{ route("api.districts") }}?province_code=${provinceCode}`, {
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            }
                         });
                         const data = await response.json();
                         return data.data || [];
                     } catch (error) {
-                        console.error(`Error fetching districts for province ${provinceCode}:`, error);
+                        console.error(`Error fetching districts:`, error);
                         return [];
                     }
                 },
 
                 async fetchSubDistricts(districtCode) {
                     try {
-                        const response = await fetch(`${config.baseUrl}/sub-districts/${districtCode}`, {
-                            headers: this.getHeaders()
+                        const response = await fetch(`{{ route("api.subdistricts") }}?district_code=${districtCode}`, {
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            }
                         });
                         const data = await response.json();
                         return data.data || [];
                     } catch (error) {
-                        console.error(`Error fetching sub-districts for district ${districtCode}:`, error);
+                        console.error(`Error fetching sub-districts:`, error);
                         return [];
                     }
                 },
 
                 async fetchVillages(subDistrictCode) {
                     try {
-                        const response = await fetch(`${config.baseUrl}/villages/${subDistrictCode}`, {
-                            headers: this.getHeaders()
+                        const response = await fetch(`{{ route("api.villages") }}?subdistrict_code=${subDistrictCode}`, {
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            }
                         });
                         const data = await response.json();
                         return data.data || [];
                     } catch (error) {
-                        console.error(`Error fetching villages for sub-district ${subDistrictCode}:`, error);
+                        console.error(`Error fetching villages:`, error);
                         return [];
                     }
                 }
             };
-
-            
+           
             function populateSelect(selectElement, options, selectedId = null) {
                 
                 const placeholder = selectElement.options[0];

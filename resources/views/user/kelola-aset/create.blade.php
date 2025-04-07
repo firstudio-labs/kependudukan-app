@@ -213,176 +213,156 @@
         </form>
     </div>
 
-<script>
-      @if(session('success'))
-        Swal.fire({
-            icon: 'success',
-            title: 'Sukses!',
-            text: "{{ session('success') }}",
-            timer: 3000,
-            showConfirmButton: false
-        });
-    @endif
+    <script>
+        @if(session('success'))
+            Swal.fire({
+                icon: 'success',
+                title: 'Sukses!',
+                text: "{{ session('success') }}",
+                timer: 3000,
+                showConfirmButton: false
+            });
+        @endif
 
-    @if(session('error'))
-        Swal.fire({
-            icon: 'error',
-            title: 'Gagal!',
-            text: "{{ session('error') }}",
-            timer: 3000,
-            showConfirmButton: false
-        });
-    @endif
+        @if(session('error'))
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal!',
+                text: "{{ session('error') }}",
+                timer: 3000,
+                showConfirmButton: false
+            });
+        @endif
 
-    
-    let nikData = [];
-    let selectedNikData = null;
 
-    async function fetchNIKData() {
-        try {
+        let nikData = [];
+        let selectedNikData = null;
+
+        async function fetchNIKData() {
+            try {
+                const nikDropdown = document.getElementById('nik-dropdown');
+
+                nikDropdown.innerHTML = '<div class="px-4 py-2 text-sm text-gray-500">Loading NIK data...</div>';
+                nikDropdown.classList.remove('hidden');
+
+                const response = await fetch('{{ route("api.all-citizens") }}', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Request failed: ${response.status}`);
+                }
+
+                const responseData = await response.json();
+
+                nikDropdown.innerHTML = '';
+
+                if (responseData.status === 'OK' && responseData.data && Array.isArray(responseData.data)) {
+                    nikData = responseData.data;
+
+                    nikData.sort((a, b) => String(a.nik).localeCompare(String(b.nik)));
+
+                    nikData.forEach(citizen => {
+                        if (citizen.nik) {
+                            const option = document.createElement('div');
+                            option.className = 'px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer';
+                            option.textContent = citizen.nik;
+                            option.setAttribute('data-nik', citizen.nik);
+                            option.setAttribute('data-name', citizen.full_name || '');
+                            option.addEventListener('click', function () {
+                                selectNIK(citizen.nik, citizen.full_name || '');
+                            });
+                            nikDropdown.appendChild(option);
+                        }
+                    });
+
+                    console.log(`Loaded ${nikData.length} NIKs`);
+                } else {
+                    console.error('Invalid or empty data format in response');
+                    nikDropdown.innerHTML = '<div class="px-4 py-2 text-sm text-gray-500">Tidak ada data NIK tersedia</div>';
+                }
+            } catch (error) {
+                console.error('Error fetching NIK data:', error);
+                document.getElementById('nik-dropdown').innerHTML =
+                    '<div class="px-4 py-2 text-sm text-red-500">Error loading NIK data</div>' +
+                    '<div class="px-4 py-2 text-sm text-red-500">Silakan muat ulang halaman</div>';
+            }
+        }
+
+        function selectNIK(nik, name) {
+            const nikInput = document.getElementById('nik-input');
+            const namaInput = document.getElementById('nama_pemilik');
+            const dropdown = document.getElementById('nik-dropdown');
+
+            nikInput.value = nik;
+
+            if (name && namaInput) {
+                namaInput.value = name;
+                selectedNikData = { nik, name };
+            }
+
+            dropdown.classList.add('hidden');
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const nikInput = document.getElementById('nik-input');
             const nikDropdown = document.getElementById('nik-dropdown');
-            
-            
-            nikDropdown.innerHTML = '<div class="px-4 py-2 text-sm text-gray-500">Loading NIK data...</div>';
-            nikDropdown.classList.remove('hidden');
-            
-            const response = await fetch('http://api-kependudukan.desaverse.id:3000/api/all-citizens', {
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'X-API-Key': 'KORIE'
+            const toggleButton = document.getElementById('toggle-nik-dropdown');
+
+            toggleButton.addEventListener('click', function () {
+                nikDropdown.classList.toggle('hidden');
+
+                if (nikData.length === 0) {
+                    fetchNIKData();
                 }
             });
-            
-            if (!response.ok) {
-                throw new Error(`API request failed: ${response.status}`);
-            }
-            
-            const responseData = await response.json();
-            
-           
-            nikDropdown.innerHTML = '';
-            
-           
-            if (responseData.status === 'OK' && responseData.data && Array.isArray(responseData.data)) {
-                
-                nikData = responseData.data;
-                
-                
-                nikData.sort((a, b) => String(a.nik).localeCompare(String(b.nik)));
-                
-                
-                nikData.forEach(citizen => {
-                    if (citizen.nik) {
-                        const option = document.createElement('div');
-                        option.className = 'px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer';
-                        option.textContent = citizen.nik;
-                        option.setAttribute('data-nik', citizen.nik);
-                        option.setAttribute('data-name', citizen.full_name || '');
-                        option.addEventListener('click', function() {
-                            selectNIK(citizen.nik, citizen.full_name || '');
-                        });
-                        nikDropdown.appendChild(option);
-                    }
-                });
-                
-                console.log(`Loaded ${nikData.length} NIKs from API`);
-            } else {
-                console.error('Invalid or empty data format in API response:', responseData);
-                nikDropdown.innerHTML = '<div class="px-4 py-2 text-sm text-gray-500">Tidak ada data NIK tersedia</div>';
-            }
-        } catch (error) {
-            console.error('Error fetching NIK data:', error);
-            document.getElementById('nik-dropdown').innerHTML = 
-                '<div class="px-4 py-2 text-sm text-red-500">Error loading NIK data</div>' +
-                '<div class="px-4 py-2 text-sm text-red-500">Silakan muat ulang halaman</div>';
-        }
-    }
 
-    
-    function selectNIK(nik, name) {
-        const nikInput = document.getElementById('nik-input');
-        const namaInput = document.getElementById('nama_pemilik');
-        const dropdown = document.getElementById('nik-dropdown');
-        
-        nikInput.value = nik;
-        
-       
-        if (name && namaInput) {
-            namaInput.value = name;
-            selectedNikData = {nik, name};
-        }
-        
-       
-        dropdown.classList.add('hidden');
-    }
+            nikInput.addEventListener('input', function () {
+                const searchText = this.value.toLowerCase();
 
-    
-    document.addEventListener('DOMContentLoaded', function() {
-        const nikInput = document.getElementById('nik-input');
-        const nikDropdown = document.getElementById('nik-dropdown');
-        const toggleButton = document.getElementById('toggle-nik-dropdown');
-        
-        
-        toggleButton.addEventListener('click', function() {
-            nikDropdown.classList.toggle('hidden');
-            
-            if (nikData.length === 0) {
-                fetchNIKData();
-            }
-        });
-        
-        
-        nikInput.addEventListener('input', function() {
-            const searchText = this.value.toLowerCase();
-            
-          
-            if (nikData.length > 0) {
-                const filteredData = nikData.filter(citizen => 
-                    String(citizen.nik).toLowerCase().includes(searchText)
-                );
-                
-                
-                nikDropdown.innerHTML = '';
-                
-                
-                filteredData.forEach(citizen => {
-                    if (citizen.nik) {
-                        const option = document.createElement('div');
-                        option.className = 'px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer';
-                        option.textContent = citizen.nik;
-                        option.setAttribute('data-nik', citizen.nik);
-                        option.setAttribute('data-name', citizen.full_name || '');
-                        option.addEventListener('click', function() {
-                            selectNIK(citizen.nik, citizen.full_name || '');
-                        });
-                        nikDropdown.appendChild(option);
-                    }
-                });
-                
-                
-                nikDropdown.classList.remove('hidden');
-            } else {
-                
-                fetchNIKData();
-            }
-        });
-        
-        
-        document.addEventListener('click', function(event) {
-            if (!nikInput.contains(event.target) && 
-                !nikDropdown.contains(event.target) && 
-                !toggleButton.contains(event.target)) {
-                nikDropdown.classList.add('hidden');
-            }
-        });
-        
-       
-        fetchNIKData();
-    });
-</script>
+                if (nikData.length > 0) {
+                    const filteredData = nikData.filter(citizen =>
+                        String(citizen.nik).toLowerCase().includes(searchText)
+                    );
 
+                    nikDropdown.innerHTML = '';
+
+                    filteredData.forEach(citizen => {
+                        if (citizen.nik) {
+                            const option = document.createElement('div');
+                            option.className = 'px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer';
+                            option.textContent = citizen.nik;
+                            option.setAttribute('data-nik', citizen.nik);
+                            option.setAttribute('data-name', citizen.full_name || '');
+                            option.addEventListener('click', function () {
+                                selectNIK(citizen.nik, citizen.full_name || '');
+                            });
+                            nikDropdown.appendChild(option);
+                        }
+                    });
+
+                    nikDropdown.classList.remove('hidden');
+                } else {
+                    fetchNIKData();
+                }
+            });
+
+            document.addEventListener('click', function (event) {
+                if (!nikInput.contains(event.target) &&
+                    !nikDropdown.contains(event.target) &&
+                    !toggleButton.contains(event.target)) {
+                    nikDropdown.classList.add('hidden');
+                }
+            });
+
+            fetchNIKData();
+        });
+    </script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
@@ -565,7 +545,7 @@
     
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // Set up coordinate combination for tag_lokasi
+          
             const tagLatInput = document.getElementById('tag_lat');
             const tagLngInput = document.getElementById('tag_lng');
             const tagLokasiInput = document.getElementById('tag_lokasi');
@@ -582,7 +562,6 @@
                 }
             }
 
-            // Update combined coordinates whenever latitude or longitude changes
             if (tagLatInput) {
                 tagLatInput.addEventListener('change', updateTagLokasi);
                 tagLatInput.addEventListener('input', updateTagLokasi);
@@ -592,11 +571,9 @@
                 tagLngInput.addEventListener('change', updateTagLokasi);
                 tagLngInput.addEventListener('input', updateTagLokasi);
             }
-
-            // Initialize combined value if coordinates already exist
+           
             updateTagLokasi();
 
-            // Also update right before form submission
             document.querySelector('form').addEventListener('submit', function (e) {
                 updateTagLokasi();
             });

@@ -365,7 +365,24 @@ Route::middleware(['auth:penduduk'])->group(function () {
     Route::get('/user/family-member/{nik}/document/{documentType}/view', [ProfileController::class, 'viewFamilyMemberDocument'])
         ->name('user.family-member.view-document');
 
-    //Route Kelola Aser
+    //Route Kelola Aset
+
+    //api
+    Route::get('/api/location-details', [WilayahController::class, 'getLocationDetailsById'])
+        ->name('api.location-details');
+    Route::get('/api/citizens/all', [WilayahController::class, 'getAllCitizens'])
+        ->name('api.all-citizens');
+    Route::get('/api/citizens/all', [WilayahController::class, 'getAllCitizens'])
+        ->name('api.all-citizens');
+    Route::get('/api/provinces', [WilayahController::class, 'getProvinces'])
+        ->name('api.provinces');
+    Route::get('/api/districts', [WilayahController::class, 'getDistricts'])
+        ->name('api.districts');
+    Route::get('/api/subdistricts', [WilayahController::class, 'getSubDistricts'])
+        ->name('api.subdistricts');
+    Route::get('/api/villages', [WilayahController::class, 'getVillages'])
+        ->name('api.villages');
+
     Route::get('/user/kelola-aset', [KelolaAsetController::class, 'index'])
         ->name('user.kelola-aset.index');
     Route::get('/user/kelola-aset/create', [KelolaAsetController::class, 'create'])
@@ -429,5 +446,8 @@ Route::get('/citizens/all', [DataKKController::class, 'fetchAllCitizens'])->name
 
 // New route for administration citizens data
 Route::get('/citizens/administrasi', [AdministrasiController::class, 'fetchAllCitizens'])->name('citizens.administrasi');
+
+
+
 
 

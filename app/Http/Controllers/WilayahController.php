@@ -181,13 +181,7 @@ class WilayahController extends Controller
         }
     }
 
-    /**
-     * Legacy method for showing kecamatan by kabupaten
-     */
-
-    /**
-     * Show all desa with pagination
-     */
+   
     public function showDesa()
     {
         try {
@@ -253,8 +247,165 @@ class WilayahController extends Controller
         }
     }
 
-    /**
-     * Legacy method for showing desa by kecamatan
-     */
+    
+    public function getLocationDetailsById(Request $request)
+    {
+        try {
+            $provinceId = $request->province_id;
+            $districtId = $request->district_id;
+            $subDistrictId = $request->sub_district_id;
+            $villageId = $request->village_id;
+
+            $result = [
+                'province_name' => null,
+                'district_name' => null,
+                'sub_district_name' => null,
+                'village_name' => null
+            ];
+
+          
+            if ($provinceId) {
+                $provinces = $this->wilayahService->getProvinces();
+                $province = collect($provinces)->firstWhere('id', $provinceId);
+
+                if ($province) {
+                    $result['province_name'] = $province['name'];
+
+                    
+                    if ($districtId && isset($province['code'])) {
+                        $districts = $this->wilayahService->getKabupaten($province['code']);
+                        $district = collect($districts)->firstWhere('id', $districtId);
+                        if ($district) {
+                            $result['district_name'] = $district['name'];
+
+                            
+                            if ($subDistrictId && isset($district['code'])) {
+                                $subDistricts = $this->wilayahService->getKecamatan($district['code']);
+                                $subDistrict = collect($subDistricts)->firstWhere('id', $subDistrictId);
+                                if ($subDistrict) {
+                                    $result['sub_district_name'] = $subDistrict['name'];
+
+                                  
+                                    if ($villageId && isset($subDistrict['code'])) {
+                                        $villages = $this->wilayahService->getDesa($subDistrict['code']);
+                                        $village = collect($villages)->firstWhere('id', $villageId);
+                                        if ($village) {
+                                            $result['village_name'] = $village['name'];
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return response()->json($result);
+        } catch (\Exception $e) {
+            Log::error('Error getting location details: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Failed to retrieve location details'
+            ], 500);
+        }
+    }
+
+    public function getAllCitizens()
+    {
+        try {
+            $apiUrl = config('services.kependudukan.url') . '/api/all-citizens';
+            $apiKey = config('services.kependudukan.key');
+
+            $response = Http::withHeaders([
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+                'X-API-Key' => $apiKey,
+            ])->get($apiUrl);
+
+            if ($response->successful()) {
+                return response()->json($response->json());
+            }
+
+            Log::error('Failed to fetch citizens data: ' . $response->status());
+            return response()->json(['error' => 'Failed to fetch citizens data'], 500);
+        } catch (\Exception $e) {
+            Log::error('Error fetching citizens data: ' . $e->getMessage());
+            return response()->json(['error' => 'Error fetching citizens data'], 500);
+        }
+    }
+
+    public function getProvinces()
+    {
+        try {
+            $provinces = $this->wilayahService->getProvinces();
+            return response()->json([
+                'status' => 'OK',
+                'data' => $provinces
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching provinces: ' . $e->getMessage());
+            return response()->json(['error' => 'Error fetching provinces'], 500);
+        }
+    }
+
+    public function getDistricts(Request $request)
+    {
+        try {
+            $provinceCode = $request->query('province_code');
+            if (!$provinceCode) {
+                return response()->json(['error' => 'Province code is required'], 400);
+            }
+
+            $districts = $this->wilayahService->getKabupaten($provinceCode);
+            return response()->json([
+                'status' => 'OK',
+                'data' => $districts
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching districts: ' . $e->getMessage());
+            return response()->json(['error' => 'Error fetching districts'], 500);
+        }
+    }
+
+    public function getSubDistricts(Request $request)
+    {
+        try {
+            $districtCode = $request->query('district_code');
+            if (!$districtCode) {
+                return response()->json(['error' => 'District code is required'], 400);
+            }
+
+            $subDistricts = $this->wilayahService->getKecamatan($districtCode);
+            return response()->json([
+                'status' => 'OK',
+                'data' => $subDistricts
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching sub-districts: ' . $e->getMessage());
+            return response()->json(['error' => 'Error fetching sub-districts'], 500);
+        }
+    }
+
+    public function getVillages(Request $request)
+    {
+        try {
+            $subDistrictCode = $request->query('subdistrict_code');
+            if (!$subDistrictCode) {
+                return response()->json(['error' => 'Sub-district code is required'], 400);
+            }
+
+            $villages = $this->wilayahService->getDesa($subDistrictCode);
+            return response()->json([
+                'status' => 'OK',
+                'data' => $villages
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching villages: ' . $e->getMessage());
+            return response()->json(['error' => 'Error fetching villages'], 500);
+        }
+    }
+
+
+
+    
 
 }
