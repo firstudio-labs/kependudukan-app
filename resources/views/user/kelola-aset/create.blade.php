@@ -241,6 +241,10 @@
         async function fetchNIKData() {
             try {
                 const nikDropdown = document.getElementById('nik-dropdown');
+                const parentWidth = document.getElementById('nik-input').offsetWidth;
+
+                // Set dropdown width to match input field
+                nikDropdown.style.width = parentWidth + 'px';
 
                 nikDropdown.innerHTML = '<div class="px-4 py-2 text-sm text-gray-500">Loading NIK data...</div>';
                 nikDropdown.classList.remove('hidden');
@@ -281,7 +285,7 @@
                         }
                     });
 
-                    console.log(`Loaded ${nikData.length} NIKs`);
+                   
                 } else {
                     console.error('Invalid or empty data format in response');
                     nikDropdown.innerHTML = '<div class="px-4 py-2 text-sm text-gray-500">Tidak ada data NIK tersedia</div>';
@@ -313,6 +317,14 @@
             const nikInput = document.getElementById('nik-input');
             const nikDropdown = document.getElementById('nik-dropdown');
             const toggleButton = document.getElementById('toggle-nik-dropdown');
+
+             // Set dropdown width to match input field initially
+            nikDropdown.style.width = nikInput.offsetWidth + 'px';
+
+            // Add resize event listener to keep dropdown width in sync
+            window.addEventListener('resize', function () {
+                nikDropdown.style.width = nikInput.offsetWidth + 'px';
+            });
 
             toggleButton.addEventListener('click', function () {
                 nikDropdown.classList.toggle('hidden');

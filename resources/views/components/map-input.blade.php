@@ -50,7 +50,7 @@
                 const lonInput = document.getElementById('{{ $longitudeId }}');
                 
                 function initMap() {
-                    console.log('Inisialisasi peta untuk: ' + mapId);
+                    
                     
                     // Periksa apakah elemen peta ada
                     const mapElement = document.getElementById(mapId);
@@ -69,7 +69,6 @@
                     // Dapatkan koordinat awal
                     let lat = parseFloat(latInput.value) || -7.310000;
                     let lon = parseFloat(lonInput.value) || 110.290000;
-                    console.log('Koordinat awal:', lat, lon);
 
                     // Buat peta baru
                     const map = L.map(mapId).setView([lat, lon], 13);
@@ -133,7 +132,7 @@
                     // Perbarui ukuran peta setelah diinisialisasi
                     setTimeout(() => {
                         map.invalidateSize();
-                        console.log('Ukuran peta diperbarui');
+                        
                     }, 300);
                     
                     return map;
@@ -249,7 +248,7 @@
                     console.log('Mengatur observer untuk modal: {{ $modalId }}');
                     observeModal('{{ $modalId }}');
                 } else {
-                    console.log('Tidak ada modal, inisialisasi peta langsung');
+                    
                     setTimeout(initMap, 300);
                 }
             });

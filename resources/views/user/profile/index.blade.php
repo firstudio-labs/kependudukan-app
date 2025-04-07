@@ -969,7 +969,7 @@ if (!empty($userData->tag_lokasi)) {
 
                                 function initialize() {
                                     if (typeof axios !== 'undefined') {
-                                        console.log('Starting location data update...');
+                                       
                                         updateLocationDisplays();
                                     } else {
                                         console.error('Axios is not loaded. Location data cannot be fetched dynamically.');
