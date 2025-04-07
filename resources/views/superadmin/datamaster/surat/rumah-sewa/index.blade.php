@@ -53,7 +53,19 @@
                         <td class="px-6 py-4">{{ $rumahSewa->responsible_name ?? '-' }}</td>
                         <td class="px-6 py-4">{{ $rumahSewa->rental_address ?? '-' }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {{ $rumahSewa->signer ? $rumahSewa->signer->judul : $rumahSewa->signing }}
+                            @php
+                                $judul = '-';
+                                if (!empty($rumahSewa->signing)) {
+                                    // Try to fetch from relationship first
+                                    if ($rumahSewa->penandatangan) {
+                                        $judul = $rumahSewa->penandatangan->judul;
+                                    } else {
+                                        // Legacy handling if stored as string or if relationship fails
+                                        $judul = $rumahSewa->signing;
+                                    }
+                                }
+                            @endphp
+                            {{ $judul }}
                         </td>
                         <td class="flex items-center px-6 py-4 space-x-2">
                             <a href="{{ route('superadmin.surat.rumah-sewa.export-pdf', $rumahSewa->id) }}" class="text-blue-600 hover:text-blue-800" aria-label="Export PDF" target="_blank">

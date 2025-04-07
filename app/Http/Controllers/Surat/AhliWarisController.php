@@ -302,11 +302,26 @@ class AhliWarisController extends Controller
         try {
             $ahliWaris = AhliWaris::findOrFail($id);
 
+            // Ensure address is properly converted to string if it's an array
+            $addressString = is_array($ahliWaris->address) ? implode(', ', $ahliWaris->address) : ($ahliWaris->address ?? '-');
+
+            // Get heirs data - ensure it's normalized
+            $heirs = [];
+            if (!empty($ahliWaris->heirs) && is_string($ahliWaris->heirs)) {
+                $heirs = json_decode($ahliWaris->heirs, true);
+            } elseif (is_array($ahliWaris->heirs)) {
+                $heirs = $ahliWaris->heirs;
+            }
+
+            // Normalize NIK if it's an array
+            $nik = is_array($ahliWaris->nik) ? implode(', ', $ahliWaris->nik) : $ahliWaris->nik;
+
             // Get location names using wilayah service
             $provinceName = '';
             $districtName = '';
             $subdistrictName = '';
             $villageName = '';
+            $villageCode = '';
 
             // Get province data
             if (!empty($ahliWaris->province_id)) {
@@ -314,148 +329,109 @@ class AhliWarisController extends Controller
                 foreach ($provinces as $province) {
                     if ($province['id'] == $ahliWaris->province_id) {
                         $provinceName = $province['name'];
-                        break;
-                    }
-                }
-            }
-
-            // Get district/kabupaten data
-            if (!empty($ahliWaris->district_id) && !empty($provinceName)) {
-                $provinceCode = null;
-                foreach ($this->wilayahService->getProvinces() as $province) {
-                    if ($province['id'] == $ahliWaris->province_id) {
                         $provinceCode = $province['code'];
+
+                        // Now get district data using province code
+                        if (!empty($ahliWaris->district_id) && !empty($provinceCode)) {
+                            $districts = $this->wilayahService->getKabupaten($provinceCode);
+                            foreach ($districts as $district) {
+                                if ($district['id'] == $ahliWaris->district_id) {
+                                    $districtName = $district['name'];
+                                    $districtCode = $district['code'];
+
+                                    // Now get subdistrict data using district code
+                                    if (!empty($ahliWaris->subdistrict_id) && !empty($districtCode)) {
+                                        $subdistricts = $this->wilayahService->getKecamatan($districtCode);
+                                        foreach ($subdistricts as $subdistrict) {
+                                            if ($subdistrict['id'] == $ahliWaris->subdistrict_id) {
+                                                $subdistrictName = $subdistrict['name'];
+                                                $subdistrictCode = $subdistrict['code'];
+
+                                                // Finally get village data using subdistrict code
+                                                if (!empty($ahliWaris->village_id) && !empty($subdistrictCode)) {
+                                                    $villages = $this->wilayahService->getDesa($subdistrictCode);
+                                                    foreach ($villages as $village) {
+                                                        if ($village['id'] == $ahliWaris->village_id) {
+                                                            $villageName = $village['name'];
+                                                            $villageCode = $village['code'];
+                                                            break;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    break;
+                                }
+                            }
+                        }
                         break;
                     }
                 }
+            }
 
-                if ($provinceCode) {
-                    $districts = $this->wilayahService->getKabupaten($provinceCode);
-                    foreach ($districts as $district) {
-                        if ($district['id'] == $ahliWaris->district_id) {
-                            $districtName = $district['name'];
-                            break;
-                        }
-                    }
+            // Format dates for human-readable display
+            $birthDate = '';
+            if (!empty($ahliWaris->birth_date) && !is_array($ahliWaris->birth_date)) {
+                try {
+                    $birthDate = \Carbon\Carbon::parse($ahliWaris->birth_date)->locale('id')->isoFormat('D MMMM Y');
+                } catch (\Exception $e) {
+                    $birthDate = $ahliWaris->birth_date;
                 }
             }
 
-            // Get subdistrict/kecamatan data
-            if (!empty($ahliWaris->subdistrict_id) && !empty($districtName)) {
-                $districtCode = null;
-                if (!empty($provinceCode)) {
-                    $districts = $this->wilayahService->getKabupaten($provinceCode);
-                    foreach ($districts as $district) {
-                        if ($district['id'] == $ahliWaris->district_id) {
-                            $districtCode = $district['code'];
-                            break;
-                        }
-                    }
-                }
-
-                if ($districtCode) {
-                    $subdistricts = $this->wilayahService->getKecamatan($districtCode);
-                    foreach ($subdistricts as $subdistrict) {
-                        if ($subdistrict['id'] == $ahliWaris->subdistrict_id) {
-                            $subdistrictName = $subdistrict['name'];
-                            break;
-                        }
-                    }
+            $deathDate = '';
+            if (!empty($ahliWaris->death_date) && !is_array($ahliWaris->death_date)) {
+                try {
+                    $deathDate = \Carbon\Carbon::parse($ahliWaris->death_date)->locale('id')->isoFormat('D MMMM Y');
+                } catch (\Exception $e) {
+                    $deathDate = $ahliWaris->death_date;
                 }
             }
 
-            // Get village/desa data
-            if (!empty($ahliWaris->village_id) && !empty($subdistrictName)) {
-                $subdistrictCode = null;
-                if (!empty($districtCode)) {
-                    $subdistricts = $this->wilayahService->getKecamatan($districtCode);
-                    foreach ($subdistricts as $subdistrict) {
-                        if ($subdistrict['id'] == $ahliWaris->subdistrict_id) {
-                            $subdistrictCode = $subdistrict['code'];
-                            break;
-                        }
-                    }
-                }
-
-                if ($subdistrictCode) {
-                    $villages = $this->wilayahService->getDesa($subdistrictCode);
-                    foreach ($villages as $village) {
-                        if ($village['id'] == $ahliWaris->village_id) {
-                            $villageName = $village['name'];
-                            break;
-                        }
-                    }
+            $letterDate = '';
+            if (!empty($ahliWaris->letter_date) && !is_array($ahliWaris->letter_date)) {
+                try {
+                    $letterDate = \Carbon\Carbon::parse($ahliWaris->letter_date)->locale('id')->isoFormat('D MMMM Y');
+                } catch (\Exception $e) {
+                    $letterDate = $ahliWaris->letter_date;
                 }
             }
 
-            // Format dates for display
-            $deathDate = !empty($ahliWaris->death_date) ? \Carbon\Carbon::parse($ahliWaris->death_date)->format('d-m-Y') : '';
-            $deathCertDate = !empty($ahliWaris->death_certificate_date) ? \Carbon\Carbon::parse($ahliWaris->death_certificate_date)->format('d-m-Y') : '';
-            $inheritanceLetterDate = !empty($ahliWaris->inheritance_letter_date) ? \Carbon\Carbon::parse($ahliWaris->inheritance_letter_date)->format('d-m-Y') : date('d-m-Y');
-
-            // Process array data from JSON if stored as strings
-            $niks = $this->safeJsonDecode($ahliWaris->nik);
-            $fullNames = $this->safeJsonDecode($ahliWaris->full_name);
-            $birthPlaces = $this->safeJsonDecode($ahliWaris->birth_place);
-            $birthDates = $this->safeJsonDecode($ahliWaris->birth_date);
-            $genders = $this->safeJsonDecode($ahliWaris->gender);
-            $religions = $this->safeJsonDecode($ahliWaris->religion);
-            $addresses = $this->safeJsonDecode($ahliWaris->address);
-            $familyStatuses = $this->safeJsonDecode($ahliWaris->family_status);
-
-            // Format the heirs data for the template
-            $heirs = [];
-            for ($i = 0; $i < count($niks); $i++) {
-                // Format dates and convert family status and gender to text
-                $formattedBirthDate = isset($birthDates[$i]) ? \Carbon\Carbon::parse($birthDates[$i])->format('d-m-Y') : '';
-
-                // Map gender codes to text
-                $genderText = '';
-                if (isset($genders[$i])) {
-                    $genderText = $genders[$i] == 1 ? 'Laki-Laki' : 'Perempuan';
-                }
-
-                // Map religion codes to text
-                $religionText = '';
-                if (isset($religions[$i])) {
-                    $religionMap = [
-                        1 => 'Islam',
-                        2 => 'Kristen',
-                        3 => 'Katholik',
-                        4 => 'Hindu',
-                        5 => 'Buddha',
-                        6 => 'Kong Hu Cu',
-                        7 => 'Lainnya'
-                    ];
-                    $religionText = $religionMap[$religions[$i]] ?? '';
-                }
-
-                // Map family status codes to text
-                $familyStatusText = '';
-                if (isset($familyStatuses[$i])) {
-                    $statusMap = [
-                        1 => 'ANAK',
-                        2 => 'KEPALA KELUARGA',
-                        3 => 'ISTRI',
-                        4 => 'ORANG TUA',
-                        5 => 'MERTUA',
-                        6 => 'CUCU',
-                        7 => 'FAMILI LAIN'
-                    ];
-                    $familyStatusText = $statusMap[$familyStatuses[$i]] ?? '';
-                }
-
-                $heirs[] = [
-                    'nik' => $niks[$i] ?? '',
-                    'full_name' => $fullNames[$i] ?? '',
-                    'birth_place' => $birthPlaces[$i] ?? '',
-                    'birth_date' => $formattedBirthDate,
-                    'gender' => $genderText,
-                    'religion' => $religionText,
-                    'address' => $addresses[$i] ?? '',
-                    'family_status' => $familyStatusText
-                ];
+            // Format gender
+            $gender = '';
+            if (isset($ahliWaris->gender)) {
+                $gender = $ahliWaris->gender == 1 ? 'Laki-Laki' : 'Perempuan';
             }
+
+            // Format religion - Fix for the illegal offset type error
+            $religions = [
+                1 => 'Islam',
+                2 => 'Kristen',
+                3 => 'Katholik',
+                4 => 'Hindu',
+                5 => 'Buddha',
+                6 => 'Kong Hu Cu',
+                7 => 'Lainnya'
+            ];
+
+            // Convert to string or integer before using as array key
+            $religionKey = null;
+            if (isset($ahliWaris->religion)) {
+                // Try to convert to integer first
+                $religionKey = is_numeric($ahliWaris->religion) ? (int)$ahliWaris->religion : null;
+
+                // If it's a string that contains a number, convert it
+                if (is_string($ahliWaris->religion) && ctype_digit($ahliWaris->religion)) {
+                    $religionKey = (int)$ahliWaris->religion;
+                }
+            }
+
+            // Now safely check if the key exists in the religions array
+            $religion = ($religionKey !== null && isset($religions[$religionKey]))
+                ? $religions[$religionKey]
+                : ($ahliWaris->religion ?? '');
 
             // Get the signing name (keterangan) from Penandatangan model
             $signing_name = null;
@@ -466,21 +442,31 @@ class AhliWarisController extends Controller
                 }
             }
 
+            // Return view with properly processed data
             return view('superadmin.datamaster.surat.ahli-waris.AhliWaris', [
                 'ahliWaris' => $ahliWaris,
+                'heirs' => $heirs,
+                'addressString' => $addressString,
+                'normalized_nik' => $nik,
                 'province_name' => $provinceName,
                 'district_name' => $districtName,
                 'subdistrict_name' => $subdistrictName,
                 'village_name' => $villageName,
-                'heirs' => $heirs,
+                'provinceName' => $provinceName,
+                'districtName' => $districtName,
+                'subdistrictName' => $subdistrictName,
+                'villageName' => $villageName,
+                'villageCode' => $villageCode,
+                'formatted_birth_date' => $birthDate,
                 'formatted_death_date' => $deathDate,
-                'formatted_death_certificate_date' => $deathCertDate,
-                'formatted_inheritance_letter_date' => $inheritanceLetterDate,
-                'signing_name' => $signing_name // Pass the signing name to the view
+                'formatted_letter_date' => $letterDate,
+                'gender' => $gender,
+                'religion' => $religion,
+                'signing_name' => $signing_name
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Error generating PDF for AhliWaris: ' . $e->getMessage(), [
+            \Log::error('Error generating PDF: ' . $e->getMessage(), [
                 'id' => $id,
                 'trace' => $e->getTraceAsString()
             ]);

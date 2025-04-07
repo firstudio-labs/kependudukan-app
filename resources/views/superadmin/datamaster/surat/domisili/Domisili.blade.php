@@ -56,20 +56,20 @@
 
         <div class="flex items-center mb-4">
             <div class="w-24 mr-4">
-                <img src="/api/placeholder/100/100" alt="Logo Kota" class="w-full h-auto">
+                <img src="{{ asset('images/logo.png') }}" alt="Logo Kota" class="w-full h-auto">
             </div>
             <div class="flex-1 text-center">
                 <p class="text-lg font-bold">PEMERINTAH {{ strtoupper($district_name ?? 'KABUPATEN') }}</p>
                 <p class="text-lg font-bold">KECAMATAN {{ strtoupper($subdistrict_name ?? 'KECAMATAN') }}</p>
                 <p class="text-2xl font-bold">
-                    @if(isset($villageCode) && substr($villageCode, 0, 1) === '1')
+                    @if(isset($villageCode) && strlen($villageCode) >= 7 && substr($villageCode, 6, 1) === '1')
                         KELURAHAN
-                    @elseif(isset($villageCode) && substr($villageCode, 0, 1) === '2')
+                    @elseif(isset($villageCode) && strlen($villageCode) >= 7 && substr($villageCode, 6, 1) === '2')
                         DESA
                     @else
                         {{ isset($administrationData) && isset($administrationData['village_type']) ? strtoupper($administrationData['village_type']) : 'DESA/KELURAHAN' }}
                     @endif
-                    {{ strtoupper($villageName ?? 'XXXX') }}
+                    {{ strtoupper($village_name ?? 'XXXX') }}
                 </p>
                 <p class="text-sm">Alamat: </p>
             </div>
@@ -82,13 +82,22 @@
 
         <!-- Document Title -->
         <div class="text-center mb-6">
-            <h1 class="text-lg font-bold">SURAT KETERANGAN DOMISILI</h1>
+            <h1 class="text-lg font-bold underline">SURAT KETERANGAN DOMISILI</h1>
             <p class="text-sm">Nomor : {{ $domisili->letter_number ?? '___________' }}</p>
         </div>
 
         <!-- Introduction -->
         <div class="mb-6">
-            <p class="mb-4">Kepala Desa/Lurah {{ $village_name ?? 'Desa/Kelurahan' }} Kecamatan {{ $subdistrict_name ?? 'Kecamatan' }} dengan ini menerangkan bahwa :</p>
+            <p class="mb-4">
+                @if(isset($villageCode) && strlen($villageCode) >= 7 && substr($villageCode, 6, 1) === '1')
+                    Lurah
+                @elseif(isset($villageCode) && strlen($villageCode) >= 7 && substr($villageCode, 6, 1) === '2')
+                    Kepala Desa
+                @else
+                    {{ isset($administrationData) && isset($administrationData['village_head_title']) ? $administrationData['village_head_title'] : 'Lurah/Kepala Desa' }}
+                @endif
+                {{ $village_name ?? 'Desa/Kelurahan' }} Kecamatan {{ $subdistrict_name ?? 'Kecamatan' }} dengan ini menerangkan bahwa :
+            </p>
         </div>
 
         <!-- Personal Information -->
@@ -144,7 +153,14 @@
                     <tr>
                         <td>Alamat</td>
                         <td>:</td>
-                        <td>{{ $domisili->address ?? '-' }} RT {{ $domisili->rt ?? '0' }}, {{ $village_name ?? 'Desa/Kelurahan' }}, {{ $subdistrict_name ?? 'Kecamatan' }}, {{ $district_name ?? 'Kabupaten' }}, {{ $province_name ?? 'Provinsi' }}</td>
+                        <td>
+                            {{ $domisili->address ?? '-' }}
+                            RT {{ $domisili->rt ?? '0' }},
+                            {{ !empty($village_name) ? $village_name : 'Desa/Kelurahan' }},
+                            {{ !empty($subdistrict_name) ? $subdistrict_name : 'Kecamatan' }},
+                            {{ !empty($district_name) ? $district_name : 'Kabupaten' }},
+                            {{ !empty($province_name) ? $province_name : 'Provinsi' }}
+                        </td>
                     </tr>
                 </tbody>
             </table>
@@ -154,14 +170,11 @@
         <div class="mb-6">
             <p class="mb-2">
                 Berdasarkan Surat Keterangan dari Ketua RT {{ $domisili->rt ?? 'XX' }}
-                @if(isset($villageCode) && substr($villageCode, 0, 1) === '1')
-                    Kelurahan
-                @elseif(isset($villageCode) && substr($villageCode, 0, 1) === '2')
-                    Desa
-                @else
-                    Desa/Kelurahan
-                @endif
-                {{ $villageName ?? 'XXXX' }}, Kecamatan {{ $subdistrict_name ?? 'XXXX' }},
+                {{ $domisili->address ?? '-' }},
+                {{ $village_name ?? 'XXXX' }},
+                {{ $subdistrict_name ?? 'XXXX' }},
+                {{ $district_name ?? 'XXXX' }},
+                {{ $province_name ?? 'XXXX' }},
                 Tanggal
                 @if(isset($formatted_letter_date) && !empty($formatted_letter_date))
                     {{ \Carbon\Carbon::parse($formatted_letter_date)->locale('id')->isoFormat('D MMMM Y') }}
@@ -176,20 +189,18 @@
         <!-- Signature -->
         <div class="text-center mt-16">
             <div class="mb-4">
-                <p>{{ $village_name ?? 'Desa/Kelurahan' }},
-                   @if(isset($formatted_letter_date) && strpos($formatted_letter_date, '-') !== false)
-                       {{ \Carbon\Carbon::createFromFormat('d-m-Y', $formatted_letter_date)->locale('id')->isoFormat('D MMMM Y') }}
-                   @else
-                       {{ $formatted_letter_date ?? \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM Y') }}
-                   @endif
-                </p>
+                {{ $village_name ?? 'Desa/Kelurahan' }},
+                @if(isset($formatted_letter_date) && strpos($formatted_letter_date, '-') !== false)
+                    {{ \Carbon\Carbon::createFromFormat('d-m-Y', $formatted_letter_date)->locale('id')->isoFormat('D MMMM Y') }}
+                @else
+                    {{ $formatted_letter_date ?? \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM Y') }}
+                @endif
             </div>
-            <p class="font-bold">
-                <p class="font-bold underline">{{ strtoupper($signing_name ?? 'NAMA KEPALA DESA') }}</p>
-            </p>
+            <p>{{ strtoupper($signing_name ?? 'NAMA KEPALA DESA') }}</p>
+            <div class="mt-20">
+                <div class="border-b border-black inline-block w-48"></div>
+            </div>
         </div>
-
     </div>
 </body>
-
 </html>

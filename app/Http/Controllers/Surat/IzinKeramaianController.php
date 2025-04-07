@@ -301,6 +301,7 @@ class IzinKeramaianController extends Controller
             $districtName = '';
             $subdistrictName = '';
             $villageName = '';
+            $villageCode = '';
 
             // Get province data
             if (!empty($keramaian->province_id)) {
@@ -380,6 +381,7 @@ class IzinKeramaianController extends Controller
                     foreach ($villages as $village) {
                         if ($village['id'] == $keramaian->village_id) {
                             $villageName = $village['name'];
+                            $villageCode = $village['code']; // Store the complete village code
                             break;
                         }
                     }
@@ -432,6 +434,7 @@ class IzinKeramaianController extends Controller
                 'districtName',
                 'subdistrictName',
                 'villageName',
+                'villageCode', // Add the village code
                 'jobName',
                 'religionName',
                 'genderName',

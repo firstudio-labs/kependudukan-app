@@ -373,6 +373,7 @@ class DomisiliUsahaController extends Controller
             $districtName = '';
             $subdistrictName = '';
             $villageName = '';
+            $villageCode = null; // Initialize village code variable
 
             // Get province data
             if (!empty($domisiliUsaha->province_id)) {
@@ -452,6 +453,7 @@ class DomisiliUsahaController extends Controller
                     foreach ($villages as $village) {
                         if ($village['id'] == $domisiliUsaha->village_id) {
                             $villageName = $village['name'];
+                            $villageCode = $village['code']; // Store the complete village code
                             break;
                         }
                     }
@@ -467,7 +469,8 @@ class DomisiliUsahaController extends Controller
                 'province_name' => $provinceName,
                 'district_name' => $districtName,
                 'subdistrict_name' => $subdistrictName,
-                'village_name' => $villageName
+                'village_name' => $villageName,
+                'village_code' => $villageCode
             ]);
 
             // Format gender
@@ -511,12 +514,13 @@ class DomisiliUsahaController extends Controller
                 'district_name' => $districtName,
                 'subdistrict_name' => $subdistrictName,
                 'village_name' => $villageName,
+                'villageCode' => $villageCode, // Add the village code
                 'gender' => $gender,
                 'religion' => $religion,
                 'citizenship' => $citizenship,
                 'formatted_birth_date' => $birthDate,
                 'formatted_letter_date' => $letterDate,
-                'signing_name' => $signing_name // Pass the signing name to the view
+                'signing_name' => $signing_name
             ]);
 
         } catch (\Exception $e) {

@@ -400,6 +400,7 @@ class DomisiliController extends Controller
             $districtName = '';
             $subdistrictName = '';
             $villageName = '';
+            $villageCode = null; // Initialize village code variable
 
             // Get province data
             if (!empty($domisili->province_id)) {
@@ -479,6 +480,7 @@ class DomisiliController extends Controller
                     foreach ($villages as $village) {
                         if ($village['id'] == $domisili->village_id) {
                             $villageName = $village['name'];
+                            $villageCode = $village['code']; // Store the complete village code
                             break;
                         }
                     }
@@ -535,6 +537,7 @@ class DomisiliController extends Controller
                 'district_name' => $districtName,
                 'subdistrict_name' => $subdistrictName,
                 'village_name' => $villageName,
+                'villageCode' => $villageCode, // Add the village code
                 'gender' => $gender,
                 'religion' => $religion,
                 'citizenship' => $citizenship,

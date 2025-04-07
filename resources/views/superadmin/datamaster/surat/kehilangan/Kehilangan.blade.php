@@ -22,8 +22,6 @@
             .no-print {
                 display: none !important;
             }
-
-
         }
     </style>
 </head>
@@ -39,16 +37,16 @@
 
         <div class="flex items-center mb-4">
             <div class="w-24 mr-4">
-                <img src="/api/placeholder/100/100" alt="Logo Kota" class="w-full h-auto">
+                <img src="{{ asset('images/logo.png') }}" alt="Logo Kota" class="w-full h-auto">
             </div>
 
             <div class="flex-1 text-center">
                 <p class="text-lg font-bold">PEMERINTAH {{ strtoupper($districtName ?? 'TARAKAN') }}</p>
                 <p class="text-lg font-bold">KECAMATAN {{ strtoupper($subdistrictName ?? 'TARAKAN BARAT') }}</p>
                 <p class="text-2xl font-bold">
-                    @if(isset($villageCode) && substr($villageCode, 0, 1) === '1')
+                    @if(isset($villageCode) && strlen($villageCode) >= 7 && substr($villageCode, 6, 1) === '1')
                         KELURAHAN
-                    @elseif(isset($villageCode) && substr($villageCode, 0, 1) === '2')
+                    @elseif(isset($villageCode) && strlen($villageCode) >= 7 && substr($villageCode, 6, 1) === '2')
                         DESA
                     @else
                         {{ isset($administrationData) && isset($administrationData['village_type']) ? strtoupper($administrationData['village_type']) : 'DESA/KELURAHAN' }}
@@ -72,7 +70,16 @@
 
         <!-- Introduction -->
         <div class="mb-6">
-            <p class="mb-4">Lurah {{ $villageName ?? 'Karang Anyar' }} Kecamatan {{ $subdistrictName ?? 'Tarakan Barat' }} dengan ini menerangkan bahwa :</p>
+            <p class="mb-4">
+                @if(isset($villageCode) && strlen($villageCode) >= 7 && substr($villageCode, 6, 1) === '1')
+                    Lurah
+                @elseif(isset($villageCode) && strlen($villageCode) >= 7 && substr($villageCode, 6, 1) === '2')
+                    Kepala Desa
+                @else
+                    {{ isset($administrationData) && isset($administrationData['village_head_title']) ? $administrationData['village_head_title'] : 'Lurah/Kepala Desa' }}
+                @endif
+                {{ $villageName ?? 'Karang Anyar' }} Kecamatan {{ $subdistrictName ?? 'Tarakan Barat' }} dengan ini menerangkan bahwa :
+            </p>
         </div>
 
         <!-- Personal Information -->
@@ -145,14 +152,11 @@
         <div class="mb-6">
             <p class="mb-2">
                 Berdasarkan Surat Keterangan dari Ketua RT {{ $kehilangan->rt ?? 'XX' }}
-                @if(isset($villageCode) && substr($villageCode, 0, 1) === '1')
-                    Kelurahan
-                @elseif(isset($villageCode) && substr($villageCode, 0, 1) === '2')
-                    Desa
-                @else
-                    Desa/Kelurahan
-                @endif
-                {{ $villageName ?? 'XXXX' }}, Kecamatan {{ $subdistrictName ?? 'XXXX' }},
+                {{ $kehilangan->address ?? '-' }},
+                {{ $villageName ?? 'XXXX' }},
+                {{ $subdistrictName ?? 'XXXX' }},
+                {{ $districtName ?? 'XXXX' }},
+                {{ $provinceName ?? 'XXXX' }},
                 Tanggal
                 @if(isset($letterDate) && !empty($letterDate))
                     {{ \Carbon\Carbon::parse($letterDate)->locale('id')->isoFormat('D MMMM Y') }}
@@ -161,7 +165,6 @@
                 @endif
                 dan menurut keterangan yang bersangkutan telah kehilangan
                 {{ $kehilangan->lost_items ?? 'XXXX' }}
-
             </p>
             <p>Demikian Surat Keterangan ini dibuat untuk dapat dipergunakan sebagaimana mestinya.</p>
         </div>
@@ -176,54 +179,19 @@
                     {{ $letterDate ?? \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM Y') }}
                 @endif
             </div>
-            <p class="font-bold">
-                <p class="font-bold underline">{{ strtoupper($signing_name ?? 'NAMA KEPALA DESA') }}</p>
-            </p>
+            <p>{{ strtoupper($signing_name ?? 'NAMA KEPALA DESA') }}</p>
+            <div class="mt-20">
+                <div class="border-b border-black inline-block w-48"></div>
+            </div>
         </div>
     </div>
 
     <script>
         // Auto-print when the page loads (optional)
         window.onload = function() {
-            // Format dates in Indonesian
-            const formatIndonesianDate = (dateString) => {
-                if (!dateString) return '';
-
-                // Check if it's already in the correct format
-                if (dateString.includes(' ') && !dateString.includes('-')) return dateString;
-
-                const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-
-                // Handle different formats
-                let date;
-                if (dateString.includes('-')) {
-                    // Format: DD-MM-YYYY
-                    const parts = dateString.split('-');
-                    if (parts.length === 3) {
-                        return parts[0] + ' ' + months[parseInt(parts[1])-1] + ' ' + parts[2];
-                    }
-                    date = new Date(dateString);
-                } else {
-                    date = new Date(dateString);
-                }
-
-                return date.getDate() + ' ' + months[date.getMonth()] + ' ' + date.getFullYear();
-            };
-
-            // Convert all dates with format-date class
-            document.querySelectorAll('.format-date').forEach(el => {
-                el.textContent = formatIndonesianDate(el.textContent);
-            });
-
-            // Also convert directly in the document where dates might be hardcoded
-            const dateElements = document.querySelectorAll('[data-date]');
-            dateElements.forEach(el => {
-                if (el.dataset.date) {
-                    el.textContent = formatIndonesianDate(el.dataset.date);
-                }
-            });
+            // Uncomment this line if you want the print dialog to appear automatically
+            // window.print();
         };
     </script>
 </body>
-
 </html>

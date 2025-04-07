@@ -43,9 +43,9 @@
                 <p class="text-lg font-bold">PEMERINTAH {{ strtoupper($districtName) }}</p>
                 <p class="text-lg font-bold">KECAMATAN {{ strtoupper($subdistrictName) }}</p>
                 <p class="text-2xl font-bold">
-                    @if(isset($villageCode) && substr($villageCode, 0, 1) === '1')
+                    @if(isset($villageCode) && strlen($villageCode) >= 7 && substr($villageCode, 6, 1) === '1')
                         KELURAHAN
-                    @elseif(isset($villageCode) && substr($villageCode, 0, 1) === '2')
+                    @elseif(isset($villageCode) && strlen($villageCode) >= 7 && substr($villageCode, 6, 1) === '2')
                         DESA
                     @else
                         {{ isset($administrationData) && isset($administrationData['village_type']) ? strtoupper($administrationData['village_type']) : 'DESA/KELURAHAN' }}
@@ -68,7 +68,16 @@
         </div>
 
         <div class="content">
-            <p>Lurah/Kepala Desa {{ $villageName }} Kecamatan {{ $subdistrictName }} , dengan ini menerangkan bahwa:</p>
+            <p>
+                @if(isset($villageCode) && strlen($villageCode) >= 7 && substr($villageCode, 6, 1) === '1')
+                    Lurah
+                @elseif(isset($villageCode) && strlen($villageCode) >= 7 && substr($villageCode, 6, 1) === '2')
+                    Kepala Desa
+                @else
+                    {{ isset($administrationData) && isset($administrationData['village_head_title']) ? $administrationData['village_head_title'] : 'Lurah/Kepala Desa' }}
+                @endif
+                {{ $villageName }} Kecamatan {{ $subdistrictName }}, dengan ini menerangkan bahwa:
+            </p>
         </div>
 
         <div class="mb-6 mt-4">
@@ -123,14 +132,11 @@
         <div class="mb-6">
             <p class="mb-2">
                 Berdasarkan {{ $kematian->info ?? 'Surat Keterangan' }} dari Ketua RT {{ $kematian->rt ?? 'XX' }}
-                @if(isset($villageCode) && substr($villageCode, 0, 1) === '1')
-                    Kelurahan
-                @elseif(isset($villageCode) && substr($villageCode, 0, 1) === '2')
-                    Desa
-                @else
-                    Desa/Kelurahan
-                @endif
-                {{ $villageName ?? 'XXXX' }}, Kecamatan {{ $subdistrictName ?? 'XXXX' }},
+                {{ $kematian->address ?? '-' }},
+                {{ $villageName ?? 'XXXX' }},
+                {{ $subdistrictName ?? 'XXXX' }},
+                {{ $districtName ?? 'XXXX' }},
+                {{ $provinceName ?? 'XXXX' }},
                 Tanggal
                 @if(isset($kematian->rt_letter_date) && !empty($kematian->rt_letter_date))
                     {{ \Carbon\Carbon::parse($kematian->rt_letter_date)->locale('id')->isoFormat('D MMMM Y') }}
@@ -197,13 +203,14 @@
         </div>
 
         <!-- Signature -->
-        <div class="text-right mt-16">
+        <div class="text-center mt-16">
             <div class="mb-4">
                 {{ $villageName }}, {{ \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM Y') }}
             </div>
-            <p class="font-bold">
-                <p class="font-bold underline">{{ strtoupper($signing_name ?? 'NAMA KEPALA DESA') }}</p>
-            </p>
+            <p>{{ strtoupper($signing_name ?? 'NAMA KEPALA DESA') }}</p>
+            <div class="mt-20">
+                <div class="border-b border-black inline-block w-48"></div>
+            </div>
         </div>
     </div>
 
@@ -215,5 +222,4 @@
         };
     </script>
 </body>
-
 </html>

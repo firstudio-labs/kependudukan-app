@@ -60,7 +60,7 @@
                 <div class="w-3/5 border border-black px-2 py-1">{{ strtoupper($subdistrictName) }}</div>
             </div>
             <div class="flex mb-1">
-                <div class="w-1/4">KELURAHAN</div>
+                <div class="w-1/4">KELURAHAN/DESA</div>
                 <div class="w-1/12 text-center">:</div>
                 <div class="w-3/5 border border-black px-2 py-1">
                     <p class="text-xl ">
@@ -248,10 +248,11 @@
                 <div class="h-16"></div>
                 <p class="underline">{{ $fullName }}</p>
                 <p class="mt-6">Mengetahui,</p>
-                <p class="font-bold">
-                    <p class="font-bold underline">{{ strtoupper($signing_name ?? 'NAMA KEPALA DESA') }}</p>
-                </p>
+                <p>{{ strtoupper($signing_name ?? 'NAMA KEPALA DESA') }}</p>
+                <div class="mt-3">
+                    <div class="border-b border-black inline-block w-48"></div>
                 </div>
+            </div>
         </div>
     </div>
 

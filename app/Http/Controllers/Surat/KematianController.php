@@ -301,6 +301,7 @@ class KematianController extends Controller
             $districtName = '';
             $subdistrictName = '';
             $villageName = '';
+            $villageCode = '';
 
             // Get province data
             if (!empty($kematian->province_id)) {
@@ -380,6 +381,7 @@ class KematianController extends Controller
                     foreach ($villages as $village) {
                         if ($village['id'] == $kematian->village_id) {
                             $villageName = $village['name'];
+                            $villageCode = $village['code']; // Store the complete village code
                             break;
                         }
                     }
@@ -448,6 +450,7 @@ class KematianController extends Controller
                 'districtName' => $districtName,
                 'subdistrictName' => $subdistrictName,
                 'villageName' => $villageName,
+                'villageCode' => $villageCode, // Add the village code
                 'jobName' => $jobName,
                 'religionName' => $religionName,
                 'genderName' => $genderName,

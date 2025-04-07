@@ -237,6 +237,7 @@ class KehilanganController extends Controller
             $districtName = '';
             $subdistrictName = '';
             $villageName = '';
+            $villageCode = null; // Initialize village code variable
 
             // Get province data
             if (!empty($kehilangan->province_id)) {
@@ -311,11 +312,12 @@ class KehilanganController extends Controller
                     }
                 }
 
-                if ($subdistrictCode) {
+                if (!empty($subdistrictCode)) {
                     $villages = $this->wilayahService->getDesa($subdistrictCode);
                     foreach ($villages as $village) {
                         if ($village['id'] == $kehilangan->village_id) {
                             $villageName = $village['name'];
+                            $villageCode = $village['code']; // Store the complete village code
                             break;
                         }
                     }
@@ -371,6 +373,7 @@ class KehilanganController extends Controller
                 'districtName' => $districtName,
                 'subdistrictName' => $subdistrictName,
                 'villageName' => $villageName,
+                'villageCode' => $villageCode, // Add the village code
                 'jobName' => $jobName,
                 'gender' => $gender,
                 'religion' => $religion,

@@ -46,9 +46,9 @@
                 <p class="text-lg font-bold">PEMERINTAH {{ strtoupper($district_name ?? 'XXXX') }}</p>
                 <p class="text-lg font-bold">KECAMATAN {{ strtoupper($subdistrict_name ?? 'XXXX') }}</p>
                 <p class="text-2xl font-bold">
-                    @if(isset($village_code) && substr($village_code, 0, 1) === '1')
+                    @if(isset($village_code) && strlen($village_code) >= 7 && substr($village_code, 6, 1) === '1')
                         KELURAHAN
-                    @elseif(isset($village_code) && substr($village_code, 0, 1) === '2')
+                    @elseif(isset($village_code) && strlen($village_code) >= 7 && substr($village_code, 6, 1) === '2')
                         DESA
                     @else
                         {{ isset($administrationData) && isset($administrationData['village_type']) ? strtoupper($administrationData['village_type']) : 'DESA/KELURAHAN' }}
@@ -73,9 +73,9 @@
         <!-- Introduction -->
         <div class="mb-6">
             <p class="mb-4">
-                @if(isset($village_code) && substr($village_code, 0, 1) === '1')
+                @if(isset($village_code) && strlen($village_code) >= 7 && substr($village_code, 6, 1) === '1')
                     Lurah
-                @elseif(isset($village_code) && substr($village_code, 0, 1) === '2')
+                @elseif(isset($village_code) && strlen($village_code) >= 7 && substr($village_code, 6, 1) === '2')
                     Kepala Desa
                 @else
                     {{ isset($administrationData) && isset($administrationData['village_head_title']) ? $administrationData['village_head_title'] : 'Lurah/Kepala Desa' }}
@@ -154,14 +154,11 @@
         <div class="mb-6">
             <p class="mb-2">
                 Berdasarkan Surat Keterangan dari Ketua RT {{ $administration->rt ?? 'XX' }}
-                @if(isset($village_code) && substr($village_code, 0, 1) === '1')
-                    Kelurahan
-                @elseif(isset($village_code) && substr($village_code, 0, 1) === '2')
-                    Desa
-                @else
-                    Desa/Kelurahan
-                @endif
-                {{ $village_name ?? 'XXXX' }}, Kecamatan {{ $subdistrict_name ?? 'XXXX' }},
+                {{ $administration->address ?? '-' }},
+                {{ $village_name ?? 'XXXX' }},
+                {{ $subdistrict_name ?? 'XXXX' }},
+                {{ $district_name ?? 'XXXX' }},
+                {{ $province_name ?? 'XXXX' }},
                 Tanggal
                 @if(isset($formatted_letter_date) && !empty($formatted_letter_date))
                     {{ \Carbon\Carbon::parse($formatted_letter_date)->locale('id')->isoFormat('D MMMM Y') }}
@@ -184,9 +181,10 @@
                     {{ \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM Y') }}
                 @endif
             </div>
-            <p class="font-bold">
-                <p class="font-bold underline">{{ strtoupper($signing_name ?? 'NAMA KEPALA DESA') }}</p>
-            </p>
+            <p>{{ strtoupper($signing_name ?? 'NAMA KEPALA DESA') }}</p>
+            <div class="mt-20">
+                <div class="border-b border-black inline-block w-48"></div>
+            </div>
         </div>
     </div>
 

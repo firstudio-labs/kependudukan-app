@@ -374,6 +374,7 @@ class KelahiranController extends Controller
                 foreach ($villages as $village) {
                     if ($village['id'] == $kelahiran->village_id) {
                         $villageName = $village['name'];
+                        $villageCode = $village['code']; // Store the complete village code
                         break;
                     }
                 }
@@ -463,6 +464,162 @@ class KelahiranController extends Controller
         } catch (\Exception $e) {
             Log::error('Error generating birth certificate PDF: ' . $e->getMessage());
             return back()->with('error', 'Gagal membuat PDF: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Generate the birth certificate PDF.
+     *
+     * @param int $id
+     * @return \Illuminate\Http\Response
+     */
+    public function generatePDF($id)
+    {
+        try {
+            $kelahiran = Kelahiran::findOrFail($id);
+
+            // Ensure address is properly converted to string if it's an array
+            if (is_array($kelahiran->address)) {
+                $addressString = implode(', ', $kelahiran->address);
+            } else {
+                $addressString = $kelahiran->address ?? '-';
+            }
+
+            // Get location names using wilayah service
+            $provinceName = '';
+            $districtName = '';
+            $subdistrictName = '';
+            $villageName = '';
+            $villageCode = '';
+
+            // Get province data
+            if (!empty($kelahiran->province_id)) {
+                $provinces = $this->wilayahService->getProvinces();
+                foreach ($provinces as $province) {
+                    if ($province['id'] == $kelahiran->province_id) {
+                        $provinceName = $province['name'];
+                        $provinceCode = $province['code'];
+                        break;
+                    }
+                }
+
+                // Get district data
+                if (!empty($kelahiran->district_id) && !empty($provinceCode)) {
+                    $districts = $this->wilayahService->getKabupaten($provinceCode);
+                    foreach ($districts as $district) {
+                        if ($district['id'] == $kelahiran->district_id) {
+                            $districtName = $district['name'];
+                            $districtCode = $district['code'];
+                            break;
+                        }
+                    }
+
+                    // Get subdistrict data
+                    if (!empty($kelahiran->subdistrict_id) && !empty($districtCode)) {
+                        $subdistricts = $this->wilayahService->getKecamatan($districtCode);
+                        foreach ($subdistricts as $subdistrict) {
+                            if ($subdistrict['id'] == $kelahiran->subdistrict_id) {
+                                $subdistrictName = $subdistrict['name'];
+                                $subdistrictCode = $subdistrict['code'];
+                                break;
+                            }
+                        }
+
+                        // Get village data
+                        if (!empty($kelahiran->village_id) && !empty($subdistrictCode)) {
+                            $villages = $this->wilayahService->getDesa($subdistrictCode);
+                            foreach ($villages as $village) {
+                                if ($village['id'] == $kelahiran->village_id) {
+                                    $villageName = $village['name'];
+                                    $villageCode = $village['code'];
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Explicitly log the village code to debug
+            \Log::info('Village code for kelahiran', [
+                'id' => $id,
+                'village_id' => $kelahiran->village_id,
+                'village_code' => $villageCode,
+                'digit_7' => strlen($villageCode) >= 7 ? substr($villageCode, 6, 1) : 'N/A'
+            ]);
+
+            // Format dates properly
+            $fatherBirthDate = '';
+            if (!empty($kelahiran->father_birth_date) && !is_array($kelahiran->father_birth_date)) {
+                try {
+                    $fatherBirthDate = \Carbon\Carbon::parse($kelahiran->father_birth_date)->format('d-m-Y');
+                } catch (\Exception $e) {
+                    $fatherBirthDate = $kelahiran->father_birth_date;
+                }
+            }
+
+            $motherBirthDate = '';
+            if (!empty($kelahiran->mother_birth_date) && !is_array($kelahiran->mother_birth_date)) {
+                try {
+                    $motherBirthDate = \Carbon\Carbon::parse($kelahiran->mother_birth_date)->format('d-m-Y');
+                } catch (\Exception $e) {
+                    $motherBirthDate = $kelahiran->mother_birth_date;
+                }
+            }
+
+            $childBirthDate = '';
+            if (!empty($kelahiran->child_birth_date) && !is_array($kelahiran->child_birth_date)) {
+                try {
+                    $childBirthDate = \Carbon\Carbon::parse($kelahiran->child_birth_date)->format('d-m-Y');
+                } catch (\Exception $e) {
+                    $childBirthDate = $kelahiran->child_birth_date;
+                }
+            }
+
+            $rtLetterDate = '';
+            if (!empty($kelahiran->rt_letter_date) && !is_array($kelahiran->rt_letter_date)) {
+                try {
+                    $rtLetterDate = \Carbon\Carbon::parse($kelahiran->rt_letter_date)->format('d-m-Y');
+                } catch (\Exception $e) {
+                    $rtLetterDate = $kelahiran->rt_letter_date;
+                }
+            }
+
+            // Get the signing name (keterangan) from Penandatangan model
+            $signing_name = null;
+            if (!empty($kelahiran->signing)) {
+                $penandatangan = \App\Models\Penandatangan::find($kelahiran->signing);
+                if ($penandatangan) {
+                    $signing_name = $penandatangan->keterangan;
+                }
+            }
+
+            // Return view with properly processed data and pass the village code explicitly
+            return view('superadmin.datamaster.surat.kelahiran.Kelahiran', [
+                'kelahiran' => $kelahiran,
+                'addressString' => $addressString ?? '',
+                'provinceName' => $provinceName,
+                'districtName' => $districtName,
+                'subdistrictName' => $subdistrictName,
+                'villageName' => $villageName,
+                'villageCode' => $villageCode, // Make sure villageCode is being passed
+                'province_name' => $provinceName,
+                'district_name' => $districtName,
+                'subdistrict_name' => $subdistrictName,
+                'village_name' => $villageName,
+                'formatted_father_birth_date' => $fatherBirthDate ?? '',
+                'formatted_mother_birth_date' => $motherBirthDate ?? '',
+                'formatted_child_birth_date' => $childBirthDate ?? '',
+                'formatted_rt_letter_date' => $rtLetterDate ?? '',
+                'signing_name' => $signing_name ?? ''
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error generating PDF: ' . $e->getMessage(), [
+                'id' => $id,
+                'trace' => $e->getTraceAsString()
+            ]);
+            return back()->with('error', 'Gagal menghasilkan PDF: ' . $e->getMessage());
         }
     }
 }

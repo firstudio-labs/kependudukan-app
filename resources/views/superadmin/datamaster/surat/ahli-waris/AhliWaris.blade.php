@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Surat Keterangan</title>
+    <title>Surat Keterangan Ahli Waris</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Times+New+Roman:wght@400;700&display=swap');
@@ -27,7 +27,6 @@
 </head>
 
 <body class="bg-white p-8">
-
     <div class="max-w-4xl mx-auto bg-white p-8">
         <!-- Print Button - Only visible on screen -->
         <div class="no-print mb-4 flex justify-end">
@@ -38,20 +37,20 @@
 
         <div class="flex items-center mb-4">
             <div class="w-24 mr-4">
-                <img src="/api/placeholder/100/100" alt="Logo Kota" class="w-full h-auto">
+                <img src="{{ asset('images/logo.png') }}" alt="Logo Kota" class="w-full h-auto">
             </div>
             <div class="flex-1 text-center">
-                <p class="text-lg font-bold">PEMERINTAH {{ strtoupper($district_name) }}</p>
-                <p class="text-lg font-bold">KECAMATAN {{ strtoupper($subdistrict_name) }}</p>
+                <p class="text-lg font-bold">PEMERINTAH {{ strtoupper($district_name ?? $districtName ?? 'KABUPATEN') }}</p>
+                <p class="text-lg font-bold">KECAMATAN {{ strtoupper($subdistrict_name ?? $subdistrictName ?? 'KECAMATAN') }}</p>
                 <p class="text-2xl font-bold">
-                    @if(isset($villageCode) && substr($villageCode, 0, 1) === '1')
+                    @if(isset($villageCode) && strlen($villageCode) >= 7 && substr($villageCode, 6, 1) === '1')
                         KELURAHAN
-                    @elseif(isset($villageCode) && substr($villageCode, 0, 1) === '2')
+                    @elseif(isset($villageCode) && strlen($villageCode) >= 7 && substr($villageCode, 6, 1) === '2')
                         DESA
                     @else
                         {{ isset($administrationData) && isset($administrationData['village_type']) ? strtoupper($administrationData['village_type']) : 'DESA/KELURAHAN' }}
                     @endif
-                    {{ strtoupper($village_name ?? 'XXXX') }}
+                    {{ strtoupper($village_name ?? $villageName ?? 'XXXX') }}
                 </p>
                 <p class="text-sm">Alamat: </p>
             </div>
@@ -64,123 +63,153 @@
 
         <!-- Document Title -->
         <div class="text-center mb-6">
-            <h1 class="text-lg font-bold">SURAT KETERANGAN AHLI WARIS</h1>
-            <p class="text-sm">Nomor: {{ $ahliWaris->letter_number ?? '-' }}</p>
+            <h1 class="text-lg font-bold underline">SURAT KETERANGAN AHLI WARIS</h1>
+            <p class="text-sm">Nomor: {{ $ahliWaris->letter_number ?? '___________' }}</p>
         </div>
 
         <!-- Introduction -->
         <div class="mb-6">
-            <p class="mb-4">Kepala Desa/Lurah {{ $village_name }} Kecamatan {{ $subdistrict_name }} dengan ini menerangkan bahwa :</p>
+            <p class="mb-4">
+                @if(isset($villageCode) && strlen($villageCode) >= 7 && substr($villageCode, 6, 1) === '1')
+                    Lurah
+                @elseif(isset($villageCode) && strlen($villageCode) >= 7 && substr($villageCode, 6, 1) === '2')
+                    Kepala Desa
+                @else
+                    {{ isset($administrationData) && isset($administrationData['village_head_title']) ? $administrationData['village_head_title'] : 'Kepala Desa' }}
+                @endif
+                {{ $village_name ?? $villageName ?? 'Desa/Kelurahan' }} Kecamatan {{ $subdistrict_name ?? $subdistrictName ?? 'Kecamatan' }} dengan ini menerangkan bahwa :
+            </p>
         </div>
 
-        <!-- Deceased Person Information -->
-        <div class="mb-6">
-            <table class="w-full">
-                <tbody>
-                    <tr>
-                        <td class="w-1/3">Nama Lengkap</td>
-                        <td class="w-1/12">:</td>
-                        <td>{{ isset($heirs[0]['full_name']) && is_string($heirs[0]['full_name']) ? $heirs[0]['full_name'] : '-' }}</td>
-                    </tr>
-                    <tr>
-                        <td>NIK</td>
-                        <td>:</td>
-                        <td>{{ is_array($ahliWaris->nik) ? (isset($ahliWaris->nik[0]) ? $ahliWaris->nik[0] : '-') : (is_string($ahliWaris->nik) ? $ahliWaris->nik : '-') }}</td>
-                    </tr>
-                    <tr>
-                        <td>Tempat Lahir</td>
-                        <td>:</td>
-                        <td>{{ is_string($ahliWaris->death_place) ? $ahliWaris->death_place : '-' }}</td>
-                    </tr>
-                    <tr>
-                        <td>Tanggal Lahir</td>
-                        <td>:</td>
-                        <td>{{ is_string($formatted_death_date) ? $formatted_death_date : '-' }}</td>
-                    </tr>
-                    <tr>
-                        <td>Jenis Kelamin</td>
-                        <td>:</td>
-                        <td>{{ isset($heirs[0]['gender']) && is_string($heirs[0]['gender']) ? $heirs[0]['gender'] : '-' }}</td>
-                    </tr>
-                    <tr>
-                        <td>Agama</td>
-                        <td>:</td>
-                        <td>{{ isset($heirs[0]['religion']) && is_string($heirs[0]['religion']) ? $heirs[0]['religion'] : '-' }}</td>
-                    </tr>
-                    <tr>
-                        <td>Alamat</td>
-                        <td>:</td>
-                        <td>
-                            {{ is_string($ahliWaris->address ?? '') ? $ahliWaris->address : (isset($heirs[0]['address']) && is_string($heirs[0]['address']) ? $heirs[0]['address'] : '-') }}
-                            RT {{ $ahliWaris->rt ?? '0' }},
-                            {{ !empty($village_name) ? $village_name : 'Desa/Kelurahan' }},
-                            {{ !empty($subdistrict_name) ? $subdistrict_name : 'Kecamatan' }},
-                            {{ !empty($district_name) ? $district_name : 'Kabupaten' }},
-                            {{ !empty($province_name) ? $province_name : 'Provinsi' }}
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+        <!-- Heirs Information Section -->
+        @php
+            // Ensure heirs is an array
+            $heirsList = [];
+            if (isset($ahliWaris) && !empty($ahliWaris->nik) && is_array($ahliWaris->nik)) {
+                // If the data is directly in the model
+                for ($i = 0; $i < count($ahliWaris->nik); $i++) {
+                    if (isset($ahliWaris->nik[$i]) && !empty($ahliWaris->nik[$i])) {
+                        $heirsList[] = [
+                            'nik' => $ahliWaris->nik[$i] ?? '-',
+                            'full_name' => $ahliWaris->full_name[$i] ?? '-',
+                            'birth_place' => $ahliWaris->birth_place[$i] ?? '-',
+                            'birth_date' => $ahliWaris->birth_date[$i] ?? '-',
+                            'gender' => $ahliWaris->gender[$i] ?? '-',
+                            'religion' => $ahliWaris->religion[$i] ?? '-',
+                            'address' => $ahliWaris->address[$i] ?? '-',
+                            'family_status' => $ahliWaris->family_status[$i] ?? '-',
+                        ];
+                    }
+                }
+            } elseif (isset($heirs) && is_array($heirs)) {
+                // If the data is in the heirs array
+                $heirsList = $heirs;
+            }
+        @endphp
 
-        <!-- Heir Information (Second Person) -->
-        <div class="mb-6">
-            <table class="w-full">
-                <tbody>
-                    <tr>
-                        <td class="w-1/3">Nama Lengkap</td>
-                        <td class="w-1/12">:</td>
-                        <td>{{ isset($heirs[1]['full_name']) && is_string($heirs[1]['full_name']) ? $heirs[1]['full_name'] : '-' }}</td>
-                    </tr>
-                    <tr>
-                        <td>NIK</td>
-                        <td>:</td>
-                        <td>{{ isset($heirs[1]['nik']) && is_string($heirs[1]['nik']) ? $heirs[1]['nik'] : '-' }}</td>
-                    </tr>
-                    <tr>
-                        <td>Tempat Lahir</td>
-                        <td>:</td>
-                        <td>{{ isset($heirs[1]['birth_place']) && is_string($heirs[1]['birth_place']) ? $heirs[1]['birth_place'] : '-' }}</td>
-                    </tr>
-                    <tr>
-                        <td>Tanggal Lahir</td>
-                        <td>:</td>
-                        <td>{{ isset($heirs[1]['birth_date']) && is_string($heirs[1]['birth_date']) ? $heirs[1]['birth_date'] : '-' }}</td>
-                    </tr>
-                    <tr>
-                        <td>Jenis Kelamin</td>
-                        <td>:</td>
-                        <td>{{ isset($heirs[1]['gender']) && is_string($heirs[1]['gender']) ? $heirs[1]['gender'] : '-' }}</td>
-                    </tr>
-                    <tr>
-                        <td>Agama</td>
-                        <td>:</td>
-                        <td>{{ isset($heirs[1]['religion']) && is_string($heirs[1]['religion']) ? $heirs[1]['religion'] : '-' }}</td>
-                    </tr>
-                    <tr>
-                        <td>Alamat</td>
-                        <td>:</td>
-                        <td>
-                            {{ isset($heirs[1]['address']) && is_string($heirs[1]['address']) ? $heirs[1]['address'] : '-' }}
-                            RT {{ isset($heirs[1]['rt']) ? $heirs[1]['rt'] : '0' }},
-                            {{ !empty($village_name) ? $village_name : 'Desa/Kelurahan' }},
-                            {{ !empty($subdistrict_name) ? $subdistrict_name : 'Kecamatan' }},
-                            {{ !empty($district_name) ? $district_name : 'Kabupaten' }},
-                            {{ !empty($province_name) ? $province_name : 'Provinsi' }}
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+        <!-- Display all heirs information -->
+        @foreach($heirsList as $index => $heir)
+            <div class="mb-6">
+                <table class="w-full">
+                    <tbody>
+                        <tr>
+                            <td class="w-1/3">Nama Lengkap</td>
+                            <td class="w-1/12">:</td>
+                            <td>{{ $heir['full_name'] ?? '-' }}</td>
+                        </tr>
+                        <tr>
+                            <td>NIK</td>
+                            <td>:</td>
+                            <td>{{ $heir['nik'] ?? '-' }}</td>
+                        </tr>
+                        <tr>
+                            <td>Tempat Lahir</td>
+                            <td>:</td>
+                            <td>{{ $heir['birth_place'] ?? '-' }}</td>
+                        </tr>
+                        <tr>
+                            <td>Tanggal Lahir</td>
+                            <td>:</td>
+                            <td>
+                                @if(isset($heir['birth_date']) && !empty($heir['birth_date']))
+                                    @if(is_string($heir['birth_date']) && strpos($heir['birth_date'], '-') !== false)
+                                        {{ \Carbon\Carbon::parse($heir['birth_date'])->locale('id')->isoFormat('D MMMM Y') }}
+                                    @else
+                                        {{ $heir['birth_date'] }}
+                                    @endif
+                                @else
+                                    -
+                                @endif
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Jenis Kelamin</td>
+                            <td>:</td>
+                            <td>
+                                @if(isset($heir['gender']))
+                                    @if($heir['gender'] == 1)
+                                        Laki-Laki
+                                    @elseif($heir['gender'] == 2)
+                                        Perempuan
+                                    @else
+                                        {{ $heir['gender'] }}
+                                    @endif
+                                @else
+                                    -
+                                @endif
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Agama</td>
+                            <td>:</td>
+                            <td>
+                                @php
+                                    $religions = [
+                                        1 => 'Islam',
+                                        2 => 'Kristen',
+                                        3 => 'Katholik',
+                                        4 => 'Hindu',
+                                        5 => 'Buddha',
+                                        6 => 'Kong Hu Cu',
+                                        7 => 'Lainnya'
+                                    ];
+                                @endphp
+                                @if(isset($heir['religion']) && isset($religions[$heir['religion']]))
+                                    {{ $religions[$heir['religion']] }}
+                                @else
+                                    {{ $heir['religion'] ?? '-' }}
+                                @endif
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Alamat</td>
+                            <td>:</td>
+                            <td>
+                                {{ is_array($heir['address'] ?? null) ? implode(', ', $heir['address']) : ($heir['address'] ?? '-') }}
+                                ,
+                                {{ $village_name ?? $villageName ?? 'Desa/Kelurahan' }},
+                                {{ $subdistrict_name ?? $subdistrictName ?? 'Kecamatan' }},
+                                {{ $district_name ?? $districtName ?? 'Kabupaten' }},
+                                {{ $province_name ?? $provinceName ?? 'Provinsi' }}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        @endforeach
+
+
 
         <!-- Signature -->
         <div class="text-center mt-16">
             <div class="mb-4">
-                {{ $village_name }}, {{ \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM Y') }}
+                {{ $village_name ?? $villageName ?? 'Desa/Kelurahan' }},
+                {{ \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM Y') }}
             </div>
-            <p class="font-bold">
-                <p class="font-bold underline">{{ strtoupper($signing_name ?? 'NAMA KEPALA DESA') }}</p>
-            </p>
+            <p>{{ strtoupper($signing_name ?? 'NAMA KEPALA DESA') }}</p>
+            <div class="mt-20">
+                <div class="border-b border-black inline-block w-48"></div>
+            </div>
         </div>
     </div>
 
@@ -192,5 +221,4 @@
         };
     </script>
 </body>
-
 </html>

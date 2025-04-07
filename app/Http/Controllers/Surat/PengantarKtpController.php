@@ -461,6 +461,7 @@ class PengantarKtpController extends Controller
                     foreach ($villages as $village) {
                         if ($village['id'] == $ktp->village_id) {
                             $villageName = $village['name'];
+                            $villageCode = $village['code']; // Store the complete village code
                             break;
                         }
                     }
@@ -481,6 +482,7 @@ class PengantarKtpController extends Controller
                 'districtName',
                 'subdistrictName',
                 'villageName',
+                'villageCode', // Add the village code
                 'applicationType',
                 'nik',
                 'fullName',
@@ -516,8 +518,42 @@ class PengantarKtpController extends Controller
                 }
             }
 
+            // Get village/desa data
+            if (!empty($ktp->village_id)) {
+                $subdistrictCode = null;
+                if (!empty($ktp->subdistrict_id)) {
+                    $subdistricts = $this->wilayahService->getKecamatan($ktp->district_id);
+                    foreach ($subdistricts as $subdistrict) {
+                        if ($subdistrict['id'] == $ktp->subdistrict_id) {
+                            $subdistrictCode = $subdistrict['code'];
+                            break;
+                        }
+                    }
+                }
+
+                if ($subdistrictCode) {
+                    $villages = $this->wilayahService->getDesa($subdistrictCode);
+                    foreach ($villages as $village) {
+                        if ($village['id'] == $ktp->village_id) {
+                            $villageName = $village['name'];
+                            $villageCode = $village['code']; // Store the complete village code
+                            break;
+                        }
+                    }
+                }
+            }
+
             return view('superadmin.datamaster.surat.pengantar-ktp.PengantarKTP', [
                 'ktp' => $ktp,
+                'fullName' => $ktp->full_name,
+                'provinceName' => $ktp->province_id,
+                'districtName' => $ktp->district_id,
+                'subdistrictName' => $ktp->subdistrict_id,
+                'villageName' => $villageName,
+                'villageCode' => $villageCode, // Add the village code
+                'nameChars' => str_split($ktp->full_name),
+                'nikChars' => str_split($ktp->nik),
+                'applicationType' => $ktp->application_type,
                 'signing_name' => $signing_name // Pass the signing name to the view
             ]);
         } catch (\Exception $e) {

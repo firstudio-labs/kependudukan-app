@@ -296,6 +296,7 @@ class SKCKController extends Controller
             $districtName = '';
             $subdistrictName = '';
             $villageName = '';
+            $villageCode = '';
 
             // Get province data
             if (!empty($skck->province_id)) {
@@ -375,6 +376,7 @@ class SKCKController extends Controller
                     foreach ($villages as $village) {
                         if ($village['id'] == $skck->village_id) {
                             $villageName = $village['name'];
+                            $villageCode = $village['code']; // Store the complete village code
                             break;
                         }
                     }
@@ -431,12 +433,13 @@ class SKCKController extends Controller
                 'district_name' => $districtName,
                 'subdistrict_name' => $subdistrictName,
                 'village_name' => $villageName,
+                'villageCode' => $villageCode, // Add the village code
                 'gender' => $gender,
                 'religion' => $religion,
                 'citizenship' => $citizenship,
                 'formatted_birth_date' => $birthDate,
                 'formatted_letter_date' => $letterDate,
-                'signing_name' => $signing_name // Pass the signing name to the view
+                'signing_name' => $signing_name
             ]);
 
         } catch (\Exception $e) {

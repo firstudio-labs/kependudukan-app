@@ -109,7 +109,8 @@
             <div class="mt-8">
                 <h2 class="text-lg font-semibold text-gray-700 mb-3">Informasi Rumah Sewa</h2>
                 <div class="border p-4 rounded-md mb-4 bg-gray-50">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Main Information -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <!-- Alamat Rumah Sewa -->
                         <div>
                             <label for="rental_address" class="block text-sm font-medium text-gray-700">Alamat Rumah Sewa <span class="text-red-500">*</span></label>
@@ -123,13 +124,8 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
-                        <!-- Kelurahan -->
-                        <div>
-                            <label for="village_name" class="block text-sm font-medium text-gray-700">Kelurahan <span class="text-red-500">*</span></label>
-                            <input type="text" id="village_name" name="village_name" value="{{ $rumahSewa->village_name }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
-                        </div>
-
+                    <!-- Location Details -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                         <!-- Gang/Nomor -->
                         <div>
                             <label for="alley_number" class="block text-sm font-medium text-gray-700">Gang/Nomor <span class="text-red-500">*</span></label>
@@ -140,11 +136,12 @@
                         <div class="form-group">
                             <label for="rt" class="block text-sm font-medium text-gray-700">RT <span class="text-red-500">*</span></label>
                             <input type="text" id="rt" name="rt" value="{{ $rumahSewa->rt }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
-                            <small class="text-gray-500">Contoh: 001, 002, 003, dll.</small>
+                            <small class="text-gray-500">Format: 001, 002, 003, dll (dengan angka 0 di depan).</small>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
+                    <!-- Property Details -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                         <!-- Luas Bangunan -->
                         <div>
                             <label for="building_area" class="block text-sm font-medium text-gray-700">Luas Bangunan <span class="text-red-500">*</span></label>
@@ -164,7 +161,8 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
+                    <!-- Administrative Details -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <!-- Berlaku Ijin Sampai -->
                         <div>
                             <label for="valid_until" class="block text-sm font-medium text-gray-700">Berlaku Ijin Sampai</label>
@@ -788,7 +786,7 @@
                 const provinceId = document.getElementById('province_id').value;
                 const districtId = document.getElementById('district_id').value;
                 const subDistrictId = document.getElementById('subdistrict_id').value;
-                const villageId = document.getElementById('village_id').value;
+                const villageId = document.getElementById('village_id');
 
                 if (!provinceId || !districtId || !subDistrictId || !villageId) {
                     e.preventDefault();

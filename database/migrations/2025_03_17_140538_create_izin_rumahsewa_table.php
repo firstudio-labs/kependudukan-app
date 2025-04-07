@@ -28,7 +28,6 @@ return new class extends Migration
             // Rental house details
             $table->string('rental_address'); // Alamat Rumah Sewa
             $table->string('street'); // Jalan
-            $table->string('village_name'); // Kelurahan
             $table->string('alley_number'); // Gang/Nomor
             $table->longText('rt');
             $table->string('building_area'); // Luas Bangunan

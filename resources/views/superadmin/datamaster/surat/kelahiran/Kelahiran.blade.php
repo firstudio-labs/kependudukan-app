@@ -40,19 +40,36 @@
                 <img src="/api/placeholder/100/100" alt="Logo Kota" class="w-full h-auto">
             </div>
             <div class="flex-1 text-center">
-                <p class="text-lg font-bold">PEMERINTAH {{ strtoupper($kelahiran->district_name ?? '') }}</p>
-                <p class="text-lg font-bold">KECAMATAN {{ strtoupper($kelahiran->subdistrict_name ?? '') }}</p>
-                <p class="text-xl font-bold">
-                    @if(isset($kelahiran->village_code) && substr($kelahiran->village_code, 0, 1) === '1')
-                        KELURAHAN
-                    @elseif(isset($kelahiran->village_code) && substr($kelahiran->village_code, 0, 1) === '2')
-                        DESA
-                    @else
-                        {{ isset($kelahiran) && isset($kelahiran->village_type) ? strtoupper($kelahiran->village_type) : 'DESA/KELURAHAN' }}
-                    @endif
-                    {{ strtoupper($kelahiran->village_name ?? '') }}
+                <p class="text-lg font-bold">PEMERINTAH {{ strtoupper($kelahiran->district_name ?? $district_name ?? 'KABUPATEN') }}</p>
+                <p class="text-lg font-bold">KECAMATAN {{ strtoupper($kelahiran->subdistrict_name ?? $subdistrict_name ?? 'KECAMATAN') }}</p>
+                <p class="text-2xl font-bold">
+                    @php
+                        // Determine the village type based on the code or other sources
+                        $villageType = '';
+
+                        // First try from villageCode
+                        if(isset($villageCode) && strlen($villageCode) >= 7) {
+                            $digit7 = substr($villageCode, 6, 1);
+                            if($digit7 === '1') {
+                                $villageType = 'KELURAHAN';
+                            } elseif($digit7 === '2') {
+                                $villageType = 'DESA';
+                            }
+                        }
+
+                        // If still empty, try from administrationData
+                        if(empty($villageType) && isset($administrationData) && isset($administrationData['village_type'])) {
+                            $villageType = strtoupper($administrationData['village_type']);
+                        }
+
+                        // If still empty, default to "DESA" as fallback
+                        if(empty($villageType)) {
+                            $villageType = 'DESA';
+                        }
+                    @endphp
+                    {{ $villageType }} {{ strtoupper($kelahiran->village_name ?? $village_name ?? '') }}
                 </p>
-                <p class="text-xs">Alamat: </p>
+                <p class="text-sm">Alamat: </p>
             </div>
             <div class="w-20">
             </div>
@@ -68,8 +85,26 @@
         </div>
 
         <!-- Introduction -->
-        <div class="mb-2">
-            <p class="mb-2 font-bold">Diberikan kepada:</p>
+        <div class="mb-6">
+            <p class="mb-4">
+                @php
+                    // Use the same logic for village head title
+                    $headTitle = 'Kepala Desa';
+
+                    if(isset($villageCode) && strlen($villageCode) >= 7) {
+                        $digit7 = substr($villageCode, 6, 1);
+                        if($digit7 === '1') {
+                            $headTitle = 'Lurah';
+                        } elseif($digit7 === '2') {
+                            $headTitle = 'Kepala Desa';
+                        }
+                    } elseif(isset($administrationData) && isset($administrationData['village_head_title'])) {
+                        $headTitle = $administrationData['village_head_title'];
+                    }
+                @endphp
+                {{ $headTitle }}
+                {{ $kelahiran->village_name ?? $village_name ?? '' }} Kecamatan {{ $kelahiran->subdistrict_name ?? $subdistrict_name ?? '' }} dengan ini menerangkan bahwa :
+            </p>
         </div>
 
         <!-- Father Information -->
@@ -95,10 +130,10 @@
                         <td>Tanggal Lahir</td>
                         <td>:</td>
                         <td>
-                            @if(isset($kelahiran->formatted_father_birth_date) && strpos($kelahiran->formatted_father_birth_date, '-') !== false)
-                                {{ \Carbon\Carbon::createFromFormat('d-m-Y', $kelahiran->formatted_father_birth_date)->locale('id')->isoFormat('D MMMM Y') }}
+                            @if(isset($formatted_father_birth_date) && !empty($formatted_father_birth_date))
+                                {{ \Carbon\Carbon::parse($formatted_father_birth_date)->locale('id')->isoFormat('D MMMM Y') }}
                             @else
-                                {{ $kelahiran->formatted_father_birth_date ?? '-' }}
+                                {{ $kelahiran->father_birth_date ? \Carbon\Carbon::parse($kelahiran->father_birth_date)->locale('id')->isoFormat('D MMMM Y') : '-' }}
                             @endif
                         </td>
                     </tr>
@@ -116,12 +151,11 @@
                         <td>Alamat</td>
                         <td>:</td>
                         <td>
-                            {{ $kelahiran->father_address ?? '-' }}
-                            RT {{ $kelahiran->father_rt ?? '0' }},
-                            {{ !empty($kelahiran->village_name) ? $kelahiran->village_name : 'Desa/Kelurahan' }},
-                            {{ !empty($kelahiran->subdistrict_name) ? $kelahiran->subdistrict_name : 'Kecamatan' }},
-                            {{ !empty($kelahiran->district_name) ? $kelahiran->district_name : 'Kabupaten' }},
-                            {{ !empty($kelahiran->province_name) ? $kelahiran->province_name : 'Provinsi' }}
+                            {{ $kelahiran->father_address ?? '-' }},
+                            {{ !empty($kelahiran->village_name) ? $kelahiran->village_name : $village_name ?? 'Desa/Kelurahan' }},
+                            {{ !empty($kelahiran->subdistrict_name) ? $kelahiran->subdistrict_name : $subdistrict_name ?? 'Kecamatan' }},
+                            {{ !empty($kelahiran->district_name) ? $kelahiran->district_name : $district_name ?? 'Kabupaten' }},
+                            {{ !empty($kelahiran->province_name) ? $kelahiran->province_name : $province_name ?? 'Provinsi' }}
                         </td>
                     </tr>
                 </tbody>
@@ -151,10 +185,10 @@
                         <td>Tanggal Lahir</td>
                         <td>:</td>
                         <td>
-                            @if(isset($kelahiran->formatted_mother_birth_date) && strpos($kelahiran->formatted_mother_birth_date, '-') !== false)
-                                {{ \Carbon\Carbon::createFromFormat('d-m-Y', $kelahiran->formatted_mother_birth_date)->locale('id')->isoFormat('D MMMM Y') }}
+                            @if(isset($formatted_mother_birth_date) && !empty($formatted_mother_birth_date))
+                                {{ \Carbon\Carbon::parse($formatted_mother_birth_date)->locale('id')->isoFormat('D MMMM Y') }}
                             @else
-                                {{ $kelahiran->formatted_mother_birth_date ?? '-' }}
+                                {{ $kelahiran->mother_birth_date ? \Carbon\Carbon::parse($kelahiran->mother_birth_date)->locale('id')->isoFormat('D MMMM Y') : '-' }}
                             @endif
                         </td>
                     </tr>
@@ -172,31 +206,31 @@
                         <td>Alamat</td>
                         <td>:</td>
                         <td>
-                            {{ $kelahiran->mother_address ?? '-' }}
-                            RT {{ $kelahiran->mother_rt ?? '0' }},
-                            {{ !empty($kelahiran->village_name) ? $kelahiran->village_name : 'Desa/Kelurahan' }},
-                            {{ !empty($kelahiran->subdistrict_name) ? $kelahiran->subdistrict_name : 'Kecamatan' }},
-                            {{ !empty($kelahiran->district_name) ? $kelahiran->district_name : 'Kabupaten' }},
-                            {{ !empty($kelahiran->province_name) ? $kelahiran->province_name : 'Provinsi' }}
+                            {{ $kelahiran->mother_address ?? '-' }},
+                            {{ !empty($kelahiran->village_name) ? $kelahiran->village_name : $village_name ?? 'Desa/Kelurahan' }},
+                            {{ !empty($kelahiran->subdistrict_name) ? $kelahiran->subdistrict_name : $subdistrict_name ?? 'Kecamatan' }},
+                            {{ !empty($kelahiran->district_name) ? $kelahiran->district_name : $district_name ?? 'Kabupaten' }},
+                            {{ !empty($kelahiran->province_name) ? $kelahiran->province_name : $province_name ?? 'Provinsi' }}
                         </td>
                     </tr>
                 </tbody>
             </table>
         </div>
 
-        <!-- Introduction -->
-        <div class="mb-2">
-            <p class="mb-2 font-bold">Telah lahir seorang anak:</p>
-        </div>
-
-        <!-- Child Information -->
-        <div class="mb-2">
+        <!-- Child Information - New Section -->
+        <div class="mb-6">
+            <p class="font-bold">Telah lahir seorang anak:</p>
             <table class="w-full text-sm">
                 <tbody>
                     <tr>
                         <td class="w-1/3">Nama Anak</td>
                         <td class="w-1/12">:</td>
                         <td>{{ $kelahiran->child_name ?? '-' }}</td>
+                    </tr>
+                    <tr>
+                        <td>NIK</td>
+                        <td>:</td>
+                        <td>{{ $kelahiran->child_nik ?? '-' }}</td>
                     </tr>
                     <tr>
                         <td>Tempat Lahir</td>
@@ -207,17 +241,17 @@
                         <td>Tanggal Lahir</td>
                         <td>:</td>
                         <td>
-                            @if(isset($kelahiran->formatted_child_birth_date) && strpos($kelahiran->formatted_child_birth_date, '-') !== false)
-                                {{ \Carbon\Carbon::createFromFormat('d-m-Y', $kelahiran->formatted_child_birth_date)->locale('id')->isoFormat('D MMMM Y') }}
+                            @if(isset($formatted_child_birth_date) && !empty($formatted_child_birth_date))
+                                {{ \Carbon\Carbon::parse($formatted_child_birth_date)->locale('id')->isoFormat('D MMMM Y') }}
                             @else
-                                {{ $kelahiran->formatted_child_birth_date ?? '-' }}
+                                {{ $kelahiran->child_birth_date ? \Carbon\Carbon::parse($kelahiran->child_birth_date)->locale('id')->isoFormat('D MMMM Y') : '-' }}
                             @endif
                         </td>
                     </tr>
                     <tr>
                         <td>Jenis Kelamin</td>
                         <td>:</td>
-                        <td>{{ $kelahiran->child_gender_name ?? '-' }}</td>
+                        <td>{{ $kelahiran->child_gender == 1 ? 'Laki-laki' : 'Perempuan' }}</td>
                     </tr>
                     <tr>
                         <td>Agama</td>
@@ -228,39 +262,34 @@
                         <td>Alamat</td>
                         <td>:</td>
                         <td>
-                            {{ $kelahiran->child_address ?? '-' }}
-                            RT {{ $kelahiran->child_rt ?? '0' }},
-                            {{ !empty($kelahiran->village_name) ? $kelahiran->village_name : 'Desa/Kelurahan' }},
-                            {{ !empty($kelahiran->subdistrict_name) ? $kelahiran->subdistrict_name : 'Kecamatan' }},
-                            {{ !empty($kelahiran->district_name) ? $kelahiran->district_name : 'Kabupaten' }},
-                            {{ !empty($kelahiran->province_name) ? $kelahiran->province_name : 'Provinsi' }}
+                            {{ $kelahiran->child_address ?? $kelahiran->father_address ?? $kelahiran->mother_address ?? '-' }},
+                            {{ !empty($kelahiran->village_name) ? $kelahiran->village_name : $village_name ?? 'Desa/Kelurahan' }},
+                            {{ !empty($kelahiran->subdistrict_name) ? $kelahiran->subdistrict_name : $subdistrict_name ?? 'Kecamatan' }},
+                            {{ !empty($kelahiran->district_name) ? $kelahiran->district_name : $district_name ?? 'Kabupaten' }},
+                            {{ !empty($kelahiran->province_name) ? $kelahiran->province_name : $province_name ?? 'Provinsi' }}
                         </td>
-                    </tr>
-                    <tr>
-                        <td>Anak Ke</td>
-                        <td>:</td>
-                        <td>{{ $kelahiran->child_order ?? '-' }}</td>
                     </tr>
                 </tbody>
             </table>
         </div>
 
-        <div class="mb-8">
-            <p>Demikian surat Keterangan ini dibuat dapat dipergunakan sebagaimana mestinya.</p>
+        <!-- Statement Section -->
+        <div class="mb-6">
+
+            <p>Demikian Surat Keterangan ini dibuat untuk dapat dipergunakan sebagaimana mestinya.</p>
         </div>
 
         <!-- Signature -->
-        <div class="text-center mt-2">
-            <div class="mb-3">
-                <p>{{ $kelahiran->village_name ?? '' }}, {{ $currentDate ?? \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM Y') }}</p>
+        <div class="text-center mt-16">
+            <div class="mb-4">
+                {{ !empty($kelahiran->village_name) ? $kelahiran->village_name : $village_name ?? 'Desa/Kelurahan' }},
+                {{ \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM Y') }}
             </div>
-            <p class="font-bold">
-                <p class="font-bold underline">{{ strtoupper($signing_name ?? 'NAMA KEPALA DESA') }}</p>
-            </p>
-
+            <p>{{ strtoupper($signing_name ?? 'NAMA KEPALA DESA') }}</p>
+            <div class="mt-20">
+                <div class="border-b border-black inline-block w-48"></div>
+            </div>
         </div>
-
-        <!-- Removed the bottom print button since we've added it to the top -->
     </div>
 
     <script>
@@ -272,7 +301,9 @@
             // Format any client-side dates in Indonesian
             const formatDateID = (dateStr) => {
                 if (!dateStr) return '';
-                const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+                const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+                ];
                 const d = new Date(dateStr);
                 return d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
             };

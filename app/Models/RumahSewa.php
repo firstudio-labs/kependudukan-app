@@ -33,7 +33,6 @@ class RumahSewa extends Model
         'responsible_name',
         'rental_address',
         'street',
-        'village_name',
         'alley_number',
         'rt',
         'building_area',
@@ -50,7 +49,15 @@ class RumahSewa extends Model
      */
     protected $casts = [
         'valid_until' => 'date',
-        'rt' => 'integer',
         'room_count' => 'integer',
+        // Removed 'rt' from integer casts to allow values like '001'
     ];
+
+    /**
+     * Get the penandatangan that signed this document.
+     */
+    public function penandatangan()
+    {
+        return $this->belongsTo(Penandatangan::class, 'signing', 'id');
+    }
 }

@@ -370,6 +370,7 @@ class AdministrasiController extends Controller
             $districtName = '';
             $subdistrictName = '';
             $villageName = '';
+            $villageCode = null; // Initialize village code variable
 
             // Get province data
             if (!empty($administration->province_id)) {
@@ -407,6 +408,7 @@ class AdministrasiController extends Controller
                                                     foreach ($villages as $village) {
                                                         if ($village['id'] == $administration->village_id) {
                                                             $villageName = $village['name'];
+                                                            $villageCode = $village['code']; // Store the complete village code
                                                             break;
                                                         }
                                                     }
@@ -433,7 +435,8 @@ class AdministrasiController extends Controller
                 'province_name' => $provinceName,
                 'district_name' => $districtName,
                 'subdistrict_name' => $subdistrictName,
-                'village_name' => $villageName
+                'village_name' => $villageName,
+                'village_code' => $villageCode // Log the village code
             ]);
 
             // Format gender
@@ -477,7 +480,7 @@ class AdministrasiController extends Controller
                 'district_name' => $districtName,
                 'subdistrict_name' => $subdistrictName,
                 'village_name' => $villageName,
-                'village_code' => $subdistrictCode ? substr($subdistrictCode, 0, 1) : null, // Add this line to pass village_code
+                'village_code' => $villageCode, // Pass the complete village code
                 'gender' => $gender,
                 'religion' => $religion,
                 'citizenship' => $citizenship,
