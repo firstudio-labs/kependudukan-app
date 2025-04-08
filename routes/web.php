@@ -288,7 +288,19 @@ Route::middleware(['auth:web', 'role:superadmin'])->group(function () {
         ->name('superadmin.datamaster.surat.penandatangan.destroy');
     Route::get('/penandatangan/dropdown', [PenandatangananController::class, 'getForDropdown'])->name('penandatangan.dropdown');
 
-
+    // Keperluan routes
+    Route::get('/superadmin/datamaster/masterkeperluan/keperluan', [App\Http\Controllers\Superadmin\KeperluanController::class, 'index'])
+        ->name('superadmin.datamaster.masterkeperluan.keperluan.index');
+    Route::get('/superadmin/datamaster/masterkeperluan/keperluan/create', [App\Http\Controllers\Superadmin\KeperluanController::class, 'create'])
+        ->name('superadmin.datamaster.masterkeperluan.keperluan.create');
+    Route::post('/superadmin/datamaster/masterkeperluan/keperluan', [App\Http\Controllers\Superadmin\KeperluanController::class, 'store'])
+        ->name('superadmin.datamaster.masterkeperluan.keperluan.store');
+    Route::get('/superadmin/datamaster/masterkeperluan/keperluan/{keperluan}/edit', [App\Http\Controllers\Superadmin\KeperluanController::class, 'edit'])
+        ->name('superadmin.datamaster.masterkeperluan.keperluan.edit');
+    Route::put('/superadmin/datamaster/masterkeperluan/keperluan/{keperluan}', [App\Http\Controllers\Superadmin\KeperluanController::class, 'update'])
+        ->name('superadmin.datamaster.masterkeperluan.keperluan.update');
+    Route::delete('/superadmin/datamaster/masterkeperluan/keperluan/{keperluan}', [App\Http\Controllers\Superadmin\KeperluanController::class, 'destroy'])
+        ->name('superadmin.datamaster.masterkeperluan.keperluan.destroy');
 
     //Route Kelola Aset
     // Klasifikasi routes

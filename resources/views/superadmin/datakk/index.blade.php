@@ -22,7 +22,7 @@
                 </button>
             </form>
 
-            {{-- <button
+            <button
                 type="button"
                 onclick="window.location.href='{{ route('superadmin.datakk.create') }}'"
                 class="text-white bg-[#7886C7] hover:bg-[#2D336B] focus:ring-4 focus:ring-[#5C69A7] font-medium rounded-lg text-sm px-5 py-2.5 flex items-center space-x-2"
@@ -31,7 +31,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                 </svg>
                 <span>Tambah Data KK</span>
-            </button> --}}
+            </button>
         </div>
 
         <div class="relative overflow-x-auto shadow-md sm:rounded-lg">

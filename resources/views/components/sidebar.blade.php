@@ -288,6 +288,28 @@ if (Auth::guard('web')->check()) {
                         </ul>
                     </li>
 
+                    <!-- Master Keperluan dropdown -->
+                    <li class="-ml-5">
+                        <button type="button"
+                            class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
+                            onclick="toggleDropdown('masterKeperluanDropdown')">
+                            <i class="fa-solid fa-clipboard-list text-lg transition-all duration-300"></i>
+                            <span>Master Keperluan</span>
+                            <i id="dropdown-icon-master-keperluan"
+                                class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
+                        </button>
+                        <ul id="masterKeperluanDropdown" class="hidden space-y-2 pl-6">
+                            <li>
+                                <a href="{{ route('superadmin.datamaster.masterkeperluan.keperluan.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                                        {{ request()->routeIs('superadmin.datamaster.masterkeperluan.keperluan*')
+        ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+        : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                    <span>Keperluan</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
                     <!-- Master Wilayah (moved out but keeping its dropdown) -->
                     <li class="-ml-5">
                         <button type="button"
@@ -428,6 +450,9 @@ if (Auth::guard('web')->check()) {
         } else if (id === 'masterUsersDropdown') {
             const icon = document.getElementById('dropdown-icon-master-users');
             icon.classList.toggle('rotate-180');
+        } else if (id === 'masterKeperluanDropdown') {
+            const icon = document.getElementById('dropdown-icon-master-keperluan');
+            icon.classList.toggle('rotate-180');
         }
 
         dropdown.classList.toggle('hidden');
@@ -473,5 +498,6 @@ if (Auth::guard('web')->check()) {
         checkDropdownForActiveItems('masterSuratDropdown', 'dropdown-icon-master-surat');
         checkDropdownForActiveItems('masterUsersDropdown', 'dropdown-icon-master-users');
         checkDropdownForActiveItems('kelolaAsetDropdown', 'dropdown-icon-kelola-aset');
+        checkDropdownForActiveItems('masterKeperluanDropdown', 'dropdown-icon-master-keperluan');
     });
 </script>
