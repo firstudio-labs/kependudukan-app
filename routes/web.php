@@ -330,15 +330,28 @@ Route::middleware(['auth:web', 'role:superadmin'])->group(function () {
         ->name('superadmin.datamaster.jenis-aset.update');
     Route::delete('/superadmin/datamaster/jenis-aset/{id}', [JenisAsetController::class, 'destroy'])
         ->name('superadmin.datamaster.jenis-aset.destroy');
-
-
 });
 
-// Route untuk admin - menggunakan web guard
-Route::middleware(['auth:web', 'role:admin'])->group(function () {
-    Route::get('/admin/index', function () {
-        return view('admin.index');
-    });
+// Route untuk admin kabupaten - menggunakan web guard
+Route::middleware(['auth:web', 'role:admin kabupaten'])->group(function () {
+    Route::get('/admin/kabupaten/index', [DashboardController::class, 'indexKabupaten'])
+        ->name('admin.kabupaten.index');
+
+    // Admin Kabupaten Profile routes - Ensure these are correctly defined
+    Route::get('/admin/kabupaten/profile', [App\Http\Controllers\adminKabupaten\ProfileController::class, 'index'])
+        ->name('admin.kabupaten.profile.index');
+    Route::get('/admin/kabupaten/profile/edit', [App\Http\Controllers\adminKabupaten\ProfileController::class, 'edit'])
+        ->name('admin.kabupaten.profile.edit');
+    Route::put('/admin/kabupaten/profile/update', [App\Http\Controllers\adminKabupaten\ProfileController::class, 'update'])
+        ->name('admin.kabupaten.profile.update');
+    Route::post('/admin/kabupaten/profile/update-photo', [App\Http\Controllers\adminKabupaten\ProfileController::class, 'updatePhoto'])
+        ->name('admin.kabupaten.profile.update-photo');
+});
+
+// Route untuk admin desa - menggunakan web guard
+Route::middleware(['auth:web', 'role:admin desa'])->group(function () {
+    Route::get('/admin/desa/index', [DashboardController::class, 'indexDesa'])
+        ->name('admin.desa.index');
 });
 
 // Route untuk operator - menggunakan web guard
@@ -447,11 +460,6 @@ Route::get('/location/districts/{provinceCode}', [DataKKController::class, 'getD
 Route::get('/location/sub-districts/{districtCode}', [DataKKController::class, 'getSubDistricts'])->name('location.sub-districts');
 Route::get('/location/villages/{subDistrictCode}', [DataKKController::class, 'getVillages'])->name('location.villages');
 
-// Remove these duplicate routes that may be causing conflicts
-// Route::get('/location/provinces', [UsersController::class, 'getProvinces'])->name('location.provinces');
-// Route::get('/location/districts/{provinceCode}', [UsersController::class, 'getDistricts'])->name('location.districts');
-// Route::get('/location/sub-districts/{districtCode}', [UsersController::class, 'getSubDistricts'])->name('location.sub-districts');
-// Route::get('/location/villages/{subDistrictCode}', [UsersController::class, 'getVillages'])->name('location.villages');
 
 // Citizen data routes
 Route::get('/citizens/all', [DataKKController::class, 'fetchAllCitizens'])->name('citizens.all');

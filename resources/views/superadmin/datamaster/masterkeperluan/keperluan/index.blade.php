@@ -85,48 +85,5 @@
                 {{ $keperluans->links() }}
             </div>
         </div>
-
-        <script>
-            // Replace existing alert script with SweetAlert
-            @if(session('success'))
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Berhasil!',
-                    text: '{{ session('success') }}',
-                    timer: 3000,
-                    showConfirmButton: false
-                });
-            @endif
-
-            @if(session('error'))
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Gagal!',
-                    text: '{{ session('error') }}',
-                    timer: 3000,
-                    showConfirmButton: false
-                });
-            @endif
-
-            // Add SweetAlert confirmation for delete
-            function confirmDelete(event, id) {
-                event.preventDefault();
-
-                Swal.fire({
-                    title: 'Anda yakin?',
-                    text: "Data yang dihapus tidak dapat dikembalikan!",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#d33',
-                    confirmButtonText: 'Ya, hapus!',
-                    cancelButtonText: 'Batal'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        document.getElementById('delete-form-' + id).submit();
-                    }
-                });
-            }
-        </script>
     </div>
 </x-layout>

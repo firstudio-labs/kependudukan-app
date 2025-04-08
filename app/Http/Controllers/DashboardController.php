@@ -86,13 +86,122 @@ class DashboardController extends Controller
         switch ($user->role) {
             case 'superadmin':
                 return view('superadmin.index', compact('user', 'role', 'userStats', 'totalCitizens', 'headsOfFamily', 'monthlyData'));
-            case 'admin':
-                return view('admin.index', compact('user', 'role', 'userStats', 'totalCitizens', 'headsOfFamily', 'monthlyData'));
+            case 'admin desa':
+                return view('admin.desa.index', compact('user', 'role', 'userStats', 'totalCitizens', 'headsOfFamily', 'monthlyData'));
+            case 'admin kabupaten':
+                return view('admin.kabupaten.index', compact('user', 'role', 'userStats', 'totalCitizens', 'headsOfFamily', 'monthlyData'));
             case 'operator':
                 return view('operator.index', compact('user', 'role', 'userStats', 'totalCitizens', 'headsOfFamily', 'monthlyData'));
             default:
                 return view('user.index', compact('user', 'role', 'userStats', 'totalCitizens', 'headsOfFamily', 'monthlyData'));
         }
+    }
+
+    /**
+     * Display admin desa dashboard
+     *
+     * @return \Illuminate\Contracts\View\View
+     */
+    public function indexDesa()
+    {
+        $user = Auth::user();
+        $role = ucfirst($user->role);
+
+        // Get statistics and data similar to index method
+        $userStats = [
+            'superadmin' => User::where('role', 'superadmin')->count(),
+            'admin' => User::where('role', 'admin')->count(),
+            'operator' => User::where('role', 'operator')->count(),
+            'user' => User::where('role', 'user')->count(),
+        ];
+
+        $citizenData = $this->citizenService->getAllCitizensWithHighLimit();
+
+        // Handle citizen data similar to the index method
+        $citizens = [];
+        $totalCitizens = 0;
+        $headsOfFamily = 0;
+
+        // Process citizen data and calculate statistics
+        // ...same logic as index method
+
+        // Monthly data similar to index method
+        $monthlyRegistrationsByRole = User::getMonthlyRegistrationsByRole();
+        $months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        $monthlyData = [
+            'labels' => $months,
+            'superadmin' => array_fill(0, 12, 0),
+            'admin' => array_fill(0, 12, 0),
+            'operator' => array_fill(0, 12, 0),
+            'user' => array_fill(0, 12, 0),
+        ];
+
+        return view('admin.desa.index', compact('user', 'role', 'userStats', 'totalCitizens', 'headsOfFamily', 'monthlyData'));
+    }
+
+    /**
+     * Display admin kabupaten dashboard
+     *
+     * @return \Illuminate\Contracts\View\View
+     */
+    public function indexKabupaten()
+    {
+        $user = Auth::user();
+        $role = ucfirst($user->role);
+
+        // Get statistics and data similar to index method
+        $userStats = [
+            'superadmin' => User::where('role', 'superadmin')->count(),
+            'admin' => User::where('role', 'admin')->count(),
+            'operator' => User::where('role', 'operator')->count(),
+            'user' => User::where('role', 'user')->count(),
+        ];
+
+        $citizenData = $this->citizenService->getAllCitizensWithHighLimit();
+
+        // Handle citizen data similar to the index method
+        $citizens = [];
+        $totalCitizens = 0;
+        $headsOfFamily = 0;
+
+        // Process citizen data and calculate statistics
+        if (isset($citizenData['data']['citizens']) && is_array($citizenData['data']['citizens'])) {
+            $citizens = $citizenData['data']['citizens'];
+            $totalCitizens = count($citizens);
+        } elseif (isset($citizenData['citizens']) && is_array($citizenData['citizens'])) {
+            $citizens = $citizenData['citizens'];
+            $totalCitizens = count($citizens);
+        } elseif (isset($citizenData['data']) && is_array($citizenData['data'])) {
+            $citizens = $citizenData['data'];
+            $totalCitizens = count($citizens);
+        }
+
+        // Count heads of family
+        foreach ($citizens as $citizen) {
+            if (isset($citizen['family_status']) && strtoupper($citizen['family_status']) === 'KEPALA KELUARGA') {
+                $headsOfFamily++;
+            }
+        }
+
+        // Monthly data similar to index method
+        $monthlyRegistrationsByRole = User::getMonthlyRegistrationsByRole();
+        $months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        $monthlyData = [
+            'labels' => $months,
+            'superadmin' => array_fill(0, 12, 0),
+            'admin' => array_fill(0, 12, 0),
+            'operator' => array_fill(0, 12, 0),
+            'user' => array_fill(0, 12, 0),
+        ];
+
+        // Fill in actual registration counts by role
+        foreach ($monthlyRegistrationsByRole as $registration) {
+            if (isset($monthlyData[$registration->role])) {
+                $monthlyData[$registration->role][$registration->month - 1] = $registration->count;
+            }
+        }
+
+        return view('admin.kabupaten.index', compact('user', 'role', 'userStats', 'totalCitizens', 'headsOfFamily', 'monthlyData'));
     }
 }
 

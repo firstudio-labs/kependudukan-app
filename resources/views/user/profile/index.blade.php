@@ -317,7 +317,7 @@ if (!empty($userData->tag_lokasi)) {
                 <div id="fotoKkPreview" class="hidden mb-4">
                     <a href="#" id="viewFotoKk" target="_blank" class="block relative">
                         <img src="" alt="Kartu Keluarga" class="max-h-60 max-w-full rounded-lg border border-gray-200">
-                        
+
                     </a>
                 </div>
 
@@ -368,7 +368,7 @@ if (!empty($userData->tag_lokasi)) {
                 <div id="fotoRumahPreview" class="hidden mb-4">
                     <a href="#" id="viewFotoRumah" target="_blank" class="block relative">
                         <img src="" alt="Foto Rumah" class="max-h-60 max-w-full rounded-lg border border-gray-200">
-                        
+
                     </a>
                 </div>
 
@@ -438,7 +438,7 @@ if (!empty($userData->tag_lokasi)) {
                                         <a href="#" id="viewFotoDiri" target="_blank" class="block relative">
                                             <img src="" alt="Foto Diri"
                                                 class="max-h-40 max-w-full rounded-lg border border-gray-200">
-                                            
+
                                         </a>
                                         <div class="flex space-x-2 mt-2">
                                             <button type="button" onclick="deleteDocument('foto_diri')"
@@ -493,7 +493,7 @@ if (!empty($userData->tag_lokasi)) {
                                         <a href="#" id="viewFotoKtp" target="_blank" class="block relative">
                                             <img src="" alt="Foto KTP"
                                                 class="max-h-40 max-w-full rounded-lg border border-gray-200">
-                                            
+
                                         </a>
                                         <div class="flex space-x-2 mt-2">
                                             <button type="button" onclick="deleteDocument('foto_ktp')"
@@ -547,7 +547,7 @@ if (!empty($userData->tag_lokasi)) {
                                         <a href="#" id="viewFotoAkta" target="_blank" class="block relative">
                                             <img src="" alt="Akta Kelahiran"
                                                 class="max-h-40 max-w-full rounded-lg border border-gray-200">
-                                            
+
                                         </a>
                                         <div class="flex space-x-2 mt-2">
                                             <button type="button" onclick="deleteDocument('foto_akta')"
@@ -602,7 +602,7 @@ if (!empty($userData->tag_lokasi)) {
                                         <a href="#" id="viewIjazah" target="_blank" class="block relative">
                                             <img src="" alt="Ijazah"
                                                 class="max-h-40 max-w-full rounded-lg border border-gray-200">
-                                           
+
                                         </a>
                                         <div class="flex space-x-2 mt-2">
                                             <button type="button" onclick="deleteDocument('ijazah')"
@@ -969,7 +969,7 @@ if (!empty($userData->tag_lokasi)) {
 
                                 function initialize() {
                                     if (typeof axios !== 'undefined') {
-                                       
+
                                         updateLocationDisplays();
                                     } else {
                                         console.error('Axios is not loaded. Location data cannot be fetched dynamically.');
@@ -1066,7 +1066,7 @@ if (!empty($userData->tag_lokasi)) {
                                         );
 
                                         row.innerHTML += createTableCell(
-                                            `<button type="button" onclick="openDocumentModal('${member.nik}', '${getMemberName(member)}')" 
+                                            `<button type="button" onclick="openDocumentModal('${member.nik}', '${getMemberName(member)}')"
                                          class="${CLASSES.buttonBlue} ${CLASSES.buttonText}">
                                             Kelola Dokumen
                                          </button>`
@@ -1401,7 +1401,7 @@ if (!empty($userData->tag_lokasi)) {
                         <!--  -->
                         <script>
                             document.addEventListener('DOMContentLoaded', function () {
-                                // Get user's NIK 
+                                // Get user's NIK
                                 const userNik = "{{ $userData->nik ?? '' }}";
                                 if (!userNik) {
                                     console.error('User NIK not found');
@@ -1623,14 +1623,14 @@ if (!empty($userData->tag_lokasi)) {
                                 const tagLngInput = document.getElementById('tagLng');
 
                                 function initializeExistingLocation() {
-                                   
+
                                     const nik = "{{ $userData->nik ?? '' }}";
                                     if (!nik) {
                                         console.log('NIK pengguna tidak tersedia, tidak dapat memuat koordinat');
                                         return;
                                     }
 
-                                    
+
 
                                     fetch(`http://api-kependudukan.desaverse.id:3000/api/citizens/${nik}`, {
                                         method: 'GET',
@@ -1655,7 +1655,7 @@ if (!empty($userData->tag_lokasi)) {
                                                     tagLatInput.value = lat;
                                                     tagLngInput.value = lng;
 
-                                        
+
                                                     if (window.map && window.marker) {
                                                         window.marker.setLatLng([lat, lng]);
                                                         window.map.setView([lat, lng], 15);
@@ -1671,7 +1671,7 @@ if (!empty($userData->tag_lokasi)) {
                                         });
                                 }
 
-                            
+
                                 initializeExistingLocation();
 
                                 function resetSaveButton() {
@@ -1683,7 +1683,7 @@ if (!empty($userData->tag_lokasi)) {
 
                                 if (saveLocationBtn) {
                                     saveLocationBtn.addEventListener('click', function () {
-                                 
+
                                         const lat = document.getElementById('tagLat').value;
                                         const lng = document.getElementById('tagLng').value;
 
@@ -1692,11 +1692,11 @@ if (!empty($userData->tag_lokasi)) {
                                             return;
                                         }
 
-                                      
+
                                         const coordinate = `${lat},${lng}`;
                                         console.log('Sending coordinate:', coordinate);
 
-                                       
+
                                         saveLocationBtn.disabled = true;
                                         saveLocationBtn.innerHTML = `
                                         <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -1706,7 +1706,7 @@ if (!empty($userData->tag_lokasi)) {
                                         Menyimpan...
                                         `;
 
-                                        
+
                                         const nik = "{{ $userData->nik ?? '' }}";
                                         if (!nik) {
                                             showLocationStatus('error', 'NIK pengguna tidak ditemukan');
@@ -1714,7 +1714,7 @@ if (!empty($userData->tag_lokasi)) {
                                             return;
                                         }
 
-                                        
+
                                         fetch(`http://api-kependudukan.desaverse.id:3000/api/citizens/${nik}`, {
                                             method: 'GET',
                                             headers: {
@@ -1751,7 +1751,7 @@ if (!empty($userData->tag_lokasi)) {
                                             })
                                             .then(response => {
                                                 if (!response.ok) {
-                                                    
+
                                                     return response.text().then(text => {
                                                         let errorMessage = `HTTP error! Status: ${response.status}`;
                                                         try {
@@ -1783,20 +1783,20 @@ if (!empty($userData->tag_lokasi)) {
                                     });
                                 }
 
-                               
+
                                 function convertDataToApiFormat(data) {
 
                                     const result = { ...data };
 
-                                    
+
                                     if (result.gender === 'Laki-Laki') result.gender = 1;
                                     else if (result.gender === 'Perempuan') result.gender = 2;
 
-                                    
+
                                     if (result.citizen_status === 'WNI') result.citizen_status = 1;
                                     else if (result.citizen_status === 'WNA') result.citizen_status = 2;
 
-                                   
+
                                     const familyStatusMap = {
                                         'ANAK': 1, 'Anak': 1,
                                         'KEPALA KELUARGA': 2, 'Kepala Keluarga': 2,

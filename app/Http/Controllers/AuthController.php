@@ -21,7 +21,7 @@ class AuthController extends Controller
 
     public function showLoginForm()
     {
-        return view('homepage');
+        return view('login');
     }
 
     /**
@@ -34,15 +34,36 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
+        // Get the intended URL from the session
+        $intended = session()->get('url.intended', '');
+
         // Try to auth as a user (admin, superadmin, operator) first
         if (Auth::guard('web')->attempt(['nik' => $request->nik, 'password' => $request->password])) {
             $user = Auth::guard('web')->user();
+
+            // Check if a superadmin is trying to access non-superadmin areas
+            if ($user->role === 'superadmin' && $intended && !$this->isSuperadminArea($intended)) {
+                Auth::guard('web')->logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+                return redirect()->route('login')->with('error', 'Akses ditolak. Area ini tidak dapat diakses oleh Superadmin.');
+            }
+
             return $this->redirectBasedOnRole($user->role);
         }
 
         // If not found in users table, try with penduduk guard
         if (Auth::guard('penduduk')->attempt(['nik' => $request->nik, 'password' => $request->password])) {
             $penduduk = Auth::guard('penduduk')->user();
+
+            // Check if trying to access restricted areas
+            if ($intended && !$this->isUserArea($intended)) {
+                Auth::guard('penduduk')->logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+                return redirect()->route('login')->with('error', 'Akses ditolak. Silahkan login dengan akun yang sesuai.');
+            }
+
             return redirect()->intended('/user/index');
         }
 
@@ -150,17 +171,96 @@ class AuthController extends Controller
      */
     protected function redirectBasedOnRole($role)
     {
+        // Get the intended URL from the session
+        $intended = session()->get('url.intended', '');
+
         switch ($role) {
             case 'superadmin':
+                // If superadmin is trying to access non-superadmin areas, force logout
+                if ($intended && !$this->isSuperadminArea($intended)) {
+                    Auth::guard('web')->logout();
+                    session()->invalidate();
+                    session()->regenerateToken();
+                    return redirect()->route('login')
+                        ->with('error', 'Akses ditolak. Area ini tidak dapat diakses oleh Superadmin.');
+                }
                 return redirect()->intended('/superadmin/index');
+
             case 'admin desa':
-                return redirect()->intended('/admin.desa.dashboard');
+                // If admin desa tries to access non-admin areas, block access
+                if ($intended && !$this->isAdminDesaArea($intended)) {
+                    Auth::guard('web')->logout();
+                    session()->invalidate();
+                    session()->regenerateToken();
+                    return redirect()->route('login')
+                        ->with('error', 'Akses ditolak. Silahkan login dengan akun yang sesuai.');
+                }
+                return redirect()->intended('/admin/desa/index');
+
             case 'admin kabupaten':
-                return redirect()->intended('/admin.kabupaten.dashboard');
+                // If admin kabupaten tries to access non-admin areas, block access
+                if ($intended && !$this->isAdminKabupatenArea($intended)) {
+                    Auth::guard('web')->logout();
+                    session()->invalidate();
+                    session()->regenerateToken();
+                    return redirect()->route('login')
+                        ->with('error', 'Akses ditolak. Silahkan login dengan akun yang sesuai.');
+                }
+                return redirect()->intended('/admin/kabupaten/index');
+
             case 'operator':
-                return redirect()->intended('/operator/dashboard');
+                // If operator tries to access non-operator areas, block access
+                if ($intended && !$this->isOperatorArea($intended)) {
+                    Auth::guard('web')->logout();
+                    session()->invalidate();
+                    session()->regenerateToken();
+                    return redirect()->route('login')
+                        ->with('error', 'Akses ditolak. Silahkan login dengan akun yang sesuai.');
+                }
+                return redirect()->intended('/operator/index');
+
             default:
                 return redirect()->intended('/');
         }
+    }
+
+    /**
+     * Check if the URL is in the superadmin area.
+     */
+    protected function isSuperadminArea($url)
+    {
+        return strpos($url, '/superadmin/') !== false;
+    }
+
+    /**
+     * Check if the URL is in the admin desa area.
+     */
+    protected function isAdminDesaArea($url)
+    {
+        return strpos($url, '/admin/desa/') !== false;
+    }
+
+    /**
+     * Check if the URL is in the admin kabupaten area.
+     */
+    protected function isAdminKabupatenArea($url)
+    {
+        return strpos($url, '/admin/kabupaten/') !== false;
+    }
+
+    /**
+     * Check if the URL is in the operator area.
+     */
+    protected function isOperatorArea($url)
+    {
+        return strpos($url, '/operator/') !== false;
+    }
+
+    /**
+     * Check if the URL is in the user area.
+     */
+    protected function isUserArea($url)
+    {
+        return strpos($url, '/user/') !== false;
     }
 }
