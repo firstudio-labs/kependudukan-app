@@ -4,7 +4,7 @@
         <h1 class="text-2xl font-bold text-gray-800 mb-6">Tambah Pengguna Baru</h1>
 
         <!-- Form Create User -->
-        <form action="{{ route('superadmin.datamaster.user.store') }}" method="POST" class="bg-white p-6 rounded-lg shadow-md">
+        <form action="{{ route('superadmin.datamaster.user.store') }}" method="POST" class="bg-white p-6 rounded-lg shadow-md" enctype="multipart/form-data">
             @csrf
 
             <!-- BIODATA -->
@@ -67,6 +67,19 @@
                             <option value="operator">Operator</option>
                         </select>
                         @error('role')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
+                    </div>
+
+                    <!-- Image/Logo Upload -->
+                    <div>
+                        <label for="image" class="block text-sm font-medium text-gray-700">Foto/Logo (Opsional)</label>
+                        <input type="file" id="image" name="image" accept="image/*" class="mt-1 block w-full text-sm text-gray-500
+                        file:mr-4 file:py-2 file:px-4
+                        file:rounded-md file:border-0
+                        file:text-sm file:font-semibold
+                        file:bg-blue-50 file:text-blue-700
+                        hover:file:bg-blue-100">
+                        <p class="mt-1 text-sm text-gray-500">Format: JPG, PNG, GIF. Maks: 2MB</p>
+                        @error('image')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                     </div>
 
                     <!-- Alamat -->

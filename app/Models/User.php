@@ -21,6 +21,7 @@ class User extends Authenticatable
         'no_hp',
         'role',
         'alamat',
+        'image',
         'province_id',
         'districts_id',
         'sub_districts_id',

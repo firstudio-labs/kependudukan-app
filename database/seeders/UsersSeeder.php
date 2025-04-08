@@ -22,6 +22,7 @@ class UsersSeeder extends Seeder
             'no_hp' => '081234567890',
             'role' => 'superadmin',
             'status' => 'active',
+            'image' => null,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -34,6 +35,7 @@ class UsersSeeder extends Seeder
             'no_hp' => '081234567891',
             'role' => 'admin desa',
             'status' => 'active',
+            'image' => null,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -46,6 +48,7 @@ class UsersSeeder extends Seeder
             'no_hp' => '081234567892',
             'role' => 'admin kabupaten',
             'status' => 'active',
+            'image' => null,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -58,6 +61,7 @@ class UsersSeeder extends Seeder
             'no_hp' => '081234567893',
             'role' => 'operator',
             'status' => 'active',
+            'image' => null,
             'created_at' => now(),
             'updated_at' => now(),
         ]);

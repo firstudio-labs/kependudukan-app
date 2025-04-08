@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('password');
             $table->string('no_hp')->nullable();
             $table->text('alamat')->nullable();
+            $table->string('image')->nullable(); // Added image field
             $table->unsignedBigInteger('province_id')->nullable();
             $table->unsignedBigInteger('districts_id')->nullable();
             $table->unsignedBigInteger('sub_districts_id')->nullable();

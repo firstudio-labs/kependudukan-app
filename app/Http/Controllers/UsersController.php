@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use App\Services\WilayahService;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class UsersController extends Controller
 {
@@ -77,6 +78,7 @@ class UsersController extends Controller
             'password' => 'required|min:6',
             'no_hp' => 'nullable|string',
             'alamat' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'province_id' => 'nullable|numeric',
             'districts_id' => 'nullable|numeric',
             'sub_districts_id' => 'nullable|numeric',
@@ -86,6 +88,14 @@ class UsersController extends Controller
         ]);
 
         $validated['password'] = Hash::make($validated['password']);
+
+        // Handle image upload
+        if ($request->hasFile('image')) {
+            $image = $request->file('image');
+            $imageName = time() . '.' . $image->getClientOriginalExtension();
+            $image->storeAs('public/users', $imageName);
+            $validated['image'] = 'users/' . $imageName;
+        }
 
         // Log the validated data before saving
         Log::info('User data after validation', [
@@ -207,6 +217,7 @@ class UsersController extends Controller
             'email' => ['nullable', 'email', Rule::unique('users')->ignore($user->id)],
             'no_hp' => 'nullable|string',
             'alamat' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'province_id' => 'nullable|numeric',
             'districts_id' => 'nullable|numeric',
             'sub_districts_id' => 'nullable|numeric',
@@ -221,6 +232,19 @@ class UsersController extends Controller
                 'password' => 'min:6',
             ]);
             $validated['password'] = Hash::make($request->password);
+        }
+
+        // Handle image upload
+        if ($request->hasFile('image')) {
+            // Delete old image if exists
+            if ($user->image) {
+                Storage::delete('public/' . $user->image);
+            }
+
+            $image = $request->file('image');
+            $imageName = time() . '.' . $image->getClientOriginalExtension();
+            $image->storeAs('public/users', $imageName);
+            $validated['image'] = 'users/' . $imageName;
         }
 
         // Log the validated data before saving
@@ -259,6 +283,11 @@ class UsersController extends Controller
      */
     public function destroy(User $user)
     {
+        // Delete user image if exists
+        if ($user->image) {
+            Storage::delete('public/' . $user->image);
+        }
+
         $user->delete();
         return redirect()->route('superadmin.datamaster.user.index')->with('success', 'Pengguna berhasil dihapus');
     }
