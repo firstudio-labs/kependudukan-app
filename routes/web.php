@@ -24,11 +24,16 @@ use App\Http\Controllers\PenandatangananController;
 use App\Http\Controllers\KlasifikasiController;
 use App\Http\Controllers\JenisAsetController;
 use App\Http\Controllers\KelolaAsetController;
+use App\Http\Controllers\guest\PelayananController;
 
-Route::get('/', function () {
-    return view('homepage');
-});
+// Homepage route should use our new method to force logout
+Route::get('/', [App\Http\Controllers\AuthController::class, 'homepage'])->name('homepage');
 
+// Guest accessible routes
+Route::get('/pelayanan', [PelayananController::class, 'index'])->name('guest.pelayanan.index');
+Route::post('/pelayanan', [PelayananController::class, 'store'])->name('guest.pelayanan.store');
+Route::get('/pelayanan/surat/{id}', [PelayananController::class, 'showSuratForm'])->name('guest.pelayanan.surat');
+Route::get('/pelayanan/antrian/{id}', [PelayananController::class, 'showAntrian'])->name('guest.pelayanan.antrian');
 
 // Rute Autentikasi
 Route::middleware('guest')->group(function () {
@@ -38,7 +43,6 @@ Route::middleware('guest')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
 });
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-
 
 // Route untuk superadmin - menggunakan web guard
 Route::middleware(['auth:web', 'role:superadmin'])->group(function () {
@@ -361,7 +365,6 @@ Route::middleware(['auth:web', 'role:operator'])->group(function () {
     });
 });
 
-
 // Route untuk penduduk - menggunakan auth penduduk
 Route::middleware(['auth:penduduk'])->group(function () {
     Route::get('/user/index', function () {
@@ -459,7 +462,6 @@ Route::get('/location/provinces', [DataKKController::class, 'getProvinces'])->na
 Route::get('/location/districts/{provinceCode}', [DataKKController::class, 'getDistricts'])->name('location.districts');
 Route::get('/location/sub-districts/{districtCode}', [DataKKController::class, 'getSubDistricts'])->name('location.sub-districts');
 Route::get('/location/villages/{subDistrictCode}', [DataKKController::class, 'getVillages'])->name('location.villages');
-
 
 // Citizen data routes
 Route::get('/citizens/all', [DataKKController::class, 'fetchAllCitizens'])->name('citizens.all');

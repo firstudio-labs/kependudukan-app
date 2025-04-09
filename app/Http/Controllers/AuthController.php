@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Penduduk;
 use App\Models\User;
+use App\Models\Keperluan;
 use App\Services\CitizenService;
+use App\Services\WilayahService;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -13,15 +15,101 @@ use Illuminate\Support\Facades\Log;
 class AuthController extends Controller
 {
     protected $citizenService;
+    protected $wilayahService;
 
-    public function __construct(CitizenService $citizenService)
+    public function __construct(CitizenService $citizenService, WilayahService $wilayahService)
     {
         $this->citizenService = $citizenService;
+        $this->wilayahService = $wilayahService;
+    }
+
+    /**
+     * Force logout if user navigates to the homepage or other public pages
+     */
+    public function homepage()
+    {
+        // Always force logout when accessing homepage
+        $this->forceLogoutIfAuthenticated();
+
+        // Get provinces for the pelayanan component
+        $provinces = app(WilayahService::class)->getProvinces();
+
+        // Get keperluan list for the form dropdown
+        $keperluanList = Keperluan::all();
+
+        return view('homepage', compact('provinces', 'keperluanList'));
+    }
+
+
+
+    /**
+     * Helper method to force logout any authenticated user
+     */
+    protected function forceLogoutIfAuthenticated()
+    {
+        if (Auth::guard('web')->check() || Auth::guard('penduduk')->check()) {
+            if (Auth::guard('web')->check()) {
+                Auth::guard('web')->logout();
+            } else if (Auth::guard('penduduk')->check()) {
+                Auth::guard('penduduk')->logout();
+            }
+
+            session()->invalidate();
+            session()->regenerateToken();
+            session()->flash('info', 'Anda telah keluar dari sistem. Silakan login kembali.');
+        }
     }
 
     public function showLoginForm()
     {
+        // Always force logout when accessing login page
+        $this->forceLogoutIfAuthenticated();
+
+        // Always show the login form (not authenticated anymore)
         return view('login');
+    }
+
+    /**
+     * Check if the URL is the homepage, login, or register page
+     */
+    protected function isPublicPage($url)
+    {
+        // Consider these routes as public pages that should always be accessible
+        $publicPages = ['/', '/home', '/login', '/register', ''];
+        return in_array($url, $publicPages);
+    }
+
+    /**
+     * Check if a user is trying to access an area they're not authorized for
+     */
+    protected function checkUnauthorizedAccess($role, $currentPath)
+    {
+        $currentPath = '/' . $currentPath; // Add leading slash for consistency
+
+        // Public pages always cause logout when directly accessed
+        if ($this->isPublicPage($currentPath)) {
+            return true;
+        }
+
+        switch ($role) {
+            case 'superadmin':
+                return !$this->isSuperadminArea($currentPath);
+
+            case 'admin desa':
+                return !$this->isAdminDesaArea($currentPath);
+
+            case 'admin kabupaten':
+                return !$this->isAdminKabupatenArea($currentPath);
+
+            case 'operator':
+                return !$this->isOperatorArea($currentPath);
+
+            case 'guest':
+                return !$this->isGuestArea($currentPath);
+
+            default:
+                return true; // Unauthorized for unknown roles
+        }
     }
 
     /**
@@ -219,6 +307,17 @@ class AuthController extends Controller
                 }
                 return redirect()->intended('/operator/index');
 
+            case 'guest':
+                // If guest tries to access non-guest areas, block access
+                if ($intended && !$this->isGuestArea($intended)) {
+                    Auth::guard('web')->logout();
+                    session()->invalidate();
+                    session()->regenerateToken();
+                    return redirect()->route('login')
+                        ->with('error', 'Akses ditolak. Silahkan login dengan akun yang sesuai.');
+                }
+                return redirect()->intended('/guest/index');
+
             default:
                 return redirect()->intended('/');
         }
@@ -229,7 +328,7 @@ class AuthController extends Controller
      */
     protected function isSuperadminArea($url)
     {
-        return strpos($url, '/superadmin/') !== false;
+        return strpos($url, '/superadmin/') !== false || $url === '/superadmin';
     }
 
     /**
@@ -237,7 +336,7 @@ class AuthController extends Controller
      */
     protected function isAdminDesaArea($url)
     {
-        return strpos($url, '/admin/desa/') !== false;
+        return strpos($url, '/admin/desa/') !== false || $url === '/admin/desa';
     }
 
     /**
@@ -245,7 +344,7 @@ class AuthController extends Controller
      */
     protected function isAdminKabupatenArea($url)
     {
-        return strpos($url, '/admin/kabupaten/') !== false;
+        return strpos($url, '/admin/kabupaten/') !== false || $url === '/admin/kabupaten';
     }
 
     /**
@@ -253,7 +352,7 @@ class AuthController extends Controller
      */
     protected function isOperatorArea($url)
     {
-        return strpos($url, '/operator/') !== false;
+        return strpos($url, '/operator/') !== false || $url === '/operator';
     }
 
     /**
@@ -261,6 +360,14 @@ class AuthController extends Controller
      */
     protected function isUserArea($url)
     {
-        return strpos($url, '/user/') !== false;
+        return strpos($url, '/user/') !== false || $url === '/user';
+    }
+
+    /**
+     * Check if the URL is in the guest area.
+     */
+    protected function isGuestArea($url)
+    {
+        return strpos($url, '/guest/') !== false || $url === '/guest';
     }
 }

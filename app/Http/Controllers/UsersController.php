@@ -83,7 +83,7 @@ class UsersController extends Controller
             'districts_id' => 'nullable|numeric',
             'sub_districts_id' => 'nullable|numeric',
             'villages_id' => 'nullable|numeric',
-            'role' => 'required|in:superadmin,admin desa,admin kabupaten,operator',
+            'role' => 'required|in:superadmin,admin desa,admin kabupaten,operator,guest',
             'status' => 'required|in:active,inactive',
         ]);
 
@@ -222,7 +222,7 @@ class UsersController extends Controller
             'districts_id' => 'nullable|numeric',
             'sub_districts_id' => 'nullable|numeric',
             'villages_id' => 'nullable|numeric',
-            'role' => 'required|in:superadmin,admin desa,admin kabupaten,operator',
+            'role' => 'required|in:superadmin,admin desa,admin kabupaten,operator,guest',
             'status' => 'required|in:active,inactive',
         ]);
 
