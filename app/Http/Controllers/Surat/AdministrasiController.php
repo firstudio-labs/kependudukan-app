@@ -115,7 +115,7 @@ class AdministrasiController extends Controller
             'subdistrict_id' => 'required|string',
             'village_id' => 'required|string',
             'letter_number' => 'nullable|string',
-            'signing' => 'nullable|string',
+            'signing' => 'nullable|string', // Ensure signing is nullable
         ]);
 
         try {
@@ -221,7 +221,7 @@ class AdministrasiController extends Controller
             'subdistrict_id' => 'required|numeric',
             'village_id' => 'required|numeric',
             'letter_number' => 'nullable|string',
-            'signing' => 'nullable|string',
+            'signing' => 'nullable|string', // Ensure signing is nullable
         ]);
 
         try {

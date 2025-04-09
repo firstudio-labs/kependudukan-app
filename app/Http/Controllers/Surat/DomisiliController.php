@@ -115,8 +115,8 @@ class DomisiliController extends Controller
             'district_id' => 'required',  // Accept numeric value
             'subdistrict_id' => 'required',  // Accept numeric value
             'village_id' => 'required',  // Accept numeric value
-            'letter_number' => 'nullable|string',  // Changed to string to match schema
-            'signing' => 'nullable|string',
+            'letter_number' => 'nullable|string',
+            'signing' => 'nullable|string', // Ensure signing is nullable
         ]);
 
         if ($validator->fails()) {
@@ -295,8 +295,8 @@ class DomisiliController extends Controller
             'district_id' => 'required',  // Accept numeric value
             'subdistrict_id' => 'required',  // Accept numeric value
             'village_id' => 'required',  // Accept numeric value
-            'letter_number' => 'nullable|string',  // Changed to string to match schema
-            'signing' => 'nullable|string',
+            'letter_number' => 'nullable|string',
+            'signing' => 'nullable|string', // Ensure signing is nullable
         ]);
 
         if ($validator->fails()) {

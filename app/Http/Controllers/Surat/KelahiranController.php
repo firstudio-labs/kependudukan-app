@@ -92,38 +92,37 @@ class KelahiranController extends Controller
      */
     public function store(Request $request)
     {
-        try {
-            // Validate after try-catch to see all errors
-            $validated = $request->validate([
-                'province_id' => 'required|numeric',
-                'district_id' => 'required|numeric',
-                'subdistrict_id' => 'required|numeric',
-                'village_id' => 'required|numeric',
-                'letter_number' => 'nullable|string',
-                'father_nik' => 'nullable|numeric',
-                'father_full_name' => 'nullable|string',
-                'father_birth_place' => 'nullable|string',
-                'father_birth_date' => 'nullable|date',
-                'father_job' => 'nullable|numeric',
-                'father_religion' => 'nullable|numeric',
-                'father_address' => 'nullable|string',
-                'mother_nik' => 'nullable|numeric',
-                'mother_full_name' => 'nullable|string',
-                'mother_birth_place' => 'nullable|string',
-                'mother_birth_date' => 'nullable|date',
-                'mother_job' => 'nullable|numeric',
-                'mother_religion' => 'nullable|numeric',
-                'mother_address' => 'nullable|string',
-                'child_name' => 'required|string|max:255',
-                'child_gender' => 'required|numeric',
-                'child_birth_date' => 'required|date',
-                'child_birth_place' => 'required|string|max:255',
-                'child_religion' => 'required|numeric',
-                'child_address' => 'required|string',
-                'child_order' => 'required|integer',
-                'signing' => 'nullable|string|max:255',
-            ]);
+        $request->validate([
+            'province_id' => 'required|numeric',
+            'district_id' => 'required|numeric',
+            'subdistrict_id' => 'required|numeric',
+            'village_id' => 'required|numeric',
+            'letter_number' => 'nullable|string',
+            'father_nik' => 'nullable|numeric',
+            'father_full_name' => 'nullable|string',
+            'father_birth_place' => 'nullable|string',
+            'father_birth_date' => 'nullable|date',
+            'father_job' => 'nullable|numeric',
+            'father_religion' => 'nullable|numeric',
+            'father_address' => 'nullable|string',
+            'mother_nik' => 'nullable|numeric',
+            'mother_full_name' => 'nullable|string',
+            'mother_birth_place' => 'nullable|string',
+            'mother_birth_date' => 'nullable|date',
+            'mother_job' => 'nullable|numeric',
+            'mother_religion' => 'nullable|numeric',
+            'mother_address' => 'nullable|string',
+            'child_name' => 'required|string|max:255',
+            'child_gender' => 'required|numeric',
+            'child_birth_date' => 'required|date',
+            'child_birth_place' => 'required|string|max:255',
+            'child_religion' => 'required|numeric',
+            'child_address' => 'required|string',
+            'child_order' => 'required|integer',
+            'signing' => 'nullable|string', // Ensure signing is nullable
+        ]);
 
+        try {
             // Get all request data
             $data = $request->all();
 
@@ -271,7 +270,7 @@ class KelahiranController extends Controller
             'child_religion' => 'required|numeric',
             'child_address' => 'required|string',
             'child_order' => 'required|integer',
-            'signing' => 'nullable|string|max:255',
+            'signing' => 'nullable|string', // Ensure signing is nullable
         ]);
 
         try {

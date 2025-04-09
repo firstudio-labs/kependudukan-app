@@ -121,7 +121,7 @@ class RumahSewaController extends Controller
 
             // Letter information fields
             'letter_number' => 'nullable|string',
-            'signing' => 'nullable|string|max:255',
+            'signing' => 'nullable|string', // Ensure signing is nullable
         ]);
 
         try {
@@ -253,7 +253,7 @@ class RumahSewaController extends Controller
 
             // Letter information fields
             'letter_number' => 'nullable|string',
-            'signing' => 'nullable|string|max:255',
+            'signing' => 'nullable|string', // Ensure signing is nullable
         ]);
 
         try {

@@ -116,7 +116,7 @@ class IzinKeramaianController extends Controller
             'entertainment' => 'required|string|max:255',
             'event' => 'required|string|max:255',
             'invitation' => 'required|string|max:255',
-            'signing' => 'nullable|string|max:255',
+            'signing' => 'nullable|string|max:255', // Ensure signing is nullable
         ]);
 
         try {
@@ -242,7 +242,7 @@ class IzinKeramaianController extends Controller
             'entertainment' => 'required|string|max:255',
             'event' => 'required|string|max:255',
             'invitation' => 'required|string|max:255',
-            'signing' => 'nullable|string|max:255',
+            'signing' => 'nullable|string|max:255', // Ensure signing is nullable
         ]);
 
         try {

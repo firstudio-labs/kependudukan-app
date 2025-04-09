@@ -110,7 +110,7 @@ class PengantarKtpController extends Controller
             'rt' => 'required|string',
             'rw' => 'required|string',
             'hamlet' => 'required|string', // Dusun
-            'signing' => 'nullable|string',
+            'signing' => 'nullable|string', // Ensure signing is nullable
         ]);
 
         try {
@@ -302,7 +302,7 @@ class PengantarKtpController extends Controller
             'rt' => 'required|string',
             'rw' => 'required|string',
             'hamlet' => 'required|string', // Dusun
-            'signing' => 'nullable|string',
+            'signing' => 'nullable|string', // Ensure signing is nullable
         ]);
 
         try {

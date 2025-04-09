@@ -112,7 +112,7 @@ class DomisiliUsahaController extends Controller
             'letter_date' => 'required|date',
             'purpose' => 'required|string',  // Added purpose field
             'letter_number' => 'nullable|string',
-            'signing' => 'nullable|string',
+            'signing' => 'nullable|string', // Ensure signing is nullable
             'province_id' => 'required',
             'district_id' => 'required',
             'subdistrict_id' => 'required',
@@ -283,7 +283,7 @@ class DomisiliUsahaController extends Controller
             'letter_date' => 'required|date',
             'purpose' => 'required|string',  // Added purpose field
             'letter_number' => 'nullable|string',
-            'signing' => 'nullable|string',
+            'signing' => 'nullable|string', // Ensure signing is nullable
             'province_id' => 'required',
             'district_id' => 'required',
             'subdistrict_id' => 'required',

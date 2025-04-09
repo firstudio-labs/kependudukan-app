@@ -107,7 +107,7 @@ class KehilanganController extends Controller
             'district_id' => 'required|numeric',
             'subdistrict_id' => 'required|numeric',
             'village_id' => 'required|numeric',
-            'letter_number' => 'nullable|string', // Changed from integer to string
+            'letter_number' => 'nullable|string',
             'signing' => 'nullable|string',
         ]);
 
@@ -177,7 +177,7 @@ class KehilanganController extends Controller
             'district_id' => 'required|numeric',
             'subdistrict_id' => 'required|numeric',
             'village_id' => 'required|numeric',
-            'letter_number' => 'nullable|string', // Changed from integer to string
+            'letter_number' => 'nullable|string',
             'signing' => 'nullable|string',
         ]);
 

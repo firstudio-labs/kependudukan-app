@@ -124,7 +124,7 @@ class AhliWarisController extends Controller
             'death_certificate_date' => 'nullable|date',
             'inheritance_letter_date' => 'nullable|date',
             'inheritance_type' => 'required|string|max:255',
-            'signing' => 'nullable|string|max:255',
+            'signing' => 'nullable|string',
         ]);
 
         try {
@@ -241,7 +241,7 @@ class AhliWarisController extends Controller
             'district_id' => 'required|string',
             'subdistrict_id' => 'required|string',
             'village_id' => 'required|string',
-            'letter_number' => 'nullable|integer',
+            'letter_number' => 'nullable|string',
             'nik' => 'required|array',
             'full_name' => 'required|array',
             'birth_place' => 'required|array',
@@ -258,7 +258,7 @@ class AhliWarisController extends Controller
             'death_certificate_date' => 'nullable|date',
             'inheritance_letter_date' => 'nullable|date',
             'inheritance_type' => 'required|string|max:255',
-            'signing' => 'nullable|string|max:255',
+            'signing' => 'nullable|string',
         ]);
 
         try {
