@@ -65,5 +65,18 @@ class UsersSeeder extends Seeder
             'created_at' => now(),
             'updated_at' => now(),
         ]);
+
+        // Guest
+        DB::table('users')->insert([
+            'nik' => 'guest',
+            'username' => 'guest',
+            'password' => Hash::make('password'),
+            'no_hp' => '081234567894',
+            'role' => 'guest',
+            'status' => 'active',
+            'image' => null,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
     }
 }

@@ -413,4 +413,38 @@ class WilayahService
             return ['data' => [], 'meta' => null];
         }
     }
+
+    /**
+     * Get village data by ID
+     *
+     * @param string $id
+     * @return array|null
+     */
+    public function getVillageById($id)
+    {
+        // Try to get from cache first
+        $cacheKey = "village_{$id}";
+
+        if (Cache::has($cacheKey)) {
+            return Cache::get($cacheKey);
+        }
+
+        try {
+            // Use the API to get village data
+            $response = Http::get("{$this->apiUrl}/village/{$id}");
+
+            if ($response->successful()) {
+                $data = $response->json();
+                // Cache the result for future use (1 day)
+                Cache::put($cacheKey, $data, now()->addDay());
+                return $data;
+            }
+
+            return null;
+        } catch (\Exception $e) {
+            // Log the error
+            \Log::error("Failed to fetch village data: " . $e->getMessage());
+            return null;
+        }
+    }
 }
