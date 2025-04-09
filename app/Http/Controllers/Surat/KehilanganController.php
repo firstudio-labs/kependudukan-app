@@ -336,6 +336,25 @@ class KehilanganController extends Controller
                 'village_name' => $villageName
             ]);
 
+            // Get user image based on matching district_id
+            $districtLogo = null;
+            if (!empty($kehilangan->district_id)) {
+                $userWithLogo = \App\Models\User::where('districts_id', $kehilangan->district_id)
+                    ->whereNotNull('image')
+                    ->first();
+
+                if ($userWithLogo && $userWithLogo->image) {
+                    $districtLogo = $userWithLogo->image;
+                }
+            }
+
+            // Log the logo information for debugging
+            \Log::info('District logo for kehilangan ID: ' . $id, [
+                'district_id' => $kehilangan->district_id,
+                'logo_found' => !is_null($districtLogo),
+                'logo_path' => $districtLogo
+            ]);
+
             // Convert gender numeric to text
             $gender = $kehilangan->gender == 1 ? 'Laki-Laki' : 'Perempuan';
 
@@ -380,7 +399,8 @@ class KehilanganController extends Controller
                 'citizenship' => $citizenship,
                 'birthDate' => $birthDate,
                 'letterDate' => $letterDate,
-                'signing_name' => $signing_name // Pass the signing name to the view
+                'signing_name' => $signing_name, // Pass the signing name to the view
+                'district_logo' => $districtLogo // Add this line
             ]);
         } catch (\Exception $e) {
             \Log::error('Error generating PDF: ' . $e->getMessage(), [

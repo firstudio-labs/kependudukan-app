@@ -507,6 +507,25 @@ class DomisiliUsahaController extends Controller
                 }
             }
 
+            // Get user image based on matching district_id
+            $districtLogo = null;
+            if (!empty($domisiliUsaha->district_id)) {
+                $userWithLogo = \App\Models\User::where('districts_id', $domisiliUsaha->district_id)
+                    ->whereNotNull('image')
+                    ->first();
+
+                if ($userWithLogo && $userWithLogo->image) {
+                    $districtLogo = $userWithLogo->image;
+                }
+            }
+
+            // Log the logo information for debugging
+            \Log::info('District logo for DomisiliUsaha ID: ' . $id, [
+                'district_id' => $domisiliUsaha->district_id,
+                'logo_found' => !is_null($districtLogo),
+                'logo_path' => $districtLogo
+            ]);
+
             return view('superadmin.datamaster.surat.domisili-usaha.DomisiliUsaha', [
                 'domisiliUsaha' => $domisiliUsaha,
                 'job_name' => $jobName,
@@ -520,7 +539,8 @@ class DomisiliUsahaController extends Controller
                 'citizenship' => $citizenship,
                 'formatted_birth_date' => $birthDate,
                 'formatted_letter_date' => $letterDate,
-                'signing_name' => $signing_name
+                'signing_name' => $signing_name,
+                'district_logo' => $districtLogo // Add this line
             ]);
 
         } catch (\Exception $e) {

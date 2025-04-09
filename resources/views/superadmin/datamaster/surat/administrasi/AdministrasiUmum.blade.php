@@ -36,11 +36,13 @@
         </div>
 
         <div class="flex items-center mb-4">
-            <div class="w-24 mr-4">
-                <!-- Replace placeholder with existing logo from your public folder -->
-                <img src="{{ asset('images/logo.png') }}" alt="Logo Kota" class="w-full h-auto">
-                <!-- If you don't have a logo yet, use this empty div instead of img tag -->
-                <!-- <div class="w-24 h-24"></div> -->
+            <div class="w-24 h-24 mr-4 flex items-center justify-center">
+                @if(isset($district_logo) && !empty($district_logo))
+                    <img src="{{ asset('storage/' . $district_logo) }}" alt="Logo Kabupaten" class="max-w-[80px] max-h-[80px] object-contain">
+                @else
+                    <!-- Fallback to default logo -->
+                    <img src="{{ asset('images/logo.png') }}" alt="Logo Default" class="max-w-[80px] max-h-[80px] object-contain">
+                @endif
             </div>
             <div class="flex-1 text-center">
                 <p class="text-lg font-bold">PEMERINTAH {{ strtoupper($district_name ?? 'XXXX') }}</p>

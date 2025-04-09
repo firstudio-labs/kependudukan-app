@@ -473,6 +473,25 @@ class AdministrasiController extends Controller
                 }
             }
 
+            // Get user image based on matching district_id
+            $districtLogo = null;
+            if (!empty($administration->district_id)) {
+                $userWithLogo = \App\Models\User::where('districts_id', $administration->district_id)
+                    ->whereNotNull('image')
+                    ->first();
+
+                if ($userWithLogo && $userWithLogo->image) {
+                    $districtLogo = $userWithLogo->image;
+                }
+            }
+
+            // Log the logo information for debugging
+            \Log::info('District logo for administration ID: ' . $id, [
+                'district_id' => $administration->district_id,
+                'logo_found' => !is_null($districtLogo),
+                'logo_path' => $districtLogo
+            ]);
+
             return view('superadmin.datamaster.surat.administrasi.AdministrasiUmum', [
                 'administration' => $administration,
                 'job_name' => $jobName,
@@ -487,7 +506,8 @@ class AdministrasiController extends Controller
                 'formatted_birth_date' => $birthDate,
                 'formatted_letter_date' => $letterDate,
                 'rt' => $rt,
-                'signing_name' => $signing_name // Pass the signing name to the view
+                'signing_name' => $signing_name, // Pass the signing name to the view
+                'district_logo' => $districtLogo // Pass the district logo to the view
             ]);
 
         } catch (\Exception $e) {

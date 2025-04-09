@@ -443,6 +443,25 @@ class KematianController extends Controller
                 }
             }
 
+            // Get user image based on matching district_id
+            $districtLogo = null;
+            if (!empty($kematian->district_id)) {
+                $userWithLogo = \App\Models\User::where('districts_id', $kematian->district_id)
+                    ->whereNotNull('image')
+                    ->first();
+
+                if ($userWithLogo && $userWithLogo->image) {
+                    $districtLogo = $userWithLogo->image;
+                }
+            }
+
+            // Log the logo information for debugging
+            \Log::info('District logo for Kematian ID: ' . $id, [
+                'district_id' => $kematian->district_id,
+                'logo_found' => !is_null($districtLogo),
+                'logo_path' => $districtLogo
+            ]);
+
             // Return view directly instead of generating PDF
             return view('superadmin.datamaster.surat.kematian.Kematian', [
                 'kematian' => $kematian,
@@ -458,7 +477,8 @@ class KematianController extends Controller
                 'birthDate' => $birthDate,
                 'deathDate' => $deathDate,
                 'rtLetterDate' => $rtLetterDate,
-                'signing_name' => $signing_name // Pass the signing name to the view
+                'signing_name' => $signing_name, // Pass the signing name to the view
+                'district_logo' => $districtLogo // Add this line
             ]);
         } catch (\Exception $e) {
             \Log::error('Error generating PDF: ' . $e->getMessage(), [

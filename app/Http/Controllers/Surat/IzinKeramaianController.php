@@ -427,6 +427,25 @@ class IzinKeramaianController extends Controller
                 }
             }
 
+            // Get user image based on matching district_id
+            $districtLogo = null;
+            if (!empty($keramaian->district_id)) {
+                $userWithLogo = \App\Models\User::where('districts_id', $keramaian->district_id)
+                    ->whereNotNull('image')
+                    ->first();
+
+                if ($userWithLogo && $userWithLogo->image) {
+                    $districtLogo = $userWithLogo->image;
+                }
+            }
+
+            // Log the logo information for debugging
+            \Log::info('District logo for Keramaian ID: ' . $id, [
+                'district_id' => $keramaian->district_id,
+                'logo_found' => !is_null($districtLogo),
+                'logo_path' => $districtLogo
+            ]);
+
             // Return view directly instead of generating PDF
             return view('superadmin.datamaster.surat.keramaian.IjinKeramaian', compact(
                 'keramaian',
@@ -441,7 +460,8 @@ class IzinKeramaianController extends Controller
                 'citizenStatusName',
                 'birthDate',
                 'eventDate',
-                'signing_name'
+                'signing_name',
+                'districtLogo' // Add this line
             ));
 
         } catch (\Exception $e) {

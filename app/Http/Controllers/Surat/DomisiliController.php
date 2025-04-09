@@ -530,6 +530,25 @@ class DomisiliController extends Controller
                 }
             }
 
+            // Get user image based on matching district_id
+            $districtLogo = null;
+            if (!empty($domisili->district_id)) {
+                $userWithLogo = \App\Models\User::where('districts_id', $domisili->district_id)
+                    ->whereNotNull('image')
+                    ->first();
+
+                if ($userWithLogo && $userWithLogo->image) {
+                    $districtLogo = $userWithLogo->image;
+                }
+            }
+
+            // Log the logo information for debugging
+            \Log::info('District logo for Domisili ID: ' . $id, [
+                'district_id' => $domisili->district_id,
+                'logo_found' => !is_null($districtLogo),
+                'logo_path' => $districtLogo
+            ]);
+
             return view('superadmin.datamaster.surat.domisili.Domisili', [
                 'domisili' => $domisili,
                 'job_name' => $jobName,
@@ -543,7 +562,8 @@ class DomisiliController extends Controller
                 'citizenship' => $citizenship,
                 'formatted_birth_date' => $birthDate,
                 'formatted_letter_date' => $letterDate,
-                'signing_name' => $signing_name // Pass the signing name to the view
+                'signing_name' => $signing_name, // Pass the signing name to the view
+                'district_logo' => $districtLogo // Add this line
             ]);
 
         } catch (\Exception $e) {

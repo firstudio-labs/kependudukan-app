@@ -426,6 +426,25 @@ class SKCKController extends Controller
                 }
             }
 
+            // Get user image based on matching district_id
+            $districtLogo = null;
+            if (!empty($skck->district_id)) {
+                $userWithLogo = \App\Models\User::where('districts_id', $skck->district_id)
+                    ->whereNotNull('image')
+                    ->first();
+
+                if ($userWithLogo && $userWithLogo->image) {
+                    $districtLogo = $userWithLogo->image;
+                }
+            }
+
+            // Log the logo information for debugging
+            \Log::info('District logo for SKCK ID: ' . $id, [
+                'district_id' => $skck->district_id,
+                'logo_found' => !is_null($districtLogo),
+                'logo_path' => $districtLogo
+            ]);
+
             return view('superadmin.datamaster.surat.skck.SKCK', [
                 'skck' => $skck,
                 'job_name' => $jobName,
@@ -439,7 +458,8 @@ class SKCKController extends Controller
                 'citizenship' => $citizenship,
                 'formatted_birth_date' => $birthDate,
                 'formatted_letter_date' => $letterDate,
-                'signing_name' => $signing_name
+                'signing_name' => $signing_name,
+                'district_logo' => $districtLogo // Add this line
             ]);
 
         } catch (\Exception $e) {

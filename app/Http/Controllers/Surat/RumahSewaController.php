@@ -390,6 +390,25 @@ class RumahSewaController extends Controller
                 }
             }
 
+            // Get user image based on matching district_id
+            $districtLogo = null;
+            if (!empty($rumahSewa->district_id)) {
+                $userWithLogo = \App\Models\User::where('districts_id', $rumahSewa->district_id)
+                    ->whereNotNull('image')
+                    ->first();
+
+                if ($userWithLogo && $userWithLogo->image) {
+                    $districtLogo = $userWithLogo->image;
+                }
+            }
+
+            // Log the logo information for debugging
+            \Log::info('District logo for RumahSewa ID: ' . $id, [
+                'district_id' => $rumahSewa->district_id,
+                'logo_found' => !is_null($districtLogo),
+                'logo_path' => $districtLogo
+            ]);
+
             // Format date
             $validUntilDate = $rumahSewa->valid_until ? \Carbon\Carbon::parse($rumahSewa->valid_until)->locale('id')->isoFormat('D MMMM Y') : '-';
 
@@ -412,7 +431,8 @@ class RumahSewaController extends Controller
                 'validUntilDate',
                 'rtValue',
                 'signing_name',
-                'villageCode'
+                'villageCode',
+                'districtLogo'
             ));
 
         } catch (\Exception $e) {

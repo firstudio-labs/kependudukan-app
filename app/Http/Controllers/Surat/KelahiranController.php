@@ -456,10 +456,30 @@ class KelahiranController extends Controller
                 }
             }
 
+            // Get user image based on matching district_id
+            $districtLogo = null;
+            if (!empty($kelahiran->district_id)) {
+                $userWithLogo = \App\Models\User::where('districts_id', $kelahiran->district_id)
+                    ->whereNotNull('image')
+                    ->first();
+
+                if ($userWithLogo && $userWithLogo->image) {
+                    $districtLogo = $userWithLogo->image;
+                }
+            }
+
+            // Log the logo information for debugging
+            \Log::info('District logo for Kelahiran ID: ' . $id, [
+                'district_id' => $kelahiran->district_id,
+                'logo_found' => !is_null($districtLogo),
+                'logo_path' => $districtLogo
+            ]);
+
             return view('superadmin.datamaster.surat.kelahiran.Kelahiran', [
                 'kelahiran' => $kelahiran,
                 'currentDate' => $currentDate,
-                'signing_name' => $signing_name // Pass the signing name to the view
+                'signing_name' => $signing_name, // Pass the signing name to the view
+                'district_logo' => $districtLogo // Add this line
             ]);
         } catch (\Exception $e) {
             Log::error('Error generating birth certificate PDF: ' . $e->getMessage());

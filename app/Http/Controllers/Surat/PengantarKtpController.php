@@ -468,6 +468,25 @@ class PengantarKtpController extends Controller
                 }
             }
 
+            // Get user image based on matching district_id
+            $districtLogo = null;
+            if (!empty($ktp->district_id)) {
+                $userWithLogo = \App\Models\User::where('districts_id', $ktp->district_id)
+                    ->whereNotNull('image')
+                    ->first();
+
+                if ($userWithLogo && $userWithLogo->image) {
+                    $districtLogo = $userWithLogo->image;
+                }
+            }
+
+            // Log the logo information for debugging
+            \Log::info('District logo for PengantarKTP ID: ' . $id, [
+                'district_id' => $ktp->district_id,
+                'logo_found' => !is_null($districtLogo),
+                'logo_path' => $districtLogo
+            ]);
+
             // Get application type name
             $applicationType = $ktp->application_type;
 
@@ -486,7 +505,8 @@ class PengantarKtpController extends Controller
                 'applicationType',
                 'nik',
                 'fullName',
-                'signing_name' // Add the signing_name variable
+                'signing_name', // Add the signing_name variable
+                'district_logo' // Add this line
             ));
 
         } catch (\Exception $e) {

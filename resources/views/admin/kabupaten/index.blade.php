@@ -1,14 +1,6 @@
 <x-layout>
 
     <div class="p-4 mt-14">
-        <!-- Add a direct link to the profile page -->
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-2xl font-bold text-gray-800">Dashboard Admin Kabupaten</h1>
-            <a href="{{ route('admin.kabupaten.profile.index') }}" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
-                Lihat Profil
-            </a>
-        </div>
-
         <h1 class="text-2xl font-bold text-gray-800 mb-6">Dashboard</h1>
 
         <div class="relative p-6 rounded-lg shadow-lg mb-8 z-10 bg-gradient-to-r from-[#FFF2F2] to-[#A9B5DF]">

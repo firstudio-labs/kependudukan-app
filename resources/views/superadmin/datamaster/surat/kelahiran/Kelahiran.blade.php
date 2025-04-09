@@ -35,9 +35,14 @@
             </button>
         </div>
 
-        <div class="flex items-center mb-2">
-            <div class="w-20 mr-2">
-                <img src="/api/placeholder/100/100" alt="Logo Kota" class="w-full h-auto">
+        <div class="flex items-center mb-4">
+            <div class="w-24 h-24 mr-4 flex items-center justify-center">
+                @if(isset($district_logo) && !empty($district_logo))
+                    <img src="{{ asset('storage/' . $district_logo) }}" alt="Logo Kabupaten" class="max-w-[80px] max-h-[80px] object-contain">
+                @else
+                    <!-- Fallback to default logo -->
+                    <img src="{{ asset('images/logo.png') }}" alt="Logo Default" class="max-w-[80px] max-h-[80px] object-contain">
+                @endif
             </div>
             <div class="flex-1 text-center">
                 <p class="text-lg font-bold">PEMERINTAH {{ strtoupper($kelahiran->district_name ?? $district_name ?? 'KABUPATEN') }}</p>

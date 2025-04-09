@@ -442,6 +442,25 @@ class AhliWarisController extends Controller
                 }
             }
 
+            // Get user image based on matching district_id
+            $districtLogo = null;
+            if (!empty($ahliWaris->district_id)) {
+                $userWithLogo = \App\Models\User::where('districts_id', $ahliWaris->district_id)
+                    ->whereNotNull('image')
+                    ->first();
+
+                if ($userWithLogo && $userWithLogo->image) {
+                    $districtLogo = $userWithLogo->image;
+                }
+            }
+
+            // Log the logo information for debugging
+            \Log::info('District logo for AhliWaris ID: ' . $id, [
+                'district_id' => $ahliWaris->district_id,
+                'logo_found' => !is_null($districtLogo),
+                'logo_path' => $districtLogo
+            ]);
+
             // Return view with properly processed data
             return view('superadmin.datamaster.surat.ahli-waris.AhliWaris', [
                 'ahliWaris' => $ahliWaris,
@@ -462,7 +481,8 @@ class AhliWarisController extends Controller
                 'formatted_letter_date' => $letterDate,
                 'gender' => $gender,
                 'religion' => $religion,
-                'signing_name' => $signing_name
+                'signing_name' => $signing_name,
+                'district_logo' => $districtLogo
             ]);
 
         } catch (\Exception $e) {

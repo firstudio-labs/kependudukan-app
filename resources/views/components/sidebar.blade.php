@@ -20,46 +20,6 @@
                     </span>
                 </a>
             </div>
-            <div class="flex items-center">
-                <div class="flex items-center gap-4">
-                    @php
-                        $profileRoute = '#';
-                        if (isset($user) && $user) {
-                            if (Auth::guard('web')->check()) {
-                                $userRole = $user->role;
-                                if ($userRole === 'admin kabupaten') {
-                                    $profileRoute = route('admin.kabupaten.profile.index');
-                                } elseif ($userRole === 'superadmin') {
-                                    $profileRoute = route('superadmin.profile.index');
-                                } elseif ($userRole === 'admin desa') {
-                                    $profileRoute = route('admin.desa.profile.index');
-                                } elseif ($userRole === 'operator') {
-                                    $profileRoute = route('operator.profile.index');
-                                }
-                            } elseif (Auth::guard('penduduk')->check()) {
-                                $profileRoute = route('user.profile.index');
-                            }
-                        }
-                    @endphp
-
-                    <!-- Direct link to profile page based on role -->
-                    <a href="{{ $profileRoute }}" class="flex items-center">
-                        <span class="sr-only">View profile</span>
-                        <img class="w-8 h-8 rounded-full"
-                            src="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
-                            alt="user photo">
-                    </a>
-
-                    <!-- Logout button -->
-                    <form method="POST" action="{{ route('logout') }}" class="ml-2">
-                        @csrf
-                        <button type="submit" class="text-gray-500 hover:text-gray-700">
-                            <i class="fa-solid fa-sign-out-alt"></i>
-                            <span class="sr-only">Logout</span>
-                        </button>
-                    </form>
-                </div>
-            </div>
         </div>
     </div>
 </nav>
@@ -191,7 +151,72 @@ if (Auth::guard('web')->check()) {
                             class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
                     </button>
                     <ul id="suratDropdown" class="hidden space-y-2 pl-6">
-                        <!-- ... existing surat dropdown items ... -->
+                        <li>
+                            <a href="{{ route('superadmin.surat.administrasi.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                {{ request()->routeIs('superadmin.surat.administrasi*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                <span>Surat Administrasi</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('superadmin.surat.kehilangan.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                {{ request()->routeIs('superadmin.surat.kehilangan*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                <span>Surat Kehilangan</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('superadmin.surat.skck.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                {{ request()->routeIs('superadmin.surat.skck*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                <span>Surat SKCK</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('superadmin.surat.domisili.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                {{ request()->routeIs('superadmin.surat.domisili*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                <span>Surat Domisili</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('superadmin.surat.domisili-usaha.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                {{ request()->routeIs('superadmin.surat.domisili-usaha*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                <span>Surat Domisili Usaha</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('superadmin.surat.ahli-waris.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                {{ request()->routeIs('superadmin.surat.ahli-waris*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                <span>Surat Ahli Waris</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('superadmin.surat.kelahiran.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                {{ request()->routeIs('superadmin.surat.kelahiran*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                <span>Surat Kelahiran</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('superadmin.surat.kematian.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                {{ request()->routeIs('superadmin.surat.kematian*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                <span>Surat Kematian</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('superadmin.surat.keramaian.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                {{ request()->routeIs('superadmin.surat.keramaian*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                <span>Izin Keramaian</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('superadmin.surat.rumah-sewa.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                {{ request()->routeIs('superadmin.surat.rumah-sewa*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                <span>Surat Rumah Sewa</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('superadmin.surat.pengantar-ktp.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                {{ request()->routeIs('superadmin.surat.pengantar-ktp*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                <span>Pengantar KTP</span>
+                            </a>
+                        </li>
                     </ul>
                 </li>
 
@@ -284,6 +309,17 @@ if (Auth::guard('web')->check()) {
                         </li>
                     </ul>
                 </li>
+
+                <!-- Add Logout Button for Superadmin -->
+                <li class="-ml-5 mt-8">
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-red-100 hover:text-red-700">
+                            <i class="fa-solid fa-right-from-bracket text-lg transition-all duration-300"></i>
+                            <span>Logout</span>
+                        </button>
+                    </form>
+                </li>
             @elseif ($user->role == 'admin desa')
                 <li class="-ml-5">
                     <a href="{{ route('admin.desa.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
@@ -295,6 +331,21 @@ if (Auth::guard('web')->check()) {
                     </a>
                 </li>
             @elseif ($user->role == 'admin kabupaten')
+                <!-- Add Profile Section for Admin Kabupaten -->
+                <li class="mb-4">
+                    <a href="{{ route('admin.kabupaten.profile.index') }}" class="flex flex-col items-center p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-all duration-300">
+                        <div class="w-16 h-16 rounded-full overflow-hidden mb-2 border-2 border-[#2D336B]">
+                            @if($user->image)
+                                <img src="{{ asset('storage/' . $user->image) }}" alt="Profile photo" class="w-full h-full object-cover">
+                            @else
+                                <img src="https://flowbite.com/docs/images/people/profile-picture-5.jpg" alt="Profile photo" class="w-full h-full object-cover">
+                            @endif
+                        </div>
+                        <span class="text-[#2D336B] font-semibold">{{ $user->username }}</span>
+                        <span class="text-xs text-gray-500">{{ ucfirst($user->role) }}</span>
+                    </a>
+                </li>
+
                 <li class="-ml-5">
                     <a href="{{ route('admin.kabupaten.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
                             {{ request()->routeIs('admin.kabupaten.index')
@@ -303,6 +354,17 @@ if (Auth::guard('web')->check()) {
                         <i class="fa-solid fa-gauge-high text-lg transition-all duration-300"></i>
                         <span>Dashboard</span>
                     </a>
+                </li>
+
+                <!-- Add Logout Button -->
+                <li class="-ml-5 mt-auto">
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-red-100 hover:text-red-700">
+                            <i class="fa-solid fa-right-from-bracket text-lg transition-all duration-300"></i>
+                            <span>Logout</span>
+                        </button>
+                    </form>
                 </li>
             @elseif ($user->role == 'operator')
                 <li class="-ml-5">
@@ -333,6 +395,17 @@ if (Auth::guard('web')->check()) {
                         <i class="fa-solid fa-boxes-stacked text-lg transition-all duration-300"></i>
                         <span>Kelola Aset</span>
                     </a>
+                </li>
+
+                <!-- Add Logout Button for User (Penduduk) -->
+                <li class="-ml-5 mt-8">
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-red-100 hover:text-red-700">
+                            <i class="fa-solid fa-right-from-bracket text-lg transition-all duration-300"></i>
+                            <span>Logout</span>
+                        </button>
+                    </form>
                 </li>
             @endif
         </ul>

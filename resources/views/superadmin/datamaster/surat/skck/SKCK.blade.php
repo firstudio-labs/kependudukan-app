@@ -55,8 +55,13 @@
         </div>
 
         <div class="flex items-center mb-4">
-            <div class="w-24 mr-4">
-                <img src="/api/placeholder/100/100" alt="Logo Kota" class="w-full h-auto">
+            <div class="w-24 h-24 mr-4 flex items-center justify-center">
+                @if(isset($district_logo) && !empty($district_logo))
+                    <img src="{{ asset('storage/' . $district_logo) }}" alt="Logo Kabupaten" class="max-w-[80px] max-h-[80px] object-contain">
+                @else
+                    <!-- Fallback to default logo -->
+                    <img src="{{ asset('images/logo.png') }}" alt="Logo Default" class="max-w-[80px] max-h-[80px] object-contain">
+                @endif
             </div>
 
             <div class="flex-1 text-center">
@@ -89,7 +94,16 @@
 
         <!-- Introduction -->
         <div class="mb-6">
-            <p class="mb-4">Lurah {{ $village_name ?? 'Desa/Kelurahan' }} Kecamatan {{ $subdistrict_name ?? 'Kecamatan' }} dengan ini menerangkan bahwa :</p>
+            <p class="mb-4">
+                @if(isset($villageCode) && strlen($villageCode) >= 7 && substr($villageCode, 6, 1) === '1')
+                    Lurah
+                @elseif(isset($villageCode) && strlen($villageCode) >= 7 && substr($villageCode, 6, 1) === '2')
+                    Kepala Desa
+                @else
+                    {{ isset($administrationData) && isset($administrationData['village_head_title']) ? $administrationData['village_head_title'] : 'Lurah/Kepala Desa' }}
+                @endif
+                {{ $village_name ?? 'Desa/Kelurahan' }} Kecamatan {{ $subdistrict_name ?? 'Kecamatan' }} dengan ini menerangkan bahwa :
+            </p>
         </div>
 
         <!-- Personal Information -->
