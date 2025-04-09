@@ -108,11 +108,29 @@
     </section>
 
     <!-- Section: Pelayanan Form -->
-    <section id="pelayanan" class="bg-[#FCF8FB] px-6 md:px-20 py-20 rounded-t-3xl shadow-lg" data-aos="fade-up">
-        <h2 class="text-3xl font-bold text-black text-center mb-12">Layanan Desa</h2>
+    <section id="pelayanan" class="relative bg-[#FCF8FB] px-6 md:px-20 py-20 rounded-t-3xl shadow-lg overflow-hidden" data-aos="fade-up">
+        <!-- Circle Blur Background -->
+<!-- Circle Blur Background -->
+<div class="absolute left-14 top-20 z-0 pointer-events-none" aria-hidden="true">
+    <!-- Lingkaran 1 -->
+    <div class="absolute w-[300px] h-[300px] bg-[#D1D0EF] rounded-full opacity-90 blur-3xl top-8 left-0"></div>
 
-        <x-pelayanan-form :provinces="$provinces" :keperluanList="$keperluanList" />
-    </section>
+    <!-- Lingkaran 2 -->
+    <div class="absolute w-[250px] h-[250px] bg-[#EEC1DD] rounded-full opacity-70 blur-3xl top-20 left-40"></div>
+
+    <!-- Lingkaran 3 -->
+    <div class="absolute w-[300px] h-[300px]  bg-[#969BE7] rounded-full opacity-60 blur-3xl top-30 left-15"></div>
+
+    <!-- Lingkaran 4 -->
+    {{-- <div class="absolute w-[200px] h-[200px] bg-[#FCF8FB] rounded-full opacity-70 blur-xl top-52 -left-5"></div> --}}
+</div>
+
+           <h2 class="text-3xl font-bold text-black text-center mb-12">Layanan Desa</h2>
+
+        <div class="relative z-10">
+            <x-pelayanan-form :provinces="$provinces" :keperluanList="$keperluanList" />
+        </div>
+        </section>
 
     <!-- Section: Statistik -->
     <section class="bg-white text-black px-6 md:px-20 py-16" data-aos="zoom-in">

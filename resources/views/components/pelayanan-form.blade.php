@@ -1,21 +1,25 @@
 <!-- Wrapper Flex -->
 <div class="flex flex-col md:flex-row gap-6">
     <!-- Card Nomor Antrian -->
-    <div class="bg-white rounded-2xl shadow-lg border border-gray-300 p-6 text-center w-full md:w-1/3 self-start">
-        <button class="text-black font-bold px-3 py-1 rounded-xl mb-4">Antrian Layanan Desa</button>
-        <div class="border border-gray-300 rounded-2xl p-6">
-            <div class="text-sm text-gray-500 mb-1">No Antrian Saat Ini</div>
+    <div class="bg-white/10 backdrop-blur-xl rounded-2xl shadow-md border border-white/20 p-6 text-center w-full md:w-1/3 self-start">
+        <button class="text-black font-semibold px-4 py-2 rounded-xl mb-4 bg-white/10 backdrop-blur-lg border border-white/20 shadow-sm">
+            Antrian Layanan Desa
+        </button>
+
+        <div class="border border-white/20 rounded-2xl p-6 bg-white/5 backdrop-blur-lg shadow-inner">
+            <div class="text-sm text-black mb-1">No Antrian Saat Ini</div>
             @if(session('no_antrian'))
-                <div class="text-5xl font-bold">{{ session('no_antrian') }}</div>
-                <div class="mt-2 text-green-600 text-sm">Nomor antrian anda</div>
+                <div class="text-5xl font-bold text-white drop-shadow-md">{{ session('no_antrian') }}</div>
+                <div class="mt-2 text-green-300 text-sm">Nomor antrian anda</div>
                 @if(session('village_name'))
-                    <div class="mt-1 text-sm text-gray-600">Desa: {{ session('village_name') }}</div>
+                    <div class="mt-1 text-sm text-gray-200">Desa: {{ session('village_name') }}</div>
                 @endif
             @else
-                <div class="text-5xl font-bold">-</div>
+                <div class="text-5xl font-bold text-black drop-shadow-md">-</div>
             @endif
         </div>
-        <p class="mt-4 text-sm italic text-gray-600">Quod Enchiridion Epictetus stoici scripsit. Rodrigo Abela</p>
+
+        <p class="mt-4 text-sm italic text-black">Quod Enchiridion Epictetus stoici scripsit. Rodrigo Abela</p>
     </div>
 
     <!-- Form Langsung -->
