@@ -2,7 +2,7 @@
 <nav class="flex justify-between items-center px-6 py-4 bg-transparent backdrop-blur-lg shadow-none text-black">
     <div class="text-2xl font-bold">Kependudukan</div>
     <ul class="flex gap-6 font-medium">
-        <li><a href="#pelayanan" class="hover:underline">Pelayanan</a></li>
+        <li><a href="{{ route('guest.pelayanan.index') }}" class="hover:underline">Pelayanan</a></li>
         <li><a href="#harga" class="hover:underline">Harga</a></li>
         <li><a href="#tentang" class="hover:underline">Tentang</a></li>
     </ul>

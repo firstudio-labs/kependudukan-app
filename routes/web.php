@@ -34,6 +34,7 @@ Route::get('/pelayanan', [PelayananController::class, 'index'])->name('guest.pel
 Route::post('/pelayanan', [PelayananController::class, 'store'])->name('guest.pelayanan.store');
 Route::get('/pelayanan/surat/{id}', [PelayananController::class, 'showSuratForm'])->name('guest.pelayanan.surat');
 Route::get('/pelayanan/antrian/{id}', [PelayananController::class, 'showAntrian'])->name('guest.pelayanan.antrian');
+Route::get('/pelayanan/list', [PelayananController::class, 'list'])->name('guest.pelayanan.list');
 
 // Rute Autentikasi
 Route::middleware('guest')->group(function () {

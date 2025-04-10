@@ -9,8 +9,8 @@
         <div class="border border-white/20 rounded-2xl p-6 bg-white/5 backdrop-blur-lg shadow-inner">
             <div class="text-sm text-black mb-1">No Antrian Saat Ini</div>
             @if(session('no_antrian'))
-                <div class="text-5xl font-bold text-white drop-shadow-md">{{ session('no_antrian') }}</div>
-                <div class="mt-2 text-green-300 text-sm">Nomor antrian anda</div>
+                <div class="text-5xl font-bold text-black drop-shadow-md">{{ session('no_antrian') }}</div>
+                <div class="mt-2 text-[#a7a7ee] text-sm">Nomor antrian anda</div>
                 @if(session('village_name'))
                     <div class="mt-1 text-sm text-gray-200">Desa: {{ session('village_name') }}</div>
                 @endif
@@ -27,11 +27,17 @@
         <form action="{{ route('guest.pelayanan.store') }}" method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-4">
             @csrf
 
-            <!-- Nama -->
-            <div>
-                <label for="nama" class="block text-sm font-medium text-gray-700">Nama <span class="text-red-500">*</span></label>
-                <input type="text" id="nama" name="nama" placeholder="Nama" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
-            </div>
+            <!-- Heading Layanan Desa -->
+        <div class="md:col-span-2 mb-2">
+            <h2 class="text-xl font-bold text-gray-800">Layanan Desa</h2>
+        </div>
+
+        <!-- Nama -->
+        <div class="md:col-span-2">
+            <label for="nama" class="block text-sm font-medium text-gray-700">Nama <span class="text-red-500">*</span></label>
+            <input type="text" id="nama" name="nama" placeholder="Nama" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+        </div>
+
 
             <!-- Provinsi -->
             <div>
@@ -90,10 +96,10 @@
             </div>
 
             <!-- Tombol -->
-        <div class="md:col-span-2">
-            <button type="submit" class="bg-[#969BE7] text-white px-6 py-2 rounded-xl hover:bg-[#7d82d6]">Submit</button>
-            <button type="button" class="ml-4 bg-yellow-500 text-white px-4 py-2 rounded-xl hover:bg-yellow-600">Tanya Petugas</button>
-        </div>
+            <div class="md:col-span-2 flex justify-end">
+                <button type="submit" class="bg-[#969BE7] text-white px-6 py-2 rounded-full hover:bg-[#7d82d6]">Submit</button>
+                <button type="button" class="ml-4 bg-yellow-500 text-white px-4 py-2 rounded-full hover:bg-yellow-600">Tanya Petugas</button>
+            </div>
         </form>
     </div>
 </div>

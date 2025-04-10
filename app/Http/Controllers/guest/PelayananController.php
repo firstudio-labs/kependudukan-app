@@ -40,6 +40,16 @@ class PelayananController extends Controller
     }
 
     /**
+     * Display the pelayanan list page
+     *
+     * @return \Illuminate\View\View
+     */
+    public function list()
+    {
+        return view('guest.pelayanan.list');
+    }
+
+    /**
      * Store a new pelayanan request
      *
      * @param Request $request
@@ -93,15 +103,21 @@ class PelayananController extends Controller
             \Log::error("Error getting village name: " . $e->getMessage());
         }
 
-        // Instead of redirecting to pelayanan.index, redirect to homepage's pelayanan section
+        // Check if the keperluan has "pelayanan" in the title
+        if ($keperluan && stripos($keperluan->judul, 'pelayanan') !== false) {
+            // Redirect to the list page
+            return redirect()->route('guest.pelayanan.list');
+        }
+
+        // For other services, follow existing logic
         if ($pelayanan->isPelayananSurat()) {
             // For document service, redirect to homepage with success message
-            return redirect()->route('homepage', ['#pelayanan'])
+            return redirect()->route('guest.pelayanan.index')
                 ->with('success', 'Pendaftaran pelayanan surat berhasil')
                 ->with('pelayanan_id', $pelayanan->id);
         } else {
             // For queue number service, redirect to homepage with queue number and success message
-            return redirect()->route('homepage', ['#pelayanan'])
+            return redirect()->route('guest.pelayanan.index')
                 ->with('success', 'Pengambilan nomor antrian berhasil')
                 ->with('no_antrian', $pelayanan->no_antrian)
                 ->with('village_name', $villageName)
