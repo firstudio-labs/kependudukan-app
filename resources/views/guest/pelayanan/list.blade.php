@@ -190,9 +190,11 @@
                     <div class="icon-circle">
                         <i class="fa fa-file-lines fa-2x text-gray-600"></i>
                     </div>
-                    <button class="modern-button text-white py-2.5 w-full rounded-3xl font-medium shadow-md">
-                        Surat Administrasi Umum
-                    </button>
+                    <a href="{{ route('guest.surat.administrasi') }}" class="block">
+                        <button class="modern-button text-white py-2.5 w-full rounded-3xl font-medium shadow-md">
+                            Surat Administrasi Umum
+                        </button>
+                    </a>
                 </div>
                 <div class="glass-card rounded-2xl p-4 text-center hover:shadow-lg transition duration-300 w-full sm:w-5/12 md:w-72">
                     <div class="icon-circle">
@@ -230,9 +232,11 @@
                     <div class="icon-circle">
                         <i class="fa fa-shield fa-2x text-gray-600"></i>
                     </div>
-                    <button class="modern-button text-white py-2.5 w-full rounded-3xl font-medium shadow-md">
-                        Surat Permohonan SKCK
-                    </button>
+                    <a href="{{ route('guest.surat.skck') }}" class="block">
+                        <button class="modern-button text-white py-2.5 w-full rounded-3xl font-medium shadow-md">
+                            Surat Permohonan SKCK
+                        </button>
+                    </a>
                 </div>
                 <div class="glass-card rounded-2xl p-4 text-center hover:shadow-lg transition duration-300 w-full sm:w-5/12 md:w-72">
                     <div class="icon-circle">
@@ -246,9 +250,11 @@
                     <div class="icon-circle">
                         <i class="fa fa-magnifying-glass fa-2x text-gray-600"></i>
                     </div>
-                    <button class="modern-button text-white py-2.5 w-full rounded-3xl font-medium shadow-md">
-                        Surat Kehilangan
-                    </button>
+                    <a href="{{ route('guest.surat.kehilangan') }}" class="block">
+                        <button class="modern-button text-white py-2.5 w-full rounded-3xl font-medium shadow-md">
+                            Surat Kehilangan
+                        </button>
+                    </a>
                 </div>
                 <div class="glass-card rounded-2xl p-4 text-center hover:shadow-lg transition duration-300 w-full sm:w-5/12 md:w-80">
                     <div class="icon-circle">

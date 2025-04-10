@@ -65,4 +65,18 @@ class Pelayanan extends Model
             ->max('no_antrian') ?? 0;
         return $lastQueue + 1;
     }
+
+    /**
+     * Get the formatted queue number with leading zeros
+     *
+     * @return string
+     */
+    public function getFormattedQueueNumberAttribute()
+    {
+        if ($this->no_antrian === null) {
+            return null;
+        }
+
+        return str_pad($this->no_antrian, 2, '0', STR_PAD_LEFT);
+    }
 }

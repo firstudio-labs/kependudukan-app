@@ -7,7 +7,7 @@
         </button>
 
         <div class="border border-white/20 rounded-2xl p-6 bg-white/5 backdrop-blur-lg shadow-inner">
-            <div class="text-sm text-black mb-1">No Antrian Saat Ini</div>
+            <div class="text-sm text-black mb-1"></div>
             @if(session('no_antrian'))
                 <div class="text-5xl font-bold text-black drop-shadow-md">{{ session('no_antrian') }}</div>
                 <div class="mt-2 text-[#a7a7ee] text-sm">Nomor antrian anda</div>

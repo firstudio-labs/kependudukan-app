@@ -116,10 +116,13 @@ class PelayananController extends Controller
                 ->with('success', 'Pendaftaran pelayanan surat berhasil')
                 ->with('pelayanan_id', $pelayanan->id);
         } else {
-            // For queue number service, redirect to homepage with queue number and success message
+            // Format queue number with leading zeros before sending to view
+            $formattedQueueNumber = str_pad($pelayanan->no_antrian, 2, '0', STR_PAD_LEFT);
+
+            // For queue number service, redirect to homepage with formatted queue number and success message
             return redirect()->route('guest.pelayanan.index')
                 ->with('success', 'Pengambilan nomor antrian berhasil')
-                ->with('no_antrian', $pelayanan->no_antrian)
+                ->with('no_antrian', $formattedQueueNumber)
                 ->with('village_name', $villageName)
                 ->with('pelayanan_id', $pelayanan->id);
         }

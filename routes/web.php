@@ -25,6 +25,9 @@ use App\Http\Controllers\KlasifikasiController;
 use App\Http\Controllers\JenisAsetController;
 use App\Http\Controllers\KelolaAsetController;
 use App\Http\Controllers\guest\PelayananController;
+use App\Http\Controllers\guest\AdministrasiUmumController;
+use App\Http\Controllers\guest\KehilanganSuratController;
+use App\Http\Controllers\guest\SKCKSuratController;
 
 // Homepage route should use our new method to force logout
 Route::get('/', [App\Http\Controllers\AuthController::class, 'homepage'])->name('homepage');
@@ -35,7 +38,18 @@ Route::post('/pelayanan', [PelayananController::class, 'store'])->name('guest.pe
 Route::get('/pelayanan/surat/{id}', [PelayananController::class, 'showSuratForm'])->name('guest.pelayanan.surat');
 Route::get('/pelayanan/antrian/{id}', [PelayananController::class, 'showAntrian'])->name('guest.pelayanan.antrian');
 Route::get('/pelayanan/list', [PelayananController::class, 'list'])->name('guest.pelayanan.list');
+Route::prefix('pelayanan')->name('guest.')->group(function () {
+    Route::get('/administrasi', [AdministrasiUmumController::class, 'index'])->name('surat.administrasi');
+    Route::post('/administrasi', [AdministrasiUmumController::class, 'store'])->name('surat.administrasi.store');
 
+    // Add Kehilangan routes
+    Route::get('/kehilangan', [KehilanganSuratController::class, 'index'])->name('surat.kehilangan');
+    Route::post('/kehilangan', [KehilanganSuratController::class, 'store'])->name('surat.kehilangan.store');
+
+    // Add SKCK routes
+    Route::get('/skck', [SKCKSuratController::class, 'index'])->name('surat.skck');
+    Route::post('/skck', [SKCKSuratController::class, 'store'])->name('surat.skck.store');
+});
 // Rute Autentikasi
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
