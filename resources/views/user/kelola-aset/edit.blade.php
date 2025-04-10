@@ -212,15 +212,15 @@
 
                         @php
 
-$latitude = '';
-$longitude = '';
-if ($aset->tag_lokasi) {
-    $coordinates = explode(',', $aset->tag_lokasi);
-    if (count($coordinates) == 2) {
-        $latitude = trim($coordinates[0]);
-        $longitude = trim($coordinates[1]);
-    }
-}
+                        $latitude = '';
+                        $longitude = '';
+                        if ($aset->tag_lokasi) {
+                            $coordinates = explode(',', $aset->tag_lokasi);
+                            if (count($coordinates) == 2) {
+                                $latitude = trim($coordinates[0]);
+                                $longitude = trim($coordinates[1]);
+                            }
+                        }
                         @endphp
                 
                         <x-map-input label="Lokasi Aset" addressId="asset_location" addressName="asset_location"
