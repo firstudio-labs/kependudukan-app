@@ -49,6 +49,26 @@ Route::prefix('pelayanan')->name('guest.')->group(function () {
     // Add SKCK routes
     Route::get('/skck', [SKCKSuratController::class, 'index'])->name('surat.skck');
     Route::post('/skck', [SKCKSuratController::class, 'store'])->name('surat.skck.store');
+
+    // Add Domisili routes
+    Route::get('/domisili', [App\Http\Controllers\guest\DomisiliSuratController::class, 'index'])->name('surat.domisili');
+    Route::post('/domisili', [App\Http\Controllers\guest\DomisiliSuratController::class, 'store'])->name('surat.domisili.store');
+
+    // Add Domisili Usaha routes
+    Route::get('/domisili-usaha', [App\Http\Controllers\guest\DomisiliUsahaSuratController::class, 'index'])->name('surat.domisili-usaha');
+    Route::post('/domisili-usaha', [App\Http\Controllers\guest\DomisiliUsahaSuratController::class, 'store'])->name('surat.domisili-usaha.store');
+
+    // Add Kematian routes
+    Route::get('/kematian', [App\Http\Controllers\guest\KematianSuratController::class, 'index'])->name('surat.kematian');
+    Route::post('/kematian', [App\Http\Controllers\guest\KematianSuratController::class, 'store'])->name('surat.kematian.store');
+
+    // Add Keramaian routes
+    Route::get('/keramaian', [App\Http\Controllers\guest\KeramaianSuratController::class, 'index'])->name('surat.keramaian');
+    Route::post('/keramaian', [App\Http\Controllers\guest\KeramaianSuratController::class, 'store'])->name('surat.keramaian.store');
+
+    // Add KTP routes
+    Route::get('/ktp', [App\Http\Controllers\guest\KTPSuratController::class, 'index'])->name('surat.ktp');
+    Route::post('/ktp', [App\Http\Controllers\guest\KTPSuratController::class, 'store'])->name('surat.ktp.store');
 });
 // Rute Autentikasi
 Route::middleware('guest')->group(function () {
