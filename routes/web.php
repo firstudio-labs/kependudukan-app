@@ -28,7 +28,7 @@ use App\Http\Controllers\guest\PelayananController;
 use App\Http\Controllers\guest\AdministrasiUmumController;
 use App\Http\Controllers\guest\KehilanganSuratController;
 use App\Http\Controllers\guest\SKCKSuratController;
-use App\Http\Controllers\Superadmin\KeperluanController;
+use App\Http\Controllers\superadmin\KeperluanController;
 
 
 // Homepage route should use our new method to force logout
