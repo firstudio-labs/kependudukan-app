@@ -654,7 +654,7 @@ if (!empty($userData->tag_lokasi)) {
                             document.addEventListener('DOMContentLoaded', function () {
                                 // Configuration
                                 const config = {
-                                    baseUrl: 'http://api-kependudukan.desaverse.id:3000/api',
+                                    baseUrl: 'https://api-kependudukan.desaverse.id/api',
                                     apiKey: '{{ config('services.kependudukan.key') }}',
                                     locationCache: {},
                                     locationIds: {
@@ -1632,7 +1632,7 @@ if (!empty($userData->tag_lokasi)) {
 
 
 
-                                    fetch(`http://api-kependudukan.desaverse.id:3000/api/citizens/${nik}`, {
+                                    fetch(`https://api-kependudukan.desaverse.id/api/citizens/${nik}`, {
                                         method: 'GET',
                                         headers: {
                                             'X-API-Key': '{{ config('services.kependudukan.key') }}',
@@ -1715,7 +1715,7 @@ if (!empty($userData->tag_lokasi)) {
                                         }
 
 
-                                        fetch(`http://api-kependudukan.desaverse.id:3000/api/citizens/${nik}`, {
+                                        fetch(`https://api-kependudukan.desaverse.id/api/citizens/${nik}`, {
                                             method: 'GET',
                                             headers: {
                                                 'X-API-Key': '{{ config('services.kependudukan.key') }}',
@@ -1739,7 +1739,7 @@ if (!empty($userData->tag_lokasi)) {
 
 
                                                 // Update the citizen data
-                                                return fetch(`http://api-kependudukan.desaverse.id:3000/api/citizens/${nik}`, {
+                                                return fetch(`https://api-kependudukan.desaverse.id/api/citizens/${nik}`, {
                                                     method: 'PUT',
                                                     headers: {
                                                         'X-API-Key': '{{ config('services.kependudukan.key') }}',

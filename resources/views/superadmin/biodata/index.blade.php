@@ -392,7 +392,7 @@
         });
 
         // API config
-        const baseUrl = 'http://api-kependudukan.desaverse.id:3000/api';
+        const baseUrl = 'https://api-kependudukan.desaverse.id/api';
         const apiKey = '{{ config('services.kependudukan.key') }}';
 
         // Cache for location names and codes
