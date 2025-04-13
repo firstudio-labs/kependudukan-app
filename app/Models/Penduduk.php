@@ -4,11 +4,12 @@ namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 
 class Penduduk extends Authenticatable
 {
-    use Notifiable;
+    use HasApiTokens, Notifiable;
 
     /**
      * The table associated with the model.
@@ -26,7 +27,7 @@ class Penduduk extends Authenticatable
         'nik',
         'password',
         'no_hp',
-       
+
     ];
 
     /**
