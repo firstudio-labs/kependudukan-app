@@ -74,4 +74,16 @@ class Aset extends Model
     {
         return $this->belongsTo(JenisAset::class);
     }
+
+    public function getFotoAsetDepanAttribute($value)
+    {
+        return asset('storage/' . $value);
+    }
+
+    public function getFotoAsetSampingAttribute($value)
+    {
+        return asset('storage/' . $value);
+    }
+
+
 }

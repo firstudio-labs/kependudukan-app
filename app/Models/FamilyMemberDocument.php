@@ -38,4 +38,6 @@ class FamilyMemberDocument extends Model
 
         return $types[$this->document_type] ?? $this->document_type;
     }
+
+    
 }
