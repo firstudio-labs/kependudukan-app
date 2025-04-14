@@ -220,9 +220,11 @@
                     <div class="icon-circle">
                         <i class="fa fa-baby fa-2x text-gray-600"></i>
                     </div>
-                    <button class="modern-button text-white py-2.5 w-full rounded-3xl font-medium shadow-md">
-                        Surat Keterangan Kelahiran
-                    </button>
+                    <a href="{{ route('guest.surat.kelahiran') }}" class="block">
+                        <button class="modern-button text-white py-2.5 w-full rounded-3xl font-medium shadow-md">
+                            Surat Keterangan Kelahiran
+                        </button>
+                    </a>
                 </div>
                 <div class="glass-card rounded-2xl p-4 text-center hover:shadow-lg transition duration-300 w-full sm:w-5/12 md:w-72">
                     <div class="icon-circle">
@@ -248,9 +250,11 @@
                     <div class="icon-circle">
                         <i class="fa fa-house fa-2x text-gray-600"></i>
                     </div>
-                    <button class="modern-button text-white py-2.5 w-full rounded-3xl font-medium shadow-md">
-                        Surat Ijin Rumah Sewa
-                    </button>
+                    <a href="{{ route('guest.surat.rumah-sewa') }}" class="block">
+                        <button class="modern-button text-white py-2.5 w-full rounded-3xl font-medium shadow-md">
+                            Surat Ijin Rumah Sewa
+                        </button>
+                    </a>
                 </div>
                 <div class="glass-card rounded-2xl p-4 text-center hover:shadow-lg transition duration-300 w-full sm:w-5/12 md:w-60">
                     <div class="icon-circle">
@@ -276,9 +280,11 @@
                     <div class="icon-circle">
                         <i class="fa fa-users fa-2x text-gray-600"></i>
                     </div>
-                    <button class="modern-button text-white py-2.5 w-full rounded-3xl font-medium shadow-md">
-                        Surat Keterangan Ahli Waris
-                    </button>
+                    <a href="{{ route('guest.surat.ahli-waris') }}" class="block">
+                        <button class="modern-button text-white py-2.5 w-full rounded-3xl font-medium shadow-md">
+                            Surat Keterangan Ahli Waris
+                        </button>
+                    </a>
                 </div>
                 <div class="glass-card rounded-2xl p-4 text-center hover:shadow-lg transition duration-300 w-full sm:w-5/12 md:w-80">
                     <div class="icon-circle">

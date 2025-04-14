@@ -1,7 +1,7 @@
 /**
  * Family Card Manager Script
  * Handles family card (KK) management, including:
- * - Select2 integration for KK and family member selection
+ * - Select2 integration for KK selection
  * - Location dropdown cascading
  * - Family member listing
  */
@@ -114,6 +114,8 @@ async function fetchCitizens() {
         const response = await axios.get(`${getBaseUrl()}/citizens/all`);
         const data = response.data;
 
+        console.log("API Response:", data); // Debug log to see API response structure
+
         // Get the citizens array regardless of structure
         let citizensList = [];
 
@@ -132,19 +134,21 @@ async function fetchCitizens() {
             }
 
             const kkSelect = document.getElementById('kkSelect');
-            const fullNameSelect = document.getElementById('full_name');
 
-            if (!kkSelect || !fullNameSelect) {
+            if (!kkSelect) {
+                console.error("KK Select element not found");
                 return;
             }
 
             // Clear existing options
             kkSelect.innerHTML = '<option value="">Pilih No KK</option>';
-            fullNameSelect.innerHTML = '<option value="">Pilih Nama Lengkap</option>';
 
             // Filter only heads of family from all citizens
             const headsOfFamily = citizensList.filter(citizen =>
-                citizen.family_status === 'KEPALA KELUARGA');
+                citizen.family_status === 'KEPALA KELUARGA' || citizen.family_status === '2');
+
+            console.log(`Found ${headsOfFamily.length} heads of family`);
+            console.log("Sample citizen data:", headsOfFamily.length > 0 ? headsOfFamily[0] : "No data");
 
             // Add options for heads of family
             if (headsOfFamily.length > 0) {
@@ -154,7 +158,7 @@ async function fetchCitizens() {
                     kkOption.textContent = citizen.kk;
 
                     // Set all data attributes
-                    kkOption.setAttribute('data-full-name', citizen.full_name);
+                    kkOption.setAttribute('data-full-name', citizen.full_name || '');
                     kkOption.setAttribute('data-address', citizen.address || '');
                     kkOption.setAttribute('data-postal-code', citizen.postal_code || '');
                     kkOption.setAttribute('data-rt', citizen.rt || '');
@@ -165,29 +169,16 @@ async function fetchCitizens() {
                     kkOption.setAttribute('data-district-id', citizen.district_id || '');
                     kkOption.setAttribute('data-sub-district-id', citizen.sub_district_id || '');
                     kkOption.setAttribute('data-village-id', citizen.village_id || '');
-                    kkOption.setAttribute('data-dusun', citizen.dusun || '');
+                    kkOption.setAttribute('data-dusun', citizen.hamlet || citizen.dusun || '');
+
+                    // Add foreign address attributes - ensure we check for both standard and alternate field names
+                    kkOption.setAttribute('data-foreign-address', citizen.foreign_address || '');
+                    kkOption.setAttribute('data-city', citizen.city || '');
+                    kkOption.setAttribute('data-state', citizen.state || citizen.negara_bagian || '');
+                    kkOption.setAttribute('data-country', citizen.country || citizen.negara || '');
+                    kkOption.setAttribute('data-foreign-postal-code', citizen.foreign_postal_code || citizen.kode_pos_luar_negeri || '');
 
                     kkSelect.appendChild(kkOption);
-
-                    const fullNameOption = document.createElement('option');
-                    fullNameOption.value = citizen.full_name;
-                    fullNameOption.textContent = citizen.full_name;
-
-                    // Set all data attributes
-                    fullNameOption.setAttribute('data-kk', citizen.kk || '');
-                    fullNameOption.setAttribute('data-address', citizen.address || '');
-                    fullNameOption.setAttribute('data-postal-code', citizen.postal_code || '');
-                    fullNameOption.setAttribute('data-rt', citizen.rt || '');
-                    fullNameOption.setAttribute('data-rw', citizen.rw || '');
-                    fullNameOption.setAttribute('data-telepon', citizen.telepon || '');
-                    fullNameOption.setAttribute('data-email', citizen.email || '');
-                    fullNameOption.setAttribute('data-province-id', citizen.province_id || '');
-                    fullNameOption.setAttribute('data-district-id', citizen.district_id || '');
-                    fullNameOption.setAttribute('data-sub-district-id', citizen.sub_district_id || '');
-                    fullNameOption.setAttribute('data-village-id', citizen.village_id || '');
-                    fullNameOption.setAttribute('data-dusun', citizen.dusun || '');
-
-                    fullNameSelect.appendChild(fullNameOption);
                 }
 
                 // Initialize Select2 after populating options
@@ -196,14 +187,14 @@ async function fetchCitizens() {
                     width: '100%'
                 });
 
-                $('#full_name').select2({
-                    placeholder: 'Pilih Nama Lengkap',
-                    width: '100%'
-                });
+                console.log(`Populated ${headsOfFamily.length} KK numbers in dropdown`);
+            } else {
+                console.warn("No heads of family found in citizen data");
             }
+        } else {
+            console.error("API returned error status", data);
         }
     } catch (error) {
-        // Silently handle errors
         console.error("Error fetching citizens:", error);
     }
 }
@@ -455,11 +446,6 @@ function initializeFamilyCardManager() {
         width: '100%'
     });
 
-    $('#full_name').select2({
-        placeholder: 'Pilih Nama Lengkap',
-        width: '100%'
-    });
-
     // KK select change handler
     $('#kkSelect').on('change', function () {
         if (isUpdating) return; // Avoid recursion
@@ -483,8 +469,23 @@ function initializeFamilyCardManager() {
             const villageId = selectedOption.attr('data-village-id');
             const dusun = selectedOption.attr('data-dusun') || '';
 
+            // Get foreign address data
+            const foreignAddress = selectedOption.attr('data-foreign-address') || '';
+            const city = selectedOption.attr('data-city') || '';
+            const state = selectedOption.attr('data-state') || '';
+            const country = selectedOption.attr('data-country') || '';
+            const foreignPostalCode = selectedOption.attr('data-foreign-postal-code') || '';
+
+            // Log foreign address data for debugging
+            console.log("Foreign address data:", {
+                foreignAddress,
+                city,
+                state,
+                country,
+                foreignPostalCode
+            });
+
             // Fill form fields
-            $('#full_name').val(fullName || '').trigger('change.select2');
             $('#address').val(address || '');
             $('#postal_code').val(postalCode || '');
             $('#rt').val(rt || '');
@@ -492,6 +493,13 @@ function initializeFamilyCardManager() {
             $('#telepon').val(telepon);
             $('#email').val(email);
             $('#dusun').val(dusun);
+
+            // Fill foreign address fields - FIXED FIELD IDS HERE
+            $('#foreign_address').val(foreignAddress);
+            $('#city').val(city);
+            $('#state').val(state);
+            $('#country').val(country);
+            $('#foreign_postal_code').val(foreignPostalCode);
 
             // Store the location IDs in hidden fields
             $('#province_id_hidden').val(provinceId || '');
@@ -528,53 +536,26 @@ function initializeFamilyCardManager() {
                                 `;
                                 $('#familyMembersContainer').append(fieldHtml);
                             });
+
+                            $('#emptyFamilyMessage').hide();
+                        } else {
+                            $('#emptyFamilyMessage').show();
                         }
                     } else {
                         $('#jml_anggota_kk').val(0);
-                        $('#familyMembersContainer').empty();
+                        $('#familyMembersContainer').empty().append(`
+                            <div class="text-gray-500 italic text-sm">Belum ada anggota keluarga untuk KK ini</div>
+                        `);
                     }
                 },
                 error: function () {
                     $('#jml_anggota_kk').val(0);
-                    $('#familyMembersContainer').empty();
+                    $('#familyMembersContainer').empty().append(`
+                        <div class="text-gray-500 italic text-sm">Error mengambil data anggota keluarga</div>
+                    `);
                 }
             });
 
-        } else {
-            // Clear fields if no selection
-            $('#full_name').val('').trigger('change.select2');
-            $('#address').val('');
-            $('#postal_code').val('');
-            $('#rt').val('');
-            $('#rw').val('');
-            $('#telepon').val('');
-            $('#email').val('');
-            $('#provinc_id').val('');
-            $('#district_id').val('');
-            $('#sub_district_id').val('');
-            $('#village_id').val('');
-            $('#dusun').val('');
-            $('#jml_anggota_kk').val('');
-            $('#familyMembersContainer').empty();
-        }
-
-        isUpdating = false;
-    });
-
-    // Full name select change handler
-    $('#full_name').on('change', function() {
-        if (isUpdating) return; // Avoid recursion
-        isUpdating = true;
-
-        const selectedName = $(this).val();
-        const selectedOption = $(this).find('option:selected');
-
-        if (selectedName) {
-            // Get data from data-* attributes
-            const kk = selectedOption.attr('data-kk');
-            $('#kkSelect').val(kk).trigger('change.select2');
-
-            // No need to manually populate fields, it will happen through the KK change event
         } else {
             // Clear fields if no selection
             $('#address').val('');
@@ -588,8 +569,14 @@ function initializeFamilyCardManager() {
             $('#sub_district_id').val('');
             $('#village_id').val('');
             $('#dusun').val('');
+            $('#foreign_address').val('');
+            $('#city').val('');
+            $('#state').val('');
+            $('#country').val('');
+            $('#foreign_postal_code').val('');
             $('#jml_anggota_kk').val('');
             $('#familyMembersContainer').empty();
+            $('#emptyFamilyMessage').show();
         }
 
         isUpdating = false;

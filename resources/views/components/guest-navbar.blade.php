@@ -7,8 +7,8 @@
     <div class="hidden md:flex items-center justify-end flex-1 gap-8">
         <ul class="flex gap-6 font-medium">
             <li><a href="{{ route('guest.pelayanan.index') }}" class="text-gray-800 hover:text-[#4F46E5] transition-colors">Pelayanan</a></li>
-            <li><a href="#harga" class="text-gray-800 hover:text-[#4F46E5] transition-colors">Harga</a></li>
-            <li><a href="#tentang" class="text-gray-800 hover:text-[#4F46E5] transition-colors">Tentang</a></li>
+            {{-- <li><a href="#harga" class="text-gray-800 hover:text-[#4F46E5] transition-colors">Harga</a></li>
+            <li><a href="#tentang" class="text-gray-800 hover:text-[#4F46E5] transition-colors">Tentang</a></li> --}}
         </ul>
 
         <div class="flex gap-3">

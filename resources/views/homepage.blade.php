@@ -5,7 +5,7 @@
             <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold text-black">Selamat Datang di Portal Layanan Desa</h1>
             <p class="text-base sm:text-lg text-black">Solusi cerdas untuk manajemen data warga, pelaporan cepat, dan analisis statistik di berbagai daerah.</p>
             <div class="flex gap-4">
-                <a href="#pelayanan" class="bg-[#969BE7] text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full shadow-md hover:shadow-lg hover:opacity-90 transition duration-200 inline-block">Mulai Sekarang</a>
+                <a href="{{ route('guest.pelayanan.index') }}" class="bg-[#969BE7] text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full shadow-md hover:shadow-lg hover:opacity-90 transition duration-200 inline-block">Mulai Sekarang</a>
             </div>
         </div>
         <!-- Modern Mobile Mockup with Glass Cards (HP pakai border) -->
@@ -110,7 +110,7 @@
         </div>
     </section>
 
-    <!-- Section: Pelayanan Form -->
+    {{-- <!-- Section: Pelayanan Form -->
     <section id="pelayanan" class="relative bg-[#FCF8FB] px-4 sm:px-6 md:px-20 py-12 md:py-20 rounded-t-3xl shadow-lg overflow-hidden" data-aos="fade-up">
         <!-- Circle Blur Background -->
         <div class="absolute left-0 sm:left-14 top-20 z-0 pointer-events-none" aria-hidden="true">
@@ -147,5 +147,5 @@
                 <p>Tingkat Kepuasan</p>
             </div>
         </div>
-    </section>
+    </section> --}}
 </x-guest-layout>

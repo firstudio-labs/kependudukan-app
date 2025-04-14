@@ -29,10 +29,21 @@ use App\Http\Controllers\guest\AdministrasiUmumController;
 use App\Http\Controllers\guest\KehilanganSuratController;
 use App\Http\Controllers\guest\SKCKSuratController;
 use App\Http\Controllers\superadmin\KeperluanController;
+use App\Http\Controllers\guest\DomisiliSuratController;
+use App\Http\Controllers\guest\DomisiliUsahaSuratController;
+use App\Http\Controllers\guest\KematianSuratController;
+use App\Http\Controllers\guest\KeramaianSuratController;
+use App\Http\Controllers\guest\KTPSuratController;
+use App\Http\Controllers\guest\KelahiranSuratController;
+use App\Http\Controllers\guest\AhliWarisSuratController;
+use App\Http\Controllers\guest\RumahSewaSuratController;
+use App\Http\Controllers\adminKabupaten\ProfileKabController;
+
+
 
 
 // Homepage route should use our new method to force logout
-Route::get('/', [App\Http\Controllers\AuthController::class, 'homepage'])->name('homepage');
+Route::get('/', [AuthController::class, 'homepage'])->name('homepage');
 
 // Guest accessible routes
 Route::get('/pelayanan', [PelayananController::class, 'index'])->name('guest.pelayanan.index');
@@ -53,24 +64,36 @@ Route::prefix('pelayanan')->name('guest.')->group(function () {
     Route::post('/skck', [SKCKSuratController::class, 'store'])->name('surat.skck.store');
 
     // Add Domisili routes
-    Route::get('/domisili', [App\Http\Controllers\guest\DomisiliSuratController::class, 'index'])->name('surat.domisili');
-    Route::post('/domisili', [App\Http\Controllers\guest\DomisiliSuratController::class, 'store'])->name('surat.domisili.store');
+    Route::get('/domisili', [DomisiliSuratController::class, 'index'])->name('surat.domisili');
+    Route::post('/domisili', [DomisiliSuratController::class, 'store'])->name('surat.domisili.store');
 
     // Add Domisili Usaha routes
-    Route::get('/domisili-usaha', [App\Http\Controllers\guest\DomisiliUsahaSuratController::class, 'index'])->name('surat.domisili-usaha');
-    Route::post('/domisili-usaha', [App\Http\Controllers\guest\DomisiliUsahaSuratController::class, 'store'])->name('surat.domisili-usaha.store');
+    Route::get('/domisili-usaha', [DomisiliUsahaSuratController::class, 'index'])->name('surat.domisili-usaha');
+    Route::post('/domisili-usaha', [DomisiliUsahaSuratController::class, 'store'])->name('surat.domisili-usaha.store');
 
     // Add Kematian routes
-    Route::get('/kematian', [App\Http\Controllers\guest\KematianSuratController::class, 'index'])->name('surat.kematian');
-    Route::post('/kematian', [App\Http\Controllers\guest\KematianSuratController::class, 'store'])->name('surat.kematian.store');
+    Route::get('/kematian', [KematianSuratController::class, 'index'])->name('surat.kematian');
+    Route::post('/kematian', [KematianSuratController::class, 'store'])->name('surat.kematian.store');
 
     // Add Keramaian routes
-    Route::get('/keramaian', [App\Http\Controllers\guest\KeramaianSuratController::class, 'index'])->name('surat.keramaian');
+    Route::get('/keramaian', [KeramaianSuratController::class, 'index'])->name('surat.keramaian');
     Route::post('/keramaian', [App\Http\Controllers\guest\KeramaianSuratController::class, 'store'])->name('surat.keramaian.store');
 
     // Add KTP routes
-    Route::get('/ktp', [App\Http\Controllers\guest\KTPSuratController::class, 'index'])->name('surat.ktp');
-    Route::post('/ktp', [App\Http\Controllers\guest\KTPSuratController::class, 'store'])->name('surat.ktp.store');
+    Route::get('/ktp', [KTPSuratController::class, 'index'])->name('surat.ktp');
+    Route::post('/ktp', [KTPSuratController::class, 'store'])->name('surat.ktp.store');
+
+    // Add Kelahiran (Birth) routes
+    Route::get('/kelahiran', [KelahiranSuratController::class, 'index'])->name('surat.kelahiran');
+    Route::post('/kelahiran', [KelahiranSuratController::class, 'store'])->name('surat.kelahiran.store');
+
+    // Add Ahli Waris (Inheritance) routes
+    Route::get('/ahli-waris', [AhliWarisSuratController::class, 'index'])->name('surat.ahli-waris');
+    Route::post('/ahli-waris', [AhliWarisSuratController::class, 'store'])->name('surat.ahli-waris.store');
+
+    // Add Rumah Sewa (Rental House) routes
+    Route::get('/rumah-sewa', [RumahSewaSuratController::class, 'index'])->name('surat.rumah-sewa');
+    Route::post('/rumah-sewa', [RumahSewaSuratController::class, 'store'])->name('surat.rumah-sewa.store');
 });
 // Rute Autentikasi
 Route::middleware('guest')->group(function () {
@@ -107,6 +130,9 @@ Route::middleware(['auth:web', 'role:superadmin'])->group(function () {
     Route::get('/superadmin/datamaster/wilayah/kabupaten/index', [WilayahController::class, 'showKabupaten'])->name('superadmin.datamaster.wilayah.kabupaten.index');
     Route::get('/superadmin/datamaster/wilayah/kecamatan/index', [WilayahController::class, 'showKecamatan'])->name('superadmin.datamaster.wilayah.kecamatan.index');
     Route::get('/superadmin/datamaster/wilayah/desa/index', [WilayahController::class, 'showDesa'])->name('superadmin.datamaster.wilayah.desa.index');
+
+    // Add the new route for storing family members
+    Route::post('/superadmin/datakk/store-family-member', [DataKKController::class, 'storeFamilyMember'])->name('superadmin.datakk.store-family-member');
 
     // Administrasi routes
     Route::get('/superadmin/surat/administrasi/index', [AdministrasiController::class, 'index'])
@@ -379,13 +405,13 @@ Route::middleware(['auth:web', 'role:admin kabupaten'])->group(function () {
         ->name('admin.kabupaten.index');
 
     // Admin Kabupaten Profile routes - Ensure these are correctly defined
-    Route::get('/admin/kabupaten/profile', [App\Http\Controllers\adminKabupaten\ProfileController::class, 'index'])
+    Route::get('/admin/kabupaten/profile', [ProfileKabController::class, 'index'])
         ->name('admin.kabupaten.profile.index');
-    Route::get('/admin/kabupaten/profile/edit', [App\Http\Controllers\adminKabupaten\ProfileController::class, 'edit'])
+    Route::get('/admin/kabupaten/profile/edit', [ProfileKabController::class, 'edit'])
         ->name('admin.kabupaten.profile.edit');
-    Route::put('/admin/kabupaten/profile/update', [App\Http\Controllers\adminKabupaten\ProfileController::class, 'update'])
+    Route::put('/admin/kabupaten/profile/update', [ProfileKabController::class, 'update'])
         ->name('admin.kabupaten.profile.update');
-    Route::post('/admin/kabupaten/profile/update-photo', [App\Http\Controllers\adminKabupaten\ProfileController::class, 'updatePhoto'])
+    Route::post('/admin/kabupaten/profile/update-photo', [ProfileKabController::class, 'updatePhoto'])
         ->name('admin.kabupaten.profile.update-photo');
 });
 
