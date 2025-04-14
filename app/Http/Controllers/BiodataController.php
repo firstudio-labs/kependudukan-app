@@ -67,10 +67,12 @@ class BiodataController extends Controller
         ));
     }
 
-
     public function store(Request $request)
     {
         try {
+            // Check if this is a family member submission from the KK page
+            $isFromKKPage = $request->header('Referer') && str_contains($request->header('Referer'), 'datakk/create');
+
             $validatedData = $request->validate([
                 'nik' => 'required|size:16',
                 'kk' => 'required|size:16',
@@ -109,6 +111,16 @@ class BiodataController extends Controller
                 'nik_father' => 'nullable|string|size:16',
                 'father' => 'required|string|max:255',
                 'coordinate' => 'nullable|string|max:255',
+                // New fields
+                'telephone' => 'nullable|string|max:20',
+                'email' => 'nullable|email|max:255',
+                'hamlet' => 'nullable|string|max:100',
+                'foreign_address' => 'nullable|string',
+                'city' => 'nullable|string|max:100',
+                'state' => 'nullable|string|max:100',
+                'country' => 'nullable|string|max:100',
+                'foreign_postal_code' => 'nullable|string|max:20',
+                'status' => 'nullable|string|in:Active,Inactive,Deceased,Moved',
             ]);
 
             // Batch process nullable fields
@@ -122,6 +134,14 @@ class BiodataController extends Controller
             $response = $this->citizenService->createCitizen($validatedData);
 
             if ($response['status'] === 'CREATED') {
+                // If coming from KK page, redirect back there
+                if ($isFromKKPage) {
+                    return redirect()
+                        ->route('superadmin.datakk.create')
+                        ->with('success', 'Anggota keluarga berhasil ditambahkan!');
+                }
+
+                // Otherwise, go to the regular biodata index
                 return redirect()
                     ->route('superadmin.biodata.index')
                     ->with('success', $response['message']);
@@ -135,48 +155,6 @@ class BiodataController extends Controller
             return back()
                 ->withInput()
                 ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
-        }
-    }
-
-    // Add this new helper method
-    private function processNullableFields(&$data)
-    {
-        // Handle nullable integer fields
-        $nullableIntegerFields = ['marital_status', 'marital_certificate', 'divorce_certificate', 'postal_code'];
-        foreach ($nullableIntegerFields as $field) {
-            $data[$field] = empty($data[$field]) ? 0 : (int) $data[$field];
-        }
-
-        // Handle nullable string fields
-        $nullableStringFields = ['birth_certificate_no', 'marital_certificate_no', 'divorce_certificate_no',
-                               'nik_mother', 'nik_father', 'coordinate'];
-        foreach ($nullableStringFields as $field) {
-            $data[$field] = empty($data[$field]) ? " " : $data[$field];
-        }
-
-        // Handle nullable date fields
-        $nullableDateFields = ['marriage_date', 'divorce_certificate_date'];
-        foreach ($nullableDateFields as $field) {
-            $data[$field] = empty($data[$field]) ? " " : date('Y-m-d', strtotime($data[$field]));
-        }
-
-        // Format integer fields
-        $integerFields = ['gender', 'age', 'province_id', 'district_id', 'sub_district_id',
-                         'village_id', 'citizen_status', 'birth_certificate', 'blood_type',
-                         'religion', 'family_status', 'mental_disorders', 'disabilities',
-                         'education_status', 'job_type_id'];
-        foreach ($integerFields as $field) {
-            if (isset($data[$field])) {
-                $data[$field] = (int) $data[$field];
-            }
-        }
-
-        // Format date fields
-        $dateFields = ['birth_date'];
-        foreach ($dateFields as $field) {
-            if (!empty($data[$field])) {
-                $data[$field] = date('Y-m-d', strtotime($data[$field]));
-            }
         }
     }
 
@@ -250,6 +228,16 @@ class BiodataController extends Controller
                 'nik_father' => 'nullable|string|size:16',
                 'father' => 'required|string|max:255',
                 'coordinate' => 'nullable|string|max:255',
+                // New fields
+                'telephone' => 'nullable|string|max:20',
+                'email' => 'nullable|email|max:255',
+                'hamlet' => 'nullable|string|max:100',
+                'foreign_address' => 'nullable|string',
+                'city' => 'nullable|string|max:100',
+                'state' => 'nullable|string|max:100',
+                'country' => 'nullable|string|max:100',
+                'foreign_postal_code' => 'nullable|string|max:20',
+                'status' => 'nullable|string|in:Active,Inactive,Deceased,Moved',
             ]);
 
             // Process nullable fields
@@ -295,36 +283,6 @@ class BiodataController extends Controller
         ->with('error', 'Gagal menghapus biodata: ' . $response['message']);
     }
 
-    // private function getProvinces()
-    // {
-    //     try {
-    //         $baseUrl = config('services.kependudukan.url');
-    //         $apiKey = config('services.kependudukan.key');
-
-    //         $response = Http::withHeaders([
-    //             'Accept' => 'application/json',
-    //             'Content-Type' => 'application/json',
-    //             'X-API-Key' => $apiKey,
-    //         ])->get("{$baseUrl}/api/provinces");
-
-    //         if ($response->successful()) {
-    //             $provinces = $response->json();
-    //             // Transform the data to match the expected format
-    //             return collect($provinces)->map(function ($province) {
-    //                 return [
-    //                     'id' => $province['code'], // Use code instead of id
-    //                     'name' => $province['name']
-    //                 ];
-    //             })->all();
-    //         }
-    //         Log::error('Province API request failed: ' . $response->status());
-    //         return [];
-    //     } catch (\Exception $e) {
-    //         Log::error('Error fetching provinces: ' . $e->getMessage());
-    //         return [];
-    //     }
-    // }
-
     private function getJobs()
     {
         try {
@@ -342,7 +300,6 @@ class BiodataController extends Controller
         }
     }
 
-    // Add these new methods for location data
     public function getDistricts($provinceCode)
     {
         $districts = $this->wilayahService->getKabupaten($provinceCode);
@@ -418,12 +375,8 @@ class BiodataController extends Controller
         return $citizen;
     }
 
-    /**
-     * Ensure select field values are numeric IDs instead of display text
-     */
     private function normalizeSelectValues(&$data)
     {
-        // Define mappings for text values to their numeric ID equivalents
         $genderMap = ['Laki-Laki' => 1, 'Perempuan' => 2];
         $citizenStatusMap = ['WNI' => 1, 'WNA' => 2];
         $certificateMap = ['Ada' => 1, 'Tidak Ada' => 2];
@@ -459,7 +412,6 @@ class BiodataController extends Controller
             'Strata III' => 9, 'Lainnya' => 10
         ];
 
-        // Convert text values to numeric IDs
         $fieldsToNormalize = [
             'gender' => $genderMap,
             'citizen_status' => $citizenStatusMap,
@@ -470,27 +422,21 @@ class BiodataController extends Controller
             'marital_certificate' => $certificateMap,
             'divorce_certificate' => $certificateMap,
             'family_status' => $familyStatusMap,
-            'mental_disorders' => $certificateMap, // Using certificate map as it has the same Ada/Tidak Ada values
+            'mental_disorders' => $certificateMap,
             'disabilities' => $disabilitiesMap,
             'education_status' => $educationStatusMap,
         ];
 
-        // Process each field that needs normalization
         foreach ($fieldsToNormalize as $field => $mapping) {
             if (isset($data[$field]) && is_string($data[$field])) {
                 $value = trim($data[$field]);
 
-                // Try to find the value in the mapping
                 if (array_key_exists($value, $mapping)) {
                     $data[$field] = $mapping[$value];
                     Log::info("Normalized {$field} from '{$value}' to {$data[$field]}");
-                }
-                // If value already looks numeric, ensure it's an integer
-                else if (is_numeric($value)) {
+                } else if (is_numeric($value)) {
                     $data[$field] = (int)$value;
-                }
-                // If we can't map it, log this for debugging
-                else if (!empty($value)) {
+                } else if (!empty($value)) {
                     Log::warning("Could not normalize {$field} value: '{$value}'");
                 }
             }
@@ -499,22 +445,17 @@ class BiodataController extends Controller
         return $data;
     }
 
-    /**
-     * Import citizens from Excel file
-     */
     public function import(Request $request)
     {
         try {
             $request->validate([
-                'excel_file' => 'required|file|mimes:xlsx,xls|max:10240', // 10MB max
+                'excel_file' => 'required|file|mimes:xlsx,xls|max:10240',
             ]);
 
-            // Process the Excel file
             $import = new CitizensImport($this->citizenService);
             Excel::import($import, $request->file('excel_file'));
 
             if (count($import->errors) > 0) {
-                // If there are errors, show them to the user
                 $errorMessages = "<ul class='text-left'>";
                 foreach ($import->errors as $error) {
                     $errorMessages .= "<li>• {$error}</li>";
@@ -534,14 +475,10 @@ class BiodataController extends Controller
         }
     }
 
-    /**
-     * Download Excel template for import
-     */
     public function downloadTemplate()
     {
         $filePath = storage_path('app/templates/biodata_template.xlsx');
 
-        // Check if the file exists
         if (!file_exists($filePath)) {
             return redirect()->route('superadmin.biodata.index')
                 ->with('error', 'Template tidak ditemukan.');
@@ -550,5 +487,42 @@ class BiodataController extends Controller
         return Response::download($filePath, 'template_biodata.xlsx', [
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         ]);
+    }
+
+    private function processNullableFields(&$data)
+    {
+        $nullableIntegerFields = ['marital_status', 'marital_certificate', 'divorce_certificate', 'postal_code'];
+        foreach ($nullableIntegerFields as $field) {
+            $data[$field] = empty($data[$field]) ? 0 : (int) $data[$field];
+        }
+
+        $nullableStringFields = ['birth_certificate_no', 'marital_certificate_no', 'divorce_certificate_no',
+                               'nik_mother', 'nik_father', 'coordinate', 'telephone', 'email', 'hamlet',
+                               'foreign_address', 'city', 'state', 'country', 'foreign_postal_code', 'status'];
+        foreach ($nullableStringFields as $field) {
+            $data[$field] = empty($data[$field]) ? " " : $data[$field];
+        }
+
+        $nullableDateFields = ['marriage_date', 'divorce_certificate_date'];
+        foreach ($nullableDateFields as $field) {
+            $data[$field] = empty($data[$field]) ? " " : date('Y-m-d', strtotime($data[$field]));
+        }
+
+        $integerFields = ['gender', 'age', 'province_id', 'district_id', 'sub_district_id',
+                         'village_id', 'citizen_status', 'birth_certificate', 'blood_type',
+                         'religion', 'family_status', 'mental_disorders', 'disabilities',
+                         'education_status', 'job_type_id'];
+        foreach ($integerFields as $field) {
+            if (isset($data[$field])) {
+                $data[$field] = (int) $data[$field];
+            }
+        }
+
+        $dateFields = ['birth_date'];
+        foreach ($dateFields as $field) {
+            if (!empty($data[$field])) {
+                $data[$field] = date('Y-m-d', strtotime($data[$field]));
+            }
+        }
     }
 }

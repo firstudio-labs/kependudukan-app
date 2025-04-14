@@ -17,10 +17,10 @@
                     <input type="text" id="kk" name="kk" pattern="\d{16}" maxlength="16" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                 </div>
 
-                <!-- Nama Lengkap -->
+                <!-- Nama Lengkap - Fixed id and name to match label -->
                 <div>
                     <label for="full_name" class="block text-sm font-medium text-gray-700">Nama Lengkap</label>
-                    <input type="text" id="name" name="name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                    <input type="text" id="full_name" name="full_name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                 </div>
 
                 <!-- Jenis Kelamin -->
@@ -336,6 +336,65 @@
                     <label for="coordinate" class="block text-sm font-medium text-gray-700">Tag Lokasi (Log, Lat)</label>
                     <input type="text" id="coordinate" name="coordinate" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
                 </div>
+
+                <!-- Telephone -->
+                <div>
+                    <label for="telephone" class="block text-sm font-medium text-gray-700">No. Telepon</label>
+                    <input type="text" id="telephone" name="telephone" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                </div>
+
+                <!-- Email -->
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                    <input type="email" id="email" name="email" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                </div>
+
+                <!-- Hamlet/Dusun -->
+                <div>
+                    <label for="hamlet" class="block text-sm font-medium text-gray-700">Dusun</label>
+                    <input type="text" id="hamlet" name="hamlet" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                </div>
+
+                <!-- Foreign Address (for WNA) -->
+                <div>
+                    <label for="foreign_address" class="block text-sm font-medium text-gray-700">Alamat Luar Negeri</label>
+                    <textarea id="foreign_address" name="foreign_address" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"></textarea>
+                </div>
+
+                <!-- City (for WNA) -->
+                <div>
+                    <label for="city" class="block text-sm font-medium text-gray-700">Kota (Luar Negeri)</label>
+                    <input type="text" id="city" name="city" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                </div>
+
+                <!-- State/Province (for WNA) -->
+                <div>
+                    <label for="state" class="block text-sm font-medium text-gray-700">Provinsi/State (Luar Negeri)</label>
+                    <input type="text" id="state" name="state" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                </div>
+
+                <!-- Country (for WNA) -->
+                <div>
+                    <label for="country" class="block text-sm font-medium text-gray-700">Negara</label>
+                    <input type="text" id="country" name="country" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                </div>
+
+                <!-- Foreign Postal Code -->
+                <div>
+                    <label for="foreign_postal_code" class="block text-sm font-medium text-gray-700">Kode Pos (Luar Negeri)</label>
+                    <input type="text" id="foreign_postal_code" name="foreign_postal_code" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                </div>
+
+                <!-- Status -->
+                <div>
+                    <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
+                    <select id="status" name="status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                        <option value="Active" selected>Active</option>
+                        <option value="Inactive">Inactive</option>
+                        <option value="Deceased">Deceased</option>
+                        <option value="Moved">Moved</option>
+                    </select>
+                </div>
             </div>
 
             <div class="mt-6 flex justify-end space-x-4">
@@ -352,13 +411,10 @@
     <!-- Add meta tag for base URL -->
     <meta name="base-url" content="{{ url('/') }}">
 
-    <!-- External JavaScript files -->
-    <script src="{{ asset('js/sweet-alert-utils.js') }}"></script>
-    <script src="{{ asset('js/location-selector.js') }}"></script>
+    <!-- Set flash messages as data attributes for SweetAlert -->
+    <body data-success-message="{{ session('success') }}" data-error-message="{{ session('error') }}">
 
-    <script>
-        // Set flash messages as data attributes for the SweetAlert utility to use
-        document.body.setAttribute('data-success-message', "{{ session('success') }}");
-        document.body.setAttribute('data-error-message', "{{ session('error') }}");
-    </script>
+    <!-- Include JavaScript files -->
+    <script src="{{ asset('js/biodata-common.js') }}"></script>
+    <script src="{{ asset('js/biodata-create.js') }}"></script>
 </x-layout>

@@ -8,17 +8,25 @@ use App\Services\CitizenService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use App\Services\WilayahService;
+use App\Services\JobService;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Validator;
 
 class DataKKController extends Controller
 {
     protected $citizenService;
     protected $wilayahService;
+    protected $jobService;
 
-    public function __construct(CitizenService $citizenService, WilayahService $wilayahService)
+    public function __construct(
+        CitizenService $citizenService,
+        WilayahService $wilayahService,
+        JobService $jobService
+    )
     {
         $this->citizenService = $citizenService;
         $this->wilayahService = $wilayahService;
+        $this->jobService = $jobService;
     }
 
     public function index(Request $request)
@@ -64,6 +72,9 @@ class DataKKController extends Controller
         // Get provinces data with caching
         $provinces = $this->wilayahService->getProvinces();
 
+        // Get jobs data
+        $jobs = $this->jobService->getAllJobs();
+
         // Initialize empty arrays for district, sub-district, and village data
         $districts = [];
         $subDistricts = [];
@@ -73,7 +84,8 @@ class DataKKController extends Controller
             'provinces',
             'districts',
             'subDistricts',
-            'villages'
+            'villages',
+            'jobs'
         ));
     }
 
@@ -252,8 +264,16 @@ class DataKKController extends Controller
                 'district_id' => $citizen['district_id'] ?? '',
                 'sub_district_id' => $citizen['sub_district_id'] ?? '',
                 'village_id' => $citizen['village_id'] ?? '',
-                'dusun' => $citizen['dusun'] ?? '',
+                // Map dusun field to hamlet for consistency
+                'hamlet' => $citizen['dusun'] ?? $citizen['hamlet'] ?? '',
                 'family_status' => $citizen['family_status'] ?? '',
+
+                // Add foreign address fields with consistent naming
+                'foreign_address' => $citizen['foreign_address'] ?? $citizen['alamat_luar_negeri'] ?? '',
+                'city' => $citizen['city'] ?? $citizen['kota'] ?? '',
+                'state' => $citizen['state'] ?? $citizen['negara_bagian'] ?? '',
+                'country' => $citizen['country'] ?? $citizen['negara'] ?? '',
+                'foreign_postal_code' => $citizen['foreign_postal_code'] ?? $citizen['kode_pos_luar_negeri'] ?? '',
             ];
         }, $citizens);
 
@@ -386,6 +406,153 @@ class DataKKController extends Controller
     {
         $villages = $this->wilayahService->getDesa($subDistrictCode);
         return response()->json($villages);
+    }
+
+    /**
+     * Store a new family member for an existing KK
+     */
+    public function storeFamilyMember(Request $request)
+    {
+        try {
+            // Debug log to see what's coming in
+            Log::info('Family Member Store - Request data:', [
+                'kk' => $request->input('kk'),
+                'request_has_kk' => $request->has('kk'),
+                'all_data' => $request->all(),
+            ]);
+
+            $validator = Validator::make($request->all(), [
+                'nik' => 'required|size:16',
+                'kk' => 'required|size:16',
+                'full_name' => 'required|string|max:255',
+                'gender' => 'required|integer|in:1,2',
+                'birth_date' => 'required|date',
+                'age' => 'required|integer',
+                'birth_place' => 'required|string|max:255',
+                'address' => 'required|string',
+                'province_id' => 'required|integer',
+                'district_id' => 'required|integer',
+                'sub_district_id' => 'required|integer',
+                'village_id' => 'required|integer',
+                'rt' => 'required|string|max:3',
+                'rw' => 'required|string|max:3',
+                'postal_code' => 'nullable|digits:5',
+                'citizen_status' => 'required|integer|in:1,2',
+                'birth_certificate' => 'integer|in:1,2',
+                'birth_certificate_no' => 'nullable|string',
+                'blood_type' => 'required|integer|in:1,2,3,4,5,6,7,8,9,10,11,12,13',
+                'religion' => 'required|in:1,2,3,4,5,6,7',
+                'marital_status' => 'nullable|integer|in:1,2,3,4,5,6',
+                'marital_certificate' => 'required|in:1,2',
+                'marital_certificate_no' => 'nullable|string',
+                'marriage_date' => 'nullable|date',
+                'divorce_certificate' => 'nullable|integer|in:1,2',
+                'divorce_certificate_no' => 'nullable|string',
+                'divorce_certificate_date' => 'nullable|date',
+                'family_status' => 'required|integer|in:1,2,3,4,5,6,7',
+                'mental_disorders' => 'required|integer|in:1,2',
+                'disabilities' => 'required|integer|in:1,2,3,4,5,6',
+                'education_status' => 'required|integer|in:1,2,3,4,5,6,7,8,9,10',
+                'job_type_id' => 'required|integer',
+                'nik_mother' => 'nullable|string|size:16',
+                'mother' => 'nullable|string|max:255', // Changed from 'required' to 'nullable'
+                'nik_father' => 'nullable|string|size:16',
+                'father' => 'nullable|string|max:255', // Changed from 'required' to 'nullable'
+                'coordinate' => 'nullable|string|max:255',
+                // New fields for foreign address
+                'telephone' => 'nullable|string|max:20',
+                'email' => 'nullable|email|max:255',
+                'hamlet' => 'nullable|string|max:100',
+                'foreign_address' => 'nullable|string',
+                'city' => 'nullable|string|max:100',
+                'state' => 'nullable|string|max:100',
+                'country' => 'nullable|string|max:100',
+                'foreign_postal_code' => 'nullable|string|max:20',
+                'status' => 'nullable|string|in:Active,Inactive,Deceased,Moved',
+            ]);
+
+            // Pemeriksaan apakah validasi gagal
+            if ($validator->fails()) {
+                return back()
+                    ->withErrors($validator)
+                    ->withInput()
+                    ->with('error', 'Validasi gagal: ' . implode(', ', $validator->errors()->all()));
+            }
+
+            // Ambil data yang sudah divalidasi
+            $validatedData = $validator->validated();
+
+            // Process nullable fields
+            $this->processNullableFields($validatedData);
+
+            // Convert NIK and KK to integers
+            $validatedData['nik'] = (int) $validatedData['nik'];
+            $validatedData['kk'] = (int) $validatedData['kk'];
+            $validatedData['religion'] = (int) $validatedData['religion'];
+
+            // Call the citizen service to create the new family member
+            $response = $this->citizenService->createCitizen($validatedData);
+
+            if ($response['status'] === 'CREATED') {
+                return redirect()
+                    ->route('superadmin.datakk.create')
+                    ->with('success', 'Anggota keluarga berhasil ditambahkan!');
+            }
+
+            return back()
+                ->withInput()
+                ->with('error', $response['message'] ?? 'Gagal menyimpan data anggota keluarga');
+
+        } catch (\Exception $e) {
+            Log::error('Error saat menyimpan anggota keluarga: ' . $e->getMessage(), [
+                'request' => $request->all(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return back()
+                ->withInput()
+                ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Process nullable fields to ensure they have appropriate default values
+     */
+    private function processNullableFields(&$data)
+    {
+        $nullableIntegerFields = ['marital_status', 'marital_certificate', 'divorce_certificate', 'postal_code'];
+        foreach ($nullableIntegerFields as $field) {
+            $data[$field] = empty($data[$field]) ? 0 : (int) $data[$field];
+        }
+
+        $nullableStringFields = ['birth_certificate_no', 'marital_certificate_no', 'divorce_certificate_no',
+                               'nik_mother', 'nik_father', 'coordinate', 'telephone', 'email', 'hamlet',
+                               'foreign_address', 'city', 'state', 'country', 'foreign_postal_code', 'status'];
+        foreach ($nullableStringFields as $field) {
+            $data[$field] = empty($data[$field]) ? " " : $data[$field];
+        }
+
+        $nullableDateFields = ['marriage_date', 'divorce_certificate_date'];
+        foreach ($nullableDateFields as $field) {
+            $data[$field] = empty($data[$field]) ? " " : date('Y-m-d', strtotime($data[$field]));
+        }
+
+        $integerFields = ['gender', 'age', 'province_id', 'district_id', 'sub_district_id',
+                         'village_id', 'citizen_status', 'birth_certificate', 'blood_type',
+                         'religion', 'family_status', 'mental_disorders', 'disabilities',
+                         'education_status', 'job_type_id'];
+        foreach ($integerFields as $field) {
+            if (isset($data[$field])) {
+                $data[$field] = (int) $data[$field];
+            }
+        }
+
+        $dateFields = ['birth_date'];
+        foreach ($dateFields as $field) {
+            if (!empty($data[$field])) {
+                $data[$field] = date('Y-m-d', strtotime($data[$field]));
+            }
+        }
     }
 }
 
