@@ -53,6 +53,7 @@
                         <th class="px-6 py-3">Nama Lengkap</th>
                         <th class="px-6 py-3">Alamat</th>
                         <th class="px-6 py-3">SHDK</th>
+                        <th class="px-6 py-3">Status</th>
                         <th class="px-6 py-3">Aksi</th>
                     </tr>
                 </thead>
@@ -77,6 +78,17 @@
                         <td class="px-6 py-4">{{ $citizen['full_name'] }}</td>
                         <td class="px-6 py-4">{{ $citizen['address'] }}</td>
                         <td class="px-6 py-4">{{ $citizen['family_status'] }}</td>
+                        <td class="px-6 py-4">
+                            <span class="px-2 py-1 rounded-full text-xs font-medium
+                                @if($citizen['status'] == 'Active') bg-green-100 text-green-800
+                                @elseif($citizen['status'] == 'Inactive') bg-yellow-100 text-yellow-800
+                                @elseif($citizen['status'] == 'Deceased') bg-red-100 text-red-800
+                                @elseif($citizen['status'] == 'Moved') bg-blue-100 text-blue-800
+                                @else bg-gray-100 text-gray-800
+                                @endif">
+                                {{ $citizen['status'] ?? 'Active' }}
+                            </span>
+                        </td>
                         <td class="flex items-center px-6 py-4 space-x-2">
                             <button onclick="showDetailModal({{ json_encode($citizen) }})" class="text-blue-600 hover:text-blue-800" aria-label="Detail">
                                 <i class="fa-solid fa-eye"></i>
@@ -95,7 +107,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="6" class="text-center py-4">Tidak ada data.</td>
+                        <td colspan="7" class="text-center py-4">Tidak ada data.</td>
                     </tr>
                     @endforelse
                 </tbody>
