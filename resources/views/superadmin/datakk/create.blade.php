@@ -523,8 +523,8 @@
         document.body.setAttribute('data-success-message', "{{ session('success') }}");
         document.body.setAttribute('data-error-message', "{{ session('error') }}");
 
-        // Additional script for family member form
         document.addEventListener('DOMContentLoaded', function() {
+            // ===== INISIALISASI ELEMEN DOM =====
             const kkSelect = document.getElementById('kkSelect');
             const familyMemberForm = document.getElementById('familyMemberFormFields');
             const addFamilyMemberForm = document.getElementById('addFamilyMemberForm');
@@ -536,56 +536,10 @@
                 addFamilyMemberForm: addFamilyMemberForm ? "Found" : "Not found"
             });
 
-            // Enable the form immediately for testing
-            if (familyMemberForm) {
-                // Remove the disabled state
-                familyMemberForm.classList.remove('opacity-50', 'pointer-events-none');
-                console.log("Form has been enabled on page load");
-            }
+            // ===== FUNGSI UTAMA UNTUK MENGELOLA DATA KK =====
 
-            // Force enable the form (in case the previous method doesn't work)
-            setTimeout(function() {
-                if (familyMemberForm) {
-                    familyMemberForm.classList.remove('opacity-50', 'pointer-events-none');
-                    console.log("Form enabled again after timeout");
-                }
-            }, 1000);
-
-            // Add a visible button to manually enable the form
-            const formHeader = document.querySelector('#addFamilyMemberForm h2');
-            if (formHeader) {
-                const enableButton = document.createElement('button');
-                enableButton.type = 'button';
-                enableButton.className = 'ml-4 px-3 py-1 bg-blue-500 text-white rounded text-sm';
-                enableButton.textContent = 'Aktifkan Form';
-                enableButton.onclick = function() {
-                    if (familyMemberForm) {
-                        familyMemberForm.classList.remove('opacity-50', 'pointer-events-none');
-                        this.textContent = 'Form Aktif';
-                        this.disabled = true;
-                        this.className = 'ml-4 px-3 py-1 bg-green-500 text-white rounded text-sm';
-                    }
-                };
-                formHeader.appendChild(enableButton);
-            }
-
-            // Calculate age from birth date
-            document.getElementById('birth_date').addEventListener('change', function() {
-                const birthDate = new Date(this.value);
-                const today = new Date();
-                let age = today.getFullYear() - birthDate.getFullYear();
-                const monthDiff = today.getMonth() - birthDate.getMonth();
-
-                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-                    age--;
-                }
-
-                document.getElementById('age').value = age;
-            });
-
-            // Fungsi untuk menyimpan data KK lengkap
-            function saveSelectedKKData() {
-                // Simpan semua data terkait KK yang dipilih
+            // 1. Fungsi untuk menyimpan data KK di localStorage
+            function saveKKDataToLocalStorage() {
                 const kkData = {
                     kk: kkSelect.value,
                     address: document.getElementById('address').value,
@@ -598,6 +552,8 @@
                     village_id: document.getElementById('village_id_hidden').value,
                     dusun: document.getElementById('dusun').value,
                     jml_anggota_kk: document.getElementById('jml_anggota_kk').value,
+
+                    // Data alamat luar negeri
                     foreign_address: document.getElementById('foreign_address').value,
                     city: document.getElementById('city').value,
                     state: document.getElementById('state').value,
@@ -605,237 +561,117 @@
                     foreign_postal_code: document.getElementById('foreign_postal_code').value
                 };
 
-                // Simpan data di localStorage untuk digunakan kembali
                 localStorage.setItem('kkDetailData', JSON.stringify(kkData));
-                console.log('Data KK tersimpan di localStorage:', kkData);
+                console.log('Data KK berhasil disimpan ke localStorage:', kkData);
+
+                return kkData;
             }
 
-            // Fungsi untuk memuat data KK yang tersimpan
-            function loadSavedKKData() {
-                const savedKKData = localStorage.getItem('kkDetailData');
-                if (savedKKData) {
-                    try {
-                        // Parse data tersimpan
-                        const kkData = JSON.parse(savedKKData);
-                        console.log('Memuat data KK dari localStorage:', kkData);
+            // 2. Fungsi untuk memuat data KK dari localStorage
+            function loadKKDataFromLocalStorage() {
+                try {
+                    const savedData = localStorage.getItem('kkDetailData');
+                    if (!savedData) return null;
 
-                        // Set KK select jika ada nilai KK tersimpan
-                        if (kkData.kk) {
-                            // Set dropdown KK
-                            kkSelect.value = kkData.kk;
-
-                            // Isi field-field data KK yang relevan
-                            document.getElementById('address').value = kkData.address || '';
-                            document.getElementById('postal_code').value = kkData.postal_code || '';
-                            document.getElementById('rt').value = kkData.rt || '';
-                            document.getElementById('rw').value = kkData.rw || '';
-                            document.getElementById('province_id_hidden').value = kkData.province_id || '';
-                            document.getElementById('district_id_hidden').value = kkData.district_id || '';
-                            document.getElementById('sub_district_id_hidden').value = kkData.sub_district_id || '';
-                            document.getElementById('village_id_hidden').value = kkData.village_id || '';
-                            document.getElementById('dusun').value = kkData.dusun || '';
-                            document.getElementById('jml_anggota_kk').value = kkData.jml_anggota_kk || '';
-
-                            // Data alamat luar negeri
-                            document.getElementById('foreign_address').value = kkData.foreign_address || '';
-                            document.getElementById('city').value = kkData.city || '';
-                            document.getElementById('state').value = kkData.state || '';
-                            document.getElementById('country').value = kkData.country || '';
-                            document.getElementById('foreign_postal_code').value = kkData.foreign_postal_code || '';
-
-                            // Trigger change event pada KK select untuk memuat data lainnya
-                            const event = new Event('change');
-                            kkSelect.dispatchEvent(event);
-
-                            // Aktifkan form tambah anggota
-                            if (familyMemberForm) {
-                                familyMemberForm.classList.remove('opacity-50', 'pointer-events-none');
-                            }
-
-                            // Tambahkan pesan sukses khusus jika baru menambahkan anggota
-                            if ({{ session('success') ? 'true' : 'false' }}) {
-                                setTimeout(() => {
-                                    Swal.fire({
-                                        icon: 'success',
-                                        title: 'Berhasil!',
-                                        text: 'Anggota keluarga berhasil ditambahkan. Anda dapat melanjutkan menambah anggota berikutnya.',
-                                        confirmButtonText: 'Lanjutkan'
-                                    });
-                                }, 500);
-                            }
-
-                            return true;
-                        }
-                    } catch (error) {
-                        console.error('Error memuat data KK:', error);
-                    }
+                    const kkData = JSON.parse(savedData);
+                    console.log('Data KK berhasil dimuat dari localStorage:', kkData);
+                    return kkData;
+                } catch (error) {
+                    console.error('Error saat memuat data KK:', error);
+                    return null;
                 }
-                return false;
             }
 
-            // Simpan data ketika KK dipilih
-            if (kkSelect) {
-                kkSelect.addEventListener('change', function() {
-                    const selectedKK = this.value;
+            // 3. Fungsi untuk mengisi form dengan data KK
+            function fillKKFormFields(kkData) {
+                if (!kkData || !kkData.kk) return false;
 
-                    if (selectedKK) {
-                        // Auto-populate the KK field and address fields
-                        document.getElementById('kk').value = selectedKK;
-                        window.selectedKKValue = selectedKK; // Store in global variable as backup
+                // Tunggu sampai Select2 siap
+                const checkSelect2Ready = setInterval(() => {
+                    if (kkSelect && $(kkSelect).data('select2')) {
+                        clearInterval(checkSelect2Ready);
 
-                        // Populate all the hidden address fields from the KK section
-                        document.getElementById('form_address').value = document.getElementById('address').value;
-                        document.getElementById('form_postal_code').value = document.getElementById('postal_code').value;
-                        document.getElementById('form_rt').value = document.getElementById('rt').value;
-                        document.getElementById('form_rw').value = document.getElementById('rw').value;
-                        document.getElementById('form_province_id').value = document.getElementById('province_id_hidden').value;
-                        document.getElementById('form_district_id').value = document.getElementById('district_id_hidden').value;
-                        document.getElementById('form_sub_district_id').value = document.getElementById('sub_district_id_hidden').value;
-                        document.getElementById('form_village_id').value = document.getElementById('village_id_hidden').value;
-                        document.getElementById('form_hamlet').value = document.getElementById('dusun').value;
+                        // Set nilai pada dropdown KK
+                        $(kkSelect).val(kkData.kk).trigger('change');
 
-                        // Foreign address data
-                        document.getElementById('form_foreign_address').value = document.getElementById('foreign_address').value;
-                        document.getElementById('form_city').value = document.getElementById('city').value;
-                        document.getElementById('form_state').value = document.getElementById('state').value;
-                        document.getElementById('form_country').value = document.getElementById('country').value;
-                        document.getElementById('form_foreign_postal_code').value = document.getElementById('foreign_postal_code').value;
+                        // Isi semua field KK
+                        document.getElementById('address').value = kkData.address || '';
+                        document.getElementById('postal_code').value = kkData.postal_code || '';
+                        document.getElementById('rt').value = kkData.rt || '';
+                        document.getElementById('rw').value = kkData.rw || '';
+                        document.getElementById('province_id_hidden').value = kkData.province_id || '';
+                        document.getElementById('district_id_hidden').value = kkData.district_id || '';
+                        document.getElementById('sub_district_id_hidden').value = kkData.sub_district_id || '';
+                        document.getElementById('village_id_hidden').value = kkData.village_id || '';
+                        document.getElementById('dusun').value = kkData.dusun || '';
+                        document.getElementById('jml_anggota_kk').value = kkData.jml_anggota_kk || '';
 
-                        // Simpan data KK yang dipilih
-                        setTimeout(saveSelectedKKData, 300);
+                        // Data alamat luar negeri
+                        document.getElementById('foreign_address').value = kkData.foreign_address || '';
+                        document.getElementById('city').value = kkData.city || '';
+                        document.getElementById('state').value = kkData.state || '';
+                        document.getElementById('country').value = kkData.country || '';
+                        document.getElementById('foreign_postal_code').value = kkData.foreign_postal_code || '';
 
-                        // Enable the form
-                        if (familyMemberForm) {
-                            familyMemberForm.classList.remove('opacity-50', 'pointer-events-none');
-                        }
+                        // Isi hidden fields pada form anggota keluarga
+                        copyDataToFamilyMemberForm(kkData);
 
-                        // Store the current KK selection in localStorage
-                        localStorage.setItem('lastUsedKK', selectedKK);
-                    } else {
-                        // Hapus data tersimpan jika user memilih opsi kosong
-                        localStorage.removeItem('kkDetailData');
-                        localStorage.removeItem('lastUsedKK');
+                        // Aktifkan form anggota keluarga
+                        enableFamilyMemberForm();
 
-                        // Disable the form
-                        if (familyMemberForm) {
-                            familyMemberForm.classList.add('opacity-50', 'pointer-events-none');
-                        }
-                        if (emptyFamilyMessage) {
-                            emptyFamilyMessage.style.display = 'block';
-                        }
+                        return true;
                     }
-                });
+                }, 200);
+
+                // Jika Select2 belum dimuat, coba cara lain sebagai fallback
+                setTimeout(() => {
+                    if (kkSelect) {
+                        kkSelect.value = kkData.kk;
+
+                        // Trigger change event
+                        const event = new Event('change');
+                        kkSelect.dispatchEvent(event);
+
+                        copyDataToFamilyMemberForm(kkData);
+                        enableFamilyMemberForm();
+                    }
+                }, 1000);
+
+                return true;
             }
 
-            // Saat form berhasil dikirim, pastikan data KK tetap tersimpan
-            addFamilyMemberForm.addEventListener('submit', function(e) {
-                // Save all KK data before submitting
-                saveSelectedKKData();
+            // 4. Fungsi untuk menyalin data KK ke form anggota keluarga
+            function copyDataToFamilyMemberForm(kkData) {
+                // Set data KK ke hidden fields
+                document.getElementById('kk').value = kkData.kk;
+                document.getElementById('form_address').value = kkData.address || '';
+                document.getElementById('form_postal_code').value = kkData.postal_code || '';
+                document.getElementById('form_rt').value = kkData.rt || '';
+                document.getElementById('form_rw').value = kkData.rw || '';
+                document.getElementById('form_province_id').value = kkData.province_id || '';
+                document.getElementById('form_district_id').value = kkData.district_id || '';
+                document.getElementById('form_sub_district_id').value = kkData.sub_district_id || '';
+                document.getElementById('form_village_id').value = kkData.village_id || '';
+                document.getElementById('form_hamlet').value = kkData.dusun || '';
 
-                // Enhanced form submission handling with proper validation
-                e.preventDefault(); // Prevent default to do validation first
+                // Data alamat luar negeri
+                document.getElementById('form_foreign_address').value = kkData.foreign_address || '';
+                document.getElementById('form_city').value = kkData.city || '';
+                document.getElementById('form_state').value = kkData.state || '';
+                document.getElementById('form_country').value = kkData.country || '';
+                document.getElementById('form_foreign_postal_code').value = kkData.foreign_postal_code || '';
+            }
 
-                let kkValue = document.getElementById('kk').value;
-                const selectedKKFromDropdown = kkSelect.value;
-
-                if (!kkValue && selectedKKFromDropdown) {
-                    kkValue = selectedKKFromDropdown;
-                    document.getElementById('kk').value = kkValue;
+            // 5. Fungsi untuk mengaktifkan form anggota keluarga
+            function enableFamilyMemberForm() {
+                if (familyMemberForm) {
+                    familyMemberForm.classList.remove('opacity-50', 'pointer-events-none');
+                    console.log("Form anggota keluarga diaktifkan");
                 }
+            }
 
-                if (!kkValue && window.selectedKKValue) {
-                    kkValue = window.selectedKKValue;
-                    document.getElementById('kk').value = kkValue;
-                }
-
-                if (!kkValue) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Silakan pilih No KK terlebih dahulu'
-                    });
-                    return;
-                }
-
-                const requiredFields = ['nik', 'full_name', 'gender', 'birth_date', 'age', 'birth_place', 'family_status', 'religion', 'job_type_id'];
-                let isValid = true;
-
-                requiredFields.forEach(field => {
-                    const element = document.getElementById(field === 'full_name' ? 'member_full_name' : field);
-                    if (!element || !element.value.trim()) {
-                        isValid = false;
-                        if (element) {
-                            element.classList.add('border-red-500');
-                        }
-                    } else if (element) {
-                        element.classList.remove('border-red-500');
-                    }
-                });
-
-                if (!isValid) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Validasi Gagal',
-                        text: 'Silakan lengkapi semua field yang diperlukan'
-                    });
-                    return;
-                }
-
-                const formData = new FormData(this);
-
-                formData.append('address', document.getElementById('address').value);
-                formData.append('postal_code', document.getElementById('postal_code').value);
-                formData.append('rt', document.getElementById('rt').value);
-                formData.append('rw', document.getElementById('rw').value);
-                formData.append('province_id', document.getElementById('province_id_hidden').value);
-                formData.append('district_id', document.getElementById('district_id_hidden').value);
-                formData.append('sub_district_id', document.getElementById('sub_district_id_hidden').value);
-                formData.append('village_id', document.getElementById('village_id_hidden').value);
-                formData.append('hamlet', document.getElementById('dusun').value);
-
-                formData.append('foreign_address', document.getElementById('foreign_address').value);
-                formData.append('city', document.getElementById('city').value);
-                formData.append('state', document.getElementById('state').value);
-                formData.append('country', document.getElementById('country').value);
-                formData.append('foreign_postal_code', document.getElementById('foreign_postal_code').value);
-
-                const fieldsToCheck = [
-                    { main: 'address', form: 'form_address' },
-                    { main: 'postal_code', form: 'form_postal_code' },
-                    { main: 'rt', form: 'form_rt' },
-                    { main: 'rw', form: 'form_rw' },
-                    { main: 'province_id_hidden', form: 'form_province_id' },
-                    { main: 'district_id_hidden', form: 'form_district_id' },
-                    { main: 'sub_district_id_hidden', form: 'form_sub_district_id' },
-                    { main: 'village_id_hidden', form: 'form_village_id' },
-                    { main: 'dusun', form: 'form_hamlet' },
-                    { main: 'foreign_address', form: 'form_foreign_address' },
-                    { main: 'city', form: 'form_city' },
-                    { main: 'state', form: 'form_state' },
-                    { main: 'country', form: 'form_country' },
-                    { main: 'foreign_postal_code', form: 'form_foreign_postal_code' }
-                ];
-
-                fieldsToCheck.forEach(field => {
-                    const mainValue = document.getElementById(field.main).value;
-                    if (mainValue && !document.getElementById(field.form).value) {
-                        document.getElementById(field.form).value = mainValue;
-                    }
-                });
-
-                Swal.fire({
-                    title: 'Memproses...',
-                    text: 'Sedang menyimpan data anggota keluarga',
-                    allowOutsideClick: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
-                });
-
-                this.submit();
-            });
-
-            function resetMemberForm() {
+            // 6. Fungsi untuk reset form anggota keluarga (hanya field anggota, bukan KK)
+            function resetFamilyMemberForm() {
                 document.getElementById('nik').value = '';
                 document.getElementById('member_full_name').value = '';
                 document.getElementById('gender').value = '';
@@ -850,54 +686,233 @@
                 document.getElementById('email').value = '';
                 document.getElementById('mother').value = '';
                 document.getElementById('father').value = '';
+                document.getElementById('nik_mother').value = '';
+                document.getElementById('nik_father').value = '';
+                document.getElementById('birth_certificate').value = '2'; // Reset ke default
+                document.getElementById('birth_certificate_no').value = '';
+                document.getElementById('marital_certificate').value = '2';
+                document.getElementById('marital_certificate_no').value = '';
+                document.getElementById('marriage_date').value = '';
+                document.getElementById('divorce_certificate').value = '2';
+                document.getElementById('divorce_certificate_no').value = '';
+                document.getElementById('divorce_certificate_date').value = '';
+                document.getElementById('blood_type').value = '13';
+                document.getElementById('marital_status').value = '1';
+                document.getElementById('mental_disorders').value = '2';
+                document.getElementById('disabilities').value = '6';
+                document.getElementById('citizen_status').value = '2';
+                document.getElementById('status').value = 'Active';
+                document.getElementById('coordinate').value = '';
             }
 
-            if ({{ session('success') ? 'true' : 'false' }}) {
-                resetMemberForm();
+            // ===== EVENT LISTENERS =====
+
+            // PERBAIKAN UNTUK MENGATASI KK HILANG SETELAH SUBMIT
+
+            // 1. Gunakan sessionStorage untuk data KK yang dipilih (lebih andal untuk redirect)
+            if (kkSelect) {
+                kkSelect.addEventListener('change', function() {
+                    const selectedValue = this.value;
+                    if (selectedValue) {
+                        // Simpan ke sessionStorage (lebih stabil saat redirect)
+                        console.log("Menyimpan KK ke sessionStorage:", selectedValue);
+                        sessionStorage.setItem('selectedKK', selectedValue);
+                        
+                        // Set ke hidden field
+                        document.getElementById('kk').value = selectedValue;
+                    }
+                });
             }
 
-            if (!loadSavedKKData()) {
-                const lastUsedKK = localStorage.getItem('lastUsedKK');
-                if (lastUsedKK) {
-                    const kkOptions = Array.from(kkSelect.options);
-                    const matchingOption = kkOptions.find(option => option.value === lastUsedKK);
-
-                    if (matchingOption) {
-                        kkSelect.value = lastUsedKK;
-
-                        const event = new Event('change');
-                        kkSelect.dispatchEvent(event);
-
-                        if ({{ session('success') ? 'true' : 'false' }}) {
-                            setTimeout(() => {
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: 'Berhasil',
-                                    text: 'Anggota keluarga berhasil ditambahkan! Anda dapat menambahkan anggota lainnya.',
-                                    timer: 3000
-                                });
-                            }, 500);
+            // 2. Fungsi untuk memastikan nilai KK tersedia dari berbagai sumber
+            function ensureKKValue() {
+                // Coba dari hidden field terlebih dahulu
+                let kkValue = document.getElementById('kk').value;
+                
+                // Jika kosong, coba dari select biasa
+                if (!kkValue && kkSelect) {
+                    kkValue = kkSelect.value;
+                }
+                
+                // Jika masih kosong dan menggunakan Select2, coba dari data API Select2
+                if (!kkValue && $(kkSelect).data('select2')) {
+                    kkValue = $(kkSelect).select2('val') || $(kkSelect).find(':selected').val();
+                }
+                
+                // Jika masih kosong, coba dari sessionStorage
+                if (!kkValue) {
+                    kkValue = sessionStorage.getItem('selectedKK');
+                }
+                
+                // Jika masih kosong, coba dari localStorage sebagai fallback terakhir
+                if (!kkValue) {
+                    try {
+                        const savedData = JSON.parse(localStorage.getItem('kkDetailData'));
+                        if (savedData && savedData.kk) {
+                            kkValue = savedData.kk;
                         }
-
-                        setTimeout(() => {
-                            document.getElementById('nik').value = '';
-                            document.getElementById('member_full_name').value = '';
-                            document.getElementById('gender').value = '';
-                            document.getElementById('birth_date').value = '';
-                            document.getElementById('age').value = '';
-                            document.getElementById('birth_place').value = '';
-                            document.getElementById('family_status').value = '';
-                        }, 300);
+                    } catch (e) {
+                        console.error('Error parsing kkDetailData from localStorage:', e);
                     }
                 }
+                
+                // Update hidden field dengan nilai yang ditemukan
+                if (kkValue) {
+                    document.getElementById('kk').value = kkValue;
+                }
+                
+                console.log('Hasil final ensureKKValue:', kkValue);
+                return kkValue;
             }
 
-            window.addEventListener('beforeunload', function(e) {
-                if (!e.submitter || e.submitter.id !== 'addFamilyMemberBtn') {
-                    localStorage.removeItem('kkDetailData');
-                    localStorage.removeItem('lastUsedKK');
+            // 3. Override event submit untuk memastikan KK tersedia sebelum form dikirim
+            if (addFamilyMemberForm) {
+                // Simpan referensi ke event handler asli
+                const originalSubmitHandler = addFamilyMemberForm.onsubmit;
+                
+                // Tambahkan handler baru yang diprioritaskan
+                addFamilyMemberForm.onsubmit = function(e) {
+                    // Pastikan KK terpilih dan tersimpan
+                    ensureKKValue();
+                    
+                    // Double-check nilai KK
+                    const currentKK = document.getElementById('kk').value;
+                    if (!currentKK) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        alert("No KK tidak ditemukan. Silakan pilih No KK terlebih dahulu.");
+                        return false;
+                    }
+                    
+                    // Simpan ke localStorage dan sessionStorage sebagai backup
+                    saveKKDataToLocalStorage();
+                    sessionStorage.setItem('selectedKK', currentKK);
+                    
+                    // Debug log
+                    console.log("Form disubmit dengan KK:", currentKK);
+                    
+                    // Panggil handler asli jika tersedia
+                    if (typeof originalSubmitHandler === 'function') {
+                        return originalSubmitHandler.call(this, e);
+                    }
+                    
+                    // Default: lanjutkan submit
+                    return true;
+                };
+            }
+
+            // 4. Perbaikan load data dari localStorage/sessionStorage saat halaman dimuat
+            window.addEventListener('load', function() {
+                console.log("Window loaded, checking for saved KK data...");
+                
+                // Prioritaskan sessionStorage untuk KK terakhir yang dipilih
+                const savedKK = sessionStorage.getItem('selectedKK');
+                if (savedKK && kkSelect) {
+                    console.log("Found saved KK in sessionStorage:", savedKK);
+                    
+                    // Tunggu sampai options dropdown tersedia
+                    const checkOptionsInterval = setInterval(function() {
+                        const options = kkSelect.options;
+                        if (options.length > 1) {
+                            clearInterval(checkOptionsInterval);
+                            
+                            // Cari option yang sesuai
+                            let optionFound = false;
+                            for (let i = 0; i < options.length; i++) {
+                                if (options[i].value === savedKK) {
+                                    kkSelect.value = savedKK;
+                                    optionFound = true;
+                                    
+                                    // Trigger change event
+                                    if ($(kkSelect).data('select2')) {
+                                        $(kkSelect).val(savedKK).trigger('change');
+                                    } else {
+                                        const event = new Event('change');
+                                        kkSelect.dispatchEvent(event);
+                                    }
+                                    
+                                    console.log("KK option found and selected:", savedKK);
+                                    break;
+                                }
+                            }
+                            
+                            if (!optionFound) {
+                                console.warn("Saved KK not found in options:", savedKK);
+                            }
+                        }
+                    }, 200);
+                    
+                    // Safety timeout
+                    setTimeout(function() {
+                        clearInterval(checkOptionsInterval);
+                    }, 5000);
+                } else {
+                    console.log("No saved KK in sessionStorage, falling back to localStorage");
                 }
             });
+
+            // ===== TAMBAHAN UI ELEMENTS =====
+
+            // Tambahkan tombol untuk mengaktifkan form & menghapus data
+            const formHeader = document.querySelector('#addFamilyMemberForm h2');
+            if (formHeader) {
+                // Tombol aktifkan form
+                const enableButton = document.createElement('button');
+                enableButton.type = 'button';
+                enableButton.className = 'ml-4 px-3 py-1 bg-blue-500 text-white rounded text-sm';
+                enableButton.textContent = 'Aktifkan Form';
+                enableButton.onclick = function() {
+                    enableFamilyMemberForm();
+                    this.textContent = 'Form Aktif';
+                    this.disabled = true;
+                    this.className = 'ml-4 px-3 py-1 bg-green-500 text-white rounded text-sm';
+                };
+
+                // Tombol hapus data
+                const clearButton = document.createElement('button');
+                clearButton.type = 'button';
+                clearButton.className = 'ml-2 px-3 py-1 bg-red-500 text-white rounded text-sm';
+                clearButton.textContent = 'Bersihkan Data';
+                clearButton.onclick = function() {
+                    localStorage.removeItem('kkDetailData');
+                    location.reload();
+                };
+
+                formHeader.appendChild(enableButton);
+                formHeader.appendChild(clearButton);
+            }
+
+            // ===== INISIALISASI SAAT HALAMAN DIMUAT =====
+
+            // Aktifkan form untuk testing
+            enableFamilyMemberForm();
+
+            // Ambil data KK yang tersimpan
+            const savedKKData = loadKKDataFromLocalStorage();
+
+            // Jika ada data KK tersimpan, isi form dengan data tersebut
+            if (savedKKData) {
+                fillKKFormFields(savedKKData);
+
+                // Jika ada pesan sukses (setelah submit), reset form anggota keluarga
+                if ({{ session('success') ? 'true' : 'false' }}) {
+                    resetFamilyMemberForm();
+
+                    // Tampilkan pesan sukses
+                    setTimeout(() => {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil!',
+                            text: 'Anggota keluarga berhasil ditambahkan. Anda dapat melanjutkan menambah anggota berikutnya.',
+                            confirmButtonText: 'Lanjutkan'
+                        });
+                    }, 500);
+                }
+            }
+
+            // Hapus event beforeunload yang menghapus data KK
+            // Ini mencegah data terhapus saat refresh halaman
+            window.removeEventListener('beforeunload', function() {});
         });
     </script>
 
