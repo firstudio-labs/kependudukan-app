@@ -38,6 +38,7 @@ use App\Http\Controllers\guest\KelahiranSuratController;
 use App\Http\Controllers\guest\AhliWarisSuratController;
 use App\Http\Controllers\guest\RumahSewaSuratController;
 use App\Http\Controllers\adminKabupaten\ProfileKabController;
+use App\Http\Controllers\LaporDesaController;
 
 
 
@@ -397,6 +398,19 @@ Route::middleware(['auth:web', 'role:superadmin'])->group(function () {
         ->name('superadmin.datamaster.jenis-aset.update');
     Route::delete('/superadmin/datamaster/jenis-aset/{id}', [JenisAsetController::class, 'destroy'])
         ->name('superadmin.datamaster.jenis-aset.destroy');
+
+    Route::get('/superadmin/datamaster/lapordesa', [LaporDesaController::class, 'index'])
+        ->name('superadmin.datamaster.lapordesa.index');
+    Route::get('/superadmin/datamaster/lapordesa/create', [LaporDesaController::class, 'create'])
+        ->name('superadmin.datamaster.lapordesa.create');
+    Route::post('/superadmin/datamaster/lapordesa', [LaporDesaController::class, 'store'])
+        ->name('superadmin.datamaster.lapordesa.store');
+    Route::get('/superadmin/datamaster/lapordesa/{id}/edit', [LaporDesaController::class, 'edit'])
+        ->name('superadmin.datamaster.lapordesa.edit');
+    Route::put('/superadmin/datamaster/lapordesa/{id}', [LaporDesaController::class, 'update'])
+        ->name('superadmin.datamaster.lapordesa.update');
+    Route::delete('/superadmin/datamaster/lapordesa/{id}', [LaporDesaController::class, 'destroy'])
+        ->name('superadmin.datamaster.lapordesa.destroy');
 });
 
 // Route untuk admin kabupaten - menggunakan web guard

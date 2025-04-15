@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 
-class ProfileController extends Controller
+class ProfileKabController extends Controller
 {
     /**
      * Display admin kabupaten profile page
