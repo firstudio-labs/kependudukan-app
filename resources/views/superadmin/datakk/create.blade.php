@@ -12,7 +12,7 @@
                 <!-- Kolom 1: Data Utama -->
                 <div class="col-span-1 sm:col-span-2 md:col-span-1">
                     <label for="kk" class="block text-sm font-medium text-gray-700">No KK</label>
-                    <input type="text" id="kk" name="kk" autocomplete="off"
+                    <input type="text" id="kk" name="kk" autocomplete="off" maxlength="16" pattern="\d{16}"
                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-lg p-2">
                 </div>
 
@@ -145,9 +145,12 @@
         </div>
 
         <!-- Form Tambah Anggota Keluarga -->
-        <form id="addFamilyMemberForm" method="POST" action="{{ route('superadmin.datakk.store-family-member') }}" class="bg-white p-4 sm:p-6 rounded-lg shadow-md">
+        <form id="addFamilyMemberForm" method="POST" action="{{ route('superadmin.datakk.store-family-members') }}" class="bg-white p-4 sm:p-6 rounded-lg shadow-md">
             @csrf
             <h2 class="text-lg font-semibold text-gray-800 mb-4">Tambah Anggota Keluarga</h2>
+
+            <!-- Hidden field to store all family members data as JSON -->
+            <input type="hidden" name="family_members_json" id="family_members_json" value="[]">
 
             <!-- Form fields are now enabled by default -->
             <div id="familyMemberFormFields">
@@ -477,19 +480,45 @@
                 </div>
 
                 <div class="mt-6 flex justify-end space-x-4">
-                    <button type="submit" id="addFamilyMemberBtn"
-                        class="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-[#7886C7] text-base font-medium text-white hover:bg-[#2D336B] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-lg">
-                        Tambah Anggota Keluarga
+                    <button type="button" id="addToListBtn"
+                        class="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:text-lg">
+                        Tambah ke Daftar
                     </button>
+                    <button type="submit" id="submitAllBtn"
+                        class="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-[#7886C7] text-base font-medium text-white hover:bg-[#2D336B] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-lg">
+                        Simpan Semua Anggota
+                    </button>
+                </div>
+            </div>
+
+            <!-- Table to display added family members -->
+            <div class="mt-8" id="familyMembersTableContainer" style="display: none;">
+                <h3 class="text-lg font-medium text-gray-700 mb-3">Daftar Anggota Keluarga yang Akan Disimpan</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NIK</th>
+                                <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
+                                <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">JK</th>
+                                <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">TTL</th>
+                                <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200" id="familyMembersTableBody">
+                            <!-- Table rows will be inserted here -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </form>
 
         <div class="mt-6 flex justify-end">
-            <button type="button" onclick="window.history.back()"
+            <a href="{{ route('superadmin.datakk.index') }}"
                 class="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                Kembali
-            </button>
+                Batal
+            </a>
         </div>
     </div>
 
@@ -506,18 +535,288 @@
         document.body.setAttribute('data-success-message', "{{ session('success') }}");
         document.body.setAttribute('data-error-message', "{{ session('error') }}");
 
+        // Clear localStorage data when coming to this page from another page (not on refresh)
         document.addEventListener('DOMContentLoaded', function() {
+            // Create a flag in sessionStorage to detect page reload vs navigation
+            if (sessionStorage.getItem('isPageReload') === null) {
+                // First load - set the flag for next time and clear localStorage KK data
+                sessionStorage.setItem('isPageReload', 'true');
+
+                // Check if we're coming from another page (not a refresh)
+                if (document.referrer && !document.referrer.includes(window.location.pathname)) {
+                    localStorage.removeItem('kkDetailData');
+                }
+            }
+
+            // Reset on page unload
+            window.addEventListener('beforeunload', function() {
+                sessionStorage.removeItem('isPageReload');
+            });
+
             // ===== INISIALISASI ELEMEN DOM =====
             const kkInput = document.getElementById('kk');
             const familyMemberForm = document.getElementById('familyMemberFormFields');
             const addFamilyMemberForm = document.getElementById('addFamilyMemberForm');
             const emptyFamilyMessage = document.getElementById('emptyFamilyMessage');
+            const familyMembersJson = document.getElementById('family_members_json');
+            const addToListBtn = document.getElementById('addToListBtn');
+            const submitAllBtn = document.getElementById('submitAllBtn');
+            const familyMembersTableBody = document.getElementById('familyMembersTableBody');
+            const familyMembersTableContainer = document.getElementById('familyMembersTableContainer');
 
-            console.log("Form elements:", {
-                kkInput: kkInput ? "Found" : "Not found",
-                familyMemberForm: familyMemberForm ? "Found" : "Not found",
-                addFamilyMemberForm: addFamilyMemberForm ? "Found" : "Not found"
-            });
+            // Initialize family members array
+            let familyMembersArray = [];
+
+            // ===== FUNGSI UNTUK MENGELOLA DAFTAR ANGGOTA KELUARGA =====
+
+            // Function to reset family member form fields without affecting KK data
+            function resetFamilyMemberForm() {
+                // Reset only family member specific fields
+                const fieldsToReset = [
+                    'nik', 'member_full_name', 'gender', 'birth_date', 'age', 'birth_place',
+                    'family_status', 'religion', 'education_status', 'job_type_id',
+                    'birth_certificate', 'birth_certificate_no',
+                    'marital_certificate', 'marital_certificate_no', 'marriage_date',
+                    'divorce_certificate', 'divorce_certificate_no', 'divorce_certificate_date',
+                    'blood_type', 'mental_disorders', 'disabilities', 'citizen_status',
+                    'telephone', 'email', 'nik_mother', 'mother', 'nik_father', 'father',
+                    'coordinate', 'status'
+                ];
+
+                // Reset each field to its default value
+                fieldsToReset.forEach(fieldId => {
+                    const field = document.getElementById(fieldId);
+                    if (field) {
+                        if (field.tagName === 'SELECT') {
+                            field.selectedIndex = 0; // Reset to first option
+
+                            // Handle specific default values
+                            if (fieldId === 'birth_certificate' || fieldId === 'marital_certificate' ||
+                                fieldId === 'divorce_certificate') {
+                                field.value = '2'; // "Tidak Ada"
+                            } else if (fieldId === 'blood_type') {
+                                field.value = '13'; // "Tidak Tahu"
+                            } else if (fieldId === 'marital_status') {
+                                field.value = '1'; // "Belum Kawin"
+                            } else if (fieldId === 'mental_disorders') {
+                                field.value = '2'; // "Tidak Ada"
+                            } else if (fieldId === 'disabilities') {
+                                field.value = '6'; // "Lainnya"
+                            } else if (fieldId === 'citizen_status') {
+                                field.value = '2'; // "WNI"
+                            } else if (fieldId === 'status') {
+                                field.value = 'Active';
+                            }
+                        } else {
+                            field.value = '';
+                        }
+                    }
+                });
+            }
+
+            // Function to get all KK data from the form
+            function getKKFormData() {
+                return {
+                    // KK data from the top form
+                    kk: document.getElementById('kk').value,
+                    address: document.getElementById('address').value,
+                    postal_code: document.getElementById('postal_code').value,
+                    rt: document.getElementById('rt').value,
+                    rw: document.getElementById('rw').value,
+                    province_id: document.getElementById('province_id').value,
+                    district_id: document.getElementById('district_id').value,
+                    sub_district_id: document.getElementById('sub_district_id').value,
+                    village_id: document.getElementById('village_id').value,
+                    hamlet: document.getElementById('dusun').value,
+
+                    // Foreign address data
+                    foreign_address: document.getElementById('foreign_address').value,
+                    city: document.getElementById('city').value,
+                    state: document.getElementById('state').value,
+                    country: document.getElementById('country').value,
+                    foreign_postal_code: document.getElementById('foreign_postal_code').value
+                };
+            }
+
+            // Function to update the table of family members
+            function updateFamilyMembersTable() {
+                // Clear current table
+                familyMembersTableBody.innerHTML = '';
+
+                // Add rows for each family member
+                familyMembersArray.forEach((member, index) => {
+                    const row = document.createElement('tr');
+
+                    // Convert gender code to text
+                    const genderText = member.gender == 1 ? 'L' : 'P';
+
+                    // Convert family status code to text
+                    let familyStatusText = 'Lainnya';
+                    switch(parseInt(member.family_status)) {
+                        case 1: familyStatusText = 'ANAK'; break;
+                        case 2: familyStatusText = 'KEPALA KELUARGA'; break;
+                        case 3: familyStatusText = 'ISTRI'; break;
+                        case 4: familyStatusText = 'ORANG TUA'; break;
+                        case 5: familyStatusText = 'MERTUA'; break;
+                        case 6: familyStatusText = 'CUCU'; break;
+                        case 7: familyStatusText = 'FAMILI LAIN'; break;
+                    }
+
+                    // Format birthdate for display
+                    const birthInfo = `${member.birth_place}, ${formatDate(member.birth_date)}`;
+
+                    row.innerHTML = `
+                        <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${member.nik}</td>
+                        <td class="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900">${member.full_name}</td>
+                        <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${genderText}</td>
+                        <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${birthInfo}</td>
+                        <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${familyStatusText}</td>
+                        <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">
+                            <button type="button" class="text-red-600 hover:text-red-900" onclick="removeFamilyMember(${index})">
+                                Hapus
+                            </button>
+                        </td>
+                    `;
+
+                    familyMembersTableBody.appendChild(row);
+                });
+            }
+
+            // Helper function to format date
+            function formatDate(dateString) {
+                if (!dateString) return '';
+                const date = new Date(dateString);
+                return date.toLocaleDateString('id-ID', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                });
+            }
+
+            // Make removeFamilyMember function available globally
+            window.removeFamilyMember = function(index) {
+                if (confirm('Apakah Anda yakin ingin menghapus anggota keluarga ini?')) {
+                    // Remove from array
+                    familyMembersArray.splice(index, 1);
+
+                    // Update hidden input
+                    familyMembersJson.value = JSON.stringify(familyMembersArray);
+
+                    // Update table
+                    updateFamilyMembersTable();
+
+                    // Hide table if no members left
+                    if (familyMembersArray.length === 0) {
+                        familyMembersTableContainer.style.display = 'none';
+                    }
+                }
+            };
+
+            // Add member to the list without submitting
+            if (addToListBtn) {
+                addToListBtn.addEventListener('click', function() {
+                    // Validate essential fields
+                    const nik = document.getElementById('nik').value;
+                    const fullName = document.getElementById('member_full_name').value;
+                    const gender = document.getElementById('gender').value;
+                    const familyStatus = document.getElementById('family_status').value;
+                    const kkNumber = document.getElementById('kk').value;
+
+                    if (!kkNumber) {
+                        alert('Silakan isi Nomor KK terlebih dahulu');
+                        return;
+                    }
+
+                    if (!nik || !fullName || !gender || !familyStatus) {
+                        alert('Harap isi semua field yang wajib (NIK, Nama Lengkap, Jenis Kelamin, Status Hubungan)');
+                        return;
+                    }
+
+                    // Save KK data and ensure it's available for all family members
+                    const kkData = saveKKDataToLocalStorage();
+
+                    // Get all KK form data
+                    const kkFormData = getKKFormData();
+
+                    // Get family member specific data
+                    const formData = {
+                        nik: nik,
+                        kk: kkNumber,
+                        full_name: fullName,
+                        gender: gender,
+                        birth_date: document.getElementById('birth_date').value,
+                        age: document.getElementById('age').value,
+                        birth_place: document.getElementById('birth_place').value,
+                        family_status: familyStatus,
+                        religion: document.getElementById('religion').value,
+                        education_status: document.getElementById('education_status').value,
+                        job_type_id: document.getElementById('job_type_id').value,
+
+                        // Include address fields from KK data
+                        address: kkFormData.address,
+                        postal_code: kkFormData.postal_code,
+                        rt: kkFormData.rt,
+                        rw: kkFormData.rw,
+                        province_id: kkFormData.province_id,
+                        district_id: kkFormData.district_id,
+                        sub_district_id: kkFormData.sub_district_id,
+                        village_id: kkFormData.village_id,
+                        hamlet: kkFormData.hamlet,
+
+                        // Birth details
+                        birth_certificate: document.getElementById('birth_certificate').value,
+                        birth_certificate_no: document.getElementById('birth_certificate_no').value,
+
+                        // Marital details
+                        marital_status: document.getElementById('marital_status').value,
+                        marital_certificate: document.getElementById('marital_certificate').value,
+                        marital_certificate_no: document.getElementById('marital_certificate_no').value,
+                        marriage_date: document.getElementById('marriage_date').value,
+
+                        // Divorce details
+                        divorce_certificate: document.getElementById('divorce_certificate').value,
+                        divorce_certificate_no: document.getElementById('divorce_certificate_no').value,
+                        divorce_certificate_date: document.getElementById('divorce_certificate_date').value,
+
+                        // Other fields
+                        blood_type: document.getElementById('blood_type').value,
+                        mental_disorders: document.getElementById('mental_disorders').value,
+                        disabilities: document.getElementById('disabilities').value,
+                        citizen_status: document.getElementById('citizen_status').value,
+                        telephone: document.getElementById('telephone').value,
+                        email: document.getElementById('email').value,
+                        coordinate: document.getElementById('coordinate').value,
+                        nik_mother: document.getElementById('nik_mother').value,
+                        mother: document.getElementById('mother').value,
+                        nik_father: document.getElementById('nik_father').value,
+                        father: document.getElementById('father').value,
+                        status: document.getElementById('status').value,
+
+                        // Foreign address (copied from KK data)
+                        foreign_address: kkFormData.foreign_address,
+                        city: kkFormData.city,
+                        state: kkFormData.state,
+                        country: kkFormData.country,
+                        foreign_postal_code: kkFormData.foreign_postal_code,
+                    };
+
+                    // Add to array and update JSON
+                    familyMembersArray.push(formData);
+                    familyMembersJson.value = JSON.stringify(familyMembersArray);
+
+                    // Update UI table
+                    updateFamilyMembersTable();
+
+                    // Show the table if it was hidden
+                    familyMembersTableContainer.style.display = 'block';
+
+                    // Clear family member form for next entry (but keep KK data)
+                    resetFamilyMemberForm();
+
+                    // Replace alert with SweetAlert for better user experience
+                    showSuccessAlert(`Anggota keluarga "${fullName}" telah ditambahkan ke daftar. Total: ${familyMembersArray.length} anggota.`);
+                });
+            }
 
             // ===== FUNGSI UTAMA UNTUK MENGELOLA DATA KK =====
 
@@ -544,197 +843,223 @@
                 };
 
                 localStorage.setItem('kkDetailData', JSON.stringify(kkData));
-                console.log('Data KK berhasil disimpan ke localStorage:', kkData);
 
                 return kkData;
             }
 
-            // 2. Fungsi untuk memuat data KK dari localStorage
-            function loadKKDataFromLocalStorage() {
-                try {
-                    const savedData = localStorage.getItem('kkDetailData');
-                    if (!savedData) return null;
+            // Add event listener for province_code dropdown
+            $('#province_code').on('change', function() {
+                const provinceCode = $(this).val();
+                const provinceOption = $(this).find('option:selected');
+                const provinceText = provinceOption.text();
 
-                    const kkData = JSON.parse(savedData);
-                    console.log('Data KK berhasil dimuat dari localStorage:', kkData);
-                    return kkData;
-                } catch (error) {
-                    console.error('Error saat memuat data KK:', error);
-                    return null;
-                }
-            }
-
-            // 3. Fungsi untuk mengisi form dengan data KK
-            function fillKKFormFields(kkData) {
-                if (!kkData || !kkData.kk) return false;
-
-                // Set nilai pada input KK
-                kkInput.value = kkData.kk;
-
-                // Isi semua field KK
-                document.getElementById('address').value = kkData.address || '';
-                document.getElementById('postal_code').value = kkData.postal_code || '';
-                document.getElementById('rt').value = kkData.rt || '';
-                document.getElementById('rw').value = kkData.rw || '';
-                document.getElementById('province_id').value = kkData.province_id || '';
-                document.getElementById('district_id').value = kkData.district_id || '';
-                document.getElementById('sub_district_id').value = kkData.sub_district_id || '';
-                document.getElementById('village_id').value = kkData.village_id || '';
-                document.getElementById('dusun').value = kkData.dusun || '';
-
-                // Data alamat luar negeri
-                document.getElementById('foreign_address').value = kkData.foreign_address || '';
-                document.getElementById('city').value = kkData.city || '';
-                document.getElementById('state').value = kkData.state || '';
-                document.getElementById('country').value = kkData.country || '';
-                document.getElementById('foreign_postal_code').value = kkData.foreign_postal_code || '';
-
-                // Isi hidden fields pada form anggota keluarga
-                copyDataToFamilyMemberForm(kkData);
-
-                return true;
-            }
-
-            // 4. Fungsi untuk menyalin data KK ke form anggota keluarga
-            function copyDataToFamilyMemberForm(kkData) {
-                // Set data KK ke hidden fields
-                document.getElementById('form_address').value = kkData.address || '';
-                document.getElementById('form_postal_code').value = kkData.postal_code || '';
-                document.getElementById('form_rt').value = kkData.rt || '';
-                document.getElementById('form_rw').value = kkData.rw || '';
-                document.getElementById('form_province_id').value = kkData.province_id || '';
-                document.getElementById('form_district_id').value = kkData.district_id || '';
-                document.getElementById('form_sub_district_id').value = kkData.sub_district_id || '';
-                document.getElementById('form_village_id').value = kkData.village_id || '';
-                document.getElementById('form_hamlet').value = kkData.dusun || '';
-
-                // Data alamat luar negeri
-                document.getElementById('form_foreign_address').value = kkData.foreign_address || '';
-                document.getElementById('form_city').value = kkData.city || '';
-                document.getElementById('form_state').value = kkData.state || '';
-                document.getElementById('form_country').value = kkData.country || '';
-                document.getElementById('form_foreign_postal_code').value = kkData.foreign_postal_code || '';
-            }
-
-            // 6. Fungsi untuk reset form anggota keluarga (hanya field anggota, bukan KK)
-            function resetFamilyMemberForm() {
-                document.getElementById('nik').value = '';
-                document.getElementById('member_full_name').value = '';
-                document.getElementById('gender').value = '';
-                document.getElementById('birth_date').value = '';
-                document.getElementById('age').value = '';
-                document.getElementById('birth_place').value = '';
-                document.getElementById('family_status').value = '';
-                document.getElementById('religion').value = '';
-                document.getElementById('education_status').value = '';
-                document.getElementById('job_type_id').value = '';
-                document.getElementById('telephone').value = '';
-                document.getElementById('email').value = '';
-                document.getElementById('mother').value = '';
-                document.getElementById('father').value = '';
-                document.getElementById('nik_mother').value = '';
-                document.getElementById('nik_father').value = '';
-                document.getElementById('birth_certificate').value = '2'; // Reset ke default
-                document.getElementById('birth_certificate_no').value = '';
-                document.getElementById('marital_certificate').value = '2';
-                document.getElementById('marital_certificate_no').value = '';
-                document.getElementById('marriage_date').value = '';
-                document.getElementById('divorce_certificate').value = '2';
-                document.getElementById('divorce_certificate_no').value = '';
-                document.getElementById('divorce_certificate_date').value = '';
-                document.getElementById('blood_type').value = '13';
-                document.getElementById('marital_status').value = '1';
-                document.getElementById('mental_disorders').value = '2';
-                document.getElementById('disabilities').value = '6';
-                document.getElementById('citizen_status').value = '2';
-                document.getElementById('status').value = 'Active';
-                document.getElementById('coordinate').value = '';
-            }
-
-            // ===== EVENT LISTENERS =====
-            // 1. Event listener for KK input
-            if (kkInput) {
-                kkInput.addEventListener('input', function() {
-                    const inputValue = this.value;
-                    if (inputValue) {
-                        // Update hidden field in family member form
-                        document.getElementById('kk').value = inputValue;
-                    }
-                });
-            }
-
-            // 2. Fungsi untuk memastikan nilai KK tersedia dari berbagai sumber
-            function ensureKKValue() {
-                // Use the input value directly
-                let kkValue = kkInput.value;
-
-                // Jika masih kosong, coba dari localStorage sebagai fallback terakhir
-                if (!kkValue) {
-                    try {
-                        const savedData = JSON.parse(localStorage.getItem('kkDetailData'));
-                        if (savedData && savedData.kk) {
-                            kkValue = savedData.kk;
-                            kkInput.value = kkValue; // Update input field
+                // Get the province ID from the data attribute or use a lookup
+                if (provinceCode) {
+                    @foreach($provinces as $province)
+                        if ("{{ $province['code'] }}" === provinceCode) {
+                            document.getElementById('province_id').value = "{{ $province["id"] }}";
                         }
-                    } catch (e) {
-                        console.error('Error parsing kkDetailData from localStorage:', e);
-                    }
-                }
-
-                console.log('Hasil final ensureKKValue:', kkValue);
-                return kkValue;
-            }
-
-            // 3. Override event submit untuk memastikan KK tersedia sebelum form dikirim
-            if (addFamilyMemberForm) {
-                // Simpan referensi ke event handler asli
-                const originalSubmitHandler = addFamilyMemberForm.onsubmit;
-
-                // Tambahkan handler baru yang diprioritaskan
-                addFamilyMemberForm.onsubmit = function(e) {
-                    // Pastikan KK terpilih dan tersimpan
-                    ensureKKValue();
-
-                    // Double-check nilai KK
-                    const currentKK = document.getElementById('kk').value;
-                    if (!currentKK) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        alert("No KK tidak ditemukan. Silakan isi No KK terlebih dahulu.");
-                        return false;
-                    }
-
-                    // Simpan ke localStorage sebagai backup
-                    saveKKDataToLocalStorage();
-
-                    // Debug log
-                    console.log("Form disubmit dengan KK:", currentKK);
-
-                    // Panggil handler asli jika tersedia
-                    if (typeof originalSubmitHandler === 'function') {
-                        return originalSubmitHandler.call(this, e);
-                    }
-
-                    // Default: lanjutkan submit
-                    return true;
-                };
-            }
-
-            // 4. Load data dari localStorage saat halaman dimuat
-            window.addEventListener('load', function() {
-                console.log("Window loaded, checking for saved KK data...");
-
-                // Ambil data dari localStorage
-                const savedKKData = loadKKDataFromLocalStorage();
-
-                // Jika ada data tersimpan, isi form
-                if (savedKKData && savedKKData.kk) {
-                    console.log("Found saved KK in localStorage:", savedKKData.kk);
-                    fillKKFormFields(savedKKData);
-                } else {
-                    console.log("No saved KK in localStorage");
+                    @endforeach
                 }
             });
+
+            // Add event listeners for other location dropdowns to ensure IDs are properly set
+            $('#district_code').on('change', function() {
+                const districtCode = $(this).val();
+                if (districtCode) {
+                    // Make an AJAX request to get the district details
+                    $.get(`${getBaseUrl()}/location/districts/${$('#province_code').val()}`, function(data) {
+                        const districts = data;
+                        const district = districts.find(d => d.code === districtCode);
+                        if (district) {
+                            document.getElementById('district_id').value = district.id;
+                        }
+                    });
+                }
+            });
+
+            $('#sub_district_code').on('change', function() {
+                const subDistrictCode = $(this).val();
+                if (subDistrictCode) {
+                    // Make an AJAX request to get the sub-district details
+                    $.get(`${getBaseUrl()}/location/sub-districts/${$('#district_code').val()}`, function(data) {
+                        const subDistricts = data;
+                        const subDistrict = subDistricts.find(sd => sd.code === subDistrictCode);
+                        if (subDistrict) {
+                            document.getElementById('sub_district_id').value = subDistrict.id;
+                        }
+                    });
+                }
+            });
+
+            $('#village_code').on('change', function() {
+                const villageCode = $(this).val();
+                if (villageCode) {
+                    // Make an AJAX request to get the village details
+                    $.get(`${getBaseUrl()}/location/villages/${$('#sub_district_code').val()}`, function(data) {
+                        const villages = data;
+                        const village = villages.find(v => v.code === villageCode);
+                        if (village) {
+                            document.getElementById('village_id').value = village.id;
+                        }
+                    });
+                }
+            });
+
+            // Get base URL function if not already defined
+            function getBaseUrl() {
+                const metaUrl = document.querySelector('meta[name="base-url"]');
+                return metaUrl ? metaUrl.getAttribute('content') : window.location.origin;
+            }
+
+            // 3. Add form submit handler to ensure current family member data is included
+            if (addFamilyMemberForm) {
+                addFamilyMemberForm.addEventListener('submit', function(e) {
+                    // Prevent default submission (we'll submit manually if validation passes)
+                    e.preventDefault();
+
+                    // Check if there's data in the current form that hasn't been added to the list
+                    const currentNik = document.getElementById('nik').value;
+                    const currentFullName = document.getElementById('member_full_name').value;
+
+                    // If there's data in the form, add it to the list automatically
+                    if (currentNik && currentFullName) {
+                        // Get KK form data
+                        const kkFormData = getKKFormData();
+
+                        // Check if the KK number is filled out
+                        if (!kkFormData.kk) {
+                            alert('Silakan isi Nomor KK terlebih dahulu');
+                            return;
+                        }
+
+                        // Check other required fields
+                        const gender = document.getElementById('gender').value;
+                        const familyStatus = document.getElementById('family_status').value;
+                        const birthDate = document.getElementById('birth_date').value;
+                        const age = document.getElementById('age').value;
+                        const birthPlace = document.getElementById('birth_place').value;
+                        const religion = document.getElementById('religion').value;
+                        const jobTypeId = document.getElementById('job_type_id').value;
+
+                        if (!gender || !familyStatus || !birthDate || !age || !birthPlace || !religion || !jobTypeId) {
+                            if (confirm('Ada data yang belum lengkap pada form anggota yang sedang diisi. Lengkapi dulu?')) {
+                                return; // Stop submission to allow user to complete the form
+                            }
+                        }
+
+                        // Create member data object (same as in addToListBtn handler)
+                        const memberData = {
+                            nik: currentNik,
+                            kk: kkFormData.kk,
+                            full_name: currentFullName,
+                            gender: gender || '',
+                            birth_date: birthDate || '',
+                            age: age || '',
+                            birth_place: birthPlace || '',
+                            family_status: familyStatus || '',
+                            religion: religion || '',
+                            education_status: document.getElementById('education_status').value || '',
+                            job_type_id: jobTypeId || '',
+
+                            // Include KK data for all members
+                            address: kkFormData.address,
+                            postal_code: kkFormData.postal_code,
+                            rt: kkFormData.rt,
+                            rw: kkFormData.rw,
+                            province_id: kkFormData.province_id,
+                            district_id: kkFormData.district_id,
+                            sub_district_id: kkFormData.sub_district_id,
+                            village_id: kkFormData.village_id,
+                            hamlet: kkFormData.hamlet,
+
+                            // Birth details
+                            birth_certificate: document.getElementById('birth_certificate').value || '',
+                            birth_certificate_no: document.getElementById('birth_certificate_no').value || '',
+
+                            // Marital details
+                            marital_status: document.getElementById('marital_status').value || '',
+                            marital_certificate: document.getElementById('marital_certificate').value || '',
+                            marital_certificate_no: document.getElementById('marital_certificate_no').value || '',
+                            marriage_date: document.getElementById('marriage_date').value || '',
+
+                            // Divorce details
+                            divorce_certificate: document.getElementById('divorce_certificate').value || '',
+                            divorce_certificate_no: document.getElementById('divorce_certificate_no').value || '',
+                            divorce_certificate_date: document.getElementById('divorce_certificate_date').value || '',
+
+                            // Other fields
+                            blood_type: document.getElementById('blood_type').value || '',
+                            mental_disorders: document.getElementById('mental_disorders').value || '',
+                            disabilities: document.getElementById('disabilities').value || '',
+                            citizen_status: document.getElementById('citizen_status').value || '',
+                            telephone: document.getElementById('telephone').value || '',
+                            email: document.getElementById('email').value || '',
+                            coordinate: document.getElementById('coordinate').value || '',
+                            nik_mother: document.getElementById('nik_mother').value || '',
+                            mother: document.getElementById('mother').value || '',
+                            nik_father: document.getElementById('nik_father').value || '',
+                            father: document.getElementById('father').value || '',
+                            status: document.getElementById('status').value || '',
+
+                            // Foreign address data
+                            foreign_address: kkFormData.foreign_address,
+                            city: kkFormData.city,
+                            state: kkFormData.state,
+                            country: kkFormData.country,
+                            foreign_postal_code: kkFormData.foreign_postal_code,
+                        };
+
+                        // Check if this NIK is already in the array to avoid duplicates
+                        const existingMemberIndex = familyMembersArray.findIndex(member => member.nik === currentNik);
+                        if (existingMemberIndex >= 0) {
+                            // Update existing entry
+                            familyMembersArray[existingMemberIndex] = memberData;
+                        } else {
+                            // Add to array
+                            familyMembersArray.push(memberData);
+                        }
+
+                        // Update the hidden input
+                        familyMembersJson.value = JSON.stringify(familyMembersArray);
+                    }
+
+                    // Check if we have any family members to submit
+                    if (familyMembersArray.length === 0) {
+                        alert('Tidak ada anggota keluarga yang akan disimpan. Silakan tambahkan anggota terlebih dahulu.');
+                        return;
+                    }
+
+                    // Update all family members with the latest KK data
+                    const kkFormData = getKKFormData();
+                    familyMembersArray = familyMembersArray.map(member => {
+                        return {
+                            ...member,
+                            kk: kkFormData.kk,
+                            address: kkFormData.address,
+                            postal_code: kkFormData.postal_code,
+                            rt: kkFormData.rt,
+                            rw: kkFormData.rw,
+                            province_id: kkFormData.province_id,
+                            district_id: kkFormData.district_id,
+                            sub_district_id: kkFormData.sub_district_id,
+                            village_id: kkFormData.village_id,
+                            hamlet: kkFormData.hamlet,
+                            foreign_address: kkFormData.foreign_address,
+                            city: kkFormData.city,
+                            state: kkFormData.state,
+                            country: kkFormData.country,
+                            foreign_postal_code: kkFormData.foreign_postal_code
+                        };
+                    });
+
+                    // Update the hidden input with the latest data
+                    familyMembersJson.value = JSON.stringify(familyMembersArray);
+
+                    // Submit the form
+                    addFamilyMemberForm.submit();
+                });
+            }
         });
     </script>
 

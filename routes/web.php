@@ -548,5 +548,7 @@ Route::get('/citizens/administrasi', [AdministrasiController::class, 'fetchAllCi
 
 
 
+Route::post('/superadmin/datakk/store-family-members', [DataKKController::class, 'storeFamilyMembers'])
+->name('superadmin.datakk.store-family-members');
 
 

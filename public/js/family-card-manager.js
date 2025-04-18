@@ -109,24 +109,23 @@ const getBaseUrl = () => {
 // Function to save KK data to localStorage
 function saveKKDataToLocalStorage() {
     const kkData = {
-        kk: document.getElementById('kk').value,
-        address: document.getElementById('address').value,
-        postal_code: document.getElementById('postal_code').value,
-        rt: document.getElementById('rt').value,
-        rw: document.getElementById('rw').value,
-        province_id: document.getElementById('province_id_hidden').value,
-        district_id: document.getElementById('district_id_hidden').value,
-        sub_district_id: document.getElementById('sub_district_id_hidden').value,
-        village_id: document.getElementById('village_id_hidden').value,
-        dusun: document.getElementById('dusun').value,
-        jml_anggota_kk: document.getElementById('jml_anggota_kk').value,
+        kk: document.getElementById('kk')?.value || '',
+        address: document.getElementById('address')?.value || '',
+        postal_code: document.getElementById('postal_code')?.value || '',
+        rt: document.getElementById('rt')?.value || '',
+        rw: document.getElementById('rw')?.value || '',
+        province_id: document.getElementById('province_id')?.value || '',
+        district_id: document.getElementById('district_id')?.value || '',
+        sub_district_id: document.getElementById('sub_district_id')?.value || '',
+        village_id: document.getElementById('village_id')?.value || '',
+        dusun: document.getElementById('dusun')?.value || '',
 
         // Data alamat luar negeri
-        foreign_address: document.getElementById('foreign_address').value,
-        city: document.getElementById('city').value,
-        state: document.getElementById('state').value,
-        country: document.getElementById('country').value,
-        foreign_postal_code: document.getElementById('foreign_postal_code').value
+        foreign_address: document.getElementById('foreign_address')?.value || '',
+        city: document.getElementById('city')?.value || '',
+        state: document.getElementById('state')?.value || '',
+        country: document.getElementById('country')?.value || '',
+        foreign_postal_code: document.getElementById('foreign_postal_code')?.value || ''
     };
 
     localStorage.setItem('kkDetailData', JSON.stringify(kkData));
@@ -142,10 +141,8 @@ function loadKKDataFromLocalStorage() {
         if (!savedData) return null;
 
         const kkData = JSON.parse(savedData);
-        console.log('Data KK berhasil dimuat dari localStorage:', kkData);
         return kkData;
     } catch (error) {
-        console.error('Error saat memuat data KK:', error);
         return null;
     }
 }
@@ -153,42 +150,47 @@ function loadKKDataFromLocalStorage() {
 // Function to copy KK data to family member form
 function copyDataToFamilyMemberForm() {
     // Get current values from the KK form
-    const kkValue = document.getElementById('kk').value;
-    const addressValue = document.getElementById('address').value;
-    const postalCodeValue = document.getElementById('postal_code').value;
-    const rtValue = document.getElementById('rt').value;
-    const rwValue = document.getElementById('rw').value;
-    const provinceIdValue = document.getElementById('province_id_hidden').value;
-    const districtIdValue = document.getElementById('district_id_hidden').value;
-    const subDistrictIdValue = document.getElementById('sub_district_id_hidden').value;
-    const villageIdValue = document.getElementById('village_id_hidden').value;
-    const hamletValue = document.getElementById('dusun').value;
+    const kkValue = document.getElementById('kk')?.value || '';
+    const addressValue = document.getElementById('address')?.value || '';
+    const postalCodeValue = document.getElementById('postal_code')?.value || '';
+    const rtValue = document.getElementById('rt')?.value || '';
+    const rwValue = document.getElementById('rw')?.value || '';
+    const provinceIdValue = document.getElementById('province_id_hidden')?.value || '';
+    const districtIdValue = document.getElementById('district_id_hidden')?.value || '';
+    const subDistrictIdValue = document.getElementById('sub_district_id_hidden')?.value || '';
+    const villageIdValue = document.getElementById('village_id_hidden')?.value || '';
+    const hamletValue = document.getElementById('dusun')?.value || '';
 
     // Foreign address values
-    const foreignAddressValue = document.getElementById('foreign_address').value;
-    const cityValue = document.getElementById('city').value;
-    const stateValue = document.getElementById('state').value;
-    const countryValue = document.getElementById('country').value;
-    const foreignPostalCodeValue = document.getElementById('foreign_postal_code').value;
+    const foreignAddressValue = document.getElementById('foreign_address')?.value || '';
+    const cityValue = document.getElementById('city')?.value || '';
+    const stateValue = document.getElementById('state')?.value || '';
+    const countryValue = document.getElementById('country')?.value || '';
+    const foreignPostalCodeValue = document.getElementById('foreign_postal_code')?.value || '';
 
     // Set values to hidden fields in the family member form
-    document.getElementById('form_kk').value = kkValue;
-    document.getElementById('form_address').value = addressValue;
-    document.getElementById('form_postal_code').value = postalCodeValue;
-    document.getElementById('form_rt').value = rtValue;
-    document.getElementById('form_rw').value = rwValue;
-    document.getElementById('form_province_id').value = provinceIdValue;
-    document.getElementById('form_district_id').value = districtIdValue;
-    document.getElementById('form_sub_district_id').value = subDistrictIdValue;
-    document.getElementById('form_village_id').value = villageIdValue;
-    document.getElementById('form_hamlet').value = hamletValue;
+    const setElementValue = (id, value) => {
+        const element = document.getElementById(id);
+        if (element) element.value = value || '';
+    };
+
+    setElementValue('form_kk', kkValue);
+    setElementValue('form_address', addressValue);
+    setElementValue('form_postal_code', postalCodeValue);
+    setElementValue('form_rt', rtValue);
+    setElementValue('form_rw', rwValue);
+    setElementValue('form_province_id', provinceIdValue);
+    setElementValue('form_district_id', districtIdValue);
+    setElementValue('form_sub_district_id', subDistrictIdValue);
+    setElementValue('form_village_id', villageIdValue);
+    setElementValue('form_hamlet', hamletValue);
 
     // Set foreign address values
-    document.getElementById('form_foreign_address').value = foreignAddressValue;
-    document.getElementById('form_city').value = cityValue;
-    document.getElementById('form_state').value = stateValue;
-    document.getElementById('form_country').value = countryValue;
-    document.getElementById('form_foreign_postal_code').value = foreignPostalCodeValue;
+    setElementValue('form_foreign_address', foreignAddressValue);
+    setElementValue('form_city', cityValue);
+    setElementValue('form_state', stateValue);
+    setElementValue('form_country', countryValue);
+    setElementValue('form_foreign_postal_code', foreignPostalCodeValue);
 }
 
 /**
@@ -393,7 +395,7 @@ function initializeFamilyCardManager() {
             copyDataToFamilyMemberForm();
 
             // Check if KK exists
-            const currentKK = document.getElementById('kk').value;
+            const currentKK = document.getElementById('kk')?.value || '';
             if (!currentKK) {
                 e.preventDefault();
                 alert("Silakan isi Nomor KK terlebih dahulu");
@@ -424,32 +426,38 @@ function initializeFamilyCardManager() {
     // Check for previously saved data
     const savedKKData = loadKKDataFromLocalStorage();
     if (savedKKData && savedKKData.kk) {
+        // Safely set form values with element existence checks
+        const setElementValue = (id, value) => {
+            const element = document.getElementById(id);
+            if (element) element.value = value || '';
+        };
+
         // Populate form with saved data
-        document.getElementById('kk').value = savedKKData.kk || '';
-        document.getElementById('address').value = savedKKData.address || '';
-        document.getElementById('postal_code').value = savedKKData.postal_code || '';
-        document.getElementById('rt').value = savedKKData.rt || '';
-        document.getElementById('rw').value = savedKKData.rw || '';
-        document.getElementById('dusun').value = savedKKData.dusun || '';
-        document.getElementById('jml_anggota_kk').value = savedKKData.jml_anggota_kk || '1';
+        setElementValue('kk', savedKKData.kk);
+        setElementValue('address', savedKKData.address);
+        setElementValue('postal_code', savedKKData.postal_code);
+        setElementValue('rt', savedKKData.rt);
+        setElementValue('rw', savedKKData.rw);
+        setElementValue('dusun', savedKKData.dusun);
 
         // Foreign address fields
-        document.getElementById('foreign_address').value = savedKKData.foreign_address || '';
-        document.getElementById('city').value = savedKKData.city || '';
-        document.getElementById('state').value = savedKKData.state || '';
-        document.getElementById('country').value = savedKKData.country || '';
-        document.getElementById('foreign_postal_code').value = savedKKData.foreign_postal_code || '';
+        setElementValue('foreign_address', savedKKData.foreign_address);
+        setElementValue('city', savedKKData.city);
+        setElementValue('state', savedKKData.state);
+        setElementValue('country', savedKKData.country);
+        setElementValue('foreign_postal_code', savedKKData.foreign_postal_code);
 
         // Handle location data if available
         if (savedKKData.province_id) {
-            document.getElementById('province_id_hidden').value = savedKKData.province_id;
+            setElementValue('province_id', savedKKData.province_id);
 
-            // Fetch and populate location dropdowns if province_id exists
+            // Further location cascading will be handled by the change event handlers
             const provinceCode = provinceCodeMap[savedKKData.province_id];
             if (provinceCode) {
-                $('#province_id').val(provinceCode).trigger('change');
-
-                // Further location cascading will be handled by the change event handlers
+                const provinceSelect = document.getElementById('province_code');
+                if (provinceSelect) {
+                    $('#province_code').val(provinceCode).trigger('change');
+                }
             }
         }
     }

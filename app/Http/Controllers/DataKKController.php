@@ -521,14 +521,18 @@ class DataKKController extends Controller
     public function storeFamilyMembers(Request $request)
     {
         try {
+            // Get family members data from JSON
+            $familyMembersJson = $request->input('family_members_json');
+            $familyMembers = json_decode($familyMembersJson, true);
+
             // Debug log to see what's coming in
             Log::info('Multiple Family Members Store - Request data:', [
                 'kk' => $request->input('kk'),
-                'family_members_count' => $request->has('family_members') ? count($request->input('family_members')) : 0,
+                'family_members_count' => count($familyMembers),
             ]);
 
             // Validate that we have family members to process
-            if (!$request->has('family_members') || !is_array($request->input('family_members')) || count($request->input('family_members')) === 0) {
+            if (empty($familyMembers) || !is_array($familyMembers)) {
                 return back()
                     ->withInput()
                     ->with('error', 'Tidak ada data anggota keluarga untuk disimpan');
@@ -540,7 +544,7 @@ class DataKKController extends Controller
             $errors = [];
 
             // Process each family member
-            foreach ($request->input('family_members') as $index => $memberData) {
+            foreach ($familyMembers as $index => $memberData) {
                 $validator = Validator::make($memberData, [
                     'nik' => 'required|size:16',
                     'kk' => 'required|size:16',
@@ -550,13 +554,13 @@ class DataKKController extends Controller
                     'age' => 'required|integer',
                     'birth_place' => 'required|string|max:255',
                     'address' => 'required|string',
-                    'province_id' => 'required|integer',
-                    'district_id' => 'required|integer',
-                    'sub_district_id' => 'required|integer',
-                    'village_id' => 'required|integer',
+                    'province_id' => 'required',
+                    'district_id' => 'required',
+                    'sub_district_id' => 'required',
+                    'village_id' => 'required',
                     'rt' => 'required|string|max:3',
                     'rw' => 'required|string|max:3',
-                    'postal_code' => 'nullable|digits:5',
+                    'postal_code' => 'nullable|string|max:5',
                     'citizen_status' => 'required|integer|in:1,2',
                     'birth_certificate' => 'integer|in:1,2',
                     'birth_certificate_no' => 'nullable|string',
@@ -602,7 +606,7 @@ class DataKKController extends Controller
                 // Process nullable fields
                 $this->processNullableFields($validatedData);
 
-                // Convert NIK and KK to integers
+                // Convert NIK and KK to integers for API compatibility
                 $validatedData['nik'] = (int) $validatedData['nik'];
                 $validatedData['kk'] = (int) $validatedData['kk'];
                 $validatedData['religion'] = (int) $validatedData['religion'];
