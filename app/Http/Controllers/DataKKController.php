@@ -516,6 +516,136 @@ class DataKKController extends Controller
     }
 
     /**
+     * Store multiple family members for an existing KK
+     */
+    public function storeFamilyMembers(Request $request)
+    {
+        try {
+            // Debug log to see what's coming in
+            Log::info('Multiple Family Members Store - Request data:', [
+                'kk' => $request->input('kk'),
+                'family_members_count' => $request->has('family_members') ? count($request->input('family_members')) : 0,
+            ]);
+
+            // Validate that we have family members to process
+            if (!$request->has('family_members') || !is_array($request->input('family_members')) || count($request->input('family_members')) === 0) {
+                return back()
+                    ->withInput()
+                    ->with('error', 'Tidak ada data anggota keluarga untuk disimpan');
+            }
+
+            // Initialize counters
+            $successCount = 0;
+            $errorCount = 0;
+            $errors = [];
+
+            // Process each family member
+            foreach ($request->input('family_members') as $index => $memberData) {
+                $validator = Validator::make($memberData, [
+                    'nik' => 'required|size:16',
+                    'kk' => 'required|size:16',
+                    'full_name' => 'required|string|max:255',
+                    'gender' => 'required|integer|in:1,2',
+                    'birth_date' => 'required|date',
+                    'age' => 'required|integer',
+                    'birth_place' => 'required|string|max:255',
+                    'address' => 'required|string',
+                    'province_id' => 'required|integer',
+                    'district_id' => 'required|integer',
+                    'sub_district_id' => 'required|integer',
+                    'village_id' => 'required|integer',
+                    'rt' => 'required|string|max:3',
+                    'rw' => 'required|string|max:3',
+                    'postal_code' => 'nullable|digits:5',
+                    'citizen_status' => 'required|integer|in:1,2',
+                    'birth_certificate' => 'integer|in:1,2',
+                    'birth_certificate_no' => 'nullable|string',
+                    'blood_type' => 'required|integer|in:1,2,3,4,5,6,7,8,9,10,11,12,13',
+                    'religion' => 'required|in:1,2,3,4,5,6,7',
+                    'marital_status' => 'nullable|integer|in:1,2,3,4,5,6',
+                    'marital_certificate' => 'required|in:1,2',
+                    'marital_certificate_no' => 'nullable|string',
+                    'marriage_date' => 'nullable|date',
+                    'divorce_certificate' => 'nullable|integer|in:1,2',
+                    'divorce_certificate_no' => 'nullable|string',
+                    'divorce_certificate_date' => 'nullable|date',
+                    'family_status' => 'required|integer|in:1,2,3,4,5,6,7',
+                    'mental_disorders' => 'required|integer|in:1,2',
+                    'disabilities' => 'required|integer|in:1,2,3,4,5,6',
+                    'education_status' => 'required|integer|in:1,2,3,4,5,6,7,8,9,10',
+                    'job_type_id' => 'required|integer',
+                    'nik_mother' => 'nullable|string|size:16',
+                    'mother' => 'nullable|string|max:255',
+                    'nik_father' => 'nullable|string|size:16',
+                    'father' => 'nullable|string|max:255',
+                    'coordinate' => 'nullable|string|max:255',
+                    'telephone' => 'nullable|string|max:20',
+                    'email' => 'nullable|email|max:255',
+                    'hamlet' => 'nullable|string|max:100',
+                    'foreign_address' => 'nullable|string',
+                    'city' => 'nullable|string|max:100',
+                    'state' => 'nullable|string|max:100',
+                    'country' => 'nullable|string|max:100',
+                    'foreign_postal_code' => 'nullable|string|max:20',
+                    'status' => 'nullable|string|in:Active,Inactive,Deceased,Moved',
+                ]);
+
+                if ($validator->fails()) {
+                    $errorCount++;
+                    $errors[] = "Anggota #{$index}: " . implode(', ', $validator->errors()->all());
+                    continue;
+                }
+
+                // Get validated data
+                $validatedData = $validator->validated();
+
+                // Process nullable fields
+                $this->processNullableFields($validatedData);
+
+                // Convert NIK and KK to integers
+                $validatedData['nik'] = (int) $validatedData['nik'];
+                $validatedData['kk'] = (int) $validatedData['kk'];
+                $validatedData['religion'] = (int) $validatedData['religion'];
+
+                // Call the citizen service to create the new family member
+                $response = $this->citizenService->createCitizen($validatedData);
+
+                if ($response['status'] === 'CREATED') {
+                    $successCount++;
+                } else {
+                    $errorCount++;
+                    $errors[] = "Anggota #{$index} ({$validatedData['full_name']}): " . ($response['message'] ?? 'Gagal menyimpan data');
+                }
+            }
+
+            // Create response message based on results
+            if ($successCount > 0 && $errorCount === 0) {
+                return redirect()
+                    ->route('superadmin.datakk.create')
+                    ->with('success', "Berhasil menambahkan {$successCount} anggota keluarga!");
+            } else if ($successCount > 0 && $errorCount > 0) {
+                return redirect()
+                    ->route('superadmin.datakk.create')
+                    ->with('warning', "Berhasil menambahkan {$successCount} anggota keluarga, tetapi {$errorCount} gagal: " . implode('; ', $errors));
+            } else {
+                return back()
+                    ->withInput()
+                    ->with('error', "Gagal menambahkan anggota keluarga: " . implode('; ', $errors));
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Error saat menyimpan anggota keluarga: ' . $e->getMessage(), [
+                'request' => $request->all(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return back()
+                ->withInput()
+                ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Process nullable fields to ensure they have appropriate default values
      */
     private function processNullableFields(&$data)

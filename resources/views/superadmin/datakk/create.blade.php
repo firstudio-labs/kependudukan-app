@@ -11,100 +11,82 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <!-- Kolom 1: Data Utama -->
                 <div class="col-span-1 sm:col-span-2 md:col-span-1">
-                    <label for="kkSelect" class="block text-sm font-medium text-gray-700">No KK</label>
-                    <select id="kkSelect" name="kk" autocomplete="off"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-lg p-2"
-                        style="max-height: 200px; overflow-y: auto;">
-                        <option value="">Pilih No KK</option>
-                        <!-- Opsi lainnya -->
-                    </select>
+                    <label for="kk" class="block text-sm font-medium text-gray-700">No KK</label>
+                    <input type="text" id="kk" name="kk" autocomplete="off"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-lg p-2">
                 </div>
 
                 <div class="col-span-1 sm:col-span-2">
                     <label for="address" class="block text-sm font-medium text-gray-700">Alamat</label>
                     <textarea id="address" name="address" autocomplete="street-address"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-lg p-2"
-                        readonly></textarea>
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-lg p-2"></textarea>
                 </div>
 
                 <div>
                     <label for="postal_code" class="block text-sm font-medium text-gray-700">Kode Pos</label>
                     <input type="text" id="postal_code" name="postal_code" autocomplete="postal-code"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-lg p-2"
-                        readonly>
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-lg p-2">
                 </div>
 
                 <div>
                     <label for="rt" class="block text-sm font-medium text-gray-700">RT</label>
                     <input type="text" id="rt" name="rt" autocomplete="address-line1"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-lg p-2"
-                        readonly>
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-lg p-2">
                 </div>
 
                 <div>
                     <label for="rw" class="block text-sm font-medium text-gray-700">RW</label>
                     <input type="text" id="rw" name="rw" autocomplete="address-line2"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-lg p-2"
-                        readonly>
-                </div>
-
-                <div>
-                    <label for="jml_anggota_kk" class="block text-sm font-medium text-gray-700">Jumlah Anggota
-                        Keluarga</label>
-                    <input type="text" id="jml_anggota_kk" name="jml_anggota_kk" autocomplete="off"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-lg p-2 bg-gray-50"
-                        readonly>
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-lg p-2">
                 </div>
 
                 <!-- Wilayah -->
                 <div>
-                    <label for="province_id" class="block text-sm font-medium text-gray-700">Provinsi</label>
-                    <select id="province_id" name="province_code"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-lg p-2"
-                        disabled>
+                    <label for="province_code" class="block text-sm font-medium text-gray-700">Provinsi</label>
+                    <select id="province_code" name="province_code"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-lg p-2">
                         <option value="">Pilih Provinsi</option>
                         @foreach($provinces as $province)
                             <option value="{{ $province['code'] }}">{{ $province['name'] }}</option>
                         @endforeach
                     </select>
-                    <input type="hidden" name="province_id" id="province_id_hidden">
+                    <input type="hidden" name="province_id" id="province_id">
                 </div>
 
                 <div>
-                    <label for="district_id" class="block text-sm font-medium text-gray-700">Kabupaten</label>
-                    <select id="district_id" name="district_code"
+                    <label for="district_code" class="block text-sm font-medium text-gray-700">Kabupaten</label>
+                    <select id="district_code" name="district_code"
                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-lg p-2"
                         disabled>
                         <option value="">Pilih Kabupaten</option>
                     </select>
-                    <input type="hidden" name="district_id" id="district_id_hidden">
+                    <input type="hidden" name="district_id" id="district_id">
                 </div>
 
                 <div>
-                    <label for="sub_district_id" class="block text-sm font-medium text-gray-700">Kecamatan</label>
-                    <select id="sub_district_id" name="sub_district_code"
+                    <label for="sub_district_code" class="block text-sm font-medium text-gray-700">Kecamatan</label>
+                    <select id="sub_district_code" name="sub_district_code"
                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-lg p-2"
                         disabled>
                         <option value="">Pilih Kecamatan</option>
                     </select>
-                    <input type="hidden" name="sub_district_id" id="sub_district_id_hidden">
+                    <input type="hidden" name="sub_district_id" id="sub_district_id">
                 </div>
 
                 <div>
-                    <label for="village_id" class="block text-sm font-medium text-gray-700">Desa/Kelurahan</label>
-                    <select id="village_id" name="village_code"
+                    <label for="village_code" class="block text-sm font-medium text-gray-700">Desa/Kelurahan</label>
+                    <select id="village_code" name="village_code"
                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-lg p-2"
                         disabled>
                         <option value="">Pilih Desa/Kelurahan</option>
                     </select>
-                    <input type="hidden" name="village_id" id="village_id_hidden">
+                    <input type="hidden" name="village_id" id="village_id">
                 </div>
 
                 <div>
                     <label for="dusun" class="block text-sm font-medium text-gray-700">Dusun/Dukuh/Kampung</label>
                     <input type="text" name="dusun" id="dusun" autocomplete="address-level5"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-lg p-2"
-                        readonly>
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-lg p-2">
                 </div>
             </div>
 
@@ -129,26 +111,26 @@
                             Negeri</label>
                         <textarea name="foreign_address" id="foreign_address" autocomplete="off"
                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-lg p-2"
-                            rows="2" readonly></textarea>
+                            rows="2"></textarea>
                     </div>
 
                     <div>
                         <label for="city" class="block text-sm font-medium text-gray-700">Kota</label>
                         <input type="text" name="city" id="city" autocomplete="off"
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-lg p-2" readonly>
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-lg p-2">
                     </div>
 
                     <div>
                         <label for="state" class="block text-sm font-medium text-gray-700">Provinsi/Negara
                             Bagian</label>
                         <input type="text" name="state" id="state" autocomplete="off"
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-lg p-2" readonly>
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-lg p-2">
                     </div>
 
                     <div>
                         <label for="country" class="block text-sm font-medium text-gray-700">Negara</label>
                         <input type="text" name="country" id="country" autocomplete="country"
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-lg p-2" readonly>
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-lg p-2">
                     </div>
 
                     <div>
@@ -156,7 +138,7 @@
                             Negeri</label>
                         <input type="text" name="foreign_postal_code" id="foreign_postal_code"
                             autocomplete="postal-code"
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-lg p-2" readonly>
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-lg p-2">
                     </div>
                 </div>
             </div>
@@ -167,8 +149,8 @@
             @csrf
             <h2 class="text-lg font-semibold text-gray-800 mb-4">Tambah Anggota Keluarga</h2>
 
-            <!-- Form hanya aktif jika KK sudah dipilih -->
-            <div id="familyMemberFormFields" class="opacity-50 pointer-events-none">
+            <!-- Form fields are now enabled by default -->
+            <div id="familyMemberFormFields">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <!-- Add hidden fields for ALL required data -->
                     <input type="hidden" id="kk" name="kk">
@@ -517,6 +499,7 @@
     <!-- External JavaScript files -->
     <script src="{{ asset('js/sweet-alert-utils.js') }}"></script>
     <script src="{{ asset('js/family-card-manager.js') }}"></script>
+    <script src="{{ asset('js/location-selector.js') }}"></script>
 
     <script>
         // Set flash messages as data attributes for the SweetAlert utility to use
@@ -525,13 +508,13 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             // ===== INISIALISASI ELEMEN DOM =====
-            const kkSelect = document.getElementById('kkSelect');
+            const kkInput = document.getElementById('kk');
             const familyMemberForm = document.getElementById('familyMemberFormFields');
             const addFamilyMemberForm = document.getElementById('addFamilyMemberForm');
             const emptyFamilyMessage = document.getElementById('emptyFamilyMessage');
 
             console.log("Form elements:", {
-                kkSelect: kkSelect ? "Found" : "Not found",
+                kkInput: kkInput ? "Found" : "Not found",
                 familyMemberForm: familyMemberForm ? "Found" : "Not found",
                 addFamilyMemberForm: addFamilyMemberForm ? "Found" : "Not found"
             });
@@ -541,17 +524,16 @@
             // 1. Fungsi untuk menyimpan data KK di localStorage
             function saveKKDataToLocalStorage() {
                 const kkData = {
-                    kk: kkSelect.value,
+                    kk: kkInput.value,
                     address: document.getElementById('address').value,
                     postal_code: document.getElementById('postal_code').value,
                     rt: document.getElementById('rt').value,
                     rw: document.getElementById('rw').value,
-                    province_id: document.getElementById('province_id_hidden').value,
-                    district_id: document.getElementById('district_id_hidden').value,
-                    sub_district_id: document.getElementById('sub_district_id_hidden').value,
-                    village_id: document.getElementById('village_id_hidden').value,
+                    province_id: document.getElementById('province_id').value,
+                    district_id: document.getElementById('district_id').value,
+                    sub_district_id: document.getElementById('sub_district_id').value,
+                    village_id: document.getElementById('village_id').value,
                     dusun: document.getElementById('dusun').value,
-                    jml_anggota_kk: document.getElementById('jml_anggota_kk').value,
 
                     // Data alamat luar negeri
                     foreign_address: document.getElementById('foreign_address').value,
@@ -586,56 +568,29 @@
             function fillKKFormFields(kkData) {
                 if (!kkData || !kkData.kk) return false;
 
-                // Tunggu sampai Select2 siap
-                const checkSelect2Ready = setInterval(() => {
-                    if (kkSelect && $(kkSelect).data('select2')) {
-                        clearInterval(checkSelect2Ready);
+                // Set nilai pada input KK
+                kkInput.value = kkData.kk;
 
-                        // Set nilai pada dropdown KK
-                        $(kkSelect).val(kkData.kk).trigger('change');
+                // Isi semua field KK
+                document.getElementById('address').value = kkData.address || '';
+                document.getElementById('postal_code').value = kkData.postal_code || '';
+                document.getElementById('rt').value = kkData.rt || '';
+                document.getElementById('rw').value = kkData.rw || '';
+                document.getElementById('province_id').value = kkData.province_id || '';
+                document.getElementById('district_id').value = kkData.district_id || '';
+                document.getElementById('sub_district_id').value = kkData.sub_district_id || '';
+                document.getElementById('village_id').value = kkData.village_id || '';
+                document.getElementById('dusun').value = kkData.dusun || '';
 
-                        // Isi semua field KK
-                        document.getElementById('address').value = kkData.address || '';
-                        document.getElementById('postal_code').value = kkData.postal_code || '';
-                        document.getElementById('rt').value = kkData.rt || '';
-                        document.getElementById('rw').value = kkData.rw || '';
-                        document.getElementById('province_id_hidden').value = kkData.province_id || '';
-                        document.getElementById('district_id_hidden').value = kkData.district_id || '';
-                        document.getElementById('sub_district_id_hidden').value = kkData.sub_district_id || '';
-                        document.getElementById('village_id_hidden').value = kkData.village_id || '';
-                        document.getElementById('dusun').value = kkData.dusun || '';
-                        document.getElementById('jml_anggota_kk').value = kkData.jml_anggota_kk || '';
+                // Data alamat luar negeri
+                document.getElementById('foreign_address').value = kkData.foreign_address || '';
+                document.getElementById('city').value = kkData.city || '';
+                document.getElementById('state').value = kkData.state || '';
+                document.getElementById('country').value = kkData.country || '';
+                document.getElementById('foreign_postal_code').value = kkData.foreign_postal_code || '';
 
-                        // Data alamat luar negeri
-                        document.getElementById('foreign_address').value = kkData.foreign_address || '';
-                        document.getElementById('city').value = kkData.city || '';
-                        document.getElementById('state').value = kkData.state || '';
-                        document.getElementById('country').value = kkData.country || '';
-                        document.getElementById('foreign_postal_code').value = kkData.foreign_postal_code || '';
-
-                        // Isi hidden fields pada form anggota keluarga
-                        copyDataToFamilyMemberForm(kkData);
-
-                        // Aktifkan form anggota keluarga
-                        enableFamilyMemberForm();
-
-                        return true;
-                    }
-                }, 200);
-
-                // Jika Select2 belum dimuat, coba cara lain sebagai fallback
-                setTimeout(() => {
-                    if (kkSelect) {
-                        kkSelect.value = kkData.kk;
-
-                        // Trigger change event
-                        const event = new Event('change');
-                        kkSelect.dispatchEvent(event);
-
-                        copyDataToFamilyMemberForm(kkData);
-                        enableFamilyMemberForm();
-                    }
-                }, 1000);
+                // Isi hidden fields pada form anggota keluarga
+                copyDataToFamilyMemberForm(kkData);
 
                 return true;
             }
@@ -643,7 +598,6 @@
             // 4. Fungsi untuk menyalin data KK ke form anggota keluarga
             function copyDataToFamilyMemberForm(kkData) {
                 // Set data KK ke hidden fields
-                document.getElementById('kk').value = kkData.kk;
                 document.getElementById('form_address').value = kkData.address || '';
                 document.getElementById('form_postal_code').value = kkData.postal_code || '';
                 document.getElementById('form_rt').value = kkData.rt || '';
@@ -660,14 +614,6 @@
                 document.getElementById('form_state').value = kkData.state || '';
                 document.getElementById('form_country').value = kkData.country || '';
                 document.getElementById('form_foreign_postal_code').value = kkData.foreign_postal_code || '';
-            }
-
-            // 5. Fungsi untuk mengaktifkan form anggota keluarga
-            function enableFamilyMemberForm() {
-                if (familyMemberForm) {
-                    familyMemberForm.classList.remove('opacity-50', 'pointer-events-none');
-                    console.log("Form anggota keluarga diaktifkan");
-                }
             }
 
             // 6. Fungsi untuk reset form anggota keluarga (hanya field anggota, bukan KK)
@@ -706,61 +652,35 @@
             }
 
             // ===== EVENT LISTENERS =====
-
-            // PERBAIKAN UNTUK MENGATASI KK HILANG SETELAH SUBMIT
-
-            // 1. Gunakan sessionStorage untuk data KK yang dipilih (lebih andal untuk redirect)
-            if (kkSelect) {
-                kkSelect.addEventListener('change', function() {
-                    const selectedValue = this.value;
-                    if (selectedValue) {
-                        // Simpan ke sessionStorage (lebih stabil saat redirect)
-                        console.log("Menyimpan KK ke sessionStorage:", selectedValue);
-                        sessionStorage.setItem('selectedKK', selectedValue);
-                        
-                        // Set ke hidden field
-                        document.getElementById('kk').value = selectedValue;
+            // 1. Event listener for KK input
+            if (kkInput) {
+                kkInput.addEventListener('input', function() {
+                    const inputValue = this.value;
+                    if (inputValue) {
+                        // Update hidden field in family member form
+                        document.getElementById('kk').value = inputValue;
                     }
                 });
             }
 
             // 2. Fungsi untuk memastikan nilai KK tersedia dari berbagai sumber
             function ensureKKValue() {
-                // Coba dari hidden field terlebih dahulu
-                let kkValue = document.getElementById('kk').value;
-                
-                // Jika kosong, coba dari select biasa
-                if (!kkValue && kkSelect) {
-                    kkValue = kkSelect.value;
-                }
-                
-                // Jika masih kosong dan menggunakan Select2, coba dari data API Select2
-                if (!kkValue && $(kkSelect).data('select2')) {
-                    kkValue = $(kkSelect).select2('val') || $(kkSelect).find(':selected').val();
-                }
-                
-                // Jika masih kosong, coba dari sessionStorage
-                if (!kkValue) {
-                    kkValue = sessionStorage.getItem('selectedKK');
-                }
-                
+                // Use the input value directly
+                let kkValue = kkInput.value;
+
                 // Jika masih kosong, coba dari localStorage sebagai fallback terakhir
                 if (!kkValue) {
                     try {
                         const savedData = JSON.parse(localStorage.getItem('kkDetailData'));
                         if (savedData && savedData.kk) {
                             kkValue = savedData.kk;
+                            kkInput.value = kkValue; // Update input field
                         }
                     } catch (e) {
                         console.error('Error parsing kkDetailData from localStorage:', e);
                     }
                 }
-                
-                // Update hidden field dengan nilai yang ditemukan
-                if (kkValue) {
-                    document.getElementById('kk').value = kkValue;
-                }
-                
+
                 console.log('Hasil final ensureKKValue:', kkValue);
                 return kkValue;
             }
@@ -769,150 +689,52 @@
             if (addFamilyMemberForm) {
                 // Simpan referensi ke event handler asli
                 const originalSubmitHandler = addFamilyMemberForm.onsubmit;
-                
+
                 // Tambahkan handler baru yang diprioritaskan
                 addFamilyMemberForm.onsubmit = function(e) {
                     // Pastikan KK terpilih dan tersimpan
                     ensureKKValue();
-                    
+
                     // Double-check nilai KK
                     const currentKK = document.getElementById('kk').value;
                     if (!currentKK) {
                         e.preventDefault();
                         e.stopPropagation();
-                        alert("No KK tidak ditemukan. Silakan pilih No KK terlebih dahulu.");
+                        alert("No KK tidak ditemukan. Silakan isi No KK terlebih dahulu.");
                         return false;
                     }
-                    
-                    // Simpan ke localStorage dan sessionStorage sebagai backup
+
+                    // Simpan ke localStorage sebagai backup
                     saveKKDataToLocalStorage();
-                    sessionStorage.setItem('selectedKK', currentKK);
-                    
+
                     // Debug log
                     console.log("Form disubmit dengan KK:", currentKK);
-                    
+
                     // Panggil handler asli jika tersedia
                     if (typeof originalSubmitHandler === 'function') {
                         return originalSubmitHandler.call(this, e);
                     }
-                    
+
                     // Default: lanjutkan submit
                     return true;
                 };
             }
 
-            // 4. Perbaikan load data dari localStorage/sessionStorage saat halaman dimuat
+            // 4. Load data dari localStorage saat halaman dimuat
             window.addEventListener('load', function() {
                 console.log("Window loaded, checking for saved KK data...");
-                
-                // Prioritaskan sessionStorage untuk KK terakhir yang dipilih
-                const savedKK = sessionStorage.getItem('selectedKK');
-                if (savedKK && kkSelect) {
-                    console.log("Found saved KK in sessionStorage:", savedKK);
-                    
-                    // Tunggu sampai options dropdown tersedia
-                    const checkOptionsInterval = setInterval(function() {
-                        const options = kkSelect.options;
-                        if (options.length > 1) {
-                            clearInterval(checkOptionsInterval);
-                            
-                            // Cari option yang sesuai
-                            let optionFound = false;
-                            for (let i = 0; i < options.length; i++) {
-                                if (options[i].value === savedKK) {
-                                    kkSelect.value = savedKK;
-                                    optionFound = true;
-                                    
-                                    // Trigger change event
-                                    if ($(kkSelect).data('select2')) {
-                                        $(kkSelect).val(savedKK).trigger('change');
-                                    } else {
-                                        const event = new Event('change');
-                                        kkSelect.dispatchEvent(event);
-                                    }
-                                    
-                                    console.log("KK option found and selected:", savedKK);
-                                    break;
-                                }
-                            }
-                            
-                            if (!optionFound) {
-                                console.warn("Saved KK not found in options:", savedKK);
-                            }
-                        }
-                    }, 200);
-                    
-                    // Safety timeout
-                    setTimeout(function() {
-                        clearInterval(checkOptionsInterval);
-                    }, 5000);
+
+                // Ambil data dari localStorage
+                const savedKKData = loadKKDataFromLocalStorage();
+
+                // Jika ada data tersimpan, isi form
+                if (savedKKData && savedKKData.kk) {
+                    console.log("Found saved KK in localStorage:", savedKKData.kk);
+                    fillKKFormFields(savedKKData);
                 } else {
-                    console.log("No saved KK in sessionStorage, falling back to localStorage");
+                    console.log("No saved KK in localStorage");
                 }
             });
-
-            // ===== TAMBAHAN UI ELEMENTS =====
-
-            // Tambahkan tombol untuk mengaktifkan form & menghapus data
-            const formHeader = document.querySelector('#addFamilyMemberForm h2');
-            if (formHeader) {
-                // Tombol aktifkan form
-                const enableButton = document.createElement('button');
-                enableButton.type = 'button';
-                enableButton.className = 'ml-4 px-3 py-1 bg-blue-500 text-white rounded text-sm';
-                enableButton.textContent = 'Aktifkan Form';
-                enableButton.onclick = function() {
-                    enableFamilyMemberForm();
-                    this.textContent = 'Form Aktif';
-                    this.disabled = true;
-                    this.className = 'ml-4 px-3 py-1 bg-green-500 text-white rounded text-sm';
-                };
-
-                // Tombol hapus data
-                const clearButton = document.createElement('button');
-                clearButton.type = 'button';
-                clearButton.className = 'ml-2 px-3 py-1 bg-red-500 text-white rounded text-sm';
-                clearButton.textContent = 'Bersihkan Data';
-                clearButton.onclick = function() {
-                    localStorage.removeItem('kkDetailData');
-                    location.reload();
-                };
-
-                formHeader.appendChild(enableButton);
-                formHeader.appendChild(clearButton);
-            }
-
-            // ===== INISIALISASI SAAT HALAMAN DIMUAT =====
-
-            // Aktifkan form untuk testing
-            enableFamilyMemberForm();
-
-            // Ambil data KK yang tersimpan
-            const savedKKData = loadKKDataFromLocalStorage();
-
-            // Jika ada data KK tersimpan, isi form dengan data tersebut
-            if (savedKKData) {
-                fillKKFormFields(savedKKData);
-
-                // Jika ada pesan sukses (setelah submit), reset form anggota keluarga
-                if ({{ session('success') ? 'true' : 'false' }}) {
-                    resetFamilyMemberForm();
-
-                    // Tampilkan pesan sukses
-                    setTimeout(() => {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Berhasil!',
-                            text: 'Anggota keluarga berhasil ditambahkan. Anda dapat melanjutkan menambah anggota berikutnya.',
-                            confirmButtonText: 'Lanjutkan'
-                        });
-                    }, 500);
-                }
-            }
-
-            // Hapus event beforeunload yang menghapus data KK
-            // Ini mencegah data terhapus saat refresh halaman
-            window.removeEventListener('beforeunload', function() {});
         });
     </script>
 

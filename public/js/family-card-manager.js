@@ -1,9 +1,8 @@
 /**
  * Family Card Manager Script
  * Handles family card (KK) management, including:
- * - Select2 integration for KK selection
  * - Location dropdown cascading
- * - Family member listing
+ * - Data persistence
  */
 
 // Global variables to store location code mappings
@@ -107,480 +106,111 @@ const getBaseUrl = () => {
     return metaUrl ? metaUrl.getAttribute('content') : window.location.origin;
 };
 
-// Fungsi untuk mengambil data dari API through controllers
-async function fetchCitizens() {
+// Function to save KK data to localStorage
+function saveKKDataToLocalStorage() {
+    const kkData = {
+        kk: document.getElementById('kk').value,
+        address: document.getElementById('address').value,
+        postal_code: document.getElementById('postal_code').value,
+        rt: document.getElementById('rt').value,
+        rw: document.getElementById('rw').value,
+        province_id: document.getElementById('province_id_hidden').value,
+        district_id: document.getElementById('district_id_hidden').value,
+        sub_district_id: document.getElementById('sub_district_id_hidden').value,
+        village_id: document.getElementById('village_id_hidden').value,
+        dusun: document.getElementById('dusun').value,
+        jml_anggota_kk: document.getElementById('jml_anggota_kk').value,
+
+        // Data alamat luar negeri
+        foreign_address: document.getElementById('foreign_address').value,
+        city: document.getElementById('city').value,
+        state: document.getElementById('state').value,
+        country: document.getElementById('country').value,
+        foreign_postal_code: document.getElementById('foreign_postal_code').value
+    };
+
+    localStorage.setItem('kkDetailData', JSON.stringify(kkData));
+    console.log('Data KK berhasil disimpan ke localStorage:', kkData);
+
+    return kkData;
+}
+
+// Function to load KK data from localStorage
+function loadKKDataFromLocalStorage() {
     try {
-        // Use the all citizens endpoint
-        const response = await axios.get(`${getBaseUrl()}/citizens/all`);
-        const data = response.data;
+        const savedData = localStorage.getItem('kkDetailData');
+        if (!savedData) return null;
 
-        console.log("API Response:", data); // Debug log to see API response structure
-
-        // Get the citizens array regardless of structure
-        let citizensList = [];
-
-        if (data.status === 'OK') {
-            if (Array.isArray(data.data)) {
-                citizensList = data.data;
-            } else if (data.data && typeof data.data === 'object') {
-                // In case data.data is a single object
-                if (data.data.citizens && Array.isArray(data.data.citizens)) {
-                    // If structure is { data: { citizens: [...] } }
-                    citizensList = data.data.citizens;
-                } else {
-                    // If it's a single citizen, make it an array
-                    citizensList = [data.data];
-                }
-            }
-
-            const kkSelect = document.getElementById('kkSelect');
-
-            if (!kkSelect) {
-                console.error("KK Select element not found");
-                return;
-            }
-
-            // Clear existing options
-            kkSelect.innerHTML = '<option value="">Pilih No KK</option>';
-
-            // Filter only heads of family from all citizens
-            const headsOfFamily = citizensList.filter(citizen =>
-                citizen.family_status === 'KEPALA KELUARGA' || citizen.family_status === '2');
-
-            console.log(`Found ${headsOfFamily.length} heads of family`);
-            console.log("Sample citizen data:", headsOfFamily.length > 0 ? headsOfFamily[0] : "No data");
-
-            // Add options for heads of family
-            if (headsOfFamily.length > 0) {
-                for (const citizen of headsOfFamily) {
-                    const kkOption = document.createElement('option');
-                    kkOption.value = citizen.kk;
-                    kkOption.textContent = citizen.kk;
-
-                    // Set all data attributes
-                    kkOption.setAttribute('data-full-name', citizen.full_name || '');
-                    kkOption.setAttribute('data-address', citizen.address || '');
-                    kkOption.setAttribute('data-postal-code', citizen.postal_code || '');
-                    kkOption.setAttribute('data-rt', citizen.rt || '');
-                    kkOption.setAttribute('data-rw', citizen.rw || '');
-                    kkOption.setAttribute('data-telepon', citizen.telepon || '');
-                    kkOption.setAttribute('data-email', citizen.email || '');
-                    kkOption.setAttribute('data-province-id', citizen.province_id || '');
-                    kkOption.setAttribute('data-district-id', citizen.district_id || '');
-                    kkOption.setAttribute('data-sub-district-id', citizen.sub_district_id || '');
-                    kkOption.setAttribute('data-village-id', citizen.village_id || '');
-                    kkOption.setAttribute('data-dusun', citizen.hamlet || citizen.dusun || '');
-
-                    // Add foreign address attributes - ensure we check for both standard and alternate field names
-                    kkOption.setAttribute('data-foreign-address', citizen.foreign_address || '');
-                    kkOption.setAttribute('data-city', citizen.city || '');
-                    kkOption.setAttribute('data-state', citizen.state || citizen.negara_bagian || '');
-                    kkOption.setAttribute('data-country', citizen.country || citizen.negara || '');
-                    kkOption.setAttribute('data-foreign-postal-code', citizen.foreign_postal_code || citizen.kode_pos_luar_negeri || '');
-
-                    kkSelect.appendChild(kkOption);
-                }
-
-                // Initialize Select2 after populating options
-                $('#kkSelect').select2({
-                    placeholder: 'Pilih No KK',
-                    width: '100%'
-                });
-
-                console.log(`Populated ${headsOfFamily.length} KK numbers in dropdown`);
-            } else {
-                console.warn("No heads of family found in citizen data");
-            }
-        } else {
-            console.error("API returned error status", data);
-        }
+        const kkData = JSON.parse(savedData);
+        console.log('Data KK berhasil dimuat dari localStorage:', kkData);
+        return kkData;
     } catch (error) {
-        console.error("Error fetching citizens:", error);
+        console.error('Error saat memuat data KK:', error);
+        return null;
     }
 }
 
-// Function to properly fetch and set location data
-function fetchAndSetLocationData(provinceCode, districtCode, subDistrictCode, villageCode) {
-    // Step 1: Set province and load its options
-    if (!provinceCode) return;
+// Function to copy KK data to family member form
+function copyDataToFamilyMemberForm() {
+    // Get current values from the KK form
+    const kkValue = document.getElementById('kk').value;
+    const addressValue = document.getElementById('address').value;
+    const postalCodeValue = document.getElementById('postal_code').value;
+    const rtValue = document.getElementById('rt').value;
+    const rwValue = document.getElementById('rw').value;
+    const provinceIdValue = document.getElementById('province_id_hidden').value;
+    const districtIdValue = document.getElementById('district_id_hidden').value;
+    const subDistrictIdValue = document.getElementById('sub_district_id_hidden').value;
+    const villageIdValue = document.getElementById('village_id_hidden').value;
+    const hamletValue = document.getElementById('dusun').value;
 
-    // Set province value and hidden ID
-    $('#province_id').val(provinceCode);
-    $('#province_id_hidden').val(provinceIdMap[provinceCode] || '');
+    // Foreign address values
+    const foreignAddressValue = document.getElementById('foreign_address').value;
+    const cityValue = document.getElementById('city').value;
+    const stateValue = document.getElementById('state').value;
+    const countryValue = document.getElementById('country').value;
+    const foreignPostalCodeValue = document.getElementById('foreign_postal_code').value;
 
-    // Step 2: Fetch district data based on province code
-    $.ajax({
-        url: `${getBaseUrl()}/location/districts/${provinceCode}`,
-        type: 'GET',
-        success: function (response) {
-            // Clear and prepare district dropdown
-            $('#district_id').empty().append('<option value="">Pilih Kabupaten</option>');
+    // Set values to hidden fields in the family member form
+    document.getElementById('form_kk').value = kkValue;
+    document.getElementById('form_address').value = addressValue;
+    document.getElementById('form_postal_code').value = postalCodeValue;
+    document.getElementById('form_rt').value = rtValue;
+    document.getElementById('form_rw').value = rwValue;
+    document.getElementById('form_province_id').value = provinceIdValue;
+    document.getElementById('form_district_id').value = districtIdValue;
+    document.getElementById('form_sub_district_id').value = subDistrictIdValue;
+    document.getElementById('form_village_id').value = villageIdValue;
+    document.getElementById('form_hamlet').value = hamletValue;
 
-            // Create fresh ID to Code mappings for districts
-            districtIdMap = {};
-            districtCodeMap = {};
-
-            // Populate district options
-            if (response.data && Array.isArray(response.data)) {
-                response.data.forEach(function (item) {
-                    // Store both mappings
-                    districtIdMap[item.code] = item.id;
-                    districtCodeMap[item.id] = item.code;
-
-                    $('#district_id').append(`<option value="${item.code}">${item.name}</option>`);
-                });
-            }
-
-            // Enable district dropdown and set the selected value using the code
-            $('#district_id').prop('disabled', false).val(districtCode);
-
-            // Set the hidden district ID
-            if (districtCode && districtIdMap[districtCode]) {
-                $('#district_id_hidden').val(districtIdMap[districtCode]);
-            }
-
-            // If district code exists, fetch sub-districts
-            if (districtCode) {
-                $.ajax({
-                    url: `${getBaseUrl()}/location/sub-districts/${districtCode}`,
-                    type: 'GET',
-                    success: function (response) {
-                        // Clear and prepare sub-district dropdown
-                        $('#sub_district_id').empty().append('<option value="">Pilih Kecamatan</option>');
-
-                        // Create fresh mappings for subdistricts from this district
-                        subDistrictIdMap = {};
-                        subDistrictCodeMap = {};
-
-                        // Populate sub-district options
-                        if (response.data && Array.isArray(response.data)) {
-                            response.data.forEach(function (item) {
-                                // Store both mappings
-                                subDistrictIdMap[item.code] = item.id;
-                                subDistrictCodeMap[item.id] = item.code;
-
-                                $('#sub_district_id').append(`<option value="${item.code}">${item.name}</option>`);
-                            });
-                        }
-
-                        // Enable sub-district dropdown and set the selected value using the code
-                        $('#sub_district_id').prop('disabled', false).val(subDistrictCode);
-
-                        // Set the hidden sub-district ID
-                        if (subDistrictCode && subDistrictIdMap[subDistrictCode]) {
-                            $('#sub_district_id_hidden').val(subDistrictIdMap[subDistrictCode]);
-                        }
-
-                        // If sub-district code exists, fetch villages
-                        if (subDistrictCode) {
-                            $.ajax({
-                                url: `${getBaseUrl()}/location/villages/${subDistrictCode}`,
-                                type: 'GET',
-                                success: function (response) {
-                                    // Clear and prepare village dropdown
-                                    $('#village_id').empty().append('<option value="">Pilih Desa/Kelurahan</option>');
-
-                                    // Create fresh mappings for villages from this subdistrict
-                                    villageIdMap = {};
-                                    villageCodeMap = {};
-
-                                    // Populate village options
-                                    if (response.data && Array.isArray(response.data)) {
-                                        response.data.forEach(function (item) {
-                                            // Store both mappings
-                                            villageIdMap[item.code] = item.id;
-                                            villageCodeMap[item.id] = item.code;
-
-                                            $('#village_id').append(`<option value="${item.code}">${item.name}</option>`);
-                                        });
-                                    }
-
-                                    // Enable village dropdown and set the selected value using the code
-                                    $('#village_id').prop('disabled', false).val(villageCode);
-
-                                    // Set the hidden village ID
-                                    if (villageCode && villageIdMap[villageCode]) {
-                                        $('#village_id_hidden').val(villageIdMap[villageCode]);
-                                    }
-                                },
-                                error: function (error) {
-                                    $('#village_id').empty().append('<option value="">Error loading data</option>');
-                                }
-                            });
-                        }
-                    },
-                    error: function (error) {
-                        $('#sub_district_id').empty().append('<option value="">Error loading data</option>');
-                    }
-                });
-            }
-        },
-        error: function (error) {
-            $('#district_id').empty().append('<option value="">Error loading data</option>');
-        }
-    });
-}
-
-// Function to map location IDs to their corresponding codes and populate dropdowns
-async function populateLocationDropdowns(provinceId, districtId, subDistrictId, villageId) {
-    try {
-        // First, store the IDs in hidden fields
-        $('#province_id_hidden').val(provinceId || '');
-        $('#district_id_hidden').val(districtId || '');
-        $('#sub_district_id_hidden').val(subDistrictId || '');
-        $('#village_id_hidden').val(villageId || '');
-
-        // Then populate province dropdown (should already be populated on page load)
-        if (provinceId) {
-            // Get province data from API
-            const provinceResponse = await axios.get(`${getBaseUrl()}/location/provinces`);
-            if (provinceResponse.data && provinceResponse.data.data) {
-                // Find matching province by ID
-                const province = provinceResponse.data.data.find(p => p.id == provinceId);
-                if (province) {
-                    // Update province dropdown
-                    $('#province_id').val(province.code);
-
-                    // Now get district data for this province
-                    const districtResponse = await axios.get(`${getBaseUrl()}/location/districts/${province.code}`);
-
-                    if (districtResponse.data && Array.isArray(districtResponse.data)) {
-                        // Clear and repopulate district dropdown
-                        $('#district_id').empty()
-                            .append('<option value="">Pilih Kabupaten</option>')
-                            .prop('disabled', false);
-
-                        // Add all districts
-                        districtResponse.data.forEach(district => {
-                            $('#district_id').append(
-                                `<option value="${district.code}" data-id="${district.id}">${district.name}</option>`
-                            );
-                            // Store mapping
-                            districtIdMap[district.code] = district.id;
-                            districtCodeMap[district.id] = district.code;
-                        });
-
-                        // If we have a district ID, select it
-                        if (districtId) {
-                            // Find the district by ID
-                            const district = districtResponse.data.find(d => d.id == districtId);
-                            if (district) {
-                                $('#district_id').val(district.code);
-
-                                // Now get subdistrict data
-                                const subDistrictResponse = await axios.get(`${getBaseUrl()}/location/sub-districts/${district.code}`);
-
-                                if (subDistrictResponse.data && Array.isArray(subDistrictResponse.data)) {
-                                    // Clear and repopulate subdistrict dropdown
-                                    $('#sub_district_id').empty()
-                                        .append('<option value="">Pilih Kecamatan</option>')
-                                        .prop('disabled', false);
-
-                                    // Add all subdistricts
-                                    subDistrictResponse.data.forEach(subDistrict => {
-                                        $('#sub_district_id').append(
-                                            `<option value="${subDistrict.code}" data-id="${subDistrict.id}">${subDistrict.name}</option>`
-                                        );
-                                        // Store mapping
-                                        subDistrictIdMap[subDistrict.code] = subDistrict.id;
-                                        subDistrictCodeMap[subDistrict.id] = subDistrict.code;
-                                    });
-
-                                    // If we have a subdistrict ID, select it
-                                    if (subDistrictId) {
-                                        // Find the subdistrict by ID
-                                        const subDistrict = subDistrictResponse.data.find(sd => sd.id == subDistrictId);
-                                        if (subDistrict) {
-                                            $('#sub_district_id').val(subDistrict.code);
-
-                                            // Now get village data
-                                            const villageResponse = await axios.get(`${getBaseUrl()}/location/villages/${subDistrict.code}`);
-
-                                            if (villageResponse.data && Array.isArray(villageResponse.data)) {
-                                                // Clear and repopulate village dropdown
-                                                $('#village_id').empty()
-                                                    .append('<option value="">Pilih Desa/Kelurahan</option>')
-                                                    .prop('disabled', false);
-
-                                                // Add all villages
-                                                villageResponse.data.forEach(village => {
-                                                    $('#village_id').append(
-                                                        `<option value="${village.code}" data-id="${village.id}">${village.name}</option>`
-                                                    );
-                                                    // Store mapping
-                                                    villageIdMap[village.code] = village.id;
-                                                    villageCodeMap[village.id] = village.code;
-                                                });
-
-                                                // If we have a village ID, select it
-                                                if (villageId) {
-                                                    // Find the village by ID
-                                                    const village = villageResponse.data.find(v => v.id == villageId);
-                                                    if (village) {
-                                                        $('#village_id').val(village.code);
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    } catch (error) {
-        // Silent error handling
-        console.error("Error populating location dropdowns:", error);
-    }
+    // Set foreign address values
+    document.getElementById('form_foreign_address').value = foreignAddressValue;
+    document.getElementById('form_city').value = cityValue;
+    document.getElementById('form_state').value = stateValue;
+    document.getElementById('form_country').value = countryValue;
+    document.getElementById('form_foreign_postal_code').value = foreignPostalCodeValue;
 }
 
 /**
  * Initialize the Family Card Manager
  */
 function initializeFamilyCardManager() {
-    // Initialize Select2 for dropdown elements
-    $('#kkSelect').select2({
-        placeholder: 'Pilih No KK',
-        width: '100%'
-    });
+    // Monitor KK input field for changes
+    const kkInput = document.getElementById('kk');
+    if (kkInput) {
+        kkInput.addEventListener('input', function() {
+            const selectedValue = this.value;
+            if (selectedValue) {
+                // Save to hidden field in family member form
+                document.getElementById('kk').value = selectedValue;
 
-    // KK select change handler
-    $('#kkSelect').on('change', function () {
-        if (isUpdating) return; // Avoid recursion
-        isUpdating = true;
-
-        const selectedKK = $(this).val();
-        const selectedOption = $(this).find('option:selected');
-
-        if (selectedKK) {
-            // Get data from data-* attributes
-            const fullName = selectedOption.attr('data-full-name');
-            const address = selectedOption.attr('data-address');
-            const postalCode = selectedOption.attr('data-postal-code');
-            const rt = selectedOption.attr('data-rt');
-            const rw = selectedOption.attr('data-rw');
-            const telepon = selectedOption.attr('data-telepon') || '';
-            const email = selectedOption.attr('data-email') || '';
-            const provinceId = selectedOption.attr('data-province-id');
-            const districtId = selectedOption.attr('data-district-id');
-            const subDistrictId = selectedOption.attr('data-sub-district-id');
-            const villageId = selectedOption.attr('data-village-id');
-            const dusun = selectedOption.attr('data-dusun') || '';
-
-            // Get foreign address data
-            const foreignAddress = selectedOption.attr('data-foreign-address') || '';
-            const city = selectedOption.attr('data-city') || '';
-            const state = selectedOption.attr('data-state') || '';
-            const country = selectedOption.attr('data-country') || '';
-            const foreignPostalCode = selectedOption.attr('data-foreign-postal-code') || '';
-
-            // Log foreign address data for debugging
-            console.log("Foreign address data:", {
-                foreignAddress,
-                city,
-                state,
-                country,
-                foreignPostalCode
-            });
-
-            // Fill form fields
-            $('#address').val(address || '');
-            $('#postal_code').val(postalCode || '');
-            $('#rt').val(rt || '');
-            $('#rw').val(rw || '');
-            $('#telepon').val(telepon);
-            $('#email').val(email);
-            $('#dusun').val(dusun);
-
-            // Fill foreign address fields - FIXED FIELD IDS HERE
-            $('#foreign_address').val(foreignAddress);
-            $('#city').val(city);
-            $('#state').val(state);
-            $('#country').val(country);
-            $('#foreign_postal_code').val(foreignPostalCode);
-
-            // Store the location IDs in hidden fields
-            $('#province_id_hidden').val(provinceId || '');
-            $('#district_id_hidden').val(districtId || '');
-            $('#sub_district_id_hidden').val(subDistrictId || '');
-            $('#village_id_hidden').val(villageId || '');
-
-            // Populate location dropdowns
-            populateLocationDropdowns(provinceId, districtId, subDistrictId, villageId);
-
-            // Fetch family members
-            $.ajax({
-                url: `${getBaseUrl()}/getFamilyMembers`,
-                type: "GET",
-                data: { kk: selectedKK },
-                success: function (response) {
-                    if (response.status === "OK") {
-                        $('#jml_anggota_kk').val(response.count);
-                        $('#familyMembersContainer').empty();
-
-                        // Create fields for each family member
-                        if (response.data && Array.isArray(response.data)) {
-                            response.data.forEach((member, index) => {
-                                const fieldHtml = `
-                                <div class="mb-4">
-                                    <label class="block text-sm font-medium text-gray-700">Anggota ${index + 1}</label>
-                                    <input type="text"
-                                        value="${member.full_name} - ${member.family_status}"
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
-                                        readonly>
-                                    <input type="hidden" name="family_members[${index}][full_name]" value="${member.full_name}">
-                                    <input type="hidden" name="family_members[${index}][family_status]" value="${member.family_status}">
-                                </div>
-                                `;
-                                $('#familyMembersContainer').append(fieldHtml);
-                            });
-
-                            $('#emptyFamilyMessage').hide();
-                        } else {
-                            $('#emptyFamilyMessage').show();
-                        }
-                    } else {
-                        $('#jml_anggota_kk').val(0);
-                        $('#familyMembersContainer').empty().append(`
-                            <div class="text-gray-500 italic text-sm">Belum ada anggota keluarga untuk KK ini</div>
-                        `);
-                    }
-                },
-                error: function () {
-                    $('#jml_anggota_kk').val(0);
-                    $('#familyMembersContainer').empty().append(`
-                        <div class="text-gray-500 italic text-sm">Error mengambil data anggota keluarga</div>
-                    `);
+                // Copy to family member form hidden field
+                if (document.getElementById('form_kk')) {
+                    document.getElementById('form_kk').value = selectedValue;
                 }
-            });
-
-        } else {
-            // Clear fields if no selection
-            $('#address').val('');
-            $('#postal_code').val('');
-            $('#rt').val('');
-            $('#rw').val('');
-            $('#telepon').val('');
-            $('#email').val('');
-            $('#province_id').val('');
-            $('#district_id').val('');
-            $('#sub_district_id').val('');
-            $('#village_id').val('');
-            $('#dusun').val('');
-            $('#foreign_address').val('');
-            $('#city').val('');
-            $('#state').val('');
-            $('#country').val('');
-            $('#foreign_postal_code').val('');
-            $('#jml_anggota_kk').val('');
-            $('#familyMembersContainer').empty();
-            $('#emptyFamilyMessage').show();
-        }
-
-        isUpdating = false;
-    });
+            }
+        });
+    }
 
     // Province change handler
     $('#province_id').on('change', function () {
@@ -593,9 +223,9 @@ function initializeFamilyCardManager() {
         }
 
         // Reset dropdowns
-        $('#district_id').empty().append('<option value="">Pilih Kabupaten</option>').prop('disabled', true);
-        $('#sub_district_id').empty().append('<option value="">Pilih Kecamatan</option>').prop('disabled', true);
-        $('#village_id').empty().append('<option value="">Pilih Desa/Kelurahan</option>').prop('disabled', true);
+        $('#district_id').empty().append('<option value="">Pilih Kabupaten</option>');
+        $('#sub_district_id').empty().append('<option value="">Pilih Kecamatan</option>');
+        $('#village_id').empty().append('<option value="">Pilih Desa/Kelurahan</option>');
 
         // Reset hidden fields
         $('#district_id_hidden').val('');
@@ -631,6 +261,7 @@ function initializeFamilyCardManager() {
                 },
                 error: function (error) {
                     $('#district_id').empty().append('<option value="">Error loading data</option>');
+                    $('#district_id').prop('disabled', false);
                 }
             });
         }
@@ -647,8 +278,8 @@ function initializeFamilyCardManager() {
         }
 
         // Reset dropdowns
-        $('#sub_district_id').empty().append('<option value="">Pilih Kecamatan</option>').prop('disabled', true);
-        $('#village_id').empty().append('<option value="">Pilih Desa/Kelurahan</option>').prop('disabled', true);
+        $('#sub_district_id').empty().append('<option value="">Pilih Kecamatan</option>');
+        $('#village_id').empty().append('<option value="">Pilih Desa/Kelurahan</option>');
 
         // Reset hidden fields
         $('#sub_district_id_hidden').val('');
@@ -683,6 +314,7 @@ function initializeFamilyCardManager() {
                 },
                 error: function (error) {
                     $('#sub_district_id').empty().append('<option value="">Error loading data</option>');
+                    $('#sub_district_id').prop('disabled', false);
                 }
             });
         }
@@ -699,7 +331,7 @@ function initializeFamilyCardManager() {
         }
 
         // Reset dropdowns
-        $('#village_id').empty().append('<option value="">Pilih Desa/Kelurahan</option>').prop('disabled', true);
+        $('#village_id').empty().append('<option value="">Pilih Desa/Kelurahan</option>');
 
         // Reset hidden field
         $('#village_id_hidden').val('');
@@ -733,6 +365,7 @@ function initializeFamilyCardManager() {
                 },
                 error: function (error) {
                     $('#village_id').empty().append('<option value="">Error loading data</option>');
+                    $('#village_id').prop('disabled', false);
                 }
             });
         }
@@ -749,15 +382,95 @@ function initializeFamilyCardManager() {
         }
     });
 
-    // Fetch citizen data
-    fetchCitizens();
+    // Add form submit handler to save all form data before submission
+    const addFamilyMemberForm = document.getElementById('addFamilyMemberForm');
+    if (addFamilyMemberForm) {
+        addFamilyMemberForm.addEventListener('submit', function(e) {
+            // Save current KK form data to localStorage
+            saveKKDataToLocalStorage();
+
+            // Ensure KK data is copied to hidden fields
+            copyDataToFamilyMemberForm();
+
+            // Check if KK exists
+            const currentKK = document.getElementById('kk').value;
+            if (!currentKK) {
+                e.preventDefault();
+                alert("Silakan isi Nomor KK terlebih dahulu");
+                return false;
+            }
+
+            // Additional check for family_members_json
+            const familyMembersJson = document.getElementById('family_members_json');
+            if (familyMembersJson && (!familyMembersJson.value || familyMembersJson.value === '[]')) {
+                // If no family members have been added, the current form data should be included
+                const addToListBtn = document.getElementById('addToListBtn');
+                if (addToListBtn) {
+                    // Trigger the add to list functionality first
+                    addToListBtn.click();
+
+                    // If after clicking, we still don't have family members, prevent submission
+                    if (!familyMembersJson.value || familyMembersJson.value === '[]') {
+                        e.preventDefault();
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        });
+    }
+
+    // Check for previously saved data
+    const savedKKData = loadKKDataFromLocalStorage();
+    if (savedKKData && savedKKData.kk) {
+        // Populate form with saved data
+        document.getElementById('kk').value = savedKKData.kk || '';
+        document.getElementById('address').value = savedKKData.address || '';
+        document.getElementById('postal_code').value = savedKKData.postal_code || '';
+        document.getElementById('rt').value = savedKKData.rt || '';
+        document.getElementById('rw').value = savedKKData.rw || '';
+        document.getElementById('dusun').value = savedKKData.dusun || '';
+        document.getElementById('jml_anggota_kk').value = savedKKData.jml_anggota_kk || '1';
+
+        // Foreign address fields
+        document.getElementById('foreign_address').value = savedKKData.foreign_address || '';
+        document.getElementById('city').value = savedKKData.city || '';
+        document.getElementById('state').value = savedKKData.state || '';
+        document.getElementById('country').value = savedKKData.country || '';
+        document.getElementById('foreign_postal_code').value = savedKKData.foreign_postal_code || '';
+
+        // Handle location data if available
+        if (savedKKData.province_id) {
+            document.getElementById('province_id_hidden').value = savedKKData.province_id;
+
+            // Fetch and populate location dropdowns if province_id exists
+            const provinceCode = provinceCodeMap[savedKKData.province_id];
+            if (provinceCode) {
+                $('#province_id').val(provinceCode).trigger('change');
+
+                // Further location cascading will be handled by the change event handlers
+            }
+        }
+    }
 }
 
 // Initialize the Family Card Manager when the document is ready
 document.addEventListener('DOMContentLoaded', function() {
-    initializeFamilyCardManager();
+    // Load province code mappings first
+    loadProvinceCodeMap().then(() => {
+        initializeFamilyCardManager();
+    });
 
-    // Set flash messages for SweetAlert
-    document.body.setAttribute('data-success-message', document.body.getAttribute('data-success-message'));
-    document.body.setAttribute('data-error-message', document.body.getAttribute('data-error-message'));
+    // Set flash messages for SweetAlert if present
+    const successMessage = document.body.getAttribute('data-success-message');
+    const errorMessage = document.body.getAttribute('data-error-message');
+
+    if (successMessage) {
+        document.body.setAttribute('data-success-message', successMessage);
+    }
+
+    if (errorMessage) {
+        document.body.setAttribute('data-error-message', errorMessage);
+    }
 });
