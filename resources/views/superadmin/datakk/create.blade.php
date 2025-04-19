@@ -292,6 +292,7 @@
                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                             <option value="">Pilih Status</option>
                             <option value="1">ANAK</option>
+                            <option value="2">KEPALA KELUARGA</option>
                             <option value="3">ISTRI</option>
                             <option value="4">ORANG TUA</option>
                             <option value="5">MERTUA</option>
