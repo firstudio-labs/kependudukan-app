@@ -247,7 +247,12 @@ class IzinKeramaianController extends Controller
 
         try {
             $keramaian = IzinKeramaian::findOrFail($id);
-            $keramaian->update($request->all());
+            $data = $request->all();
+            
+            // Set is_accepted field if it's provided in the form
+            $data['is_accepted'] = $request->has('is_accepted') ? 1 : 0;
+            
+            $keramaian->update($data);
 
             return redirect()->route('superadmin.surat.keramaian.index')
                 ->with('success', 'Surat izin keramaian berhasil diperbarui!');

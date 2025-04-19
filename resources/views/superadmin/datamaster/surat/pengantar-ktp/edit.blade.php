@@ -2,9 +2,10 @@
     <div class="p-4 mt-14">
         <h1 class="text-2xl font-bold text-gray-800 mb-6">Edit Surat Pengantar KTP</h1>
 
-        <form method="POST" action="{{ route('superadmin.surat.pengantar-ktp.update', $ktp->id) }}" class="bg-white p-6 rounded-lg shadow-md">
+        <form method="POST" action="{{ route('superadmin.surat.pengantar-ktp.update', $pengantarKtp->id) }}" class="bg-white p-6 rounded-lg shadow-md">
             @csrf
             @method('PUT')
+            <input type="hidden" name="is_accepted" value="1">
 
             <!-- Data Pemohon Section -->
             <div class="mt-4">
@@ -16,7 +17,7 @@
                             <label for="nikSelect" class="block text-sm font-medium text-gray-700">NIK <span class="text-red-500">*</span></label>
                             <select id="nikSelect" name="nik" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                                 <option value="">Pilih NIK</option>
-                                <option value="{{ $ktp->nik }}" selected>{{ $ktp->nik }}</option>
+                                <option value="{{ $pengantarKtp->nik }}" selected>{{ $pengantarKtp->nik }}</option>
                             </select>
                         </div>
 
@@ -25,7 +26,7 @@
                             <label for="fullNameSelect" class="block text-sm font-medium text-gray-700">Nama Lengkap <span class="text-red-500">*</span></label>
                             <select id="fullNameSelect" name="full_name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                                 <option value="">Pilih Nama Lengkap</option>
-                                <option value="{{ $ktp->full_name }}" selected>{{ $ktp->full_name }}</option>
+                                <option value="{{ $pengantarKtp->full_name }}" selected>{{ $pengantarKtp->full_name }}</option>
                             </select>
                         </div>
                     </div>
@@ -34,13 +35,13 @@
                         <!-- Nomor Kartu Keluarga -->
                         <div>
                             <label for="kk" class="block text-sm font-medium text-gray-700">Nomor Kartu Keluarga <span class="text-red-500">*</span></label>
-                            <input type="text" id="kk" name="kk" value="{{ $ktp->kk }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                            <input type="text" id="kk" name="kk" value="{{ $pengantarKtp->kk }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                         </div>
 
                         <!-- Alamat -->
                         <div>
                             <label for="address" class="block text-sm font-medium text-gray-700">Alamat <span class="text-red-500">*</span></label>
-                            <textarea id="address" name="address" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>{{ $ktp->address }}</textarea>
+                            <textarea id="address" name="address" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>{{ $pengantarKtp->address }}</textarea>
                         </div>
                     </div>
 
@@ -48,21 +49,21 @@
                         <!-- RT -->
                         <div>
                             <label for="rt" class="block text-sm font-medium text-gray-700">RT <span class="text-red-500">*</span></label>
-                            <input type="text" id="rt" name="rt" value="{{ $ktp->rt }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                            <input type="text" id="rt" name="rt" value="{{ $pengantarKtp->rt }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                             <small class="text-gray-500">Contoh: 001, 002, dll.</small>
                         </div>
 
                         <!-- RW -->
                         <div>
                             <label for="rw" class="block text-sm font-medium text-gray-700">RW <span class="text-red-500">*</span></label>
-                            <input type="text" id="rw" name="rw" value="{{ $ktp->rw }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                            <input type="text" id="rw" name="rw" value="{{ $pengantarKtp->rw }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                             <small class="text-gray-500">Contoh: 001, 002, dll.</small>
                         </div>
 
                         <!-- Dusun -->
                         <div>
                             <label for="hamlet" class="block text-sm font-medium text-gray-700">Dusun <span class="text-red-500">*</span></label>
-                            <input type="text" id="hamlet" name="hamlet" value="{{ $ktp->hamlet }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                            <input type="text" id="hamlet" name="hamlet" value="{{ $pengantarKtp->hamlet }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                         </div>
                     </div>
                 </div>
@@ -79,10 +80,10 @@
                             <select id="province_code" name="province_code" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                                 <option value="">Pilih Provinsi</option>
                                 @foreach($provinces as $province)
-                                    <option value="{{ $province['code'] }}" data-id="{{ $province['id'] }}" {{ $province['id'] == $ktp->province_id ? 'selected' : '' }}>{{ $province['name'] }}</option>
+                                    <option value="{{ $province['code'] }}" data-id="{{ $province['id'] }}" {{ $province['id'] == $pengantarKtp->province_id ? 'selected' : '' }}>{{ $province['name'] }}</option>
                                 @endforeach
                             </select>
-                            <input type="hidden" id="province_id" name="province_id" value="{{ $ktp->province_id }}">
+                            <input type="hidden" id="province_id" name="province_id" value="{{ $pengantarKtp->province_id }}">
                         </div>
 
                         <!-- Kabupaten -->
@@ -91,10 +92,10 @@
                             <select id="district_code" name="district_code" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                                 <option value="">Pilih Kabupaten</option>
                                 @foreach($districts as $district)
-                                    <option value="{{ $district['code'] }}" data-id="{{ $district['id'] }}" {{ $district['id'] == $ktp->district_id ? 'selected' : '' }}>{{ $district['name'] }}</option>
+                                    <option value="{{ $district['code'] }}" data-id="{{ $district['id'] }}" {{ $district['id'] == $pengantarKtp->district_id ? 'selected' : '' }}>{{ $district['name'] }}</option>
                                 @endforeach
                             </select>
-                            <input type="hidden" id="district_id" name="district_id" value="{{ $ktp->district_id }}">
+                            <input type="hidden" id="district_id" name="district_id" value="{{ $pengantarKtp->district_id }}">
                         </div>
 
                         <!-- Kecamatan -->
@@ -103,10 +104,10 @@
                             <select id="subdistrict_code" name="subdistrict_code" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                                 <option value="">Pilih Kecamatan</option>
                                 @foreach($subDistricts as $subDistrict)
-                                    <option value="{{ $subDistrict['code'] }}" data-id="{{ $subDistrict['id'] }}" {{ $subDistrict['id'] == $ktp->subdistrict_id ? 'selected' : '' }}>{{ $subDistrict['name'] }}</option>
+                                    <option value="{{ $subDistrict['code'] }}" data-id="{{ $subDistrict['id'] }}" {{ $subDistrict['id'] == $pengantarKtp->subdistrict_id ? 'selected' : '' }}>{{ $subDistrict['name'] }}</option>
                                 @endforeach
                             </select>
-                            <input type="hidden" id="subdistrict_id" name="subdistrict_id" value="{{ $ktp->subdistrict_id }}">
+                            <input type="hidden" id="subdistrict_id" name="subdistrict_id" value="{{ $pengantarKtp->subdistrict_id }}">
                         </div>
 
                         <!-- Desa -->
@@ -115,10 +116,10 @@
                             <select id="village_code" name="village_code" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                                 <option value="">Pilih Desa</option>
                                 @foreach($villages as $village)
-                                    <option value="{{ $village['code'] }}" data-id="{{ $village['id'] }}" {{ $village['id'] == $ktp->village_id ? 'selected' : '' }}>{{ $village['name'] }}</option>
+                                    <option value="{{ $village['code'] }}" data-id="{{ $village['id'] }}" {{ $village['id'] == $pengantarKtp->village_id ? 'selected' : '' }}>{{ $village['name'] }}</option>
                                 @endforeach
                             </select>
-                            <input type="hidden" id="village_id" name="village_id" value="{{ $ktp->village_id }}">
+                            <input type="hidden" id="village_id" name="village_id" value="{{ $pengantarKtp->village_id }}">
                         </div>
                     </div>
                 </div>
@@ -134,16 +135,16 @@
                             <label for="application_type" class="block text-sm font-medium text-gray-700">Permohonan KTP <span class="text-red-500">*</span></label>
                             <select id="application_type" name="application_type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                                 <option value="">Pilih Jenis Permohonan</option>
-                                <option value="Baru" {{ $ktp->application_type == 'Baru' ? 'selected' : '' }}>Baru</option>
-                                <option value="Perpanjang" {{ $ktp->application_type == 'Perpanjang' ? 'selected' : '' }}>Perpanjang</option>
-                                <option value="Pergantian" {{ $ktp->application_type == 'Pergantian' ? 'selected' : '' }}>Pergantian</option>
+                                <option value="Baru" {{ $pengantarKtp->application_type == 'Baru' ? 'selected' : '' }}>Baru</option>
+                                <option value="Perpanjang" {{ $pengantarKtp->application_type == 'Perpanjang' ? 'selected' : '' }}>Perpanjang</option>
+                                <option value="Pergantian" {{ $pengantarKtp->application_type == 'Pergantian' ? 'selected' : '' }}>Pergantian</option>
                             </select>
                         </div>
 
                         <!-- Nomor Surat -->
                         <div>
                             <label for="letter_number" class="block text-sm font-medium text-gray-700">Nomor Surat</label>
-                            <input type="text" id="letter_number" name="letter_number" value="{{ $ktp->letter_number }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                            <input type="text" id="letter_number" name="letter_number" value="{{ $pengantarKtp->letter_number }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
                         </div>
 
                         <!-- Pejabat Penandatangan -->
@@ -152,7 +153,7 @@
                             <select id="signing" name="signing" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
                                 <option value="">Pilih Pejabat</option>
                                 @foreach($signers as $signer)
-                                    <option value="{{ $signer->id }}" {{ $ktp->signing == $signer->id ? 'selected' : '' }}>{{ $signer->judul }} - {{ $signer->keterangan }}</option>
+                                    <option value="{{ $signer->id }}" {{ $pengantarKtp->signing == $signer->id ? 'selected' : '' }}>{{ $signer->judul }} - {{ $signer->keterangan }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -165,7 +166,7 @@
                     Batal
                 </button>
                 <button type="submit" class="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-[#7886C7] text-base font-medium text-white hover:bg-[#2D336B] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-lg">
-                    Perbarui
+                    Accept
                 </button>
             </div>
         </form>
@@ -272,8 +273,8 @@
                 if (!citizens || !Array.isArray(citizens)) return;
 
                 // Clear existing options first but keep selected ones
-                const currentNik = '{{ $ktp->nik }}';
-                const currentName = '{{ $ktp->full_name }}';
+                const currentNik = '{{ $pengantarKtp->nik }}';
+                const currentName = '{{ $pengantarKtp->full_name }}';
 
                 $('#nikSelect').empty().append('<option value="">Pilih NIK</option>');
                 $('#fullNameSelect').empty().append('<option value="">Pilih Nama Lengkap</option>');
@@ -503,7 +504,7 @@
                                     option.setAttribute('data-id', district.id);
 
                                     // Check if this district matches the one we want to select
-                                    if (district.id == {{ $ktp->district_id ?? 'null' }}) {
+                                    if (district.id == {{ $pengantarKtp->district_id ?? 'null' }}) {
                                         option.selected = true;
                                         districtIdInput.value = district.id;
                                     }
@@ -563,7 +564,7 @@
                                     option.setAttribute('data-id', subdistrict.id);
 
                                     // Check if this subdistrict matches the one we want to select
-                                    if (subdistrict.id == {{ $ktp->subdistrict_id ?? 'null' }}) {
+                                    if (subdistrict.id == {{ $pengantarKtp->subdistrict_id ?? 'null' }}) {
                                         option.selected = true;
                                         subDistrictIdInput.value = subdistrict.id;
                                     }
@@ -623,7 +624,7 @@
                                     option.setAttribute('data-id', village.id);
 
                                     // Check if this village matches the one we want to select
-                                    if (village.id == {{ $ktp->village_id ?? 'null' }}) {
+                                    if (village.id == {{ $pengantarKtp->village_id ?? 'null' }}) {
                                         option.selected = true;
                                         villageIdInput.value = village.id;
                                     }

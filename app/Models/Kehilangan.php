@@ -40,7 +40,8 @@ class Kehilangan extends Model
         'signing',
         'rt',
         'letter_date',
-        'lost_items'
+        'lost_items',
+        'is_accepted' // Add this field
     ];
 
     public function signer()

@@ -39,7 +39,8 @@ class RumahSewa extends Model
         'room_count',
         'rental_type',
         'valid_until',
-        'signing'
+        'signing',
+        'is_accepted' // Add this field
     ];
 
     /**

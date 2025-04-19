@@ -183,12 +183,17 @@ class KehilanganController extends Controller
 
         try {
             $kehilangan = Kehilangan::findOrFail($id);
-            $kehilangan->update($request->all());
+            $data = $request->all();
+            
+            // Set is_accepted field if it's provided in the form
+            $data['is_accepted'] = $request->has('is_accepted') ? 1 : 0;
+            
+            $kehilangan->update($data);
 
             return redirect()->route('superadmin.surat.kehilangan.index')
-                ->with('success', 'Surat kehilangan berhasil diperbarui!');
+                ->with('success', 'Surat keterangan kehilangan berhasil diperbarui!');
         } catch (\Exception $e) {
-            return back()->with('error', 'Gagal memperbarui surat kehilangan: ' . $e->getMessage());
+            return back()->with('error', 'Gagal memperbarui surat keterangan kehilangan: ' . $e->getMessage());
         }
     }
 

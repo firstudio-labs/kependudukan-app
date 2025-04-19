@@ -70,17 +70,21 @@
                             {{ $kematian->signer ? $kematian->signer->judul : $kematian->signing }}
                         </td>
                         <td class="flex items-center px-6 py-4 space-x-2">
-
-                            <a href="{{ route('superadmin.surat.kematian.export-pdf', $kematian->id) }}" class="text-blue-600 hover:text-blue-800" aria-label="Export PDF" target="_blank">
+                            @if($kematian->is_accepted)
+                                <span class="text-green-600 font-semibold">Acceptance</span>
+                            @endif
+                            <a href="{{ route('superadmin.surat.kematian.pdf', $kematian->id) }}" class="text-blue-600 hover:text-blue-800" aria-label="Export PDF" target="_blank">
                                 <i class="fa-solid fa-file-pdf"></i>
                             </a>
-                            <a href="{{ route('superadmin.surat.kematian.edit', $kematian->id) }}" class="text-yellow-600 hover:text-yellow-800" aria-label="Edit">
-                                <i class="fa-solid fa-pen-to-square"></i>
-                            </a>
+                            @if(!$kematian->is_accepted)
+                                <a href="{{ route('superadmin.surat.kematian.edit', $kematian->id) }}" class="text-yellow-600 hover:text-yellow-800" aria-label="Edit">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </a>
+                            @endif
                             <form action="{{ route('superadmin.surat.kematian.delete', $kematian->id) }}" method="POST" onsubmit="return confirmDelete(event)">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="font-medium text-red-600 hover:underline ml-3">
+                                <button type="submit" class="font-medium text-red-600 hover:underline">
                                     <i class="fa-solid fa-trash"></i>
                                 </button>
                             </form>

@@ -43,7 +43,8 @@ class DomisiliUsaha extends Model
         'business_address',
         'business_year',
         'purpose',
-        'signing'
+        'signing',
+        'is_accepted' // Add this field
     ];
 
     public function signer()

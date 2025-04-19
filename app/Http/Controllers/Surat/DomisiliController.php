@@ -306,53 +306,18 @@ class DomisiliController extends Controller
         }
 
         try {
-            DB::beginTransaction();
-
             $domisili = Domisili::findOrFail($id);
-
-            // Prepare data without type casting to maintain original values
-            $data = [
-                'nik' => $request->nik,
-                'full_name' => $request->full_name,
-                'birth_place' => $request->birth_place,
-                'birth_date' => $request->birth_date,
-                'gender' => $request->gender,
-                'job_type_id' => $request->job_type_id,
-                'religion' => $request->religion,
-                'citizen_status' => $request->citizen_status,
-                'address' => $request->address,
-                'rt' => $request->rt, // Store RT as-is without conversion
-                'letter_date' => $request->letter_date,
-                'domicile_address' => $request->domicile_address,
-                'purpose' => $request->purpose,
-                'province_id' => $request->province_id,
-                'district_id' => $request->district_id,
-                'subdistrict_id' => $request->subdistrict_id,
-                'village_id' => $request->village_id,
-                'letter_number' => $request->letter_number,
-                'signing' => $request->signing,
-            ];
-
-            Log::info('Updating domisili data', ['id' => $id, 'data' => $data]);
-
+            $data = $request->all();
+            
+            // Set is_accepted field if it's provided in the form
+            $data['is_accepted'] = $request->has('is_accepted') ? 1 : 0;
+            
             $domisili->update($data);
-
-            DB::commit();
-
-            Log::info('Domisili updated successfully', ['id' => $id]);
 
             return redirect()->route('superadmin.surat.domisili.index')
                 ->with('success', 'Surat keterangan domisili berhasil diperbarui!');
         } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Failed to update domisili: ' . $e->getMessage(), [
-                'id' => $id,
-                'trace' => $e->getTraceAsString(),
-                'request' => $request->all()
-            ]);
-
-            return back()->withInput()
-                ->with('error', 'Gagal memperbarui surat keterangan domisili: ' . $e->getMessage());
+            return back()->with('error', 'Gagal memperbarui surat keterangan domisili: ' . $e->getMessage());
         }
     }
 

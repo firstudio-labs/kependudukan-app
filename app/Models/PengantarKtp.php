@@ -36,7 +36,8 @@ class PengantarKtp extends Model
         'rt',
         'rw',
         'hamlet',
-        'signing'
+        'signing',
+        'is_accepted' // Add this field
     ];
 
     /**

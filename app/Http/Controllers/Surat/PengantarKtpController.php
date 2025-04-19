@@ -306,39 +306,18 @@ class PengantarKtpController extends Controller
         ]);
 
         try {
-            $ktp = PengantarKtp::findOrFail($id);
-
-            // Update model with validated data
-            $ktp->province_id = $validated['province_id'];
-            $ktp->district_id = $validated['district_id'];
-            $ktp->subdistrict_id = $validated['subdistrict_id'];
-            $ktp->village_id = $validated['village_id'];
-            $ktp->letter_number = $validated['letter_number'];
-            $ktp->application_type = $validated['application_type'];
-            $ktp->nik = $validated['nik'];
-            $ktp->full_name = $validated['full_name'];
-            $ktp->kk = $validated['kk'];
-            $ktp->address = $validated['address'];
-            $ktp->rt = $validated['rt'];
-            $ktp->rw = $validated['rw'];
-            $ktp->hamlet = $validated['hamlet'];
-            $ktp->signing = $validated['signing'];
-            $ktp->save();
-
-            // Log successful update
-            \Log::info('PengantarKTP Updated Successfully:', $ktp->toArray());
+            $pengantarKtp = PengantarKtp::findOrFail($id);
+            $data = $request->all();
+            
+            // Set is_accepted field if it's provided in the form
+            $data['is_accepted'] = $request->has('is_accepted') ? 1 : 0;
+            
+            $pengantarKtp->update($data);
 
             return redirect()->route('superadmin.surat.pengantar-ktp.index')
                 ->with('success', 'Surat pengantar KTP berhasil diperbarui!');
         } catch (\Exception $e) {
-            // Log the error
-            \Log::error('PengantarKTP Update Error:', [
-                'message' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine()
-            ]);
-
-            return back()->withInput()->with('error', 'Gagal memperbarui surat pengantar KTP: ' . $e->getMessage());
+            return back()->with('error', 'Gagal memperbarui surat pengantar KTP: ' . $e->getMessage());
         }
     }
 

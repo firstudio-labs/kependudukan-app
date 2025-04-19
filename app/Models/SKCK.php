@@ -40,7 +40,8 @@ class SKCK extends Model
         'signing',
         'rt',
         'letter_date',
-        'purpose'
+        'purpose',
+        'is_accepted' // Add this field
     ];
 
     public function signer()

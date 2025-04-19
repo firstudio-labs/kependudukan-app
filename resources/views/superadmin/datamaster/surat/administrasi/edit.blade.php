@@ -8,6 +8,7 @@
         :signers="$signers">
 
         <x-slot name="additionalFields">
+            <input type="hidden" name="is_accepted" value="1">
             <!-- Kewarganegaraan - Added to Data Pribadi section -->
             <div class="col-span-2 md:col-span-1">
                 <label for="citizen_status" class="block text-sm font-medium text-gray-700">Kewarganegaraan <span class="text-red-500">*</span></label>
@@ -57,6 +58,12 @@
                         @foreach($signers as $signer)
                         signingDropdown.innerHTML += `<option value="{{ $signer->id }}" {{ $administration->signing == $signer->id ? 'selected' : '' }}>{{ $signer->judul }} - {{ $signer->keterangan }}</option>`;
                         @endforeach
+                    }
+
+                    // Change button text from "Perbarui" to "Accept"
+                    const submitButton = document.querySelector('button[type="submit"]');
+                    if (submitButton) {
+                        submitButton.textContent = 'Accept';
                     }
                 });
             </script>

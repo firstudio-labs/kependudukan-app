@@ -44,7 +44,8 @@ class AhliWaris extends Model
         'death_certificate_date',
         'inheritance_letter_date',
         'inheritance_type',
-        'signing'
+        'signing',
+        'is_accepted'
     ];
 
     /**

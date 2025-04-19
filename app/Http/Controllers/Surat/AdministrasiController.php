@@ -226,7 +226,12 @@ class AdministrasiController extends Controller
 
         try {
             $administration = Administration::findOrFail($id);
-            $administration->update($request->all());
+            $data = $request->all();
+            
+            // Set is_accepted field if it's provided in the form
+            $data['is_accepted'] = $request->has('is_accepted') ? 1 : 0;
+            
+            $administration->update($data);
 
             return redirect()->route('superadmin.surat.administrasi.index')
                 ->with('success', 'Surat administrasi berhasil diperbarui!');

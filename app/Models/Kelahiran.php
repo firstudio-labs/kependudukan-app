@@ -49,7 +49,8 @@ class Kelahiran extends Model
                 'child_religion',
         'child_address',
         'child_order',
-                'signing'
+                'signing',
+        'is_accepted'
     ];
 
     /**

@@ -51,6 +51,7 @@ class Kematian extends Model
         'reporter_name',
         'reporter_relation',
                 'signing',
+        'is_accepted'
     ];
 
     /**

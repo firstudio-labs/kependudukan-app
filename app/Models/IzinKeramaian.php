@@ -43,7 +43,8 @@ class IzinKeramaian extends Model
         'entertainment',
         'event',
         'invitation',
-        'signing'
+        'signing',
+        'is_accepted'
     ];
 
     /**

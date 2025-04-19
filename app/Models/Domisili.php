@@ -41,7 +41,8 @@ class Domisili extends Model
         'rt',
         'letter_date',
         'domicile_address',
-        'purpose'
+        'purpose',
+        'is_accepted' // Add this field
     ];
 
     public function signer()

@@ -258,14 +258,17 @@ class RumahSewaController extends Controller
 
         try {
             $rumahSewa = RumahSewa::findOrFail($id);
-            $rumahSewa->update($validated);
+            $data = $request->all();
+
+            // Set is_accepted field if it's provided in the form
+            $data['is_accepted'] = $request->has('is_accepted') ? 1 : 0;
+
+            $rumahSewa->update($data);
 
             return redirect()->route('superadmin.surat.rumah-sewa.index')
-                ->with('success', 'Izin rumah sewa berhasil diperbarui!');
-        } catch (Exception $e) {
-            return back()
-                ->withInput()
-                ->with('error', 'Gagal memperbarui izin rumah sewa: ' . $e->getMessage());
+                ->with('success', 'Surat izin rumah sewa berhasil diperbarui!');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal memperbarui surat izin rumah sewa: ' . $e->getMessage());
         }
     }
 

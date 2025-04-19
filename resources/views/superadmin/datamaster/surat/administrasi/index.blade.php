@@ -66,16 +66,21 @@
                             {{ $administration->signer ? $administration->signer->judul : $administration->signing }}
                         </td>
                         <td class="flex items-center px-6 py-4 space-x-2">
+                            @if($administration->is_accepted)
+                                <span class="text-green-600 font-semibold">Acceptance</span>
+                            @endif
                             <a href="{{ route('superadmin.surat.administrasi.pdf', $administration->id) }}" class="text-blue-600 hover:text-blue-800" aria-label="Export PDF" target="_blank" title="Export PDF">
                                 <i class="fa-solid fa-file-pdf"></i>
                             </a>
-                            <a href="{{ route('superadmin.surat.administrasi.edit', $administration->id) }}" class="text-yellow-600 hover:text-yellow-800" aria-label="Edit">
-                                <i class="fa-solid fa-pen-to-square"></i>
-                            </a>
+                            @if(!$administration->is_accepted)
+                                <a href="{{ route('superadmin.surat.administrasi.edit', $administration->id) }}" class="text-yellow-600 hover:text-yellow-800" aria-label="Edit">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </a>
+                            @endif
                             <form action="{{ route('superadmin.surat.administrasi.delete', $administration->id) }}" method="POST" class="delete-form">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="font-medium text-red-600 hover:underline ml-3">
+                                <button type="submit" class="font-medium text-red-600 hover:underline">
                                     <i class="fa-solid fa-trash"></i>
                                 </button>
                             </form>

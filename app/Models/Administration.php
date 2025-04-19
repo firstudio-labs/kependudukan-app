@@ -41,7 +41,8 @@ class Administration extends Model
         'rt',
         'letter_date',
         'statement_content',
-        'purpose'
+        'purpose',
+        'is_accepted' // Add this field
     ];
 
     /**

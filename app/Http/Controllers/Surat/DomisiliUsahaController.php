@@ -292,40 +292,17 @@ class DomisiliUsahaController extends Controller
 
         try {
             $domisiliUsaha = DomisiliUsaha::findOrFail($id);
-
-            // Prepare data with proper types, including business_year
-            $data = [
-                'nik' => $request->nik,
-                'full_name' => $request->full_name,
-                'birth_place' => $request->birth_place,
-                'birth_date' => $request->birth_date,
-                'gender' => $request->gender,
-                'job_type_id' => $request->job_type_id,
-                'religion' => $request->religion,
-                'citizen_status' => $request->citizen_status,
-                'address' => $request->address,
-                'rt' => $request->rt,
-                // Removed business_name from data array
-                'business_address' => $request->business_address,
-                'business_type' => $request->business_type,
-                'business_year' => $request->business_year,
-                'letter_date' => $request->letter_date,
-                'purpose' => $request->purpose,
-                'letter_number' => $request->letter_number,
-                'signing' => $request->signing,
-                'province_id' => $request->province_id,
-                'district_id' => $request->district_id,
-                'subdistrict_id' => $request->subdistrict_id,
-                'village_id' => $request->village_id,
-            ];
-
+            $data = $request->all();
+            
+            // Set is_accepted field if it's provided in the form
+            $data['is_accepted'] = $request->has('is_accepted') ? 1 : 0;
+            
             $domisiliUsaha->update($data);
 
             return redirect()->route('superadmin.surat.domisili-usaha.index')
                 ->with('success', 'Surat keterangan domisili usaha berhasil diperbarui!');
         } catch (\Exception $e) {
-            return back()->withInput()
-                ->with('error', 'Gagal memperbarui surat keterangan domisili usaha: ' . $e->getMessage());
+            return back()->with('error', 'Gagal memperbarui surat keterangan domisili usaha: ' . $e->getMessage());
         }
     }
 

@@ -5,6 +5,7 @@
         <form method="POST" action="{{ route('superadmin.surat.ahli-waris.update', $ahliWaris->id) }}" class="bg-white p-6 rounded-lg shadow-md">
             @csrf
             @method('PUT')
+            <input type="hidden" name="is_accepted" value="1">
 
             <!-- Daftar Ahli Waris Section (Moved to top) -->
             <div>
@@ -268,7 +269,7 @@
                     Batal
                 </button>
                 <button type="submit" class="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-[#7886C7] text-base font-medium text-white hover:bg-[#2D336B] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-lg">
-                    Perbarui
+                    Accept
                 </button>
             </div>
         </form>
