@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Surat;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Kematian;
+use App\Models\Penandatangan;
+use App\Models\User;
 use App\Services\JobService;
 use App\Services\WilayahService;
 use App\Services\CitizenService;
@@ -67,7 +69,7 @@ class KematianController extends Controller
         // Get jobs and regions data from services
         $provinces = $this->wilayahService->getProvinces();
         $jobs = $this->jobService->getAllJobs();
-        $signers = \App\Models\Penandatangan::all(); // Fetch signers
+        $signers = Penandatangan::all(); // Fetch signers
 
         // Initialize empty arrays for district, sub-district, and village data
         $districts = [];
@@ -192,7 +194,7 @@ class KematianController extends Controller
         // Get jobs and provinces data from services
         $provinces = $this->wilayahService->getProvinces();
         $jobs = $this->jobService->getAllJobs();
-        $signers = \App\Models\Penandatangan::all(); // Fetch signers
+        $signers = Penandatangan::all(); // Fetch signers
 
         // Initialize arrays for district, sub-district, and village data
         $districts = [];
@@ -442,7 +444,7 @@ class KematianController extends Controller
             // Get the signing name (keterangan) from Penandatangan model
             $signing_name = null;
             if (!empty($kematian->signing)) {
-                $penandatangan = \App\Models\Penandatangan::find($kematian->signing);
+                $penandatangan = Penandatangan::find($kematian->signing);
                 if ($penandatangan) {
                     $signing_name = $penandatangan->keterangan;
                 }
@@ -451,7 +453,7 @@ class KematianController extends Controller
             // Get user image based on matching district_id
             $districtLogo = null;
             if (!empty($kematian->district_id)) {
-                $userWithLogo = \App\Models\User::where('districts_id', $kematian->district_id)
+                $userWithLogo = User::where('districts_id', $kematian->district_id)
                     ->whereNotNull('image')
                     ->first();
 

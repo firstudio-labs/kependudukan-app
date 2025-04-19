@@ -11,6 +11,8 @@ use App\Services\CitizenService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use App\Models\Penandatangan;
+use App\Models\User;
 
 class DomisiliController extends Controller
 {
@@ -68,7 +70,7 @@ class DomisiliController extends Controller
         // Get jobs and regions data from services
         $provinces = $this->wilayahService->getProvinces();
         $jobs = $this->jobService->getAllJobs();
-        $signers = \App\Models\Penandatangan::all(); // Fetch signers
+        $signers = Penandatangan::all(); // Fetch signers
 
         // Initialize empty arrays for district, sub-district, and village data
         $districts = [];
@@ -247,7 +249,7 @@ class DomisiliController extends Controller
         // Get jobs and provinces data from services
         $provinces = $this->wilayahService->getProvinces();
         $jobs = $this->jobService->getAllJobs();
-        $signers = \App\Models\Penandatangan::all(); // Fetch signers
+        $signers = Penandatangan::all(); // Fetch signers
 
         // Initialize arrays for district, sub-district, and village data
         $districts = [];
@@ -489,7 +491,7 @@ class DomisiliController extends Controller
             // Get the signing name (keterangan) from Penandatangan model
             $signing_name = null;
             if (!empty($domisili->signing)) {
-                $penandatangan = \App\Models\Penandatangan::find($domisili->signing);
+                $penandatangan = Penandatangan::find($domisili->signing);
                 if ($penandatangan) {
                     $signing_name = $penandatangan->keterangan;
                 }
@@ -498,7 +500,7 @@ class DomisiliController extends Controller
             // Get user image based on matching district_id
             $districtLogo = null;
             if (!empty($domisili->district_id)) {
-                $userWithLogo = \App\Models\User::where('districts_id', $domisili->district_id)
+                $userWithLogo = User::where('districts_id', $domisili->district_id)
                     ->whereNotNull('image')
                     ->first();
 

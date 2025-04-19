@@ -11,6 +11,7 @@ use App\Services\CitizenService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use App\Models\Penandatangan;
+use App\Models\Users;
 
 class AdministrasiController extends Controller
 {
@@ -472,7 +473,7 @@ class AdministrasiController extends Controller
             // Get the signing name (keterangan) from Penandatangan model
             $signing_name = null;
             if (!empty($administration->signing)) {
-                $penandatangan = \App\Models\Penandatangan::find($administration->signing);
+                $penandatangan = Penandatangan::find($administration->signing);
                 if ($penandatangan) {
                     $signing_name = $penandatangan->keterangan;
                 }
@@ -481,7 +482,7 @@ class AdministrasiController extends Controller
             // Get user image based on matching district_id
             $districtLogo = null;
             if (!empty($administration->district_id)) {
-                $userWithLogo = \App\Models\User::where('districts_id', $administration->district_id)
+                $userWithLogo = User::where('districts_id', $administration->district_id)
                     ->whereNotNull('image')
                     ->first();
 

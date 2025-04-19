@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Surat;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Kehilangan;
+use App\Models\User;
+use App\Models\Penandatangan;
 use App\Services\JobService;
 use App\Services\WilayahService;
 use App\Services\CitizenService;
@@ -65,7 +67,7 @@ class KehilanganController extends Controller
         // Get jobs and regions data from services
         $provinces = $this->wilayahService->getProvinces();
         $jobs = $this->jobService->getAllJobs();
-        $signers = \App\Models\Penandatangan::all(); // Fetch signers
+        $signers = Penandatangan::all(); // Fetch signers
 
         // Initialize empty arrays for district, sub-district, and village data
         $districts = [];
@@ -133,7 +135,7 @@ class KehilanganController extends Controller
         // Get jobs and provinces data from services
         $provinces = $this->wilayahService->getProvinces();
         $jobs = $this->jobService->getAllJobs();
-        $signers = \App\Models\Penandatangan::all(); // Fetch signers
+        $signers = Penandatangan::all(); // Fetch signers
 
         // Initialize arrays for district, sub-district, and village data
         $districts = [];
@@ -344,7 +346,7 @@ class KehilanganController extends Controller
             // Get user image based on matching district_id
             $districtLogo = null;
             if (!empty($kehilangan->district_id)) {
-                $userWithLogo = \App\Models\User::where('districts_id', $kehilangan->district_id)
+                $userWithLogo = User::where('districts_id', $kehilangan->district_id)
                     ->whereNotNull('image')
                     ->first();
 
@@ -385,7 +387,7 @@ class KehilanganController extends Controller
             // Get the signing name (keterangan) from Penandatangan model
             $signing_name = null;
             if (!empty($kehilangan->signing)) {
-                $penandatangan = \App\Models\Penandatangan::find($kehilangan->signing);
+                $penandatangan = Penandatangan::find($kehilangan->signing);
                 if ($penandatangan) {
                     $signing_name = $penandatangan->keterangan;
                 }

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\RumahSewa;
 use App\Models\Penandatangan;
+use App\Models\User;
 use App\Services\JobService;
 use App\Services\WilayahService;
 use App\Services\CitizenService;
@@ -396,7 +397,7 @@ class RumahSewaController extends Controller
             // Get user image based on matching district_id
             $districtLogo = null;
             if (!empty($rumahSewa->district_id)) {
-                $userWithLogo = \App\Models\User::where('districts_id', $rumahSewa->district_id)
+                $userWithLogo = User::where('districts_id', $rumahSewa->district_id)
                     ->whereNotNull('image')
                     ->first();
 
@@ -418,7 +419,7 @@ class RumahSewaController extends Controller
             // Get the signing name (keterangan) from Penandatangan model
             $signing_name = null;
             if (!empty($rumahSewa->signing)) {
-                $penandatangan = \App\Models\Penandatangan::find($rumahSewa->signing);
+                $penandatangan = Penandatangan::find($rumahSewa->signing);
                 if ($penandatangan) {
                     $signing_name = $penandatangan->keterangan;
                 }
@@ -557,7 +558,7 @@ class RumahSewaController extends Controller
             // Get the signing name (keterangan) from Penandatangan model
             $signing_name = null;
             if (!empty($rumahSewa->signing)) {
-                $penandatangan = \App\Models\Penandatangan::find($rumahSewa->signing);
+                $penandatangan = Penandatangan::find($rumahSewa->signing);
                 if ($penandatangan) {
                     $signing_name = $penandatangan->keterangan;
                 }

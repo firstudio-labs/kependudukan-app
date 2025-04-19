@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Surat;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\PengantarKtp;
+use App\Models\Penandatangan;
+use App\Models\User;
 use App\Services\JobService;
 use App\Services\WilayahService;
 use App\Services\CitizenService;
@@ -67,7 +69,7 @@ class PengantarKtpController extends Controller
         // Get jobs and regions data from services
         $provinces = $this->wilayahService->getProvinces();
         $jobs = $this->jobService->getAllJobs();
-        $signers = \App\Models\Penandatangan::all(); // Fetch signers
+        $signers = Penandatangan::all(); // Fetch signers
 
         // Initialize empty arrays for district, sub-district, and village data
         $districts = [];
@@ -163,7 +165,7 @@ class PengantarKtpController extends Controller
             // Get jobs and provinces data from services
             $provinces = $this->wilayahService->getProvinces();
             $jobs = $this->jobService->getAllJobs();
-            $signers = \App\Models\Penandatangan::all(); // Fetch signers
+            $signers = Penandatangan::all(); // Fetch signers
 
             // Get district data if province_id exists
             $districts = [];
@@ -354,7 +356,7 @@ class PengantarKtpController extends Controller
             // Get the signing name (keterangan) from Penandatangan model
             $signing_name = null;
             if (!empty($ktp->signing)) {
-                $penandatangan = \App\Models\Penandatangan::find($ktp->signing);
+                $penandatangan = Penandatangan::find($ktp->signing);
                 if ($penandatangan) {
                     $signing_name = $penandatangan->keterangan;
                 }
@@ -450,7 +452,7 @@ class PengantarKtpController extends Controller
             // Get user image based on matching district_id
             $districtLogo = null;
             if (!empty($ktp->district_id)) {
-                $userWithLogo = \App\Models\User::where('districts_id', $ktp->district_id)
+                $userWithLogo = User::where('districts_id', $ktp->district_id)
                     ->whereNotNull('image')
                     ->first();
 
@@ -511,7 +513,7 @@ class PengantarKtpController extends Controller
             // Get the signing name (keterangan) from Penandatangan model
             $signing_name = null;
             if (!empty($ktp->signing)) {
-                $penandatangan = \App\Models\Penandatangan::find($ktp->signing);
+                $penandatangan = Penandatangan::find($ktp->signing);
                 if ($penandatangan) {
                     $signing_name = $penandatangan->keterangan;
                 }

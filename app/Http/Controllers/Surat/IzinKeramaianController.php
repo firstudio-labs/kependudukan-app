@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Surat;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\IzinKeramaian;
+use App\Models\Penandatangan;
+use App\Models\User;
 use App\Services\WilayahService;
 use App\Services\CitizenService;
 use Illuminate\Support\Facades\DB;
@@ -69,7 +71,7 @@ class IzinKeramaianController extends Controller
         // Get jobs and regions data from services
         $provinces = $this->wilayahService->getProvinces();
         $jobs = $this->jobService->getAllJobs();
-        $signers = \App\Models\Penandatangan::all(); // Fetch signers
+        $signers = Penandatangan::all(); // Fetch signers
 
         // Initialize empty arrays for district, sub-district, and village data
         $districts = [];
@@ -193,7 +195,7 @@ class IzinKeramaianController extends Controller
         // Get jobs and provinces data from services
         $provinces = $this->wilayahService->getProvinces();
         $jobs = $this->jobService->getAllJobs();
-        $signers = \App\Models\Penandatangan::all(); // Fetch signers
+        $signers = Penandatangan::all(); // Fetch signers
 
         // Initialize arrays for district, sub-district, and village data
         $districts = [];
@@ -426,7 +428,7 @@ class IzinKeramaianController extends Controller
             // Get the signing name (keterangan) from Penandatangan model
             $signing_name = null;
             if (!empty($keramaian->signing)) {
-                $penandatangan = \App\Models\Penandatangan::find($keramaian->signing);
+                $penandatangan = Penandatangan::find($keramaian->signing);
                 if ($penandatangan) {
                     $signing_name = $penandatangan->keterangan;
                 }
@@ -435,7 +437,7 @@ class IzinKeramaianController extends Controller
             // Get user image based on matching district_id
             $districtLogo = null;
             if (!empty($keramaian->district_id)) {
-                $userWithLogo = \App\Models\User::where('districts_id', $keramaian->district_id)
+                $userWithLogo = User::where('districts_id', $keramaian->district_id)
                     ->whereNotNull('image')
                     ->first();
 

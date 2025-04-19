@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\AhliWaris;
 use App\Models\Penandatangan;
+use App\Models\User;
 use App\Services\JobService;
 use App\Services\WilayahService;
 use App\Services\CitizenService;
@@ -441,7 +442,7 @@ class AhliWarisController extends Controller
             // Get the signing name (keterangan) from Penandatangan model
             $signing_name = null;
             if (!empty($ahliWaris->signing)) {
-                $penandatangan = \App\Models\Penandatangan::find($ahliWaris->signing);
+                $penandatangan = Penandatangan::find($ahliWaris->signing);
                 if ($penandatangan) {
                     $signing_name = $penandatangan->keterangan;
                 }
@@ -450,7 +451,7 @@ class AhliWarisController extends Controller
             // Get user image based on matching district_id
             $districtLogo = null;
             if (!empty($ahliWaris->district_id)) {
-                $userWithLogo = \App\Models\User::where('districts_id', $ahliWaris->district_id)
+                $userWithLogo = User::where('districts_id', $ahliWaris->district_id)
                     ->whereNotNull('image')
                     ->first();
 
