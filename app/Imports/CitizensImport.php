@@ -85,7 +85,7 @@ class CitizensImport implements ToCollection, WithHeadingRow, WithValidation
             'sub_district_id' => (int) $row['sub_district_id'],
             'village_id' => (int) $row['village_id'],
             'postal_code' => $row['postal_code'] ?? '0',
-            'citizen_status' => (int) $row['citizen_status'],
+            'citizen_status' => 2, // Set to 2 (WNI) regardless of what's in the Excel file
             'religion' => (int) $row['religion'],
             'blood_type' => (int) $row['blood_type'],
             'family_status' => (int) $row['family_status'],

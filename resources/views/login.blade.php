@@ -468,9 +468,7 @@
                                 <input type="text" name="nik" id="nik"
                                     class="bg-white/80 border border-gray-200 text-gray-900 rounded-lg focus:ring-[#7886C7] focus:border-[#7886C7] block w-full p-2.5 transition-all duration-200"
                                     placeholder="Masukkan NIK Anda"
-                                    inputmode="numeric" pattern="[0-9]*"
-                                    required
-                                    oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                                    required>
                             </div>
                             <div>
                                 <label for="password" class="block text-sm font-medium text-white mb-1">Password</label>
