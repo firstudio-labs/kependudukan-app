@@ -7,12 +7,8 @@
 
         <title>Kependudukan</title>
         <style>
-            .gradient-bg {
-                background: linear-gradient(135deg, #FFF2F2 0%, #A9B5DF 35%, #7886C7 65%, #2D336B 100%);
-            }
-
             .glass-card {
-                background-color: rgba(255, 255, 255, 0.15);
+                background-color: rgba(45, 51, 107, 0.2);
                 backdrop-filter: blur(12px);
                 border: 1px solid rgba(255, 255, 255, 0.3);
                 box-shadow: 0 8px 32px rgba(31, 38, 135, 0.2);
@@ -29,6 +25,10 @@
                 font-size: 1.5rem;
             }
 
+            .text-white {
+                text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            }
+
             @media (max-width: 640px) {
                 .logo-text {
                     font-size: 1.25rem;
@@ -39,7 +39,13 @@
         </style>
     </head>
 
-    <body class="gradient-bg flex items-center justify-center min-h-screen">
+    <body class="flex items-center justify-center min-h-screen relative overflow-x-hidden">
+        <!-- Circle Gradient Backgrounds -->
+        <div class="pointer-events-none fixed top-0 left-0 w-[600px] h-[600px] bg-[#969BE7] rounded-full blur-3xl opacity-50 z-0 -translate-x-1/2 -translate-y-1/2"></div>
+        <div class="pointer-events-none fixed top-0 right-0 w-[500px] h-[500px] bg-[#EEC1DD] rounded-full blur-3xl opacity-50 z-0 translate-x-1/3 -translate-y-1/3"></div>
+        <div class="pointer-events-none fixed bottom-0 left-1/3 w-[700px] h-[700px] bg-[#D1D0EF] rounded-full blur-3xl opacity-50 z-0 -translate-x-1/2 translate-y-1/4"></div>
+        <div class="pointer-events-none fixed bottom-0 right-0 w-[400px] h-[400px] bg-[#FCF8FB] rounded-full blur-3xl opacity-60 z-0 translate-x-1/4 translate-y-1/4"></div>
+
         <!-- Logo text in top left corner -->
 
         @if (session('success'))
@@ -66,7 +72,7 @@
         </div>
         @endif
 
-        <section class="flex items-center justify-center w-full px-6 py-8">
+        <section class="flex items-center justify-center w-full px-6 py-8 relative z-10">
             <div class="w-full max-w-4xl glass-card rounded-2xl overflow-hidden">
                 <div class="grid grid-cols-1 md:grid-cols-2">
                     <!-- Kolom Kiri (SVG) -->
@@ -452,23 +458,32 @@
 
                     <!-- Kolom Kanan (Form Login) -->
                     <div class="p-6 space-y-4 md:space-y-6 sm:p-8">
-                        <h1 class="text-xl font-bold leading-tight tracking-tight text-white md:text-2xl">
+                        <h1 class="text-xl font-bold leading-tight tracking-tight text-white md:text-2xl text-shadow">
                             Sign in to your account
                         </h1>
                         <form class="space-y-4 md:space-y-6" action="{{ route('login') }}" method="POST">
                             @csrf
                             <div>
-                                <label for="nik" class="block mb-2 text-sm font-medium text-white">NIK</label>
-                                <input type="text" name="nik" id="nik" class="bg-white/80 border border-gray-200 text-gray-900 rounded-lg focus:ring-[#7886C7] focus:border-[#7886C7] block w-full p-2.5 transition-all duration-200" placeholder="Masukkan NIK Anda" required>
+                                <label for="nik" class="block text-sm font-medium text-white mb-1">NIK</label>
+                                <input type="text" name="nik" id="nik"
+                                    class="bg-white/80 border border-gray-200 text-gray-900 rounded-lg focus:ring-[#7886C7] focus:border-[#7886C7] block w-full p-2.5 transition-all duration-200"
+                                    placeholder="Masukkan NIK Anda"
+                                    inputmode="numeric" pattern="[0-9]*"
+                                    required
+                                    oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                             </div>
                             <div>
-                                <label for="password" class="block mb-2 text-sm font-medium text-white">Password</label>
-                                <input type="password" name="password" id="password" placeholder="••••••••" class="bg-white/80 border border-gray-200 text-gray-900 rounded-lg focus:ring-[#7886C7] focus:border-[#7886C7] block w-full p-2.5 transition-all duration-200" required>
+                                <label for="password" class="block text-sm font-medium text-white mb-1">Password</label>
+                                <input type="password" name="password" id="password"
+                                    placeholder="••••••••"
+                                    class="bg-white/80 border border-gray-200 text-gray-900 rounded-lg focus:ring-[#7886C7] focus:border-[#7886C7] block w-full p-2.5 transition-all duration-200"
+                                    required>
                             </div>
                             <div class="flex items-center justify-between">
-                                <a href="#" class="text-sm font-medium text-white hover:underline">Forgot password?</a>
+                                <a href="#" class="text-sm font-medium text-white hover:underline hover:text-[#FFF2F2] transition-colors">Forgot password?</a>
                             </div>
-                            <button type="submit" class="w-full text-white bg-[#2D336B] hover:bg-[#25295A] focus:ring-4 focus:outline-none focus:ring-[#25295A] font-medium rounded-lg text-sm px-5 py-2.5 text-center">Sign in</button>
+                            <button type="submit"
+                                class="w-full text-white bg-[#2D336B] hover:bg-[#25295A] focus:ring-4 focus:outline-none focus:ring-[#25295A] font-medium rounded-lg text-sm px-5 py-2.5 text-center transition-all duration-200">Sign in</button>
                             <p class="text-sm font-light text-white">
                                 Don't have an account yet? <a href="{{ route('register') }}" class="font-medium text-white hover:text-[#FFF2F2] hover:underline transition-colors">Sign up</a>
                             </p>

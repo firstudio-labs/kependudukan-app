@@ -40,8 +40,6 @@
     <!-- Mobile Navigation Links -->
     <ul class="flex flex-col items-center gap-6 text-xl font-medium mb-10">
         <li><a href="{{ route('guest.pelayanan.index') }}" class="text-gray-800 hover:text-[#4F46E5] transition-colors">Pelayanan</a></li>
-        <li><a href="#harga" class="text-gray-800 hover:text-[#4F46E5] transition-colors">Harga</a></li>
-        <li><a href="#tentang" class="text-gray-800 hover:text-[#4F46E5] transition-colors">Tentang</a></li>
     </ul>
 
     <!-- Mobile Auth Buttons -->
