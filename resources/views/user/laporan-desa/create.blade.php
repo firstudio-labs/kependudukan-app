@@ -77,16 +77,21 @@
                         @enderror
                     </div>
 
-                    <!-- Lokasi -->
-                    <div>
-                        <label for="lokasi" class="block text-sm font-medium text-gray-700">Lokasi</label>
-                        <input type="text" id="lokasi" name="lokasi" value="{{ old('lokasi') }}"
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
-                            placeholder="Masukkan lokasi kejadian">
-                        @error('lokasi')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
+                    <!-- Tag Lokasi Map -->
+                    <div class="col-span-1 md:col-span-2">
+                        <div class="bg-white rounded-lg">
+                            <x-map-input label="Tag Lokasi Kejadian" addressId="location_address"
+                                addressName="location_address" address="{{ old('location_address') ?? '' }}"
+                                latitudeId="tag_lat" latitudeName="tag_lat" latitude="{{ old('tag_lat') ?? '' }}"
+                                longitudeId="tag_lng" longitudeName="tag_lng" longitude="{{ old('tag_lng') ?? '' }}"
+                                modalId="" />
+
+                            <input type="hidden" id="tag_lokasi" name="tag_lokasi"
+                                value="{{ old('tag_lokasi') ?? '' }}">
+                        </div>
                     </div>
+
+
                 </div>
 
                 <div class="flex justify-end mt-6 space-x-2">
@@ -102,6 +107,49 @@
             </form>
         </div>
     </div>
+
+
+    @push('js-internal')
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const tagLatInput = document.getElementById('tag_lat');
+                const tagLngInput = document.getElementById('tag_lng');
+                const tagLokasiInput = document.getElementById('tag_lokasi');
+
+                function updateTagLokasi() {
+                    const lat = tagLatInput ? tagLatInput.value.trim() : '';
+                    const lng = tagLngInput ? tagLngInput.value.trim() : '';
+
+                    if (lat && lng && tagLokasiInput) {
+                        tagLokasiInput.value = `${lat}, ${lng}`;
+                        console.log('Tag lokasi updated:', tagLokasiInput.value);
+                    } else if (tagLokasiInput) {
+                        tagLokasiInput.value = '';
+                    }
+                }
+
+                if (tagLatInput) {
+                    tagLatInput.addEventListener('change', updateTagLokasi);
+                    tagLatInput.addEventListener('input', updateTagLokasi);
+                }
+
+                if (tagLngInput) {
+                    tagLngInput.addEventListener('change', updateTagLokasi);
+                    tagLngInput.addEventListener('input', updateTagLokasi);
+                }
+
+                updateTagLokasi();
+
+                // Update tag_lokasi before form submission
+                const form = document.querySelector('form');
+                if (form) {
+                    form.addEventListener('submit', function (e) {
+                        updateTagLokasi();
+                    });
+                }
+            });
+        </script>
+    @endpush
 
     <script>
         // JSON object to store all categories
