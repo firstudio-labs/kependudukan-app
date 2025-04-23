@@ -45,16 +45,16 @@
                         @enderror
                     </div>
 
-                    
+
                 </div>
 
-                <div class="mt-6 flex justify-end space-x-3">
+                <div class="flex justify-end mt-6 space-x-2">
                     <a href="{{ route('superadmin.datamaster.lapordesa.index') }}"
-                        class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 focus:outline-none focus:bg-gray-400">
                         Batal
                     </a>
                     <button type="submit"
-                        class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-[#7886C7] hover:bg-[#2D336B] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        class="px-4 py-2 bg-[#7886C7] text-white rounded-md hover:bg-[#2D336B] focus:outline-none focus:bg-[#2D336B]">
                         Simpan
                     </button>
                 </div>

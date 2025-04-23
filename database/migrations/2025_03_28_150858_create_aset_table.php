@@ -11,8 +11,8 @@ class CreateAsetTable extends Migration
     {
         Schema::create('aset', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id')->nullable(); 
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');
+            $table->unsignedBigInteger('user_id')->nullable();
+            $table->foreign('user_id')->references('id')->on('penduduk')->onDelete('set null');
             $table->string('nik_pemilik')->nullable();
             $table->string('nama_pemilik')->nullable();
             $table->string('nama_aset')->nullable();

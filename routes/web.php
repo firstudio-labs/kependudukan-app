@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\LaporanDesaController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
@@ -38,10 +39,7 @@ use App\Http\Controllers\guest\KelahiranSuratController;
 use App\Http\Controllers\guest\AhliWarisSuratController;
 use App\Http\Controllers\guest\RumahSewaSuratController;
 use App\Http\Controllers\adminKabupaten\ProfileKabController;
-use App\Http\Controllers\LaporDesaController;
-
-
-
+use App\Http\Controllers\LaporDesaController;  // Change from User\LaporDesaController to LaporDesaController
 
 // Homepage route should use our new method to force logout
 Route::get('/', [AuthController::class, 'homepage'])->name('homepage');
@@ -504,6 +502,24 @@ Route::middleware(['auth:penduduk'])->group(function () {
     // Route for searching citizen by NIK for asset management
     Route::get('/citizens/search-by-nik/{nik}', [KelolaAsetController::class, 'searchByNik'])
         ->name('citizens.search-by-nik');
+
+    //Route Lapor Desa
+    Route::get('/user/laporan-desa', [LaporanDesaController::class, 'index'])
+        ->name('user.laporan-desa.index');
+    Route::get('/user/laporan-desa/create', [LaporanDesaController::class, 'create'])
+        ->name('user.laporan-desa.create');
+    Route::post('/user/laporan-desa', [LaporanDesaController::class, 'store'])
+        ->name('user.laporan-desa.store');
+    Route::get('/user/laporan-desa/{id}', [LaporanDesaController::class, 'show'])
+        ->name('user.laporan-desa.show');
+    Route::get('/user/laporan-desa/{id}/edit', [LaporanDesaController::class, 'edit'])
+        ->name('user.laporan-desa.edit');
+    Route::put('/user/laporan-desa/{id}', [LaporanDesaController::class, 'update'])
+        ->name('user.laporan-desa.update');
+    Route::delete('/user/laporan-desa/{id}', [LaporanDesaController::class, 'destroy'])
+        ->name('user.laporan-desa.destroy');
+    Route::get('/user/laporan-desa/{id}', [LaporanDesaController::class, 'show'])
+        ->name('user.laporan-desa.show');
 
 });
 

@@ -32,9 +32,8 @@ class Aset extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Penduduk::class, 'user_id');
     }
-
 
     public function getLatitudeAttribute()
     {
@@ -46,7 +45,6 @@ class Aset extends Model
         return isset($parts[0]) ? trim($parts[0]) : null;
     }
 
-    
     public function getLongitudeAttribute()
     {
         if (!$this->tag_lokasi) {
@@ -57,7 +55,6 @@ class Aset extends Model
         return isset($parts[1]) ? trim($parts[1]) : null;
     }
 
-    
     public function setCoordinates($latitude, $longitude)
     {
         if ($latitude && $longitude) {
@@ -75,15 +72,14 @@ class Aset extends Model
         return $this->belongsTo(JenisAset::class);
     }
 
-    public function getFotoAsetDepanAttribute($value)
+    // Ensure these accessors use the correct storage paths
+    public function getFotoAsetDepanUrlAttribute()
     {
-        return asset('storage/' . $value);
+        return $this->foto_aset_depan ? asset('storage/' . $this->foto_aset_depan) : null;
     }
 
-    public function getFotoAsetSampingAttribute($value)
+    public function getFotoAsetSampingUrlAttribute()
     {
-        return asset('storage/' . $value);
+        return $this->foto_aset_samping ? asset('storage/' . $this->foto_aset_samping) : null;
     }
-
-
 }

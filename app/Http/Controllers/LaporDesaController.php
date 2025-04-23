@@ -79,4 +79,25 @@ class LaporDesaController extends Controller
         return redirect()->route('superadmin.datamaster.lapordesa.index')
             ->with('success', 'Lapor Desa berhasil dihapus.');
     }
+
+    /**
+     * Get categories for laporan desa
+     */
+    public function getCategories()
+    {
+        $categories = LaporDesa::select('id', 'ruang_lingkup', 'bidang')->get();
+        return response()->json($categories);
+    }
+
+    /**
+     * Get bidang options based on ruang_lingkup selection
+     */
+    public function getBidangByRuangLingkup($ruangLingkup)
+    {
+        $bidangOptions = LaporDesa::where('ruang_lingkup', $ruangLingkup)
+            ->select('id', 'bidang')
+            ->get();
+
+        return response()->json($bidangOptions);
+    }
 }

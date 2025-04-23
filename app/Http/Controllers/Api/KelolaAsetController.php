@@ -39,21 +39,12 @@ class KelolaAsetController extends Controller
             $tokenOwnerType = $request->attributes->get('token_owner_type');
             $tokenOwnerRole = $request->attributes->get('token_owner_role');
 
-            Log::info('Fetching assets for token owner', [
-                'owner_id' => $tokenOwner->id,
-                'owner_type' => $tokenOwnerType,
-                'owner_role' => $tokenOwnerRole
-            ]);
-
             $query = Aset::query();
 
             if ($tokenOwnerType === 'penduduk') {
                 $query->where('user_id', $tokenOwner->id);
-            } elseif ($tokenOwnerRole === 'superadmin') {
+            } else if ($tokenOwnerRole === 'superadmin') {
                 // Superadmin can see all assets
-            } elseif (in_array($tokenOwnerRole, ['admin desa', 'admin kabupaten'])) {
-                // Filter by location for admin roles
-                // Implementation depends on your data structure
             }
 
             // Add search functionality
@@ -68,7 +59,7 @@ class KelolaAsetController extends Controller
             $assets = $query->with(['klasifikasi', 'jenisAset'])
                 ->paginate($perPage);
 
-            // Process assets to attach location names and format data
+            // Process assets to attach location names
             foreach ($assets as $asset) {
                 $this->attachLocationNames($asset);
             }
@@ -89,7 +80,6 @@ class KelolaAsetController extends Controller
                     ]
                 ]
             ], 200);
-
         } catch (\Exception $e) {
             Log::error('Error fetching assets: ' . $e->getMessage());
             return response()->json([
@@ -98,6 +88,8 @@ class KelolaAsetController extends Controller
             ], 500);
         }
     }
+
+
     public function create()
     {
         try {

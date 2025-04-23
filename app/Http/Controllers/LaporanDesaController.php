@@ -1,0 +1,304 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\LaporDesa;
+use App\Models\LaporanDesa;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+
+class LaporanDesaController extends Controller
+{
+    public function index(Request $request)
+    {
+        $query = LaporanDesa::query();
+
+        // For regular users, only show their own reports
+        if (Auth::guard('penduduk')->check()) {
+            $query->where('user_id', Auth::guard('penduduk')->id());
+        }
+        // For admin desa, only show reports from their village
+        elseif (Auth::user() && Auth::user()->role === 'admin desa') {
+            $query->where('village_id', Auth::user()->villages_id);
+        }
+
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('judul_laporan', 'like', "%{$search}%")
+                    ->orWhere('deskripsi_laporan', 'like', "%{$search}%");
+            });
+        }
+
+        // Include relationships for better display
+        $query->with(['laporDesa', 'user']);
+
+        $laporans = $query->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('user.laporan-desa.index', compact('laporans'));
+    }
+
+    public function create()
+    {
+        $categories = [];
+        $laporDesas = LaporDesa::all()->groupBy('ruang_lingkup');
+
+        foreach ($laporDesas as $ruangLingkup => $items) {
+            $categories[$ruangLingkup] = $items->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'bidang' => $item->bidang
+                ];
+            })->toArray();
+        }
+
+        return view('user.laporan-desa.create', compact('categories'));
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'lapor_desa_id' => 'required|exists:lapor_desas,id',
+            'judul_laporan' => 'required|string|max:255',
+            'deskripsi_laporan' => 'required|string',
+            'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'tag_lat' => 'nullable|numeric',
+            'tag_lng' => 'nullable|numeric',
+        ]);
+
+        $data = $request->only([
+            'lapor_desa_id',
+            'judul_laporan',
+            'deskripsi_laporan',
+        ]);
+
+        // Handle tag location from map coordinates
+        $tag_lokasi = null;
+        if ($request->filled('tag_lat') && $request->filled('tag_lng')) {
+            $latitude = number_format((float) $request->tag_lat, 6, '.', '');
+            $longitude = number_format((float) $request->tag_lng, 6, '.', '');
+            $tag_lokasi = "$latitude, $longitude";
+        }
+        $data['tag_lokasi'] = $tag_lokasi;
+
+        // Handle image upload
+        if ($request->hasFile('gambar')) {
+            $file = $request->file('gambar');
+            $fileName = time() . '_' . Str::slug($request->judul_laporan) . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('public/laporan-desa', $fileName);
+            $data['gambar'] = $fileName;
+        }
+
+        // Set user_id and village_id
+        if (Auth::guard('penduduk')->check()) {
+            $data['user_id'] = Auth::guard('penduduk')->id();
+            // Get village_id from the user's profile or set a default
+            $data['village_id'] = Auth::guard('penduduk')->user()->villages_id ?? 1;
+        }
+
+        // Set initial status
+        $data['status'] = 'Menunggu';
+
+        LaporanDesa::create($data);
+
+        return redirect()->route('user.laporan-desa.index')
+            ->with('success', 'Laporan berhasil dikirim dan sedang menunggu diproses.');
+    }
+
+    public function show($id)
+    {
+        try {
+            $laporan = LaporanDesa::with('laporDesa')->findOrFail($id);
+
+            // For API requests, return JSON response
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'status' => 'success',
+                    'data' => $laporan
+                ]);
+            }
+
+            return view('user.laporan-desa.show', compact('laporan'));
+        } catch (\Exception $e) {
+            \Log::error('Error in laporan-desa show: ' . $e->getMessage());
+
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => $e->getMessage()
+                ], 500);
+            }
+
+            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
+    }
+
+    public function edit($id)
+    {
+        $laporanDesa = LaporanDesa::findOrFail($id);
+
+        if ($laporanDesa->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        if ($laporanDesa->status !== 'Menunggu') {
+            return redirect()->route('user.laporan-desa.index')
+                ->with('error', 'Hanya laporan dengan status Menunggu yang dapat diedit.');
+        }
+
+        $categories = [];
+        $laporDesas = LaporDesa::all()->groupBy('ruang_lingkup');
+
+        foreach ($laporDesas as $ruangLingkup => $items) {
+            $categories[$ruangLingkup] = $items->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'bidang' => $item->bidang
+                ];
+            })->toArray();
+        }
+
+        // Parse coordinates from tag_lokasi
+        $lat = '';
+        $lng = '';
+        if (!empty($laporanDesa->tag_lokasi)) {
+            $coordinates = explode(',', $laporanDesa->tag_lokasi);
+            if (count($coordinates) >= 2) {
+                $lat = trim($coordinates[0]);
+                $lng = trim($coordinates[1]);
+            }
+        }
+
+        $selectedRuangLingkup = $laporanDesa->laporDesa->ruang_lingkup ?? null;
+
+        return view('user.laporan-desa.edit', compact('laporanDesa', 'categories', 'selectedRuangLingkup', 'lat', 'lng'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $laporanDesa = LaporanDesa::findOrFail($id);
+
+        if ($laporanDesa->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        if ($laporanDesa->status !== 'Menunggu') {
+            return redirect()->route('user.laporan-desa.index')
+                ->with('error', 'Hanya laporan dengan status Menunggu yang dapat diedit.');
+        }
+
+        $request->validate([
+            'lapor_desa_id' => 'required|exists:lapor_desas,id',
+            'judul_laporan' => 'required|string|max:255',
+            'deskripsi_laporan' => 'required|string',
+            'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'tag_lat' => 'nullable|numeric',
+            'tag_lng' => 'nullable|numeric',
+        ]);
+
+        $data = $request->only([
+            'lapor_desa_id',
+            'judul_laporan',
+            'deskripsi_laporan',
+        ]);
+
+        // Handle tag location from map coordinates
+        $tag_lokasi = null;
+        if ($request->filled('tag_lat') && $request->filled('tag_lng')) {
+            $latitude = number_format((float) $request->tag_lat, 6, '.', '');
+            $longitude = number_format((float) $request->tag_lng, 6, '.', '');
+            $tag_lokasi = "$latitude, $longitude";
+        }
+        $data['tag_lokasi'] = $tag_lokasi;
+
+        // Handle image upload
+        if ($request->hasFile('gambar')) {
+            // Delete old image if exists
+            if ($laporanDesa->gambar && Storage::exists('public/laporan-desa/' . $laporanDesa->gambar)) {
+                Storage::delete('public/laporan-desa/' . $laporanDesa->gambar);
+            }
+
+            $file = $request->file('gambar');
+            $fileName = time() . '_' . Str::slug($request->judul_laporan) . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('public/laporan-desa', $fileName);
+            $data['gambar'] = $fileName;
+        }
+
+        $laporanDesa->update($data);
+
+        return redirect()->route('user.laporan-desa.index')
+            ->with('success', 'Laporan berhasil diperbarui.');
+    }
+
+    public function destroy($id)
+    {
+        $laporanDesa = LaporanDesa::findOrFail($id);
+
+        if ($laporanDesa->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        if ($laporanDesa->status !== 'Menunggu') {
+            return redirect()->route('user.laporan-desa.index')
+                ->with('error', 'Hanya laporan dengan status Menunggu yang dapat dihapus.');
+        }
+
+        // Delete image if exists
+        if ($laporanDesa->gambar && Storage::exists('public/laporan-desa/' . $laporanDesa->gambar)) {
+            Storage::delete('public/laporan-desa/' . $laporanDesa->gambar);
+        }
+
+        $laporanDesa->delete();
+
+        return redirect()->route('user.laporan-desa.index')
+            ->with('success', 'Laporan berhasil dihapus.');
+    }
+
+    /**
+     * Admin function to manage reports
+     */
+    public function adminIndex()
+    {
+        $query = LaporanDesa::query();
+
+        // Admin desa only sees reports from their village
+        if (Auth::user()->role === 'admin desa') {
+            $query->where('village_id', Auth::user()->villages_id);
+        }
+
+        $laporans = $query->with(['laporDesa', 'user'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
+        return view('admin.desa.laporan-desa.index', compact('laporans'));
+    }
+
+    /**
+     * Admin function to update status
+     */
+    public function updateStatus(Request $request, $id)
+    {
+        $laporan = LaporanDesa::findOrFail($id);
+
+        // Only admin desa from the same village can update status
+        if (Auth::user()->role === 'admin desa' && $laporan->village_id != Auth::user()->villages_id) {
+            return abort(403, 'Unauthorized action.');
+        }
+
+        $request->validate([
+            'status' => 'required|in:Menunggu,Diproses,Selesai,Ditolak',
+        ]);
+
+        $laporan->update([
+            'status' => $request->status
+        ]);
+
+        return redirect()->route('admin.desa.laporan-desa.index')
+            ->with('success', 'Status laporan berhasil diperbarui.');
+    }
+}

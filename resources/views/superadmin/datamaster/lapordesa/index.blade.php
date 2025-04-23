@@ -10,21 +10,20 @@
                 <button type="submit" class="absolute top-1/2 left-2 w-5 h-5 text-gray-400 transform -translate-y-1/2">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M21 21l-4.35-4.35m0 0a7.5 7.5 7.5 0 1110.15-10.15 7.5 7.5 0 01-10.15 10.15z" />
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                 </button>
             </form>
 
-            <div class="flex space-x-2">
-                <button type="button"
-                    onclick="window.location.href='{{ route('superadmin.datamaster.lapordesa.create') }}'"
-                    class="text-white bg-[#7886C7] hover:bg-[#2D336B] focus:ring-4 focus:ring-[#5C69A7] font-medium rounded-lg text-sm px-5 py-2.5 flex items-center space-x-2">
+            <div>
+                <a href="{{ route('superadmin.datamaster.lapordesa.create') }}"
+                    class="flex items-center justify-center bg-[#7886C7] text-white font-semibold py-2 px-4 rounded-lg hover:bg-[#2D336B] transition duration-300 ease-in-out">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
                         class="w-4 h-4">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                     </svg>
                     <span>Tambah Data LaporDes</span>
-                </button>
+                </a>
             </div>
         </div>
 

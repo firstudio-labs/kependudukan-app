@@ -21,4 +21,12 @@ class LaporDesa extends Model
         'bidang',
         'keterangan'
     ];
+
+    /**
+     * Get the laporan associated with this master category
+     */
+    public function laporanDesas()
+    {
+        return $this->hasMany(LaporanDesa::class);
+    }
 }
