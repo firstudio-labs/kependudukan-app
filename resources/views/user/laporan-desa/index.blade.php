@@ -51,13 +51,13 @@
                                                     <td class="px-6 py-4">{{ $laporan->judul_laporan }}</td>
                                                     <td class="px-6 py-4">
                                                         @php
-                $statusColors = [
-                    'Menunggu' => 'text-yellow-600 bg-yellow-100',
-                    'Diproses' => 'text-blue-600 bg-blue-100',
-                    'Selesai' => 'text-green-600 bg-green-100',
-                    'Ditolak' => 'text-red-600 bg-red-100'
-                ];
-                $statusColor = $statusColors[$laporan->status] ?? 'text-gray-600 bg-gray-100';
+    $statusColors = [
+        'Menunggu' => 'text-yellow-600 bg-yellow-100',
+        'Diproses' => 'text-blue-600 bg-blue-100',
+        'Selesai' => 'text-green-600 bg-green-100',
+        'Ditolak' => 'text-red-600 bg-red-100'
+    ];
+    $statusColor = $statusColors[$laporan->status] ?? 'text-gray-600 bg-gray-100';
                         @endphp
                         <span class="px-2 py-1 rounded-full text-xs font-medium {{ $statusColor }}">
                             {{ $laporan->status }}
@@ -113,7 +113,7 @@
         <!-- Modal Content -->
         <div class="relative w-full max-w-4xl bg-white rounded-lg shadow-xl overflow-hidden">
             <!-- Modal Header -->
-            <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t">
+            <div class="flex items-center justify-between p-4 md:p-5 border-gray-300 border-b rounded-t">
                 <h3 class="text-xl font-semibold text-gray-900" id="detailJudul">
                     Detail Laporan
                 </h3>

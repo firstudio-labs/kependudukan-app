@@ -188,7 +188,7 @@
             <!-- Modal Content -->
             <div class="relative w-full max-w-4xl bg-white rounded-lg shadow-xl overflow-hidden">
                 <!-- Modal Header -->
-                <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t">
+                <div class="flex items-center justify-between p-4 md:p-5 border-gray-300  border-b rounded-t">
                     <h3 class="text-xl font-semibold text-gray-900">
                         Detail Aset
                     </h3>
