@@ -75,6 +75,13 @@
                         @error('gambar')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
+
+                        <!-- Add this image preview container -->
+                        <div id="file-preview" class="mt-2 hidden">
+                            <p class="text-sm text-gray-600 mb-2">File yang dipilih: <span id="file-name"></span></p>
+                            <img id="image-preview" class="max-h-40 w-auto rounded border border-gray-200"
+                                alt="Preview gambar">
+                        </div>
                     </div>
 
                     <!-- Tag Lokasi Map -->
@@ -147,6 +154,38 @@
                         updateTagLokasi();
                     });
                 }
+
+                // Add this image preview functionality
+                const fileInput = document.getElementById('gambar');
+                const filePreview = document.getElementById('file-preview');
+                const fileName = document.getElementById('file-name');
+                const imagePreview = document.getElementById('image-preview');
+
+                if (fileInput) {
+                    fileInput.addEventListener('change', function () {
+                        if (fileInput.files.length > 0) {
+                            const file = fileInput.files[0];
+                            fileName.textContent = file.name + ' (' + (file.size / 1024 / 1024).toFixed(2) + 'MB)';
+
+                            // Create and set image preview
+                            const fileReader = new FileReader();
+                            fileReader.onload = function (e) {
+                                imagePreview.src = e.target.result;
+                            };
+                            fileReader.readAsDataURL(file);
+
+                            filePreview.classList.remove('hidden');
+
+                            if (file.size > 2 * 1024 * 1024) {
+                                alert('File terlalu besar! Maksimal 2MB');
+                                fileInput.value = '';
+                                filePreview.classList.add('hidden');
+                            }
+                        } else {
+                            filePreview.classList.add('hidden');
+                        }
+                    });
+                }
             });
         </script>
     @endpush
@@ -194,4 +233,4 @@
             }
         });
     </script>
-</x-layout></div>
+</x-layout>

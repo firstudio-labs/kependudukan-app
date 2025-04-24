@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Api\LaporDesaApiController;
+use App\Http\Controllers\Api\LaporDesaController;
 use App\Http\Middleware\ApiTokenOwnerMiddleware;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -46,6 +48,7 @@ Route::middleware(ApiTokenOwnerMiddleware::class)->group(function () {
     });
 
     Route::prefix('user')->group(function () {
+        //kelola aset
         Route::get('/kelola-aset', [KelolaAsetController::class, 'index'])
             ->name('user.kelola-aset.index');
         Route::get('/kelola-aset/create', [KelolaAsetController::class, 'create'])
@@ -58,6 +61,21 @@ Route::middleware(ApiTokenOwnerMiddleware::class)->group(function () {
             ->name('user.kelola-aset.update');
         Route::delete('/kelola-aset/{id}', [KelolaAsetController::class, 'destroy'])
             ->name('user.kelola-aset.destroy');
+
+        //laporan desa
+        Route::get('/laporan-desa', [LaporDesaController::class, 'index'])
+            ->name('user.laporan-desa.index');
+        Route::get('/laporan-desa/create', [LaporDesaController::class, 'create'])
+            ->name('user.laporan-desa.create');
+        Route::post('/laporan-desa', [LaporDesaController::class, 'store'])
+            ->name('user.laporan-desa.store');
+        Route::get('/laporan-desa/{id}/edit', [LaporDesaController::class, 'edit'])
+            ->name('user.laporan-desa.edit');
+        Route::put('/laporan-desa/{id}', [LaporDesaController::class, 'update'])
+            ->name('user.laporan-desa.update');
+        Route::delete('/laporan-desa/{id}', [LaporDesaController::class, 'destroy'])
+            ->name('user.laporan-desa.destroy');
+
     });
 });
 
