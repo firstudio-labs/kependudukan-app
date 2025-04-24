@@ -9,8 +9,10 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use App\Services\WilayahService;
 use App\Services\JobService;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Validator;
+use Maatwebsite\Excel\Facades\Excel;
 
 class DataKKController extends Controller
 {
@@ -22,8 +24,7 @@ class DataKKController extends Controller
         CitizenService $citizenService,
         WilayahService $wilayahService,
         JobService $jobService
-    )
-    {
+    ) {
         $this->citizenService = $citizenService;
         $this->wilayahService = $wilayahService;
         $this->jobService = $jobService;
@@ -31,6 +32,11 @@ class DataKKController extends Controller
 
     public function index(Request $request)
     {
+        // Jika parameter export ada, langsung panggil fungsi export
+        if ($request->has('export')) {
+            return $this->export();
+        }
+        
         $page = $request->input('page', 1);
         $search = $request->input('search');
 
@@ -64,6 +70,10 @@ class DataKKController extends Controller
             }
         }
 
+        if (Auth::user()->role === 'admin desa') {
+            return view('admin.desa.datakk.index', compact('kk', 'search'));
+        }
+
         return view('superadmin.datakk.index', compact('kk', 'search'));
     }
 
@@ -79,6 +89,16 @@ class DataKKController extends Controller
         $districts = [];
         $subDistricts = [];
         $villages = [];
+
+        if (Auth::user()->role === 'admin') {
+            return view('admin.desa.datakk.create', compact(
+                'provinces',
+                'districts',
+                'subDistricts',
+                'villages',
+                'jobs'
+            ));
+        }
 
         return view('superadmin.datakk.create', compact(
             'provinces',
@@ -134,6 +154,10 @@ class DataKKController extends Controller
             }
         }
 
+        if (Auth::user()->role === 'admin') {
+            return redirect()->route('admin.desa.datakk.index')->with('success', 'Data KK berhasil disimpan');
+        }
+
         return redirect()->route('superadmin.datakk.index')->with('success', 'Data KK berhasil disimpan');
     }
 
@@ -163,6 +187,16 @@ class DataKKController extends Controller
             'sub_districts_count' => count($subDistricts),
             'villages_count' => count($villages),
         ]);
+
+        if (Auth::user()->role === 'admin') {
+            return view('admin.desa.datakk.update', compact(
+                'kk',
+                'provinces',
+                'districts',
+                'subDistricts',
+                'villages'
+            ));
+        }
 
         return view('superadmin.datakk.update', compact(
             'kk',
@@ -200,17 +234,30 @@ class DataKKController extends Controller
         $kk->fill($validatedData);
         $kk->save();
 
+        if (Auth::user()->role === 'admin') {
+            return redirect()->route('admin.desa.datakk.index')->with('success', 'Data KK berhasil diperbarui!');
+        }
+
         return redirect()->route('superadmin.datakk.index')->with('success', 'Data KK berhasil diperbarui!');
     }
 
     public function destroy($id)
     {
+
         try {
             $kk = KK::findOrFail($id);
             $kk->delete();
 
+            if (Auth::user()->role === 'admin') {
+                return redirect()->route('admin.desa.datakk.index')->with('success', 'Data KK berhasil dihapus!');
+            }
+
             return redirect()->route('superadmin.datakk.index')->with('success', 'Data KK berhasil dihapus!');
         } catch (\Exception $e) {
+            if (Auth::user()->role === 'admin') {
+                return redirect()->route('admin.desa.datakk.index')->with('error', 'Gagal menghapus data: ' . $e->getMessage());
+            }
+
             return redirect()->route('superadmin.datakk.index')->with('error', 'Gagal menghapus data: ' . $e->getMessage());
         }
     }
@@ -250,7 +297,7 @@ class DataKKController extends Controller
         }
 
         // Filter only needed fields to reduce response size
-        $citizens = array_map(function($citizen) {
+        $citizens = array_map(function ($citizen) {
             return [
                 'kk' => $citizen['kk'] ?? '',
                 'full_name' => $citizen['full_name'] ?? '',
@@ -494,6 +541,12 @@ class DataKKController extends Controller
             $response = $this->citizenService->createCitizen($validatedData);
 
             if ($response['status'] === 'CREATED') {
+                if (Auth::user()->role === 'admin') {
+                    return redirect()
+                        ->route('admin.desa.datakk.create')
+                        ->with('success', 'Anggota keluarga berhasil ditambahkan!');
+                }
+
                 return redirect()
                     ->route('superadmin.datakk.create')
                     ->with('success', 'Anggota keluarga berhasil ditambahkan!');
@@ -502,7 +555,6 @@ class DataKKController extends Controller
             return back()
                 ->withInput()
                 ->with('error', $response['message'] ?? 'Gagal menyimpan data anggota keluarga');
-
         } catch (\Exception $e) {
             Log::error('Error saat menyimpan anggota keluarga: ' . $e->getMessage(), [
                 'request' => $request->all(),
@@ -624,10 +676,22 @@ class DataKKController extends Controller
 
             // Create response message based on results
             if ($successCount > 0 && $errorCount === 0) {
+                if (Auth::user()->role === 'admin') {
+                    return redirect()
+                        ->route('admin.desa.datakk.create')
+                        ->with('success', "Berhasil menambahkan {$successCount} anggota keluarga!");
+                }
+
                 return redirect()
                     ->route('superadmin.datakk.create')
                     ->with('success', "Berhasil menambahkan {$successCount} anggota keluarga!");
             } else if ($successCount > 0 && $errorCount > 0) {
+                if (Auth::user()->role === 'admin') {
+                    return redirect()
+                        ->route('admin.desa.datakk.create')
+                        ->with('warning', "Berhasil menambahkan {$successCount} anggota keluarga, tetapi {$errorCount} gagal: " . implode('; ', $errors));
+                }
+
                 return redirect()
                     ->route('superadmin.datakk.create')
                     ->with('warning', "Berhasil menambahkan {$successCount} anggota keluarga, tetapi {$errorCount} gagal: " . implode('; ', $errors));
@@ -636,7 +700,6 @@ class DataKKController extends Controller
                     ->withInput()
                     ->with('error', "Gagal menambahkan anggota keluarga: " . implode('; ', $errors));
             }
-
         } catch (\Exception $e) {
             Log::error('Error saat menyimpan anggota keluarga: ' . $e->getMessage(), [
                 'request' => $request->all(),
@@ -659,9 +722,23 @@ class DataKKController extends Controller
             $data[$field] = empty($data[$field]) ? 0 : (int) $data[$field];
         }
 
-        $nullableStringFields = ['birth_certificate_no', 'marital_certificate_no', 'divorce_certificate_no',
-                               'nik_mother', 'nik_father', 'coordinate', 'telephone', 'email', 'hamlet',
-                               'foreign_address', 'city', 'state', 'country', 'foreign_postal_code', 'status'];
+        $nullableStringFields = [
+            'birth_certificate_no',
+            'marital_certificate_no',
+            'divorce_certificate_no',
+            'nik_mother',
+            'nik_father',
+            'coordinate',
+            'telephone',
+            'email',
+            'hamlet',
+            'foreign_address',
+            'city',
+            'state',
+            'country',
+            'foreign_postal_code',
+            'status'
+        ];
         foreach ($nullableStringFields as $field) {
             $data[$field] = empty($data[$field]) ? " " : $data[$field];
         }
@@ -671,10 +748,23 @@ class DataKKController extends Controller
             $data[$field] = empty($data[$field]) ? " " : date('Y-m-d', strtotime($data[$field]));
         }
 
-        $integerFields = ['gender', 'age', 'province_id', 'district_id', 'sub_district_id',
-                         'village_id', 'citizen_status', 'birth_certificate', 'blood_type',
-                         'religion', 'family_status', 'mental_disorders', 'disabilities',
-                         'education_status', 'job_type_id'];
+        $integerFields = [
+            'gender',
+            'age',
+            'province_id',
+            'district_id',
+            'sub_district_id',
+            'village_id',
+            'citizen_status',
+            'birth_certificate',
+            'blood_type',
+            'religion',
+            'family_status',
+            'mental_disorders',
+            'disabilities',
+            'education_status',
+            'job_type_id'
+        ];
         foreach ($integerFields as $field) {
             if (isset($data[$field])) {
                 $data[$field] = (int) $data[$field];
@@ -688,5 +778,170 @@ class DataKKController extends Controller
             }
         }
     }
-}
 
+    /**
+     * Export citizen data to Excel
+     */
+    public function export()
+    {
+        try {
+            // Ambil data dari service
+            $response = $this->citizenService->getAllCitizensWithHighLimit();
+            $exportData = [];
+
+            // Header untuk Excel
+            $exportData[] = [
+                'NIK',
+                'Nomor KK',
+                'Nama Lengkap',
+                'Jenis Kelamin',
+                'Tanggal Lahir',
+                'Tempat Lahir',
+                'Usia',
+                'Alamat',
+                'RT',
+                'RW',
+                'Provinsi',
+                'Kabupaten', 
+                'Kecamatan',
+                'Desa',
+                'Kode Pos',
+                'Status Kewarganegaraan',
+                'Agama',
+                'Golongan Darah',
+                'Status Dalam Keluarga',
+                'Nama Ayah',
+                'Nama Ibu',
+                'NIK Ayah',
+                'NIK Ibu',
+            ];
+
+            // Periksa response struktur data
+            $citizens = [];
+            if (isset($response['data']) && isset($response['data']['citizens']) && is_array($response['data']['citizens'])) {
+                $citizens = $response['data']['citizens'];
+            } elseif (isset($response['citizens']) && is_array($response['citizens'])) {
+                $citizens = $response['citizens'];
+            } elseif (isset($response['data']) && is_array($response['data'])) {
+                $citizens = $response['data'];
+            }
+            
+            if (empty($citizens)) {
+                return redirect()->route('admin.desa.datakk.index')
+                    ->with('error', 'Tidak ada data yang bisa diekspor atau format data tidak sesuai');
+            }
+            
+            foreach ($citizens as $citizen) {
+                $exportData[] = [
+                    $citizen['nik'] ?? '',
+                    $citizen['kk'] ?? '',
+                    $citizen['full_name'] ?? '',
+                    $this->formatGender($citizen['gender'] ?? ''),
+                    $citizen['birth_date'] ?? '',
+                    $citizen['birth_place'] ?? '',
+                    $citizen['age'] ?? '',
+                    $citizen['address'] ?? '',
+                    $citizen['rt'] ?? '',
+                    $citizen['rw'] ?? '',
+                    $citizen['province_id'] ?? '',
+                    $citizen['district_id'] ?? '',
+                    $citizen['sub_district_id'] ?? '',
+                    $citizen['village_id'] ?? '',
+                    $citizen['postal_code'] ?? '',
+                    $this->formatCitizenStatus($citizen['citizen_status'] ?? ''),
+                    $this->formatReligion($citizen['religion'] ?? ''),
+                    $this->formatBloodType($citizen['blood_type'] ?? ''),
+                    $this->formatFamilyStatus($citizen['family_status'] ?? ''),
+                    $citizen['father'] ?? '',
+                    $citizen['mother'] ?? '',
+                    $citizen['nik_father'] ?? '',
+                    $citizen['nik_mother'] ?? '',
+                ];
+            }
+
+            $filename = 'data_kk_' . date('Ymd_His') . '.xlsx';
+            return Excel::download(new \App\Exports\CitizensExport($exportData), $filename);
+        } catch (\Exception $e) {
+            Log::error('Error exporting data: ' . $e->getMessage());
+            return redirect()->route('admin.desa.datakk.index')
+                ->with('error', 'Gagal mengekspor data: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Format gender value for export
+     */
+    private function formatGender($gender)
+    {
+        if ($gender == 1) return 'Laki-laki';
+        if ($gender == 2) return 'Perempuan';
+        return $gender;
+    }
+
+    /**
+     * Format citizen status value for export
+     */
+    private function formatCitizenStatus($status)
+    {
+        if ($status == 1) return 'WNI';
+        if ($status == 2) return 'WNA';
+        return $status;
+    }
+
+    /**
+     * Format religion value for export
+     */
+    private function formatReligion($religion)
+    {
+        $religions = [
+            1 => 'Islam',
+            2 => 'Kristen',
+            3 => 'Katolik',
+            4 => 'Hindu',
+            5 => 'Buddha',
+            6 => 'Konghucu',
+            7 => 'Lainnya'
+        ];
+        return $religions[$religion] ?? $religion;
+    }
+
+    /**
+     * Format blood type value for export
+     */
+    private function formatBloodType($bloodType)
+    {
+        $bloodTypes = [
+            1 => 'A',
+            2 => 'B',
+            3 => 'AB',
+            4 => 'O',
+            5 => 'A+',
+            6 => 'A-',
+            7 => 'B+',
+            8 => 'B-',
+            9 => 'AB+',
+            10 => 'AB-',
+            11 => 'O+',
+            12 => 'O-',
+            13 => 'Tidak Tahu'
+        ];
+        return $bloodTypes[$bloodType] ?? $bloodType;
+    }
+
+    /**
+     * Format family status value for export
+     */
+    private function formatFamilyStatus($status)
+    {
+        $statuses = [
+            1 => 'ANAK',
+            2 => 'KEPALA KELUARGA',
+            3 => 'ISTRI',
+            4 => 'ORANG TUA',
+            5 => 'MERTUA',
+            6 => 'CUCU',
+            7 => 'FAMILI LAIN'
+        ];
+        return $statuses[$status] ?? $status;
+    }
+}

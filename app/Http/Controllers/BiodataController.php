@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Response;
 use Maatwebsite\Excel\Facades\Excel; // You'll need to install Laravel Excel package
 use App\Imports\CitizensImport; // We'll create this import class
+use Illuminate\Support\Facades\Auth;
+
 
 class BiodataController extends Controller
 {
@@ -34,18 +36,51 @@ class BiodataController extends Controller
         $page = $request->input('page', 1);
         $search = $request->input('search');
 
-        if ($search) {
-            $citizens = $this->citizenService->searchCitizens($search);
-            // If search returns null or error, fallback to getting all citizens
-            if (!$citizens || isset($citizens['status']) && $citizens['status'] === 'ERROR') {
-                $citizens = $this->citizenService->getAllCitizens($page);
-                session()->flash('warning', 'Search failed, showing all results instead');
+        // Jika user adalah admin desa, ambil data warga berdasarkan village_id admin
+        if (Auth::user()->role == 'admin desa') {
+            $villageId = Auth::user()->villages_id;
+            
+            if ($search) {
+                // Cari berdasarkan keyword terlebih dahulu
+                $citizens = $this->citizenService->searchCitizens($search);
+                
+                // Jika pencarian error atau tidak ada hasil, fallback ke menampilkan semua warga desa
+                if (!$citizens || isset($citizens['status']) && $citizens['status'] === 'ERROR') {
+                    $citizens = $this->citizenService->getCitizensByVillageId($villageId);
+                    session()->flash('warning', 'Pencarian gagal, menampilkan semua data warga desa');
+                } else {
+                    // Filter hasil pencarian hanya untuk desa admin
+                    if (isset($citizens['data']['citizens']) && is_array($citizens['data']['citizens'])) {
+                        $filteredCitizens = array_filter($citizens['data']['citizens'], function($citizen) use ($villageId) {
+                            // Cek kedua kolom yang mungkin ada
+                            return (isset($citizen['villages_id']) && $citizen['villages_id'] == $villageId) || 
+                                   (isset($citizen['village_id']) && $citizen['village_id'] == $villageId);
+                        });
+                        
+                        $citizens['data']['citizens'] = array_values($filteredCitizens);
+                    }
+                }
+            } else {
+                // Ambil warga berdasarkan village_id admin desa
+                $citizens = $this->citizenService->getCitizensByVillageId($villageId);
             }
+            
+            return view('admin.desa.biodata.index', compact('citizens', 'search'));
         } else {
-            $citizens = $this->citizenService->getAllCitizens($page);
+            // Untuk superadmin tampilkan semua data
+            if ($search) {
+                $citizens = $this->citizenService->searchCitizens($search);
+                // If search returns null or error, fallback to getting all citizens
+                if (!$citizens || isset($citizens['status']) && $citizens['status'] === 'ERROR') {
+                    $citizens = $this->citizenService->getAllCitizens($page);
+                    session()->flash('warning', 'Search failed, showing all results instead');
+                }
+            } else {
+                $citizens = $this->citizenService->getAllCitizens($page);
+            }
+            
+            return view('superadmin.biodata.index', compact('citizens', 'search'));
         }
-
-        return view('superadmin.biodata.index', compact('citizens', 'search'));
     }
 
     public function create()
@@ -58,12 +93,21 @@ class BiodataController extends Controller
         $subDistricts = [];
         $villages = [];
 
+
+        if (Auth::user()->role == 'admin desa') {
+            return view('admin.desa.biodata.create', compact(
+                'provinces',
+                'jobs',
+                'districts',
+                'subDistricts',
+                'villages'
+            ));
+        }
+
         return view('superadmin.biodata.create', compact(
             'provinces',
             'jobs',
             'districts',
-            'subDistricts',
-            'villages'
         ));
     }
 
@@ -103,7 +147,7 @@ class BiodataController extends Controller
                 'divorce_certificate_date' => 'nullable|date',
                 'family_status' => 'required|integer|in:1,2,3,4,5,6,7',
                 'mental_disorders' => 'required|integer|in:1,2',
-                'disabilities' => 'required|integer|in:1,2,3,4,5,6',
+                'disabilities' => 'nullable|integer|in:1,2,3,4,5,6',
                 'education_status' => 'required|integer|in:1,2,3,4,5,6,7,8,9,10',
                 'job_type_id' => 'required|integer',
                 'nik_mother' => 'nullable|string|size:16',
@@ -136,9 +180,22 @@ class BiodataController extends Controller
             if ($response['status'] === 'CREATED') {
                 // If coming from KK page, redirect back there
                 if ($isFromKKPage) {
+
+                    if (Auth::user()->role == 'admin desa') {
+                        return redirect()
+                            ->route('admin.desa.datakk.create')
+                            ->with('success', 'Anggota keluarga berhasil ditambahkan!');
+                    }
+
                     return redirect()
                         ->route('superadmin.datakk.create')
                         ->with('success', 'Anggota keluarga berhasil ditambahkan!');
+                }
+
+                if (Auth::user()->role == 'admin desa') {
+                    return redirect()
+                        ->route('admin.desa.biodata.index')
+                        ->with('success', $response['message']);
                 }
 
                 // Otherwise, go to the regular biodata index
@@ -150,7 +207,6 @@ class BiodataController extends Controller
             return back()
                 ->withInput()
                 ->with('error', $response['message'] ?? 'Gagal menyimpan data');
-
         } catch (\Exception $e) {
             return back()
                 ->withInput()
@@ -175,6 +231,17 @@ class BiodataController extends Controller
         $districts = $this->wilayahService->getKabupaten($citizen['data']['province_id']);
         $subDistricts = $this->wilayahService->getKecamatan($citizen['data']['district_id']);
         $villages = $this->wilayahService->getDesa($citizen['data']['sub_district_id']);
+
+        if (Auth::user()->role == 'admin desa') {
+            return view('admin.desa.biodata.edit', compact(
+                'citizen',
+                'provinces',
+                'jobs',
+                'districts',
+                'subDistricts',
+                'villages'
+            ));
+        }
 
         return view('superadmin.biodata.update', compact(
             'citizen',
@@ -220,7 +287,7 @@ class BiodataController extends Controller
                 'divorce_certificate_date' => 'nullable|date',
                 'family_status' => 'required|integer|in:1,2,3,4,5,6,7',
                 'mental_disorders' => 'required|integer|in:1,2',
-                'disabilities' => 'required|integer|in:1,2,3,4,5,6',
+                'disabilities' => 'nullable|integer|in:1,2,3,4,5,6',
                 'education_status' => 'required|integer|in:1,2,3,4,5,6,7,8,9,10',
                 'job_type_id' => 'required|integer',
                 'nik_mother' => 'nullable|string|size:16',
@@ -250,6 +317,13 @@ class BiodataController extends Controller
             $response = $this->citizenService->updateCitizen($nik, $validatedData);
 
             if ($response['status'] === 'OK') {
+
+                if (Auth::user()->role == 'admin desa') {
+                    return redirect()
+                        ->route('admin.desa.biodata.index')
+                        ->with('success', 'Biodata berhasil diperbarui!');
+                }
+
                 return redirect()
                     ->route('superadmin.biodata.index', ['page' => $page])
                     ->with('success', 'Biodata berhasil diperbarui!');
@@ -258,29 +332,39 @@ class BiodataController extends Controller
             return back()
                 ->withInput()
                 ->with('error', $response['message'] ?? 'Gagal memperbarui data');
-
         } catch (\Exception $e) {
             return back()
                 ->withInput()
                 ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
-
     }
 
     public function destroy($id, Request $request)
     {
         $page = $request->query('page', 1);
-    $response = $this->citizenService->deleteCitizen($id);
+        $response = $this->citizenService->deleteCitizen($id);
 
-    if ($response['status'] === 'OK') {
+        if ($response['status'] === 'OK') {
+            if (Auth::user()->role == 'admin desa') {
+                return redirect()
+                    ->route('admin.desa.biodata.index')
+                    ->with('success', 'Biodata berhasil dihapus!');
+            }
+
+            return redirect()
+                ->route('superadmin.biodata.index', ['page' => $page])
+                ->with('success', 'Biodata berhasil dihapus!');
+        }
+
+        if (Auth::user()->role == 'admin desa') {
+            return redirect()
+                ->route('admin.desa.biodata.index')
+                ->with('error', 'Gagal menghapus biodata: ' . $response['message']);
+        }
+
         return redirect()
             ->route('superadmin.biodata.index', ['page' => $page])
-            ->with('success', 'Biodata berhasil dihapus!');
-    }
-
-    return redirect()
-        ->route('superadmin.biodata.index', ['page' => $page])
-        ->with('error', 'Gagal menghapus biodata: ' . $response['message']);
+            ->with('error', 'Gagal menghapus biodata: ' . $response['message']);
     }
 
     private function getJobs()
@@ -367,7 +451,13 @@ class BiodataController extends Controller
 
     public function getCitizenByNIK($nik)
     {
-        // ...existing code...
+        // Ambil data citizen dari service
+        $citizen = $this->citizenService->getCitizenByNIK($nik);
+
+        // Jika data tidak ditemukan, return null
+        if (!$citizen || !isset($citizen['data'])) {
+            return null;
+        }
 
         // Before returning the citizen data, ensure the select field values are numeric
         $this->normalizeSelectValues($citizen['data']);
@@ -381,35 +471,75 @@ class BiodataController extends Controller
         $citizenStatusMap = ['WNI' => 1, 'WNA' => 2];
         $certificateMap = ['Ada' => 1, 'Tidak Ada' => 2];
         $bloodTypeMap = [
-            'A' => 1, 'B' => 2, 'AB' => 3, 'O' => 4,
-            'A+' => 5, 'A-' => 6, 'B+' => 7, 'B-' => 8,
-            'AB+' => 9, 'AB-' => 10, 'O+' => 11, 'O-' => 12,
+            'A' => 1,
+            'B' => 2,
+            'AB' => 3,
+            'O' => 4,
+            'A+' => 5,
+            'A-' => 6,
+            'B+' => 7,
+            'B-' => 8,
+            'AB+' => 9,
+            'AB-' => 10,
+            'O+' => 11,
+            'O-' => 12,
             'Tidak Tahu' => 13
         ];
         $religionMap = [
-            'Islam' => 1, 'Kristen' => 2, 'Katolik' => 3, 'Katholik' => 3,
-            'Hindu' => 4, 'Buddha' => 5, 'Budha' => 5, 'Kong Hu Cu' => 6,
-            'Konghucu' => 6, 'Lainnya' => 7
+            'Islam' => 1,
+            'Kristen' => 2,
+            'Katolik' => 3,
+            'Katholik' => 3,
+            'Hindu' => 4,
+            'Buddha' => 5,
+            'Budha' => 5,
+            'Kong Hu Cu' => 6,
+            'Konghucu' => 6,
+            'Lainnya' => 7
         ];
         $maritalStatusMap = [
-            'Belum Kawin' => 1, 'Kawin Tercatat' => 2, 'Kawin Belum Tercatat' => 3,
-            'Cerai Hidup Tercatat' => 4, 'Cerai Hidup Belum Tercatat' => 5, 'Cerai Mati' => 6
+            'Belum Kawin' => 1,
+            'Kawin Tercatat' => 2,
+            'Kawin Belum Tercatat' => 3,
+            'Cerai Hidup Tercatat' => 4,
+            'Cerai Hidup Belum Tercatat' => 5,
+            'Cerai Mati' => 6
         ];
         $familyStatusMap = [
-            'ANAK' => 1, 'Anak' => 1, 'KEPALA KELUARGA' => 2, 'Kepala Keluarga' => 2,
-            'ISTRI' => 3, 'Istri' => 3, 'ORANG TUA' => 4, 'Orang Tua' => 4,
-            'MERTUA' => 5, 'Mertua' => 5, 'CUCU' => 6, 'Cucu' => 6,
-            'FAMILI LAIN' => 7, 'Famili Lain' => 7
+            'ANAK' => 1,
+            'Anak' => 1,
+            'KEPALA KELUARGA' => 2,
+            'Kepala Keluarga' => 2,
+            'ISTRI' => 3,
+            'Istri' => 3,
+            'ORANG TUA' => 4,
+            'Orang Tua' => 4,
+            'MERTUA' => 5,
+            'Mertua' => 5,
+            'CUCU' => 6,
+            'Cucu' => 6,
+            'FAMILI LAIN' => 7,
+            'Famili Lain' => 7
         ];
         $disabilitiesMap = [
-            'Fisik' => 1, 'Netra/Buta' => 2, 'Rungu/Wicara' => 3,
-            'Mental/Jiwa' => 4, 'Fisik dan Mental' => 5, 'Lainnya' => 6
+            'Fisik' => 1,
+            'Netra/Buta' => 2,
+            'Rungu/Wicara' => 3,
+            'Mental/Jiwa' => 4,
+            'Fisik dan Mental' => 5,
+            'Lainnya' => 6
         ];
         $educationStatusMap = [
-            'Tidak/Belum Sekolah' => 1, 'Belum tamat SD/Sederajat' => 2, 'Tamat SD' => 3,
-            'SLTP/SMP/Sederajat' => 4, 'SLTA/SMA/Sederajat' => 5, 'Diploma I/II' => 6,
-            'Akademi/Diploma III/ Sarjana Muda' => 7, 'Diploma IV/ Strata I/ Strata II' => 8,
-            'Strata III' => 9, 'Lainnya' => 10
+            'Tidak/Belum Sekolah' => 1,
+            'Belum tamat SD/Sederajat' => 2,
+            'Tamat SD' => 3,
+            'SLTP/SMP/Sederajat' => 4,
+            'SLTA/SMA/Sederajat' => 5,
+            'Diploma I/II' => 6,
+            'Akademi/Diploma III/ Sarjana Muda' => 7,
+            'Diploma IV/ Strata I/ Strata II' => 8,
+            'Strata III' => 9,
+            'Lainnya' => 10
         ];
 
         $fieldsToNormalize = [
@@ -468,10 +598,110 @@ class BiodataController extends Controller
 
             return redirect()->route('superadmin.biodata.index')
                 ->with('success', 'Import data berhasil! ' . $import->successCount . ' data telah diimport.');
-
         } catch (\Exception $e) {
             return redirect()->route('superadmin.biodata.index')
                 ->with('error', 'Gagal import data: ' . $e->getMessage());
+        }
+    }
+
+    public function export()
+    {
+        try {
+            // Ambil data dari service
+            $response = null;
+            
+            // Jika user adalah admin desa, hanya ambil data warga berdasarkan village_id admin
+            if (Auth::user()->role == 'admin desa') {
+                $villageId = Auth::user()->villages_id;
+                $response = $this->citizenService->getCitizensByVillageId($villageId);
+            } else {
+                // Untuk superadmin tampilkan semua data
+                $response = $this->citizenService->getAllCitizens();
+            }
+            
+            $exportData = [];
+
+            // Header untuk Excel
+            $exportData[] = [
+                'NIK',
+                'Nomor KK',
+                'Nama Lengkap',
+                'Jenis Kelamin',
+                'Tanggal Lahir',
+                'Tempat Lahir',
+                'Usia',
+                'Alamat',
+                'RT',
+                'RW',
+                'Provinsi',
+                'Kabupaten', 
+                'Kecamatan',
+                'Desa',
+                'Kode Pos',
+                'Status Kewarganegaraan',
+                'Agama',
+                'Golongan Darah',
+                'Status Dalam Keluarga',
+                'Nama Ayah',
+                'Nama Ibu',
+                'NIK Ayah',
+                'NIK Ibu',
+            ];
+
+            // Periksa response struktur data
+            if (isset($response['data']['citizens']) && is_array($response['data']['citizens'])) {
+                $citizens = $response['data']['citizens'];
+                
+                foreach ($citizens as $citizen) {
+                    $exportData[] = [
+                        $citizen['nik'] ?? '',
+                        $citizen['kk'] ?? '',
+                        $citizen['full_name'] ?? '',
+                        $citizen['gender'] ?? '',
+                        $citizen['birth_date'] ?? '',
+                        $citizen['birth_place'] ?? '',
+                        $citizen['age'] ?? '',
+                        $citizen['address'] ?? '',
+                        $citizen['rt'] ?? '',
+                        $citizen['rw'] ?? '',
+                        $citizen['province_id'] ?? '',
+                        $citizen['district_id'] ?? '',
+                        $citizen['sub_district_id'] ?? '',
+                        $citizen['village_id'] ?? '',
+                        $citizen['postal_code'] ?? '',
+                        $citizen['citizen_status'] ?? '',
+                        $citizen['religion'] ?? '',
+                        $citizen['blood_type'] ?? '',
+                        $citizen['family_status'] ?? '',
+                        $citizen['father'] ?? '',
+                        $citizen['mother'] ?? '',
+                        $citizen['nik_father'] ?? '',
+                        $citizen['nik_mother'] ?? '',
+                    ];
+                }
+            } else {
+                // Jika data kosong, beri pesan
+                if (Auth::user()->role == 'admin desa') {
+                    return redirect()->route('admin.desa.biodata.index')
+                        ->with('error', 'Tidak ada data yang bisa diekspor atau format data tidak sesuai');
+                }
+                
+                return redirect()->route('superadmin.biodata.index')
+                    ->with('error', 'Tidak ada data yang bisa diekspor atau format data tidak sesuai');
+            }
+
+            $filename = 'biodata_' . date('Ymd_His') . '.xlsx';
+            return Excel::download(new \App\Exports\CitizensExport($exportData), $filename);
+        } catch (\Exception $e) {
+            Log::error('Error exporting data: ' . $e->getMessage());
+            
+            if (Auth::user()->role == 'admin desa') {
+                return redirect()->route('admin.desa.biodata.index')
+                    ->with('error', 'Gagal mengekspor data: ' . $e->getMessage());
+            }
+            
+            return redirect()->route('superadmin.biodata.index')
+                ->with('error', 'Gagal mengekspor data: ' . $e->getMessage());
         }
     }
 
@@ -491,14 +721,28 @@ class BiodataController extends Controller
 
     private function processNullableFields(&$data)
     {
-        $nullableIntegerFields = ['marital_status', 'marital_certificate', 'divorce_certificate', 'postal_code'];
+        $nullableIntegerFields = ['marital_status', 'marital_certificate', 'divorce_certificate', 'postal_code', 'disabilities'];
         foreach ($nullableIntegerFields as $field) {
             $data[$field] = empty($data[$field]) ? 0 : (int) $data[$field];
         }
 
-        $nullableStringFields = ['birth_certificate_no', 'marital_certificate_no', 'divorce_certificate_no',
-                               'nik_mother', 'nik_father', 'coordinate', 'telephone', 'email', 'hamlet',
-                               'foreign_address', 'city', 'state', 'country', 'foreign_postal_code', 'status'];
+        $nullableStringFields = [
+            'birth_certificate_no',
+            'marital_certificate_no',
+            'divorce_certificate_no',
+            'nik_mother',
+            'nik_father',
+            'coordinate',
+            'telephone',
+            'email',
+            'hamlet',
+            'foreign_address',
+            'city',
+            'state',
+            'country',
+            'foreign_postal_code',
+            'status'
+        ];
         foreach ($nullableStringFields as $field) {
             $data[$field] = empty($data[$field]) ? " " : $data[$field];
         }
@@ -508,10 +752,22 @@ class BiodataController extends Controller
             $data[$field] = empty($data[$field]) ? " " : date('Y-m-d', strtotime($data[$field]));
         }
 
-        $integerFields = ['gender', 'age', 'province_id', 'district_id', 'sub_district_id',
-                         'village_id', 'citizen_status', 'birth_certificate', 'blood_type',
-                         'religion', 'family_status', 'mental_disorders', 'disabilities',
-                         'education_status', 'job_type_id'];
+        $integerFields = [
+            'gender',
+            'age',
+            'province_id',
+            'district_id',
+            'sub_district_id',
+            'village_id',
+            'citizen_status',
+            'birth_certificate',
+            'blood_type',
+            'religion',
+            'family_status',
+            'mental_disorders',
+            'education_status',
+            'job_type_id'
+        ];
         foreach ($integerFields as $field) {
             if (isset($data[$field])) {
                 $data[$field] = (int) $data[$field];

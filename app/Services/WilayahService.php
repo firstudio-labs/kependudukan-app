@@ -422,28 +422,114 @@ class WilayahService
      */
     public function getVillageById($id)
     {
-        // Try to get from cache first
+        // Bersihkan cache untuk debugging
         $cacheKey = "village_{$id}";
+        Cache::forget($cacheKey);
 
-        if (Cache::has($cacheKey)) {
-            return Cache::get($cacheKey);
-        }
+        // Log info untuk debugging
+        Log::info("Mencoba mendapatkan data desa dengan ID: {$id}");
 
         try {
-            // Use the API to get village data
-            $response = Http::get("{$this->apiUrl}/village/{$id}");
+            // Coba endpoint pertama
+            $endpoint = "/api/village/{$id}";
+            Log::info("Mencoba endpoint: {$this->baseUrl}{$endpoint}");
+
+            $response = Http::withHeaders([
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+                'X-API-Key' => $this->apiKey,
+            ])->get("{$this->baseUrl}{$endpoint}");
 
             if ($response->successful()) {
                 $data = $response->json();
-                // Cache the result for future use (1 day)
-                Cache::put($cacheKey, $data, now()->addDay());
-                return $data;
+                Log::info("Respons dari endpoint pertama:", ['data' => $data]);
+
+                if (isset($data['name']) && !empty($data['name'])) {
+                    Cache::put($cacheKey, $data, now()->addDay());
+                    return $data;
+                } elseif (isset($data['data']['name']) && !empty($data['data']['name'])) {
+                    Cache::put($cacheKey, $data, now()->addDay());
+                    return $data;
+                }
             }
 
+            // Coba endpoint kedua
+            $endpoint = "/api/villages/{$id}";
+            Log::info("Mencoba endpoint: {$this->baseUrl}{$endpoint}");
+
+            $response = Http::withHeaders([
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+                'X-API-Key' => $this->apiKey,
+            ])->get("{$this->baseUrl}{$endpoint}");
+
+            if ($response->successful()) {
+                $data = $response->json();
+                Log::info("Respons dari endpoint kedua:", ['data' => $data]);
+
+                if (isset($data['name']) && !empty($data['name'])) {
+                    Cache::put($cacheKey, $data, now()->addDay());
+                    return $data;
+                } elseif (isset($data['data']['name']) && !empty($data['data']['name'])) {
+                    Cache::put($cacheKey, $data, now()->addDay());
+                    return $data;
+                }
+            }
+
+            // Coba endpoint ketiga
+            $endpoint = "/api/village/detail/{$id}";
+            Log::info("Mencoba endpoint: {$this->baseUrl}{$endpoint}");
+
+            $response = Http::withHeaders([
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+                'X-API-Key' => $this->apiKey,
+            ])->get("{$this->baseUrl}{$endpoint}");
+
+            if ($response->successful()) {
+                $data = $response->json();
+                Log::info("Respons dari endpoint ketiga:", ['data' => $data]);
+
+                if (isset($data['name']) && !empty($data['name'])) {
+                    Cache::put($cacheKey, $data, now()->addDay());
+                    return $data;
+                } elseif (isset($data['data']['name']) && !empty($data['data']['name'])) {
+                    Cache::put($cacheKey, $data, now()->addDay());
+                    return $data;
+                }
+            }
+
+            // Jika semua endpoint gagal, coba cari dari daftar desa
+            Log::info("Mencoba mencari desa dari daftar desa");
+
+            // Ambil semua daftar kecamatan (menggunakan metode yang sudah ada)
+            $kecamatanPages = $this->getKecamatanByPage();
+
+            foreach ($kecamatanPages['data'] as $kecamatan) {
+                $kecamatanCode = $kecamatan['code'];
+                $desaList = $this->getDesa($kecamatanCode);
+
+                foreach ($desaList as $desa) {
+                    if ($desa['id'] == $id) {
+                        $data = [
+                            'id' => $desa['id'],
+                            'code' => $desa['code'],
+                            'name' => $desa['name']
+                        ];
+
+                        Log::info("Desa ditemukan dari daftar:", ['data' => $data]);
+                        Cache::put($cacheKey, $data, now()->addDay());
+                        return $data;
+                    }
+                }
+            }
+
+            Log::error("Gagal menemukan data desa dengan ID: {$id}");
             return null;
         } catch (\Exception $e) {
-            // Log the error
-            \Log::error("Failed to fetch village data: " . $e->getMessage());
+            Log::error("Error mengambil data desa: " . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
             return null;
         }
     }

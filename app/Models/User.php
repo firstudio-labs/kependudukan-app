@@ -39,25 +39,50 @@ class User extends Authenticatable
         'created_at' => 'datetime', // Ensure created_at is cast as datetime
     ];
 
-    // Relationships
+    // Relationships - menggunakan string namespace untuk lazy loading
     public function province()
     {
-        return $this->belongsTo(Province::class, 'province_id');
+        // Kita gunakan string namespace untuk menghindari autoloading class sebelum runtime
+        return $this->belongsTo('App\Models\Province', 'province_id');
     }
 
     public function district()
     {
-        return $this->belongsTo(District::class, 'districts_id');
+        return $this->belongsTo('App\Models\District', 'districts_id');
     }
 
     public function subDistrict()
     {
-        return $this->belongsTo(SubDistrict::class, 'sub_districts_id');
+        return $this->belongsTo('App\Models\SubDistrict', 'sub_districts_id');
     }
 
     public function village()
     {
-        return $this->belongsTo(Village::class, 'villages_id');
+        // Untuk mengambil nama desa, kita gunakan accessor
+        return $this->belongsTo('App\Models\Village', 'villages_id');
+    }
+    
+    /**
+     * Mendapatkan nama desa dari village_id
+     */
+    public function getVillageNameAttribute()
+    {
+        if (!$this->villages_id) {
+            return 'Tidak Ada Desa';
+        }
+        
+        try {
+            $villageData = app(\App\Services\WilayahService::class)->getVillageById($this->villages_id);
+            if ($villageData && isset($villageData['name'])) {
+                return $villageData['name'];
+            } elseif ($villageData && isset($villageData['data']['name'])) {
+                return $villageData['data']['name'];
+            }
+            return 'Desa #' . $this->villages_id;
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Error getting village name: ' . $e->getMessage());
+            return 'Desa #' . $this->villages_id;
+        }
     }
 
     // Add a scope to get monthly registration counts

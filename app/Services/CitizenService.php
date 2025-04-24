@@ -348,5 +348,168 @@ class CitizenService
             ];
         }
     }
+
+    /**
+     * Get citizens by village ID
+     * 
+     * @param int $villageId
+     * @return array
+     */
+    public function getCitizensByVillageId($villageId)
+    {
+        try {
+            $response = Http::withHeaders([
+                'X-API-Key' => $this->apiKey,
+            ])->get("{$this->baseUrl}/api/citizens", [
+                'village_id' => $villageId,
+                'limit' => 1000
+            ]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                return $data;
+            } else {
+                Log::error('API request failed when fetching citizens by village ID', [
+                    'status_code' => $response->status(),
+                    'village_id' => $villageId
+                ]);
+                
+                // Jika API tidak mendukung filter by village_id, gunakan metode alternatif
+                return $this->filterCitizensByVillageId($villageId);
+            }
+        } catch (\Exception $e) {
+            Log::error('Exception fetching citizens by village ID', [
+                'error' => $e->getMessage(),
+                'village_id' => $villageId
+            ]);
+            
+            // Gunakan metode alternatif jika terjadi error
+            return $this->filterCitizensByVillageId($villageId);
+        }
+    }
+
+    /**
+     * Filter citizens by village ID manually (fallback method)
+     * 
+     * @param int $villageId
+     * @return array
+     */
+    private function filterCitizensByVillageId($villageId)
+    {
+        // Dapatkan semua warga terlebih dahulu
+        $allCitizensData = $this->getAllCitizensWithHighLimit();
+        
+        // Ekstrak array warga dari respons API
+        $allCitizens = [];
+        if (isset($allCitizensData['data']['citizens']) && is_array($allCitizensData['data']['citizens'])) {
+            $allCitizens = $allCitizensData['data']['citizens'];
+        } elseif (isset($allCitizensData['citizens']) && is_array($allCitizensData['citizens'])) {
+            $allCitizens = $allCitizensData['citizens'];
+        } elseif (isset($allCitizensData['data']) && is_array($allCitizensData['data'])) {
+            $allCitizens = $allCitizensData['data'];
+        }
+        
+        // Filter warga berdasarkan village_id atau villages_id
+        $filteredCitizens = array_filter($allCitizens, function($citizen) use ($villageId) {
+            // Cek kedua kolom yang mungkin ada
+            return (isset($citizen['villages_id']) && $citizen['villages_id'] == $villageId) || 
+                   (isset($citizen['village_id']) && $citizen['village_id'] == $villageId);
+        });
+        
+        // Kembalikan format yang sama dengan API
+        return [
+            'status' => 'OK',
+            'data' => ['citizens' => array_values($filteredCitizens)]
+        ];
+    }
+
+    /**
+     * Get citizens by village name
+     * 
+     * @param string $villageName
+     * @return array
+     */
+    public function getCitizensByVillageName($villageName)
+    {
+        try {
+            $response = Http::withHeaders([
+                'X-API-Key' => $this->apiKey,
+            ])->get("{$this->baseUrl}/api/citizens", [
+                'village_name' => $villageName,
+                'limit' => 1000
+            ]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                return $data;
+            } else {
+                Log::error('API request failed when fetching citizens by village name', [
+                    'status_code' => $response->status(),
+                    'village_name' => $villageName
+                ]);
+                
+                // Jika API tidak mendukung filter by village_name, gunakan metode alternatif
+                return $this->filterCitizensByVillageName($villageName);
+            }
+        } catch (\Exception $e) {
+            Log::error('Exception fetching citizens by village name', [
+                'error' => $e->getMessage(),
+                'village_name' => $villageName
+            ]);
+            
+            // Gunakan metode alternatif jika terjadi error
+            return $this->filterCitizensByVillageName($villageName);
+        }
+    }
+
+    /**
+     * Filter citizens by village name manually (fallback method)
+     * 
+     * @param string $villageName
+     * @return array
+     */
+    private function filterCitizensByVillageName($villageName)
+    {
+        // Dapatkan semua warga terlebih dahulu
+        $allCitizensData = $this->getAllCitizensWithHighLimit();
+        
+        // Ekstrak array warga dari respons API
+        $allCitizens = [];
+        if (isset($allCitizensData['data']['citizens']) && is_array($allCitizensData['data']['citizens'])) {
+            $allCitizens = $allCitizensData['data']['citizens'];
+        } elseif (isset($allCitizensData['citizens']) && is_array($allCitizensData['citizens'])) {
+            $allCitizens = $allCitizensData['citizens'];
+        } elseif (isset($allCitizensData['data']) && is_array($allCitizensData['data'])) {
+            $allCitizens = $allCitizensData['data'];
+        }
+        
+        // Filter warga berdasarkan village_name
+        $filteredCitizens = array_filter($allCitizens, function($citizen) use ($villageName) {
+            // Pencocokan nama desa
+            if (isset($citizen['village_name'])) {
+                return strtolower($citizen['village_name']) == strtolower($villageName);
+            }
+            
+            // Jika tidak ada village_name, coba cek villages_id dan cocokkan dengan data desa
+            if (isset($citizen['villages_id'])) {
+                try {
+                    $villageData = app(\App\Services\WilayahService::class)->getVillageById($citizen['villages_id']);
+                    $citizenVillageName = $villageData['name'] ?? $villageData['data']['name'] ?? '';
+                    return strtolower($citizenVillageName) == strtolower($villageName);
+                } catch (\Exception $e) {
+                    Log::error('Error getting village name in filter: ' . $e->getMessage());
+                    return false;
+                }
+            }
+            
+            return false;
+        });
+        
+        // Kembalikan format yang sama dengan API
+        return [
+            'status' => 'OK',
+            'data' => ['citizens' => array_values($filteredCitizens)]
+        ];
+    }
 }
 

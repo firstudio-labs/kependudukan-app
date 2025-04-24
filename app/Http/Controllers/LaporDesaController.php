@@ -26,11 +26,19 @@ class LaporDesaController extends Controller
             ->paginate(10)
             ->withQueryString();
 
+        if (Auth::user()->role == 'admin desa') {
+            return view('admin.desa.lapordesa.index', compact('lapordesas'));
+        }
+
         return view('superadmin.datamaster.lapordesa.index', compact('lapordesas'));
     }
 
     public function create()
     {
+        if (Auth::user()->role == 'admin desa') {
+            return view('admin.desa.lapordesa.create');
+        }
+
         return view('superadmin.datamaster.lapordesa.create');
     }
 
@@ -44,6 +52,11 @@ class LaporDesaController extends Controller
 
         LaporDesa::create($request->all());
 
+        if (Auth::user()->role == 'admin desa') {
+            return redirect()->route('admin.desa.datamaster.lapordesa.index')
+                ->with('success', 'Lapor Desa berhasil ditambahkan.');
+        }
+
         return redirect()->route('superadmin.datamaster.lapordesa.index')
             ->with('success', 'Lapor Desa berhasil ditambahkan.');
     }
@@ -51,6 +64,10 @@ class LaporDesaController extends Controller
     public function edit($id)
     {
         $laporDesa = LaporDesa::findOrFail($id);
+
+        if (Auth::user()->role == 'admin desa') {
+            return view('admin.desa.lapordesa.edit', compact('laporDesa'));
+        }
 
         return view('superadmin.datamaster.lapordesa.edit', compact('laporDesa'));
     }
@@ -67,6 +84,11 @@ class LaporDesaController extends Controller
 
         $laporDesa->update($request->all());
 
+        if (Auth::user()->role == 'admin desa') {
+            return redirect()->route('admin.desa.datamaster.lapordesa.index')
+                ->with('success', 'Lapor Desa berhasil diperbarui.');
+        }
+
         return redirect()->route('superadmin.datamaster.lapordesa.index')
             ->with('success', 'Lapor Desa berhasil diperbarui.');
     }
@@ -75,6 +97,11 @@ class LaporDesaController extends Controller
     {
         $laporDesa = LaporDesa::findOrFail($id);
         $laporDesa->delete();
+
+        if (Auth::user()->role == 'admin desa') {
+            return redirect()->route('admin.desa.datamaster.lapordesa.index')
+                ->with('success', 'Lapor Desa berhasil dihapus.');
+        }
 
         return redirect()->route('superadmin.datamaster.lapordesa.index')
             ->with('success', 'Lapor Desa berhasil dihapus.');

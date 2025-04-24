@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Superadmin;
+namespace App\Http\Controllers\superadmin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Keperluan;

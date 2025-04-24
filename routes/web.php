@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\LaporanDesaController;
+use App\Http\Controllers\adminDesa\ProfileDesaController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
@@ -39,6 +39,7 @@ use App\Http\Controllers\guest\KelahiranSuratController;
 use App\Http\Controllers\guest\AhliWarisSuratController;
 use App\Http\Controllers\guest\RumahSewaSuratController;
 use App\Http\Controllers\adminKabupaten\ProfileKabController;
+use App\Http\Controllers\LaporanDesaController;
 use App\Http\Controllers\LaporDesaController;  // Change from User\LaporDesaController to LaporDesaController
 
 // Homepage route should use our new method to force logout
@@ -427,11 +428,88 @@ Route::middleware(['auth:web', 'role:admin kabupaten'])->group(function () {
         ->name('admin.kabupaten.profile.update-photo');
 });
 
+
+
+
+
+
+
+
+
 // Route untuk admin desa - menggunakan web guard
 Route::middleware(['auth:web', 'role:admin desa'])->group(function () {
     Route::get('/admin/desa/index', [DashboardController::class, 'indexDesa'])
         ->name('admin.desa.index');
+
+    // Admin Desa Profile routes
+    Route::get('/admin/desa/profile', [ProfileDesaController::class, 'index'])
+        ->name('admin.desa.profile.index');
+    Route::get('/admin/desa/profile/edit', [ProfileDesaController::class, 'edit'])
+        ->name('admin.desa.profile.edit');
+    Route::put('/admin/desa/profile/update', [ProfileDesaController::class, 'update'])
+        ->name('admin.desa.profile.update');
+    Route::post('/admin/desa/profile/update-photo', [ProfileDesaController::class, 'updatePhoto'])
+        ->name('admin.desa.profile.update-photo');
+
+    // Routes for managing data related to citizens
+    Route::get('/admin/desa/biodata/index', [BiodataController::class, 'index'])
+        ->name('admin.desa.biodata.index');
+    Route::get('/admin/desa/biodata/create', [BiodataController::class, 'create'])
+        ->name('admin.desa.biodata.create');
+    Route::post('/admin/desa/biodata/store', [BiodataController::class, 'store'])
+        ->name('admin.desa.biodata.store');
+    Route::get('/admin/desa/biodata/{nik}/edit', [BiodataController::class, 'edit'])
+        ->name('admin.desa.biodata.edit');
+    Route::put('/admin/desa/biodata/{nik}', [BiodataController::class, 'update'])
+        ->name('admin.desa.biodata.update');
+    Route::delete('/admin/desa/biodata/{id}', [BiodataController::class, 'destroy'])
+        ->name('admin.desa.biodata.destroy');
+
+    // Routes for managing family data
+    Route::get('/admin/desa/datakk/index', [DataKKController::class, 'index'])
+        ->name('admin.desa.datakk.index');
+    Route::get('/admin/desa/datakk/create', [DataKKController::class, 'create'])
+        ->name('admin.desa.datakk.create');
+    Route::post('/admin/desa/datakk/store', [DataKKController::class, 'store'])
+        ->name('admin.desa.datakk.store');
+    Route::get('/admin/desa/datakk/{id}/edit', [DataKKController::class, 'edit'])
+        ->name('admin.desa.datakk.edit');
+    Route::put('/admin/desa/datakk/{id}', [DataKKController::class, 'update'])
+        ->name('admin.desa.datakk.update');
+    Route::delete('/admin/desa/datakk/{id}', [DataKKController::class, 'destroy'])
+        ->name('admin.desa.datakk.destroy');
+
+    // Routes for Excel import
+    Route::get('/admin/desa/biodata/export', [BiodataController::class, 'export'])
+        ->name('admin.desa.biodata.export');
+
+
+    // Routes for reporting
+    Route::get('/admin/desa/datamaster/lapordesa', [LaporDesaController::class, 'index'])
+        ->name('admin.desa.datamaster.lapordesa.index');
+    Route::get('/admin/desa/datamaster/lapordesa/create', [LaporDesaController::class, 'create'])
+        ->name('admin.desa.datamaster.lapordesa.create');
+    Route::post('/admin/desa/datamaster/lapordesa', [LaporDesaController::class, 'store'])
+        ->name('admin.desa.datamaster.lapordesa.store');
+    Route::get('/admin/desa/datamaster/lapordesa/{id}/edit', [LaporDesaController::class, 'edit'])
+        ->name('admin.desa.datamaster.lapordesa.edit');
+    Route::put('/admin/desa/datamaster/lapordesa/{id}', [LaporDesaController::class, 'update'])
+        ->name('admin.desa.datamaster.lapordesa.update');
+    Route::delete('/admin/desa/datamaster/lapordesa/{id}', [LaporDesaController::class, 'destroy'])
+        ->name('admin.desa.datamaster.lapordesa.destroy');
+
+    // Di dalam grup middleware admin desa
+    Route::get('/admin/desa/datakk/export', [DataKKController::class, 'export'])
+        ->name('admin.desa.datakk.export');
 });
+
+
+
+
+
+
+
+
 
 // Route untuk operator - menggunakan web guard
 Route::middleware(['auth:web', 'role:operator'])->group(function () {
@@ -520,7 +598,6 @@ Route::middleware(['auth:penduduk'])->group(function () {
         ->name('user.laporan-desa.destroy');
     Route::get('/user/laporan-desa/{id}', [LaporanDesaController::class, 'show'])
         ->name('user.laporan-desa.show');
-
 });
 
 // User management routes
@@ -565,6 +642,4 @@ Route::get('/citizens/administrasi', [AdministrasiController::class, 'fetchAllCi
 
 
 Route::post('/superadmin/datakk/store-family-members', [DataKKController::class, 'storeFamilyMembers'])
-->name('superadmin.datakk.store-family-members');
-
-
+    ->name('superadmin.datakk.store-family-members');
