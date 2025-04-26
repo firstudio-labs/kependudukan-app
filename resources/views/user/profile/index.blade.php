@@ -1557,7 +1557,7 @@ if (!empty($userData->tag_lokasi)) {
                                         `;
                                         submitBtn.disabled = true;
 
-                                        fetch(`/user/family-member/${nik}/upload-document`, {
+                                        fetch(`/api/user/family-member/${nik}/upload-document`, {
                                             method: 'POST',
                                             body: formData
                                         })

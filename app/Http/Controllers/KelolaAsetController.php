@@ -32,8 +32,11 @@ class KelolaAsetController extends Controller
         $search = $request->input('search');
         $page = $request->input('page', 1);
 
+        // Use the penduduk guard to get the correct user ID
+        $userId = Auth::guard('penduduk')->id();
+
         $assets = Aset::query()
-            ->where('user_id', Auth::id())
+            ->where('user_id', $userId)
             ->when($search, function ($query, $search) {
                 return $query->where('nama_aset', 'like', "%{$search}%")
                     ->orWhere('nik_pemilik', 'like', "%{$search}%")
@@ -74,7 +77,7 @@ class KelolaAsetController extends Controller
         try {
             $validated = $request->validate([
                 'nama_aset' => 'required|string|max:255',
-                'nik' => 'nullable|string|max:16',
+                'nik_pemilik' => 'nullable|string|max:16',
                 'nama_pemilik' => 'nullable|string|max:255',
                 'address' => 'required|string',
                 'province_id' => 'required|integer',
@@ -92,36 +95,31 @@ class KelolaAsetController extends Controller
                 'foto_aset_samping' => 'nullable|image|max:2048',
             ]);
 
+            // Log the received data for debugging
+            Log::info('Asset creation request received', [
+                'request_data' => $request->all(),
+                'nik_pemilik' => $request->nik_pemilik,
+                'nik_input' => $request->input('nik-input') // Check if NIK comes from a different field name
+            ]);
+
             $foto_aset_depan = null;
             if ($request->hasFile('foto_aset_depan')) {
-                try {
-                    $file = $request->file('foto_aset_depan');
-                    $assetName = Str::slug(substr($validated['nama_aset'], 0, 30));
-                    $timestamp = time();
-                    $filename = $timestamp . '_' . $assetName . '_depan.' . $file->getClientOriginalExtension();
-                    $path = $file->storeAs('uploads/documents/foto-aset', $filename, 'public');
-                    $foto_aset_depan = $path;
-                } catch (\Exception $e) {
-                    Log::error('Error saving foto depan', [
-                        'error' => $e->getMessage()
-                    ]);
-                }
+                $file = $request->file('foto_aset_depan');
+                $assetName = Str::slug(substr($validated['nama_aset'], 0, 30));
+                $timestamp = time();
+                $filename = $timestamp . '_' . $assetName . '_depan.' . $file->getClientOriginalExtension();
+                $path = $file->storeAs('uploads/documents/foto-aset', $filename, 'public');
+                $foto_aset_depan = $path;
             }
 
             $foto_aset_samping = null;
             if ($request->hasFile('foto_aset_samping')) {
-                try {
-                    $file = $request->file('foto_aset_samping');
-                    $assetName = Str::slug(substr($validated['nama_aset'], 0, 30));
-                    $timestamp = time();
-                    $filename = $timestamp . '_' . $assetName . '_samping.' . $file->getClientOriginalExtension();
-                    $path = $file->storeAs('uploads/documents/foto-aset', $filename, 'public');
-                    $foto_aset_samping = $path;
-                } catch (\Exception $e) {
-                    Log::error('Error saving foto samping', [
-                        'error' => $e->getMessage()
-                    ]);
-                }
+                $file = $request->file('foto_aset_samping');
+                $assetName = Str::slug(substr($validated['nama_aset'], 0, 30));
+                $timestamp = time();
+                $filename = $timestamp . '_' . $assetName . '_samping.' . $file->getClientOriginalExtension();
+                $path = $file->storeAs('uploads/documents/foto-aset', $filename, 'public');
+                $foto_aset_samping = $path;
             }
 
             $tag_lokasi = null;
@@ -129,14 +127,19 @@ class KelolaAsetController extends Controller
                 $latitude = number_format((float) $request->tag_lat, 6, '.', '');
                 $longitude = number_format((float) $request->tag_lng, 6, '.', '');
                 $tag_lokasi = "$latitude, $longitude";
-            } else if ($request->filled('tag_lokasi')) {
+            } elseif ($request->filled('tag_lokasi')) {
                 $tag_lokasi = $request->tag_lokasi;
             }
 
+            $userId = Auth::guard('penduduk')->id();
+
+            // Check if nik-input field exists and use it if nik_pemilik is missing
+            $nikPemilik = $validated['nik_pemilik'] ?? $request->input('nik-input') ?? null;
+
             $aset = Aset::create([
-                'user_id' => Auth::id(),
+                'user_id' => $userId,
                 'nama_aset' => $validated['nama_aset'],
-                'nik_pemilik' => $validated['nik'] ?? null,
+                'nik_pemilik' => $nikPemilik,
                 'nama_pemilik' => $validated['nama_pemilik'] ?? null,
                 'address' => $validated['address'],
                 'province_id' => $validated['province_id'],
@@ -152,23 +155,22 @@ class KelolaAsetController extends Controller
                 'foto_aset_samping' => $foto_aset_samping,
             ]);
 
-            Log::info('Asset created', ['id' => $aset->id]);
-
-            return redirect()
-                ->route('user.kelola-aset.index')
+            return redirect()->route('user.kelola-aset.index')
                 ->with('success', 'Data aset berhasil disimpan');
         } catch (\Exception $e) {
-            Log::error('Error creating asset: ' . $e->getMessage());
-            return back()
-                ->withInput()
-                ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            Log::error('Gagal menyimpan aset: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
 
+
     public function edit($id)
     {
+        // Use the penduduk guard to get the correct user ID
+        $userId = Auth::guard('penduduk')->id();
+
         $aset = Aset::where('id', $id)
-            ->where('user_id', Auth::id())
+            ->where('user_id', $userId)
             ->firstOrFail();
 
         if (!empty($aset->tag_lokasi)) {
@@ -198,13 +200,15 @@ class KelolaAsetController extends Controller
     public function update(Request $request, $id)
     {
         try {
+            $userId = Auth::guard('penduduk')->id();
+
             $aset = Aset::where('id', $id)
-                ->where('user_id', Auth::id())
+                ->where('user_id', $userId)
                 ->firstOrFail();
 
             $validated = $request->validate([
                 'nama_aset' => 'required|string|max:255',
-                'nik' => 'nullable|string|max:16',
+                'nik_pemilik' => 'nullable|string|max:16',
                 'nama_pemilik' => 'nullable|string|max:255',
                 'address' => 'required|string',
                 'province_id' => 'required|integer',
@@ -226,26 +230,18 @@ class KelolaAsetController extends Controller
                 if ($aset->foto_aset_depan && Storage::disk('public')->exists($aset->foto_aset_depan)) {
                     Storage::disk('public')->delete($aset->foto_aset_depan);
                 }
-
                 $file = $request->file('foto_aset_depan');
-                $assetName = Str::slug(substr($validated['nama_aset'], 0, 30));
-                $timestamp = time();
-                $filename = $timestamp . '_' . $assetName . '_depan.' . $file->getClientOriginalExtension();
-                $path = $file->storeAs('uploads/documents/foto-aset', $filename, 'public');
-                $validated['foto_aset_depan'] = $path;
+                $filename = time() . '_depan.' . $file->getClientOriginalExtension();
+                $validated['foto_aset_depan'] = $file->storeAs('uploads/documents/foto-aset', $filename, 'public');
             }
 
             if ($request->hasFile('foto_aset_samping')) {
                 if ($aset->foto_aset_samping && Storage::disk('public')->exists($aset->foto_aset_samping)) {
                     Storage::disk('public')->delete($aset->foto_aset_samping);
                 }
-
                 $file = $request->file('foto_aset_samping');
-                $assetName = Str::slug(substr($validated['nama_aset'], 0, 30));
-                $timestamp = time();
-                $filename = $timestamp . '_' . $assetName . '_samping.' . $file->getClientOriginalExtension();
-                $path = $file->storeAs('uploads/documents/foto-aset', $filename, 'public');
-                $validated['foto_aset_samping'] = $path;
+                $filename = time() . '_samping.' . $file->getClientOriginalExtension();
+                $validated['foto_aset_samping'] = $file->storeAs('uploads/documents/foto-aset', $filename, 'public');
             }
 
             $tag_lokasi = null;
@@ -253,13 +249,13 @@ class KelolaAsetController extends Controller
                 $latitude = number_format((float) $request->tag_lat, 6, '.', '');
                 $longitude = number_format((float) $request->tag_lng, 6, '.', '');
                 $tag_lokasi = "$latitude, $longitude";
-            } else if ($request->filled('tag_lokasi')) {
+            } elseif ($request->filled('tag_lokasi')) {
                 $tag_lokasi = $request->tag_lokasi;
             }
 
             $aset->update([
                 'nama_aset' => $validated['nama_aset'],
-                'nik_pemilik' => $validated['nik'] ?? null,
+                'nik_pemilik' => $validated['nik_pemilik'] ?? null,
                 'nama_pemilik' => $validated['nama_pemilik'] ?? null,
                 'address' => $validated['address'],
                 'province_id' => $validated['province_id'],
@@ -275,15 +271,13 @@ class KelolaAsetController extends Controller
                 'foto_aset_samping' => $validated['foto_aset_samping'] ?? $aset->foto_aset_samping,
             ]);
 
-            return redirect()
-                ->route('user.kelola-aset.index')
+            return redirect()->route('user.kelola-aset.index')
                 ->with('success', 'Data aset berhasil diperbarui');
         } catch (\Exception $e) {
-            return back()
-                ->withInput()
-                ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
+
 
     private function attachLocationNames($asset)
     {
@@ -333,8 +327,11 @@ class KelolaAsetController extends Controller
     public function destroy($id)
     {
         try {
+            // Use the penduduk guard to get the correct user ID
+            $userId = Auth::guard('penduduk')->id();
+
             $aset = Aset::where('id', $id)
-                ->where('user_id', Auth::id())
+                ->where('user_id', $userId)
                 ->firstOrFail();
 
             if ($aset->foto_aset_depan && Storage::disk('public')->exists($aset->foto_aset_depan)) {

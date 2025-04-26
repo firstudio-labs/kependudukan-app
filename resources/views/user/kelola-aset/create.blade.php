@@ -6,28 +6,28 @@
         class="bg-white p-6 rounded-lg shadow-md">
             @csrf
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- NIK Pemilik -->
-                <div>
-                    <label for="nik" class="block text-sm font-medium text-gray-700">NIK Pemilik</label>
-                    <div class="relative">
-                        <input type="text" id="nik-input" name="nik"
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
-                            value="{{ old('nik') }}" placeholder="Pilih atau ketik NIK">
-                        <div class="absolute inset-y-0 right-0 flex items-center pr-3">
-                            <button type="button" id="toggle-nik-dropdown" class="text-gray-400 hover:text-gray-600">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd"
-                                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                        clip-rule="evenodd" />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                    <div id="nik-dropdown"
-                        class="hidden absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-                        <!-- NIK options will be populated here -->
+            <!-- NIK Pemilik -->
+            <div>
+                <label for="nik-input" class="block text-sm font-medium text-gray-700">NIK Pemilik</label>
+                <div class="relative">
+                    <input type="text" id="nik-input" name="nik_pemilik"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
+                        value="{{ old('nik_pemilik') }}" placeholder="Pilih atau ketik NIK">
+                    <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                        <button type="button" id="toggle-nik-dropdown" class="text-gray-400 hover:text-gray-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd"
+                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                        </button>
                     </div>
                 </div>
+                <div id="nik-dropdown"
+                    class="hidden absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+                    <!-- NIK options will be populated here -->
+                </div>
+            </div>
                 
                 <!-- Nama Pemilik -->
                 <div>
@@ -299,19 +299,28 @@
         }
 
         function selectNIK(nik, name) {
-            const nikInput = document.getElementById('nik-input');
-            const namaInput = document.getElementById('nama_pemilik');
-            const dropdown = document.getElementById('nik-dropdown');
+                const nikInput = document.getElementById('nik-input');
+                const namaInput = document.getElementById('nama_pemilik');
+                const dropdown = document.getElementById('nik-dropdown');
 
-            nikInput.value = nik;
+                nikInput.value = nik;
+                // Ensure the nik value is set to the field with the correct name attribute
+                const hiddenNikInput = document.querySelector('input[name="nik_pemilik"]');
+                if (!hiddenNikInput) {
+                    // If there's no separate field, make sure nikInput has the correct name
+                    nikInput.name = 'nik_pemilik';
+                } else if (hiddenNikInput !== nikInput) {
+                    // Otherwise set the value on the correct field
+                    hiddenNikInput.value = nik;
+                }
 
-            if (name && namaInput) {
-                namaInput.value = name;
-                selectedNikData = { nik, name };
+                if (name && namaInput) {
+                    namaInput.value = name;
+                    selectedNikData = { nik, name };
+                }
+
+                dropdown.classList.add('hidden');
             }
-
-            dropdown.classList.add('hidden');
-        }
 
         document.addEventListener('DOMContentLoaded', function () {
             const nikInput = document.getElementById('nik-input');

@@ -10,57 +10,71 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
+use App\Services\CitizenService;
 
 class LaporDesaController extends Controller
 {
-    public function index(Request $request)
+    protected $citizenService;
+    public function __construct(CitizenService $citizenService)
     {
-        $query = LaporanDesa::query();
+        $this->citizenService = $citizenService;
+    }
+    public function index()
+    {
+        if (Auth::guard('web')->check()) {
+            $userData = Auth::guard('web')->user();
 
-        // For regular users, only show their own reports
-        if (Auth::guard('penduduk')->check()) {
-            $query->where('user_id', Auth::guard('penduduk')->id());
+        } elseif (Auth::guard('penduduk')->check()) {
+            $userData = Auth::guard('penduduk')->user();
+
+            if ($userData) {
+                try {
+                    $citizenData = $this->citizenService->getCitizenByNIK((int) $userData->nik);
+                    if ($citizenData && isset($citizenData['data'])) {
+                        $userData->citizen_data = $citizenData['data'];
+
+                        if (isset($userData->citizen_data['kk'])) {
+                            $userData->no_kk = $userData->citizen_data['kk'];
+                            $familyData = $this->citizenService->getFamilyMembersByKK($userData->citizen_data['kk']);
+
+                            if ($familyData && isset($familyData['data'])) {
+                                $userData->family_members = $familyData['data'];
+
+                                Log::info('Family members retrieved successfully', [
+                                    'count' => count($userData->family_members),
+                                    'kk' => $userData->citizen_data['kk'],
+                                ]);
+                            } else {
+                                Log::error('Failed to retrieve family members', [
+                                    'kk' => $userData->citizen_data['kk'],
+                                    'response' => $familyData,
+                                ]);
+                            }
+                        }
+                    }
+                } catch (\Exception $e) {
+                    Log::error('Error fetching citizen data: ' . $e->getMessage());
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Terjadi kesalahan saat mengambil data penduduk.',
+                    ], 500);
+                }
+            }
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized. Please login to access your profile.',
+            ], 401);
         }
-        // For admin desa, only show reports from their village
-        elseif (Auth::user() && Auth::user()->role === 'admin desa') {
-            $query->where('village_id', Auth::user()->villages_id);
-        }
-
-        if ($request->has('search') && !empty($request->search)) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('judul_laporan', 'like', "%{$search}%")
-                    ->orWhere('deskripsi_laporan', 'like', "%{$search}%");
-            });
-        }
-
-        // Include only laporDesa relationship, not user
-        $query->with(['laporDesa']);
-
-        $perPage = $request->get('per_page', 10);
-        $laporans = $query->orderBy('created_at', 'desc')->paginate($perPage);
-
-        // Map the results to exclude user data or include only minimal user info
-        $mappedData = collect($laporans->items())->map(function ($item) {
-            // Include user_id but not the full user object
-            $item->user_id = $item->user_id;
-            // Remove the user relationship data
-            unset($item->user);
-            return $item;
-        });
 
         return response()->json([
-            'status' => 'success',
-            'data' => $mappedData,
-            'meta' => [
-                'current_page' => $laporans->currentPage(),
-                'last_page' => $laporans->lastPage(),
-                'per_page' => $laporans->perPage(),
-                'total' => $laporans->total()
-            ]
+            'success' => true,
+            'message' => 'User profile data retrieved successfully.',
+            'data' => $userData,
         ]);
     }
-    
+
     public function getCategories()
     {
         $categories = [];
@@ -115,8 +129,7 @@ class LaporDesaController extends Controller
             
             // Modified authentication check - allow the request temporarily for testing
             if (!$isAuthenticated) {
-                // Instead of immediately rejecting, try to get the user if you have a token mechanism
-                // Or for temporary testing, you could create a default user
+               
                 $penduduk = \App\Models\Penduduk::first(); // This is for testing only!
                 if ($penduduk) {
                     Auth::guard('penduduk')->login($penduduk);

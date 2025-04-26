@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\KelolaAsetController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\ProfileController;
 
 /*
 |--------------------------------------------------------------------------
@@ -76,6 +77,28 @@ Route::middleware(ApiTokenOwnerMiddleware::class)->group(function () {
         Route::delete('/laporan-desa/{id}', [LaporDesaController::class, 'destroy'])
             ->name('user.laporan-desa.destroy');
 
+        //profile
+        Route::get('/profile', [ProfileController::class, 'index'])
+            ->name('user.profile.index');
+        Route::get('/profile/edit', [ProfileController::class, 'edit'])
+            ->name('user.profile.edit');
+        Route::put('/profile', [ProfileController::class, 'update'])
+            ->name('user.profile.update');
+        Route::get('/profile/create', [ProfileController::class, 'create'])
+            ->name('user.profile.create');
+        Route::post('/profile', [ProfileController::class, 'store'])
+            ->name('user.profile.store');
+        Route::post('/profile/update-location', [ProfileController::class, 'updateLocation'])
+            ->name('user.profile.updateLocation');
+
+        Route::get('/family-member/{nik}/documents', [ProfileController::class, 'getFamilyMemberDocuments'])
+            ->name('user.family-member.documents');
+        Route::post('/family-member/{nik}/upload-document', [ProfileController::class, 'uploadFamilyMemberDocument'])
+            ->name('user.family-member.upload-document');
+        Route::get('/family-member/{nik}/document/{documentType}/view', [ProfileController::class, 'viewFamilyMemberDocument'])
+            ->name('user.family-member.view-document');
+        Route::delete('/family-member/{nik}/delete-document/{documentType}', [ProfileController::class, 'deleteFamilyMemberDocument'])
+            ->name('user.family-member.delete-document');
     });
 });
 

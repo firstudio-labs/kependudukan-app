@@ -1,19 +1,19 @@
- <x-layout>
+<x-layout>
     <div class="p-4 mt-14">
         <h1 class="text-2xl font-bold text-gray-800 mb-6">Edit Data Aset</h1>
 
         <form method="POST" action="{{ route('user.kelola-aset.update', $aset->id) }}" enctype="multipart/form-data"
-        class="bg-white p-6 rounded-lg shadow-md">
+            class="bg-white p-6 rounded-lg shadow-md">
             @csrf
             @method('PUT')
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <!-- NIK Pemilik -->
                 <div>
-                    <label for="nik" class="block text-sm font-medium text-gray-700">NIK Pemilik</label>
+                    <label for="nik-input" class="block text-sm font-medium text-gray-700">NIK Pemilik</label>
                     <div class="relative">
-                        <input type="text" id="nik-input" name="nik"
+                        <input type="text" id="nik-input" name="nik_pemilik"
                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
-                            value="{{ old('nik', $aset->nik_pemilik) }}" placeholder="Pilih atau ketik NIK">
+                            value="{{ old('nik_pemilik', $aset->nik_pemilik) }}" placeholder="Pilih atau ketik NIK">
                         <div class="absolute inset-y-0 right-0 flex items-center pr-3">
                             <button type="button" id="toggle-nik-dropdown" class="text-gray-400 hover:text-gray-600">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -212,15 +212,15 @@
 
                         @php
 
-                        $latitude = '';
-                        $longitude = '';
-                        if ($aset->tag_lokasi) {
-                            $coordinates = explode(',', $aset->tag_lokasi);
-                            if (count($coordinates) == 2) {
-                                $latitude = trim($coordinates[0]);
-                                $longitude = trim($coordinates[1]);
-                            }
-                        }
+$latitude = '';
+$longitude = '';
+if ($aset->tag_lokasi) {
+    $coordinates = explode(',', $aset->tag_lokasi);
+    if (count($coordinates) == 2) {
+        $latitude = trim($coordinates[0]);
+        $longitude = trim($coordinates[1]);
+    }
+}
                         @endphp
                 
                         <x-map-input label="Lokasi Aset" addressId="asset_location" addressName="asset_location"
