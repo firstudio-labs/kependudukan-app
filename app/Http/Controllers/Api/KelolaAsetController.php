@@ -12,7 +12,6 @@ use Illuminate\Support\Facades\Log;
 use App\Services\WilayahService;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Auth;
 
 class KelolaAsetController extends Controller
 {
@@ -34,50 +33,40 @@ class KelolaAsetController extends Controller
             $page = $request->input('page', 1);
             $perPage = $request->input('per_page', 10);
 
-            // Get token owner information
+            // Get token owner from request attributes
             $tokenOwner = $request->attributes->get('token_owner');
-            $tokenOwnerType = $request->attributes->get('token_owner_type');
-            $tokenOwnerRole = $request->attributes->get('token_owner_role');
+            $userId = $tokenOwner->id;
 
-            $query = Aset::query();
+            $query = Aset::query()
+                ->where('user_id', $userId)
+                ->when($search, function ($query, $search) {
+                    return $query->where('nama_aset', 'like', "%{$search}%")
+                        ->orWhere('nik_pemilik', 'like', "%{$search}%")
+                        ->orWhere('nama_pemilik', 'like', "%{$search}%");
+                })
+                ->with(['klasifikasi', 'jenisAset']);
 
-            if ($tokenOwnerType === 'penduduk') {
-                $query->where('user_id', $tokenOwner->id);
-            } else if ($tokenOwnerRole === 'superadmin') {
-                // Superadmin can see all assets
-            }
+            // Get the paginator instance but don't return it directly
+            $paginator = $query->paginate($perPage);
 
-            // Add search functionality
-            if ($search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('nama_aset', 'like', "%$search%")
-                        ->orWhere('nama_pemilik', 'like', "%$search%")
-                        ->orWhere('nik_pemilik', 'like', "%$search%");
-                });
-            }
-
-            $assets = $query->with(['klasifikasi', 'jenisAset'])
-                ->paginate($perPage);
+            // Get just the data items from the paginator
+            $assets = $paginator->items();
 
             // Process assets to attach location names
             foreach ($assets as $asset) {
                 $this->attachLocationNames($asset);
             }
 
-            // Return successful response
+            // Return a custom response without pagination metadata
             return response()->json([
                 'status' => 'success',
                 'message' => 'Data aset berhasil diambil',
-                'data' => [
-                    'assets' => $assets->items(),
-                    'pagination' => [
-                        'total_items' => $assets->total(),
-                        'items_per_page' => $assets->perPage(),
-                        'current_page' => $assets->currentPage(),
-                        'total_page' => $assets->lastPage(),
-                        'has_next_page' => $assets->hasMorePages(),
-                        'has_prev_page' => $assets->currentPage() > 1
-                    ]
+                'data' => $assets,
+                // Optional minimal pagination info
+                'page_info' => [
+                    'current_page' => $paginator->currentPage(),
+                    'total_items' => $paginator->total(),
+                    'total_pages' => $paginator->lastPage()
                 ]
             ], 200);
         } catch (\Exception $e) {
@@ -88,7 +77,6 @@ class KelolaAsetController extends Controller
             ], 500);
         }
     }
-
 
     public function create()
     {
@@ -104,7 +92,6 @@ class KelolaAsetController extends Controller
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Data form berhasil diambil',
                 'data' => $data
             ], 200);
         } catch (\Exception $e) {
@@ -144,8 +131,9 @@ class KelolaAsetController extends Controller
             $userId = $tokenOwner->id;
 
             Log::info('Asset creation request received', [
-                'request_data' => $request->all(),
-                'token_owner' => $userId
+                'token_owner' => $userId,
+                'nik_pemilik' => $request->nik_pemilik,
+                'nik_input' => $request->input('nik-input')
             ]);
 
             $foto_aset_depan = null;
@@ -254,7 +242,6 @@ class KelolaAsetController extends Controller
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Data aset berhasil dimuat',
                 'data' => $data
             ], 200);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
@@ -374,8 +361,6 @@ class KelolaAsetController extends Controller
             ], 500);
         }
     }
-
- 
 
     private function attachLocationNames($asset)
     {
