@@ -16,16 +16,16 @@
             @endif
 
             @php
-if (Auth::guard('web')->check()) {
-    $userData = Auth::guard('web')->user();
-    $userType = 'web';
-} elseif (Auth::guard('penduduk')->check()) {
-    $userData = Auth::guard('penduduk')->user();
-    $userType = 'penduduk';
-} else {
-    $userData = null;
-    $userType = null;
-}
+                if (Auth::guard('web')->check()) {
+                    $userData = Auth::guard('web')->user();
+                    $userType = 'web';
+                } elseif (Auth::guard('penduduk')->check()) {
+                    $userData = Auth::guard('penduduk')->user();
+                    $userType = 'penduduk';
+                } else {
+                    $userData = null;
+                    $userType = null;
+                }
             @endphp
 
             <!-- Tabel Informasi Pribadi -->
@@ -85,10 +85,10 @@ if (Auth::guard('web')->check()) {
                                         {{ $userData->citizen_data['full_name'] ?? ($userData->citizen_data['nama_kepala_keluarga'] ?? 'Belum diisi') }}
                                     @elseif(isset($userData->family_members))
                                         @php
-    $kepalaKeluarga = collect($userData->family_members)->firstWhere(
-        'family_status',
-        'KEPALA KELUARGA',
-    );
+                                            $kepalaKeluarga = collect($userData->family_members)->firstWhere(
+                                                'family_status',
+                                                'KEPALA KELUARGA',
+                                            );
                                         @endphp
                                         {{ $kepalaKeluarga['full_name'] ?? ($userData->citizen_data['nama_kepala_keluarga'] ?? 'Belum diisi') }}
                                     @else
@@ -268,16 +268,16 @@ if (Auth::guard('web')->check()) {
                 </div>
 
                 @php
-$lat = '';
-$lng = '';
+                    $lat = '';
+                    $lng = '';
 
-if (!empty($userData->tag_lokasi)) {
-    $coordinates = explode(',', $userData->tag_lokasi);
-    if (count($coordinates) >= 2) {
-        $lat = trim($coordinates[0]);
-        $lng = trim($coordinates[1]);
-    }
-}
+                    if (!empty($userData->tag_lokasi)) {
+                        $coordinates = explode(',', $userData->tag_lokasi);
+                        if (count($coordinates) >= 2) {
+                            $lat = trim($coordinates[0]);
+                            $lng = trim($coordinates[1]);
+                        }
+                    }
                 @endphp
 
                 <x-map-input label="Lokasi Tempat Tinggal" addressId="user_address" addressName="user_address"
@@ -1189,7 +1189,7 @@ if (!empty($userData->tag_lokasi)) {
 
 
                             function fetchDocumentStatus(nik) {
-                                fetch(`/api/user/family-member/${nik}/documents`)
+                                fetch(`/user/family-member/${nik}/documents`)
                                     .then(response => response.json())
                                     .then(data => {
                                         if (data.success) {
@@ -1244,10 +1244,10 @@ if (!empty($userData->tag_lokasi)) {
                                         imgElem.src = docInfo.preview_url;
                                         previewElem.classList.remove('hidden');
 
-                                        viewLinkElem.href = `/api/user/family-member/${currentNIK}/document/${docTypeKey}/view`;
+                                        viewLinkElem.href = `/user/family-member/${currentNIK}/document/${docTypeKey}/view`;
                                     } else if (docInfo.extension && ['pdf'].includes(docInfo.extension.toLowerCase())) {
                                         previewElem.innerHTML =
-                                            `<a href="/api/user/family-member/${currentNIK}/document/${docTypeKey}/view" target="_blank" class="block relative">
+                                            `<a href="/user/family-member/${currentNIK}/document/${docTypeKey}/view" target="_blank" class="block relative">
                                             <div class="p-4 bg-gray-100 rounded-lg text-center">
                                                 <svg class="w-10 h-10 mx-auto text-red-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                                                     <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"></path>
@@ -1317,7 +1317,7 @@ if (!empty($userData->tag_lokasi)) {
                                 `;
                                     submitBtn.disabled = true;
 
-                                    fetch(`/api/user/family-member/${currentNIK}/upload-document`, {
+                                    fetch(`/user/family-member/${currentNIK}/upload-document`, {
                                         method: 'POST',
                                         body: formData
                                     })
@@ -1352,7 +1352,7 @@ if (!empty($userData->tag_lokasi)) {
                             // Hapus dokumen
                             function deleteDocument(docType) {
                                 if (confirm("Apakah Anda yakin ingin menghapus dokumen ini? Tindakan ini tidak dapat dibatalkan.")) {
-                                    fetch(`/api/user/family-member/${currentNIK}/delete-document/${docType}`, {
+                                    fetch(`/user/family-member/${currentNIK}/delete-document/${docType}`, {
                                         method: 'DELETE',
                                         headers: {
                                             'Content-Type': 'application/json',
@@ -1426,7 +1426,7 @@ if (!empty($userData->tag_lokasi)) {
 
                                 // Function to fetch document status
                                 function fetchStandaloneDocuments(nik) {
-                                    fetch(`/api/user/family-member/${nik}/documents`)
+                                    fetch(`/user/family-member/${nik}/documents`)
                                         .then(response => response.json())
                                         .then(data => {
                                             if (data.success) {
@@ -1473,11 +1473,11 @@ if (!empty($userData->tag_lokasi)) {
                                             }
 
                                             if (viewLinkElem) {
-                                                viewLinkElem.href = `/api/user/family-member/${userNik}/document/${docTypeKey}/view`;
+                                                viewLinkElem.href = `/user/family-member/${userNik}/document/${docTypeKey}/view`;
                                             }
                                         } else if (docInfo.extension && ['pdf'].includes(docInfo.extension.toLowerCase()) && previewElem) {
                                             previewElem.innerHTML = `
-                                                <a href="/api/user/family-member/${userNik}/document/${docTypeKey}/view" target="_blank" class="block relative">
+                                                <a href="/user/family-member/${userNik}/document/${docTypeKey}/view" target="_blank" class="block relative">
                                                     <div class="p-4 bg-gray-100 rounded-lg text-center">
                                                         <svg class="w-10 h-10 mx-auto text-red-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                                                             <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"></path>
@@ -1590,7 +1590,7 @@ if (!empty($userData->tag_lokasi)) {
 
                                 function deleteStandaloneDocument(docType, nik) {
                                     if (confirm("Apakah Anda yakin ingin menghapus dokumen ini? Tindakan ini tidak dapat dibatalkan.")) {
-                                        fetch(`/api/user/family-member/${nik}/delete-document/${docType}`, {
+                                        fetch(`/user/family-member/${nik}/delete-document/${docType}`, {
                                             method: 'DELETE',
                                             headers: {
                                                 'Content-Type': 'application/json',
