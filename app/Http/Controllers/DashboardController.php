@@ -112,54 +112,143 @@ class DashboardController extends Controller
 
         // Dapatkan nama desa dari service dengan pendekatan yang lebih sederhana
         $villageName = '';
+        $villageCode = '';
         try {
-            // Gunakan accessor di model User untuk mendapatkan nama desa
-            
-            // $villageName = $user->getVillageNameAttribute();
+            // Log untuk debugging
+            Log::info('Attempting to get village name for ID: ' . $villageId, [
+                'user_id' => $user->id,
+                'villages_id' => $villageId,
+                'districts_id' => $user->districts_id
+            ]);
 
-            // Jika masih menampilkan ID, coba dapatkan dari WilayahService langsung
-            if (strpos($villageName, 'Desa #') === 0) {
-                $villageData = app(\App\Services\WilayahService::class)->getVillageById($villageId);
+            // Get location names using wilayah service - Improved location data retrieval
+            $provinceName = '';
+            $districtName = '';
+            $subdistrictName = '';
+            $villageName = '';
+            $villageCode = null; // Initialize village code variable
 
-                if ($villageData && isset($villageData['name'])) {
-                    $villageName = $villageData['name'];
-                } elseif ($villageData && isset($villageData['data']['name'])) {
-                    $villageName = $villageData['data']['name'];
+            $wilayahService = app(\App\Services\WilayahService::class);
+
+            // Get province data
+            if (!empty($user->province_id)) {
+                $provinces = $wilayahService->getProvinces();
+                foreach ($provinces as $province) {
+                    if ($province['id'] == $user->province_id) {
+                        $provinceName = $province['name'];
+
+                        // Get province code for further queries
+                        $provinceCode = $province['code'];
+
+                        // Now get district data using province code
+                        if (!empty($user->districts_id) && !empty($provinceCode)) {
+                            $districts = $wilayahService->getKabupaten($provinceCode);
+                            foreach ($districts as $district) {
+                                if ($district['id'] == $user->districts_id) {
+                                    $districtName = $district['name'];
+
+                                    // Get district code for further queries
+                                    $districtCode = $district['code'];
+
+                                    // Now get subdistrict data using district code
+                                    if (!empty($user->sub_districts_id) && !empty($districtCode)) {
+                                        $subdistricts = $wilayahService->getKecamatan($districtCode);
+                                        foreach ($subdistricts as $subdistrict) {
+                                            if ($subdistrict['id'] == $user->sub_districts_id) {
+                                                $subdistrictName = $subdistrict['name'];
+
+                                                // Get subdistrict code for further queries
+                                                $subdistrictCode = $subdistrict['code'];
+
+                                                // Finally get village data using subdistrict code
+                                                if (!empty($villageId) && !empty($subdistrictCode)) {
+                                                    $villages = $wilayahService->getDesa($subdistrictCode);
+                                                    foreach ($villages as $village) {
+                                                        if ($village['id'] == $villageId) {
+                                                            $villageName = $village['name'];
+                                                            $villageCode = $village['code']; // Store the complete village code
+                                                            break;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                        break;
+                    }
                 }
             }
 
-            // Jika masih kosong atau masih berisi ID dan user memiliki district id,
-            // coba ambil semua desa dan cari yang sesuai
-            if ((empty($villageName) || strpos($villageName, 'Desa #') === 0) && $user->districts_id) {
-                // Dapatkan daftar desa dari semua kecamatan di kabupaten ini
-                $wilayahService = app(\App\Services\WilayahService::class);
-                $kecamatanList = $wilayahService->getKecamatan($user->districts_id);
+            // If village name is still empty, try to search all districts
+            if (empty($villageName)) {
+                Log::info('Village name not found in hierarchy, trying alternative approach');
 
-                // Periksa setiap kecamatan untuk mencari desa
-                foreach ($kecamatanList as $kecamatan) {
-                    $desaList = $wilayahService->getDesa($kecamatan['code']);
+                // Get all districts from all provinces
+                $provinces = $wilayahService->getProvinces();
+                foreach ($provinces as $province) {
+                    $provinceCode = $province['code'];
+                    $districts = $wilayahService->getKabupaten($provinceCode);
 
-                    // Cari desa dengan ID yang sesuai
-                    foreach ($desaList as $desa) {
-                        if ($desa['id'] == $villageId) {
-                            $villageName = $desa['name'];
-                            break 2; // Keluar dari kedua loop jika desa ditemukan
+                    foreach ($districts as $district) {
+                        $districtCode = $district['code'];
+                        $subdistricts = $wilayahService->getKecamatan($districtCode);
+
+                        foreach ($subdistricts as $subdistrict) {
+                            $subdistrictCode = $subdistrict['code'];
+                            $villages = $wilayahService->getDesa($subdistrictCode);
+
+                            foreach ($villages as $village) {
+                                if ($village['id'] == $villageId) {
+                                    $villageName = $village['name'];
+                                    $villageCode = $village['code'];
+                                    $subdistrictName = $subdistrict['name'];
+                                    $districtName = $district['name'];
+                                    $provinceName = $province['name'];
+                                    Log::info('Found village in broader search: ' . $villageName);
+                                    break 4; // Break out of all loops
+                                }
+                            }
                         }
                     }
                 }
             }
 
+            // Log location data for debugging
+            Log::info('Location data for user ID: ' . $user->id, [
+                'province_id' => $user->province_id,
+                'district_id' => $user->districts_id,
+                'subdistrict_id' => $user->sub_districts_id,
+                'village_id' => $villageId,
+                'province_name' => $provinceName,
+                'district_name' => $districtName,
+                'subdistrict_name' => $subdistrictName,
+                'village_name' => $villageName,
+                'village_code' => $villageCode // Log the village code
+            ]);
+
             // Jika masih kosong, gunakan fallback
             if (empty($villageName)) {
+                Log::warning('Could not find village name for ID: ' . $villageId);
                 $villageName = 'Desa #' . $villageId;
             }
         } catch (\Exception $e) {
-            Log::error('Error getting village name: ' . $e->getMessage());
+            Log::error('Error getting village name: ' . $e->getMessage(), [
+                'exception' => $e->getTraceAsString()
+            ]);
             $villageName = 'Desa #' . $villageId;
         }
 
         // Log untuk debug
-        Log::info('Nama desa yang digunakan', ['village_id' => $villageId, 'village_name' => $villageName]);
+        Log::info('Nama desa yang digunakan', [
+            'village_id' => $villageId,
+            'village_name' => $villageName,
+            'village_code' => $villageCode
+        ]);
 
         // Dapatkan statistik pengguna berdasarkan desa
         $userStats = [
@@ -193,16 +282,31 @@ class DashboardController extends Controller
             }
         }
 
-        // Log untuk debug
+        // Dapatkan data warga
         Log::info('Mengambil data warga berdasarkan nama desa', ['village_name' => $villageName]);
 
-        // Dapatkan data warga dari API berdasarkan nama desa
-        $citizenData = $this->citizenService->getCitizensByVillageName($villageName);
+        // Gunakan metode yang tersedia di CitizenService
+        $citizenData = $this->citizenService->getAllCitizensWithHighLimit();
+
+        // Filter warga berdasarkan nama desa secara manual jika perlu
+        $filteredCitizens = [];
 
         // Ekstrak array warga dari respons API dengan penanganan yang lebih baik
-        $filteredCitizens = [];
         if (isset($citizenData['data']['citizens']) && is_array($citizenData['data']['citizens'])) {
-            $filteredCitizens = $citizenData['data']['citizens'];
+            $allCitizens = $citizenData['data']['citizens'];
+            // Filter citizens by village name if we have it
+            if (!empty($villageName) && $villageName !== 'Desa #' . $villageId) {
+                foreach ($allCitizens as $citizen) {
+                    if (isset($citizen['village_name']) &&
+                        (strtolower($citizen['village_name']) === strtolower($villageName) ||
+                         strpos(strtolower($citizen['village_name']), strtolower($villageName)) !== false)) {
+                        $filteredCitizens[] = $citizen;
+                    }
+                }
+                Log::info('Filtered citizens by village name', ['count' => count($filteredCitizens)]);
+            } else {
+                $filteredCitizens = $allCitizens;
+            }
         } elseif (isset($citizenData['citizens']) && is_array($citizenData['citizens'])) {
             $filteredCitizens = $citizenData['citizens'];
         } elseif (isset($citizenData['data']) && is_array($citizenData['data'])) {
