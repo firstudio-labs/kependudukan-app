@@ -389,11 +389,13 @@ class ProfileController extends Controller
     public function uploadFamilyMemberDocument(Request $request, $nik)
     {
         try {
+            // dd($request);
             $request->validate([
                 'file' => 'required|file|max:4096',
                 'document_type' => 'required|string|in:foto_diri,foto_ktp,foto_akta,ijazah,foto_kk,foto_rumah',
                 'tag_lokasi' => 'nullable|string|max:255',
             ]);
+
 
             if ($request->document_type == 'foto_diri') {
                 $request->validate(['file' => 'mimes:jpg,jpeg,png']);
