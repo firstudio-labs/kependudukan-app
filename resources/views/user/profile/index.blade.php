@@ -16,16 +16,16 @@
             @endif
 
             @php
-                if (Auth::guard('web')->check()) {
-                    $userData = Auth::guard('web')->user();
-                    $userType = 'web';
-                } elseif (Auth::guard('penduduk')->check()) {
-                    $userData = Auth::guard('penduduk')->user();
-                    $userType = 'penduduk';
-                } else {
-                    $userData = null;
-                    $userType = null;
-                }
+if (Auth::guard('web')->check()) {
+    $userData = Auth::guard('web')->user();
+    $userType = 'web';
+} elseif (Auth::guard('penduduk')->check()) {
+    $userData = Auth::guard('penduduk')->user();
+    $userType = 'penduduk';
+} else {
+    $userData = null;
+    $userType = null;
+}
             @endphp
 
             <!-- Tabel Informasi Pribadi -->
@@ -85,10 +85,10 @@
                                         {{ $userData->citizen_data['full_name'] ?? ($userData->citizen_data['nama_kepala_keluarga'] ?? 'Belum diisi') }}
                                     @elseif(isset($userData->family_members))
                                         @php
-                                            $kepalaKeluarga = collect($userData->family_members)->firstWhere(
-                                                'family_status',
-                                                'KEPALA KELUARGA',
-                                            );
+    $kepalaKeluarga = collect($userData->family_members)->firstWhere(
+        'family_status',
+        'KEPALA KELUARGA',
+    );
                                         @endphp
                                         {{ $kepalaKeluarga['full_name'] ?? ($userData->citizen_data['nama_kepala_keluarga'] ?? 'Belum diisi') }}
                                     @else
@@ -268,16 +268,16 @@
                 </div>
 
                 @php
-                    $lat = '';
-                    $lng = '';
+$lat = '';
+$lng = '';
 
-                    if (!empty($userData->tag_lokasi)) {
-                        $coordinates = explode(',', $userData->tag_lokasi);
-                        if (count($coordinates) >= 2) {
-                            $lat = trim($coordinates[0]);
-                            $lng = trim($coordinates[1]);
-                        }
-                    }
+if (!empty($userData->tag_lokasi)) {
+    $coordinates = explode(',', $userData->tag_lokasi);
+    if (count($coordinates) >= 2) {
+        $lat = trim($coordinates[0]);
+        $lng = trim($coordinates[1]);
+    }
+}
                 @endphp
 
                 <x-map-input label="Lokasi Tempat Tinggal" addressId="user_address" addressName="user_address"
@@ -1845,12 +1845,12 @@
 
                                     const disabilitiesMap = {
                                         'Fisik': 1, 'Netra/Buta': 2, 'Rungu/Wicara': 3,
-                                        'Mental/Jiwa': 4, 'Fisik dan Mental': 5, 'Lainnya': 6
+                                        'Mental/Jiwa': 4, 'Fisik dan Mental': 5, 'Lainnya': 6 //opsi tidak ada
                                     };
+
                                     if (typeof result.disabilities === 'string') {
                                         if (result.disabilities === '' || result.disabilities === ' ') {
-
-                                            result.disabilities = 6;
+                                            result.disabilities = null;
                                         } else if (disabilitiesMap[result.disabilities]) {
                                             result.disabilities = disabilitiesMap[result.disabilities];
                                         }
