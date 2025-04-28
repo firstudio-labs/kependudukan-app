@@ -32,23 +32,91 @@ class DataKKController extends Controller
 
     public function index(Request $request)
     {
+        // Debug admin village info
+        if (Auth::user()->role === 'admin desa') {
+            Log::info('Admin Desa User Details:', [
+                'id' => Auth::user()->id,
+                'username' => Auth::user()->username,
+                'villages_id' => Auth::user()->villages_id ?? 'Not set',
+                'role' => Auth::user()->role,
+                'villages_id_type' => gettype(Auth::user()->villages_id)
+            ]);
+        }
+
         // Jika parameter export ada, langsung panggil fungsi export
         if ($request->has('export')) {
             return $this->export();
         }
-        
+
         $page = $request->input('page', 1);
         $search = $request->input('search');
+        $villagesId = null;
 
+        // Get villages_id filter for admin desa
+        if (Auth::user()->role === 'admin desa' && Auth::user()->villages_id) {
+            $villagesId = Auth::user()->villages_id;
+            Log::info('Admin desa has villages_id: ' . $villagesId);
+        }
+
+        // Get data from API
         if ($search) {
             $kk = $this->citizenService->searchCitizens($search);
-            // If search returns null or error, fallback to getting all citizens
+
+            // If search fails, fallback to getting all citizens
             if (!$kk || isset($kk['status']) && $kk['status'] === 'ERROR') {
                 $kk = $this->citizenService->getAllCitizens($page);
                 session()->flash('warning', 'Search failed, showing all results instead');
             }
         } else {
             $kk = $this->citizenService->getAllCitizens($page);
+        }
+
+        // Manually filter the results by villages_id if admin desa is logged in
+        if (Auth::user()->role === 'admin desa' && $villagesId && isset($kk['data']['citizens']) && is_array($kk['data']['citizens'])) {
+            $originalCount = count($kk['data']['citizens']);
+
+            // Filter the citizens array
+            $filteredCitizens = array_filter($kk['data']['citizens'], function($citizen) use ($villagesId) {
+                // Check for villages_id match in different possible field names
+                $citizenVillageId = null;
+
+                if (isset($citizen['villages_id'])) {
+                    $citizenVillageId = $citizen['villages_id'];
+                } else if (isset($citizen['village_id'])) {
+                    $citizenVillageId = $citizen['village_id'];
+                }
+
+                // Log individual citizen data for debugging
+                if ($citizenVillageId == $villagesId) {
+                    Log::debug('Citizen matched filter', [
+                        'citizen_name' => $citizen['full_name'] ?? 'Unknown',
+                        'villages_id' => $citizenVillageId,
+                        'filter_villages_id' => $villagesId
+                    ]);
+                }
+
+                return $citizenVillageId == $villagesId;
+            });
+
+            // Re-index the array to maintain sequential keys
+            $filteredCitizens = array_values($filteredCitizens);
+            $filteredCount = count($filteredCitizens);
+
+            // Log the filtering results
+            Log::info('Filtered KK data for admin desa:', [
+                'villages_id' => $villagesId,
+                'original_count' => $originalCount,
+                'filtered_count' => $filteredCount
+            ]);
+
+            // Replace the original citizens array with the filtered one
+            $kk['data']['citizens'] = $filteredCitizens;
+
+            // Update pagination data if it exists
+            if (isset($kk['data']['pagination'])) {
+                $kk['data']['pagination']['total_items'] = $filteredCount;
+                $kk['data']['pagination']['total_page'] = ceil($filteredCount / ($kk['data']['pagination']['items_per_page'] ?? 10));
+            }
         }
 
         // Get family member counts for each KK
@@ -243,7 +311,6 @@ class DataKKController extends Controller
 
     public function destroy($id)
     {
-
         try {
             $kk = KK::findOrFail($id);
             $kk->delete();
@@ -268,19 +335,26 @@ class DataKKController extends Controller
         $search = $request->input('search');
         $page = $request->input('page', 1);
         $limit = $request->input('limit', 100);
+        $villagesId = null;
+
+        // Check if the user is admin desa and has a villages_id
+        if (Auth::user()->role === 'admin desa' && Auth::user()->villages_id) {
+            $villagesId = Auth::user()->villages_id;
+            Log::info('Admin desa fetching citizens with villages_id: ' . $villagesId);
+        }
 
         // Use cache for non-search queries to improve performance
-        $cacheKey = "citizens_all_{$page}_{$limit}";
+        $cacheKey = "citizens_all_{$page}_{$limit}" . ($villagesId ? "_village_{$villagesId}" : "");
 
         // Only use cache for non-search queries
         if (!$search && Cache::has($cacheKey)) {
             return response()->json(Cache::get($cacheKey));
         }
 
-        // Get citizens with parameters and transform to expected format
+        // Get citizens from API without filtering
         $response = $search
-            ? $this->citizenService->searchCitizens($search, $page, $limit)
-            : $this->citizenService->getAllCitizensWithHighLimit($page, $limit);
+            ? $this->citizenService->searchCitizens($search)
+            : $this->citizenService->getAllCitizensWithHighLimit();
 
         // Extract citizens array from the response structure
         $citizens = [];
@@ -294,6 +368,34 @@ class DataKKController extends Controller
             // Format directly: { data: [...] }
             $citizens = $response['data'];
             $status = 'OK';
+        }
+
+        // Apply filtering for admin desa
+        if (Auth::user()->role === 'admin desa' && $villagesId && !empty($citizens)) {
+            $originalCount = count($citizens);
+
+            // Filter by villages_id
+            $citizens = array_filter($citizens, function($citizen) use ($villagesId) {
+                $citizenVillageId = null;
+
+                if (isset($citizen['villages_id'])) {
+                    $citizenVillageId = $citizen['villages_id'];
+                } else if (isset($citizen['village_id'])) {
+                    $citizenVillageId = $citizen['village_id'];
+                }
+
+                return $citizenVillageId == $villagesId;
+            });
+
+            // Re-index array
+            $citizens = array_values($citizens);
+            $filteredCount = count($citizens);
+
+            Log::info('Filtered citizens for admin desa in fetchAllCitizens:', [
+                'villages_id' => $villagesId,
+                'original_count' => $originalCount,
+                'filtered_count' => $filteredCount
+            ]);
         }
 
         // Filter only needed fields to reduce response size
@@ -311,6 +413,7 @@ class DataKKController extends Controller
                 'district_id' => $citizen['district_id'] ?? '',
                 'sub_district_id' => $citizen['sub_district_id'] ?? '',
                 'village_id' => $citizen['village_id'] ?? '',
+                'villages_id' => $citizen['villages_id'] ?? $citizen['village_id'] ?? '',
                 // Map dusun field to hamlet for consistency
                 'hamlet' => $citizen['dusun'] ?? $citizen['hamlet'] ?? '',
                 'family_status' => $citizen['family_status'] ?? '',
@@ -342,6 +445,13 @@ class DataKKController extends Controller
     public function getFamilyMembers(Request $request)
     {
         $kk = $request->input('kk');
+
+        // Log if admin desa is accessing family members data
+        if (Auth::user()->role === 'admin desa' && Auth::user()->villages_id) {
+            Log::info('Admin desa accessing family members for KK: ' . $kk, [
+                'villages_id' => Auth::user()->villages_id
+            ]);
+        }
 
         // Use a short cache for family members (1 minute)
         $cacheKey = "family_members_{$kk}";
@@ -409,7 +519,6 @@ class DataKKController extends Controller
         }
     }
 
-    // Add these methods for location data
     /**
      * Get provinces with both ID and code for mapping purposes
      */
@@ -785,7 +894,15 @@ class DataKKController extends Controller
     public function export()
     {
         try {
-            // Ambil data dari service
+            $villagesId = null;
+
+            // Get villages_id filter for admin desa
+            if (Auth::user()->role === 'admin desa' && Auth::user()->villages_id) {
+                $villagesId = Auth::user()->villages_id;
+                Log::info('Filtering export data for admin desa with villages_id: ' . $villagesId);
+            }
+
+            // Ambil semua data dari service tanpa filter
             $response = $this->citizenService->getAllCitizensWithHighLimit();
             $exportData = [];
 
@@ -802,7 +919,7 @@ class DataKKController extends Controller
                 'RT',
                 'RW',
                 'Provinsi',
-                'Kabupaten', 
+                'Kabupaten',
                 'Kecamatan',
                 'Desa',
                 'Kode Pos',
@@ -825,12 +942,39 @@ class DataKKController extends Controller
             } elseif (isset($response['data']) && is_array($response['data'])) {
                 $citizens = $response['data'];
             }
-            
+
+            // Filter by villages_id if admin desa
+            if (Auth::user()->role === 'admin desa' && $villagesId && !empty($citizens)) {
+                $originalCount = count($citizens);
+
+                $citizens = array_filter($citizens, function($citizen) use ($villagesId) {
+                    $citizenVillageId = null;
+
+                    if (isset($citizen['villages_id'])) {
+                        $citizenVillageId = $citizen['villages_id'];
+                    } else if (isset($citizen['village_id'])) {
+                        $citizenVillageId = $citizen['village_id'];
+                    }
+
+                    return $citizenVillageId == $villagesId;
+                });
+
+                $citizens = array_values($citizens);
+                $filteredCount = count($citizens);
+
+                Log::info('Filtered export data:', [
+                    'villages_id' => $villagesId,
+                    'original_count' => $originalCount,
+                    'filtered_count' => $filteredCount,
+                    'filter_type' => 'village_id filter'
+                ]);
+            }
+
             if (empty($citizens)) {
                 return redirect()->route('admin.desa.datakk.index')
                     ->with('error', 'Tidak ada data yang bisa diekspor atau format data tidak sesuai');
             }
-            
+
             foreach ($citizens as $citizen) {
                 $exportData[] = [
                     $citizen['nik'] ?? '',
