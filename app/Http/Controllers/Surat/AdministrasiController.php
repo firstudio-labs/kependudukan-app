@@ -11,7 +11,7 @@ use App\Services\CitizenService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use App\Models\Penandatangan;
-use App\Models\Users;
+use App\Models\User;
 
 class AdministrasiController extends Controller
 {
@@ -228,10 +228,10 @@ class AdministrasiController extends Controller
         try {
             $administration = Administration::findOrFail($id);
             $data = $request->all();
-            
+
             // Set is_accepted field if it's provided in the form
             $data['is_accepted'] = $request->has('is_accepted') ? 1 : 0;
-            
+
             $administration->update($data);
 
             return redirect()->route('superadmin.surat.administrasi.index')
