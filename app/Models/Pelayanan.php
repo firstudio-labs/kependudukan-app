@@ -22,12 +22,10 @@ class Pelayanan extends Model
      * @var array
      */
     protected $fillable = [
-        'nama',
         'province_id',
         'district_id',
         'sub_district_id',
         'village_id',
-        'alamat',
         'keperluan',
         'no_antrian',
     ];

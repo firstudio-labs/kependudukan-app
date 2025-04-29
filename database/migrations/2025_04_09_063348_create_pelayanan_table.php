@@ -13,12 +13,10 @@ return new class extends Migration
     {
         Schema::create('pelayanan', function (Blueprint $table) {
             $table->id();
-            $table->string('nama');
             $table->string('province_id');
             $table->string('district_id');
             $table->string('sub_district_id');
             $table->string('village_id');
-            $table->string('alamat');
             $table->unsignedBigInteger('keperluan');  // Changed to unsignedBigInteger to match Keperluan id type
             $table->integer('no_antrian')->nullable();
             $table->timestamps();

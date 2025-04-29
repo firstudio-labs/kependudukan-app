@@ -58,12 +58,10 @@ class PelayananController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'nama' => 'required|string|max:255',
             'province_id' => 'required|string|max:255',
             'district_id' => 'required|string|max:255',
             'sub_district_id' => 'required|string|max:255',
             'village_id' => 'required|string|max:255',
-            'alamat' => 'required|string',
             'keperluan' => 'required|exists:keperluan,id',
         ]);
 

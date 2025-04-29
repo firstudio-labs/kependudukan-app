@@ -32,11 +32,11 @@
             <h2 class="text-xl font-bold text-gray-800">Layanan Desa</h2>
         </div>
 
-        <!-- Nama -->
+        {{-- <!-- Nama -->
         <div class="md:col-span-2">
             <label for="nama" class="block text-sm font-medium text-gray-700">Nama <span class="text-red-500">*</span></label>
             <input type="text" id="nama" name="nama" placeholder="Nama" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
-        </div>
+        </div> --}}
 
 
             <!-- Provinsi -->
@@ -78,11 +78,11 @@
                 <input type="hidden" id="village_id" name="village_id" value="">
             </div>
 
-            <!-- Alamat -->
+            {{-- <!-- Alamat -->
             <div class="md:col-span-2">
                 <label for="alamat" class="block text-sm font-medium text-gray-700">Alamat <span class="text-red-500">*</span></label>
                 <input type="text" id="alamat" name="alamat" placeholder="Alamat" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
-            </div>
+            </div> --}}
 
             <!-- Keperluan -->
             <div class="md:col-span-2">
