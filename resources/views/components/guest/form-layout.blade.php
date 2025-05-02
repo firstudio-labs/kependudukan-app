@@ -157,13 +157,8 @@
                 <textarea id="address" name="address" rows="2" placeholder="Alamat" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required></textarea>
             </div>
 
-            <!-- Informasi Tambahan Section -->
-            <div class="mb-2 mt-6">
-                <h2 class="text-xl font-bold text-gray-800">Informasi Tambahan</h2>
-            </div>
-
             <!-- Additional Fields Slot -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
                 {{ $additionalFields ?? '' }}
             </div>
 

@@ -123,11 +123,11 @@ class KematianSuratController extends Controller
             'info' => 'required|string|max:255',
             'rt' => 'nullable|string',
             'rt_letter_date' => 'nullable|date',
-            'death_cause' => 'required|string|max:255',
-            'death_place' => 'required|string|max:255',
-            'reporter_name' => 'required|string|max:255',
-            'reporter_relation' => 'required|string',
-            'death_date' => 'required|date',
+            'death_cause' => 'nullable|string|max:255',
+            'death_place' => 'nullable|string|max:255',
+            'reporter_name' => 'nullable|string|max:255',
+            'reporter_relation' => 'nullable|string',
+            'death_date' => 'nullable|date',
             'signing' => 'nullable|string',
         ]);
 

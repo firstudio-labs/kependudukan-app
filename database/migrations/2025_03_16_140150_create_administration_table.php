@@ -29,9 +29,9 @@ return new class extends Migration
             $table->text('address');
             $table->string('signing')->nullable();
             $table->longText('rt'); // Changed from integer to longText
-            $table->date('letter_date');
-            $table->text('statement_content'); // menyatakan bahwa
-            $table->text('purpose'); // digunakan untuk
+            $table->date('letter_date')->nullable();
+            $table->text('statement_content')->nullable(); // menyatakan bahwa
+            $table->text('purpose')->nullable();; // digunakan untuk
             $table->timestamps();
         });
     }

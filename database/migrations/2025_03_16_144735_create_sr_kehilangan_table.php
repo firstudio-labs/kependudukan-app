@@ -29,8 +29,8 @@ return new class extends Migration
             $table->text('address');
             $table->string('signing')->nullable();
             $table->longText('rt');
-            $table->date('letter_date');
-            $table->text('lost_items');
+            $table->date('letter_date')->nullable();
+            $table->text('lost_items')->nullable();
             $table->timestamps();
         });
     }

@@ -118,7 +118,7 @@ class KTPSuratController extends Controller
             'address' => 'required|string',
             'rt' => 'required|string',
             'rw' => 'required|string',
-            'hamlet' => 'required|string',
+            'hamlet' => 'nullable|string', // Changed to nullable to match database
             'signing' => 'nullable|string',
         ]);
 

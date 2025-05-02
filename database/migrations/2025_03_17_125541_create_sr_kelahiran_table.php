@@ -38,13 +38,13 @@ return new class extends Migration
             $table->text('mother_address')->nullable();
 
             // Child data
-            $table->string('child_name');
-            $table->bigInteger('child_gender');
-            $table->date('child_birth_date');
-            $table->string('child_birth_place');
-            $table->bigInteger('child_religion');
-            $table->string('child_address');
-            $table->integer('child_order');
+            $table->string('child_name')->nullable();
+            $table->bigInteger('child_gender')->nullable();
+            $table->date('child_birth_date')->nullable();
+            $table->string('child_birth_place')->nullable();
+            $table->bigInteger('child_religion')->nullable();
+            $table->string('child_address')->nullable();
+            $table->integer('child_order')->nullable();
 
             // Signing official
             $table->string('signing')->nullable();

@@ -31,13 +31,13 @@ return new class extends Migration
             $table->text('address');
 
             // Event details
-            $table->string('day');
-            $table->time('time');
-            $table->date('event_date');
-            $table->string('place');
-            $table->string('entertainment');
-            $table->string('event');
-            $table->string('invitation');
+            $table->string('day')->nullable();
+            $table->time('time')->nullable();
+            $table->date('event_date')->nullable();
+            $table->string('place')->nullable();
+            $table->string('entertainment')->nullable();
+            $table->string('event')->nullable();
+            $table->string('invitation')->nullable();
 
             // Signing official
             $table->string('signing')->nullable();

@@ -20,7 +20,7 @@
                     </select>
                 </div>
 
-                <!-- Dasar Keterangan -->
+                {{-- <!-- Dasar Keterangan -->
                 <div>
                     <label for="info" class="block text-sm font-medium text-gray-700">Dasar Keterangan <span class="text-red-500">*</span></label>
                     <input type="text" id="info" name="info" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
@@ -69,7 +69,7 @@
                         <option value="6">Saudara</option>
                         <option value="7">Lainnya</option>
                     </select>
-                </div>
+                </div> --}}
             @endslot
         </x-guest.form-layout>
     </div>

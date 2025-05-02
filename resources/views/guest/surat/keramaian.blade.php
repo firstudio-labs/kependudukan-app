@@ -20,7 +20,7 @@
                     </select>
                 </div>
 
-                <!-- Event Information Section -->
+                {{-- <!-- Event Information Section -->
                 <div class="col-span-full">
                     <h3 class="text-md font-semibold text-gray-700 mt-4 mb-2">Informasi Keramaian</h3>
                 </div>
@@ -74,7 +74,7 @@
                 <div>
                     <label for="invitation" class="block text-sm font-medium text-gray-700">Undangan <span class="text-red-500">*</span></label>
                     <input type="text" id="invitation" name="invitation" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" placeholder="Jumlah undangan" required>
-                </div>
+                </div> --}}
             @endslot
         </x-guest.form-layout>
     </div>

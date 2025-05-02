@@ -26,10 +26,10 @@ return new class extends Migration
             $table->json('religion')->nullable();
             $table->json('address')->nullable();
             $table->json('family_status')->nullable();
-            $table->string('heir_name');
-            $table->string('deceased_name');
-            $table->string('death_place');
-            $table->date('death_date');
+            $table->string('heir_name')->nullable();
+            $table->string('deceased_name')->nullable();
+            $table->string('death_place')->nullable();
+            $table->date('death_date')->nullable();
             $table->integer('death_certificate_number')->nullable();
             $table->date('death_certificate_date')->nullable();
             $table->date('inheritance_letter_date')->nullable();

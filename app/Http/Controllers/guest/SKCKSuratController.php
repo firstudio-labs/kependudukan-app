@@ -85,12 +85,14 @@ class SKCKSuratController extends Controller
             'citizen_status' => 'required|numeric',
             'address' => 'required|string',
             'rt' => 'required|string',
-            'letter_date' => 'required|date',
-            'purpose' => 'required|string',
+            'letter_date' => 'nullable|date',
+            'purpose' => 'nullable|string',
             'province_id' => 'required|numeric',
             'district_id' => 'required|numeric',
             'subdistrict_id' => 'required|numeric',
             'village_id' => 'required|numeric',
+            'letter_number' => 'nullable|string',
+            'signing' => 'nullable|string',
         ]);
 
         try {

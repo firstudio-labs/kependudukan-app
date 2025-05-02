@@ -34,11 +34,11 @@ return new class extends Migration
             $table->string('info'); // Dasar Keterangan
             $table->longText('rt')->nullable(); // RT Asal Surat
             $table->date('rt_letter_date')->nullable(); // Tanggal Surat RT
-            $table->string('death_cause'); // Penyebab Kematian
-            $table->string('death_place'); // Tempat Kematian
-            $table->string('reporter_name'); // Nama Pelapor
-            $table->string('reporter_relation'); // Hubungan Pelapor
-            $table->date('death_date'); // Tanggal Meninggal
+            $table->string('death_cause')->nullable(); // Penyebab Kematian
+            $table->string('death_place')->nullable(); // Tempat Kematian
+            $table->string('reporter_name')->nullable(); // Nama Pelapor
+            $table->string('reporter_relation')->nullable(); // Hubungan Pelapor
+            $table->date('death_date')->nullable(); // Tanggal Meninggal
             $table->string('signing')->nullable(); // Pejabat Penandatangan
 
             $table->timestamps();

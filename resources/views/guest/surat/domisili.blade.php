@@ -20,7 +20,7 @@
                     </select>
                 </div>
 
-                <!-- Tanggal Surat -->
+                {{-- <!-- Tanggal Surat -->
                 <div>
                     <label for="letter_date" class="block text-sm font-medium text-gray-700">Tanggal Surat <span class="text-red-500">*</span></label>
                     <input type="date" id="letter_date" name="letter_date" value="{{ date('Y-m-d') }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
@@ -36,7 +36,7 @@
                 <div>
                     <label for="purpose" class="block text-sm font-medium text-gray-700">Digunakan Untuk <span class="text-red-500">*</span></label>
                     <textarea id="purpose" name="purpose" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required></textarea>
-                </div>
+                </div> --}}
             @endslot
 
             @slot('scripts')

@@ -128,13 +128,13 @@ class RumahSewaSuratController extends Controller
             'responsible_name' => 'required|string|max:255',
 
             // Rental property details
-            'rental_address' => 'required|string',
-            'street' => 'required|string|max:255',
-            'alley_number' => 'required|string|max:50',
-            'rt' => 'required|string|max:10',
-            'building_area' => 'required|string|max:50',
-            'room_count' => 'required|integer|min:1',
-            'rental_type' => 'required|string|max:255',
+            'rental_address' => 'nullable|string',
+            'street' => 'nullable|string|max:255',
+            'alley_number' => 'nullable|string|max:50',
+            'rt' => 'nullable|string|max:10',
+            'building_area' => 'nullable|string|max:50',
+            'room_count' => 'nullable|integer|min:1',
+            'rental_type' => 'nullable|string|max:255',
             'valid_until' => 'nullable|date',
 
             // Letter information fields

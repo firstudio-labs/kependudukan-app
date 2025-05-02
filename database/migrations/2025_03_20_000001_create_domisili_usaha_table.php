@@ -28,11 +28,11 @@ return new class extends Migration
             $table->bigInteger('citizen_status');
             $table->text('address');
             $table->longText('rt');
-            $table->date('letter_date');
-            $table->string('business_type');
-            $table->text('business_address');
-            $table->string('business_year');
-            $table->text('purpose');
+            $table->date('letter_date')->nullable();
+            $table->string('business_type')->nullable();
+            $table->text('business_address')->nullable();
+            $table->string('business_year')->nullable();
+            $table->text('purpose')->nullable();
             $table->string('signing')->nullable();
             $table->timestamps();
         });

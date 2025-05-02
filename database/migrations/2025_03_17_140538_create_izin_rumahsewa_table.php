@@ -26,13 +26,13 @@ return new class extends Migration
             $table->string('responsible_name'); // Nama Penanggung Jawab
 
             // Rental house details
-            $table->string('rental_address'); // Alamat Rumah Sewa
-            $table->string('street'); // Jalan
-            $table->string('alley_number'); // Gang/Nomor
-            $table->longText('rt');
-            $table->string('building_area'); // Luas Bangunan
-            $table->integer('room_count'); // Jumlah Kamar
-            $table->string('rental_type'); // Jenis Rumah/Kamar Sewa
+            $table->string('rental_address')->nullable(); // Alamat Rumah Sewa
+            $table->string('street')->nullable(); // Jalan
+            $table->string('alley_number')->nullable(); // Gang/Nomor
+            $table->longText('rt')->nullable();
+            $table->string('building_area')->nullable(); // Luas Bangunan
+            $table->integer('room_count')->nullable(); // Jumlah Kamar
+            $table->string('rental_type')->nullable(); // Jenis Rumah/Kamar Sewa
             $table->date('valid_until')->nullable(); // Berlaku Ijin Sampai
 
             // Signing official

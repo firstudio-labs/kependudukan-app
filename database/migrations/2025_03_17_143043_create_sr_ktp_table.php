@@ -18,7 +18,7 @@ return new class extends Migration
             $table->bigInteger('subdistrict_id');
             $table->bigInteger('village_id');
             $table->string('letter_number')->nullable();
-            $table->string('application_type'); // Baru, Perpanjang, Pergantian
+            $table->string('application_type')->nullable(); // Baru, Perpanjang, Pergantian
 
             // Citizen data (changed from JSON to specific data types)
             $table->bigInteger('nik');
@@ -29,7 +29,7 @@ return new class extends Migration
             $table->text('address');
             $table->longText('rt');
             $table->longText('rw');
-            $table->string('hamlet'); // Dusun
+            $table->string('hamlet')->nullable(); // Dusun
 
             // Signing official
             $table->string('signing')->nullable();

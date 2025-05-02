@@ -29,9 +29,9 @@ return new class extends Migration
             $table->text('address');
             $table->string('signing')->nullable();
             $table->longText('rt');
-            $table->date('letter_date');
-            $table->text('domicile_address');
-            $table->text('purpose');
+            $table->date('letter_date')->nullable();
+            $table->text('domicile_address')->nullable();
+            $table->text('purpose')->nullable();
             $table->timestamps();
         });
     }
