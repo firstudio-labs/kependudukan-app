@@ -389,13 +389,11 @@ class ProfileController extends Controller
     public function uploadFamilyMemberDocument(Request $request, $nik)
     {
         try {
-            // dd($request);
             $request->validate([
                 'file' => 'required|file|max:4096',
                 'document_type' => 'required|string|in:foto_diri,foto_ktp,foto_akta,ijazah,foto_kk,foto_rumah',
                 'tag_lokasi' => 'nullable|string|max:255',
             ]);
-
 
             if ($request->document_type == 'foto_diri') {
                 $request->validate(['file' => 'mimes:jpg,jpeg,png']);
@@ -403,28 +401,21 @@ class ProfileController extends Controller
                 $request->validate(['file' => 'mimes:jpg,jpeg,png,pdf']);
             }
 
-            // First check if user is authenticated through penduduk guard
-            $user = Auth::guard('penduduk')->user();
-
-            // If not, check if authenticated through web guard
-            if (!$user && Auth::guard('web')->check()) {
-                $user = Auth::guard('web')->user();
+            // Check authentication - support both token and session auth
+            if (auth('sanctum')->check()) {
+                $user = auth('sanctum')->user();
+            } elseif (auth()->guard('penduduk')->check()) {
+                $user = auth()->guard('penduduk')->user();
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized: Please login first',
+                ], 401);
             }
 
-            // If still not authenticated, try to find the penduduk by NIK
-            if (!$user) {
-                $user = Penduduk::where('nik', $nik)->first();
-
-                if (!$user) {
-                    Log::warning('Unauthorized document upload attempt for NIK: ' . $nik);
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'User tidak terautentikasi'
-                    ], 401);
-                }
-            }
-
+            // Now we're sure $user is not null before accessing its properties
             $fullName = '';
+
             if ($user->nik == $nik) {
                 $fullName = $user->nama_lengkap ?? ($user->nama ?? '');
             } else {
@@ -442,6 +433,19 @@ class ProfileController extends Controller
                         $fullName = $penduduk->nama_lengkap ?? ($penduduk->nama ?? '');
                     }
                 }
+
+                if (empty($fullName)) {
+                    try {
+                        $citizen = $this->citizenService->getCitizenByNIK((int) $nik);
+                        if ($citizen && isset($citizen['data']) && isset($citizen['data']['full_name'])) {
+                            $fullName = $citizen['data']['full_name'];
+                        } elseif ($citizen && isset($citizen['data']) && isset($citizen['data']['nama'])) {
+                            $fullName = $citizen['data']['nama'];
+                        }
+                    } catch (\Exception $e) {
+                        Log::error('Error fetching citizen data: ' . $e->getMessage());
+                    }
+                }
             }
 
             if (empty($fullName)) {
@@ -453,20 +457,39 @@ class ProfileController extends Controller
             $fileName = time() . '_' . Str::slug(Str::limit($fullName, 20)) . '.' . $extension;
             $path = $file->storeAs('uploads/documents/' . $request->document_type, $fileName, 'public');
 
-            // Process tag_lokasi if provided
-            $additionalData = [];
-            if ($request->filled('tag_lokasi')) {
-                $additionalData['tag_lokasi'] = $request->tag_lokasi;
+            // Create penduduk record if it doesn't exist and user is uploading their own document
+            if ($user->nik == $nik) {
+                $penduduk = Penduduk::firstOrNew(['nik' => $nik]);
+                if (!$penduduk->exists) {
+                    $penduduk->password = Hash::make(Str::random(10));
+                    $penduduk->save();
+                }
+            }
 
-                // Update citizen data if tag_lokasi is provided
+            $tagLokasi = $request->tag_lokasi;
+
+            if (!empty($tagLokasi)) {
                 try {
                     $data = [
-                        'coordinate' => $request->tag_lokasi
+                        'coordinate' => $tagLokasi
                     ];
-                    $this->citizenService->updateCitizen((int) $nik, $data);
+
+                    Log::info('Updating citizen coordinates via document upload', [
+                        'nik' => $nik,
+                        'coordinate' => $tagLokasi
+                    ]);
+
+                    $response = $this->citizenService->updateCitizen((int) $nik, $data);
+
+                    Log::info('API coordinate update response', [
+                        'nik' => $nik,
+                        'response' => $response
+                    ]);
                 } catch (\Exception $e) {
-                    Log::error('Error updating coordinates in API: ' . $e->getMessage());
-                    // Continue processing even if API update fails
+                    Log::error('Error updating coordinates in API: ' . $e->getMessage(), [
+                        'nik' => $nik,
+                        'coordinate' => $tagLokasi
+                    ]);
                 }
             }
 
@@ -475,13 +498,14 @@ class ProfileController extends Controller
                     'nik' => $nik,
                     'document_type' => $request->document_type,
                 ],
-                array_merge([
+                [
                     'file_path' => $path,
                     'file_name' => $fileName,
                     'mime_type' => $file->getMimeType(),
                     'extension' => $extension,
                     'file_size' => $file->getSize() / 1024,
-                ], $additionalData)
+                    'tag_lokasi' => $tagLokasi,
+                ]
             );
 
             return response()->json([
@@ -493,22 +517,23 @@ class ProfileController extends Controller
                     'file_path' => $document->file_path,
                     'preview_url' => in_array(strtolower($extension), ['jpg', 'jpeg', 'png']) ? asset('storage/' . $path) : null,
                     'updated_at' => $document->updated_at->format('Y-m-d H:i:s'),
-                ]
+                ],
             ]);
         } catch (\Exception $e) {
             Log::error('Error uploading document: ' . $e->getMessage(), [
-                'nik' => $nik,
-                'document_type' => $request->document_type ?? 'unknown',
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
+                'request' => $request->all()
             ]);
 
-            return response()->json([
-                'success' => false,
-                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
-            ], 500);
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => 'Terjadi kesalahan saat mengunggah dokumen: ' . $e->getMessage(),
+                ],
+                500
+            );
         }
     }
-
     public function viewFamilyMemberDocument($nik, $documentType)
     {
         try {
