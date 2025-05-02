@@ -1,4 +1,19 @@
-@props(['title', 'route', 'jobs', 'provinces', 'section_title' => 'Data Pribadi', 'queueNumber' => '01', 'villageName' => null])
+@props([
+    'title',
+    'route',
+    'jobs',
+    'provinces',
+    'districts' => [],
+    'subDistricts' => [],
+    'villages' => [],
+    'section_title' => 'Data Pribadi',
+    'queueNumber' => '01',
+    'villageName' => null,
+    'province_id' => null,
+    'district_id' => null,
+    'sub_district_id' => null,
+    'village_id' => null
+])
 
 <!-- Title Heading -->
 <h1 class="text-2xl font-extrabold text-gray-800 text-shadow mb-4">Portal Layanan Desa</h1>
@@ -31,47 +46,11 @@
             <!-- Form Title -->
             <h3 class="text-lg font-medium text-gray-700 mb-2">{{ $title }}</h3>
 
-            <!-- Location Selection Section - 4 columns on larger screens -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                <!-- Provinsi -->
-                <div>
-                    <label for="province_code" class="block text-sm font-medium text-gray-700">Provinsi <span class="text-red-500">*</span></label>
-                    <select id="province_code" name="province_code" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2" required>
-                        <option value="">Pilih Provinsi</option>
-                        @foreach($provinces as $province)
-                            <option value="{{ $province['code'] }}" data-id="{{ $province['id'] }}">{{ $province['name'] }}</option>
-                        @endforeach
-                    </select>
-                    <input type="hidden" id="province_id" name="province_id">
-                </div>
-
-                <!-- Kabupaten -->
-                <div>
-                    <label for="district_code" class="block text-sm font-medium text-gray-700">Kabupaten <span class="text-red-500">*</span></label>
-                    <select id="district_code" name="district_code" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2" required>
-                        <option value="">Pilih Kabupaten</option>
-                    </select>
-                    <input type="hidden" id="district_id" name="district_id">
-                </div>
-
-                <!-- Kecamatan -->
-                <div>
-                    <label for="subdistrict_code" class="block text-sm font-medium text-gray-700">Kecamatan <span class="text-red-500">*</span></label>
-                    <select id="subdistrict_code" name="subdistrict_code" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2" required>
-                        <option value="">Pilih Kecamatan</option>
-                    </select>
-                    <input type="hidden" id="subdistrict_id" name="subdistrict_id">
-                </div>
-
-                <!-- Desa -->
-                <div>
-                    <label for="village_code" class="block text-sm font-medium text-gray-700">Desa <span class="text-red-500">*</span></label>
-                    <select id="village_code" name="village_code" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2" required>
-                        <option value="">Pilih Desa</option>
-                    </select>
-                    <input type="hidden" id="village_id" name="village_id">
-                </div>
-            </div>
+            <!-- Hidden Location Fields (instead of visible dropdowns) -->
+            <input type="hidden" id="province_id" name="province_id" value="{{ request('province_id', $province_id) }}">
+            <input type="hidden" id="district_id" name="district_id" value="{{ request('district_id', $district_id) }}">
+            <input type="hidden" id="sub_district_id" name="subdistrict_id" value="{{ request('sub_district_id', $sub_district_id) }}">
+            <input type="hidden" id="village_id" name="village_id" value="{{ request('village_id', $village_id) }}">
 
             <!-- Data Pribadi Section -->
             <div class="mb-2">
@@ -194,15 +173,25 @@
 <!-- Sweet Alert Utilities -->
 <script src="{{ asset('js/sweet-alert-utils.js') }}"></script>
 
-<!-- Standard scripts for form functionality -->
-<script src="{{ asset('js/location-dropdowns.js') }}"></script>
+<!-- Use the new JS file for citizen-only functionality -->
+<script src="{{ asset('js/citizen-only-form.js') }}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Initialize citizen data select fields
         initializeCitizenSelect('{{ route("citizens.administrasi") }}');
 
-        // Setup location dropdown events
-        setupLocationDropdowns();
+        // Get location IDs from URL query parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const provinceId = urlParams.get('province_id') || '{{ request('province_id', $province_id) }}';
+        const districtId = urlParams.get('district_id') || '{{ request('district_id', $district_id) }}';
+        const subDistrictId = urlParams.get('sub_district_id') || '{{ request('sub_district_id', $sub_district_id) }}';
+        const villageId = urlParams.get('village_id') || '{{ request('village_id', $village_id) }}';
+
+        // Set form hidden input values
+        document.getElementById('province_id').value = provinceId;
+        document.getElementById('district_id').value = districtId;
+        document.getElementById('sub_district_id').value = subDistrictId;
+        document.getElementById('village_id').value = villageId;
 
         // Setup form validation
         setupFormValidation();

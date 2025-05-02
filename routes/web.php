@@ -48,14 +48,16 @@ Route::get('/', [AuthController::class, 'homepage'])->name('homepage');
 // Guest accessible routes
 Route::get('/pelayanan', [PelayananController::class, 'index'])->name('guest.pelayanan.index');
 Route::post('/pelayanan', [PelayananController::class, 'store'])->name('guest.pelayanan.store');
+// Update this route to accept location parameters
+Route::get('/pelayanan/list/{province_id}/{district_id}/{sub_district_id}/{village_id}', [PelayananController::class, 'list'])->name('guest.pelayanan.list');
 Route::get('/pelayanan/surat/{id}', [PelayananController::class, 'showSuratForm'])->name('guest.pelayanan.surat');
 Route::get('/pelayanan/antrian/{id}', [PelayananController::class, 'showAntrian'])->name('guest.pelayanan.antrian');
-Route::get('/pelayanan/list', [PelayananController::class, 'list'])->name('guest.pelayanan.list');
 Route::prefix('pelayanan')->name('guest.')->group(function () {
+    // Update route to accept location parameters
     Route::get('/administrasi', [AdministrasiUmumController::class, 'index'])->name('surat.administrasi');
     Route::post('/administrasi', [AdministrasiUmumController::class, 'store'])->name('surat.administrasi.store');
 
-    // Add Kehilangan routes
+    // Do this for all other service routes
     Route::get('/kehilangan', [KehilanganSuratController::class, 'index'])->name('surat.kehilangan');
     Route::post('/kehilangan', [KehilanganSuratController::class, 'store'])->name('surat.kehilangan.store');
 

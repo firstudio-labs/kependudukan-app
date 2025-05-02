@@ -258,9 +258,11 @@
     <div class="container mx-auto px-4 py-4 relative z-10 h-screen flex flex-col">
         <!-- Main Content -->
         <div class="max-w-6xl mx-auto w-full flex flex-col h-full">
-            <!-- Header -->
+            <!-- Header with location info -->
             <div class="flex flex-col md:flex-row justify-between items-center gap-2 mb-8">
                 <h1 class="text-xl md:text-2xl font-extrabold text-gray-800 text-shadow">Portal Layanan Desa</h1>
+                <!-- Optionally show location info if you need it -->
+                <!-- <p class="text-sm text-gray-600">Lokasi: {{ $village_id }}</p> -->
                 <div class="relative w-full md:w-1/3">
                     <input type="text" placeholder="Cari Layanan..." class="w-full rounded-3xl py-1.5 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-custom-purple glass-card">
                     <div class="absolute left-3 top-2 text-gray-500">
@@ -278,7 +280,12 @@
                         <div class="icon-circle blue w-16 h-16 md:w-20 md:h-20">
                             <i class="fa fa-file-lines fa-xl text-blue-600"></i>
                         </div>
-                        <a href="{{ route('guest.surat.administrasi') }}" class="block">
+                        <a href="{{ route('guest.surat.administrasi', [
+                            'province_id' => $province_id ?? null,
+                            'district_id' => $district_id ?? null,
+                            'sub_district_id' => $sub_district_id ?? null,
+                            'village_id' => $village_id ?? null
+                        ]) }}" class="block">
                             <button class="modern-button blue text-white py-2 w-full rounded-3xl font-medium shadow-md text-sm">
                                 Surat Administrasi Umum
                             </button>
@@ -290,7 +297,12 @@
                         <div class="icon-circle red w-16 h-16 md:w-20 md:h-20">
                             <i class="fa fa-people-group fa-xl text-red-600"></i>
                         </div>
-                        <a href="{{ route('guest.surat.keramaian') }}" class="block">
+                        <a href="{{ route('guest.surat.keramaian', [
+                            'province_id' => $province_id ?? null,
+                            'district_id' => $district_id ?? null,
+                            'sub_district_id' => $sub_district_id ?? null,
+                            'village_id' => $village_id ?? null
+                        ]) }}" class="block">
                             <button class="modern-button red text-white py-2 w-full rounded-3xl font-medium shadow-md text-sm">
                                 Surat Ijin Keramaian
                             </button>
@@ -302,7 +314,12 @@
                         <div class="icon-circle orange w-16 h-16 md:w-20 md:h-20">
                             <i class="fa fa-id-card fa-xl text-orange-600"></i>
                         </div>
-                        <a href="{{ route('guest.surat.ktp') }}" class="block">
+                        <a href="{{ route('guest.surat.ktp', [
+                            'province_id' => $province_id ?? null,
+                            'district_id' => $district_id ?? null,
+                            'sub_district_id' => $sub_district_id ?? null,
+                            'village_id' => $village_id ?? null
+                        ]) }}" class="block">
                             <button class="modern-button orange text-white py-2 w-full rounded-3xl font-medium shadow-md text-sm">
                                 Surat Pengantar KTP
                             </button>
@@ -314,7 +331,12 @@
                         <div class="icon-circle pink w-16 h-16 md:w-20 md:h-20">
                             <i class="fa fa-baby fa-xl text-pink-600"></i>
                         </div>
-                        <a href="{{ route('guest.surat.kelahiran') }}" class="block">
+                        <a href="{{ route('guest.surat.kelahiran', [
+                            'province_id' => $province_id ?? null,
+                            'district_id' => $district_id ?? null,
+                            'sub_district_id' => $sub_district_id ?? null,
+                            'village_id' => $village_id ?? null
+                        ]) }}" class="block">
                             <button class="modern-button pink text-white py-2 w-full rounded-3xl font-medium shadow-md text-sm">
                                 Surat Keterangan Kelahiran
                             </button>
@@ -326,7 +348,12 @@
                         <div class="icon-circle purple w-16 h-16 md:w-20 md:h-20">
                             <i class="fa fa-cross fa-xl text-purple-600"></i>
                         </div>
-                        <a href="{{ route('guest.surat.kematian') }}" class="block">
+                        <a href="{{ route('guest.surat.kematian', [
+                            'province_id' => $province_id ?? null,
+                            'district_id' => $district_id ?? null,
+                            'sub_district_id' => $sub_district_id ?? null,
+                            'village_id' => $village_id ?? null
+                        ]) }}" class="block">
                             <button class="modern-button purple text-white py-2 w-full rounded-3xl font-medium shadow-md text-sm">
                                 Surat Keterangan Kematian
                             </button>
@@ -338,7 +365,12 @@
                         <div class="icon-circle yellow w-16 h-16 md:w-20 md:h-20">
                             <i class="fa fa-shield fa-xl text-yellow-600"></i>
                         </div>
-                        <a href="{{ route('guest.surat.skck') }}" class="block">
+                        <a href="{{ route('guest.surat.skck', [
+                            'province_id' => $province_id ?? null,
+                            'district_id' => $district_id ?? null,
+                            'sub_district_id' => $sub_district_id ?? null,
+                            'village_id' => $village_id ?? null
+                        ]) }}" class="block">
                             <button class="modern-button yellow text-white py-2 w-full rounded-3xl font-medium shadow-md text-sm">
                                 Surat Permohonan SKCK
                             </button>
@@ -350,7 +382,12 @@
                         <div class="icon-circle green w-16 h-16 md:w-20 md:h-20">
                             <i class="fa fa-house fa-xl text-green-600"></i>
                         </div>
-                        <a href="{{ route('guest.surat.rumah-sewa') }}" class="block">
+                        <a href="{{ route('guest.surat.rumah-sewa', [
+                            'province_id' => $province_id ?? null,
+                            'district_id' => $district_id ?? null,
+                            'sub_district_id' => $sub_district_id ?? null,
+                            'village_id' => $village_id ?? null
+                        ]) }}" class="block">
                             <button class="modern-button green text-white py-2 w-full rounded-3xl font-medium shadow-md text-sm">
                                 Surat Ijin Rumah Sewa
                             </button>
@@ -362,7 +399,12 @@
                         <div class="icon-circle teal w-16 h-16 md:w-20 md:h-20">
                             <i class="fa fa-magnifying-glass fa-xl text-teal-600"></i>
                         </div>
-                        <a href="{{ route('guest.surat.kehilangan') }}" class="block">
+                        <a href="{{ route('guest.surat.kehilangan', [
+                            'province_id' => $province_id ?? null,
+                            'district_id' => $district_id ?? null,
+                            'sub_district_id' => $sub_district_id ?? null,
+                            'village_id' => $village_id ?? null
+                        ]) }}" class="block">
                             <button class="modern-button teal text-white py-2 w-full rounded-3xl font-medium shadow-md text-sm">
                                 Surat Kehilangan
                             </button>
@@ -374,7 +416,12 @@
                         <div class="icon-circle blue w-16 h-16 md:w-20 md:h-20">
                             <i class="fa fa-location-dot fa-xl text-blue-600"></i>
                         </div>
-                        <a href="{{ route('guest.surat.domisili') }}" class="block">
+                        <a href="{{ route('guest.surat.domisili', [
+                            'province_id' => $province_id ?? null,
+                            'district_id' => $district_id ?? null,
+                            'sub_district_id' => $sub_district_id ?? null,
+                            'village_id' => $village_id ?? null
+                        ]) }}" class="block">
                             <button class="modern-button blue text-white py-2 w-full rounded-3xl font-medium shadow-md text-sm">
                                 Surat Keterangan Domisili
                             </button>
@@ -386,7 +433,12 @@
                         <div class="icon-circle orange w-16 h-16 md:w-20 md:h-20">
                             <i class="fa fa-users fa-xl text-orange-600"></i>
                         </div>
-                        <a href="{{ route('guest.surat.ahli-waris') }}" class="block">
+                        <a href="{{ route('guest.surat.ahli-waris', [
+                            'province_id' => $province_id ?? null,
+                            'district_id' => $district_id ?? null,
+                            'sub_district_id' => $sub_district_id ?? null,
+                            'village_id' => $village_id ?? null
+                        ]) }}" class="block">
                             <button class="modern-button orange text-white py-2 w-full rounded-3xl font-medium shadow-md text-sm">
                                 Surat Keterangan Ahli Waris
                             </button>
@@ -398,7 +450,12 @@
                         <div class="icon-circle pink w-16 h-16 md:w-20 md:h-20">
                             <i class="fa fa-store fa-xl text-pink-600"></i>
                         </div>
-                        <a href="{{ route('guest.surat.domisili-usaha') }}" class="block">
+                        <a href="{{ route('guest.surat.domisili-usaha', [
+                            'province_id' => $province_id ?? null,
+                            'district_id' => $district_id ?? null,
+                            'sub_district_id' => $sub_district_id ?? null,
+                            'village_id' => $village_id ?? null
+                        ]) }}" class="block">
                             <button class="modern-button pink text-white py-2 w-full rounded-3xl font-medium shadow-md text-sm">
                                 Surat Keterangan Domisili Usaha
                             </button>

@@ -40,13 +40,24 @@ class PelayananController extends Controller
     }
 
     /**
-     * Display the pelayanan list page
+     * Display the pelayanan list page with location context
      *
+     * @param string $province_id
+     * @param string $district_id
+     * @param string $sub_district_id
+     * @param string $village_id
      * @return \Illuminate\View\View
      */
-    public function list()
+    public function list($province_id, $district_id, $sub_district_id, $village_id)
     {
-        return view('guest.pelayanan.list');
+        // You can use these parameters to fetch location names if needed
+        // Or pass them to the view for other purposes
+        return view('guest.pelayanan.list', compact(
+            'province_id',
+            'district_id',
+            'sub_district_id',
+            'village_id'
+        ));
     }
 
     /**
@@ -103,8 +114,13 @@ class PelayananController extends Controller
 
         // Check if the keperluan has "pelayanan" in the title
         if ($keperluan && stripos($keperluan->judul, 'pelayanan') !== false) {
-            // Redirect to the list page
-            return redirect()->route('guest.pelayanan.list');
+            // Redirect to the list page with location parameters in the URL
+            return redirect()->route('guest.pelayanan.list', [
+                'province_id' => $validated['province_id'],
+                'district_id' => $validated['district_id'],
+                'sub_district_id' => $validated['sub_district_id'],
+                'village_id' => $validated['village_id']
+            ]);
         }
 
         // For other services, follow existing logic
