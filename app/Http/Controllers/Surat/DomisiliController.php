@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Penandatangan;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 
 class DomisiliController extends Controller
 {
@@ -57,6 +58,10 @@ class DomisiliController extends Controller
 
         $domisiliList = $query->paginate(10);
 
+        if (Auth::user()->role === 'admin desa') {
+            return view('admin.desa.datamaster.surat.domisili.index', compact('domisiliList'));
+        }
+
         return view('superadmin.datamaster.surat.domisili.index', compact('domisiliList'));
     }
 
@@ -76,6 +81,17 @@ class DomisiliController extends Controller
         $districts = [];
         $subDistricts = [];
         $villages = [];
+
+        if (Auth::user()->role === 'admin desa') {
+            return view('admin.desa.datamaster.surat.domisili.create', compact(
+                'jobs',
+                'provinces',
+                'districts',
+                'subDistricts',
+                'villages',
+                'signers'
+            ));
+        }
 
         return view('superadmin.datamaster.surat.domisili.create', compact(
             'jobs',
@@ -161,6 +177,11 @@ class DomisiliController extends Controller
             DB::commit();
 
             Log::info('Domisili created successfully', ['id' => $domisili->id]);
+
+            if (Auth::user()->role === 'admin desa') {
+                return redirect()->route('admin.desa.datamaster.surat.domisili.index')
+                    ->with('success', 'Surat keterangan domisili berhasil dibuat!');
+            }
 
             return redirect()->route('superadmin.surat.domisili.index')
                 ->with('success', 'Surat keterangan domisili berhasil dibuat!');
@@ -256,6 +277,8 @@ class DomisiliController extends Controller
         $subDistricts = [];
         $villages = [];
 
+
+        // BARU SAMPAI SINI //
         return view('superadmin.datamaster.surat.domisili.edit', compact(
             'domisili',
             'jobs',
