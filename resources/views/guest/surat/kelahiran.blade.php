@@ -31,46 +31,15 @@
             @csrf
 
             <!-- Data Wilayah Section -->
-            <div class="mb-2 mt-6">
+            {{-- <div class="mb-2 mt-6">
                 <h2 class="text-xl font-bold text-gray-800">Data Wilayah</h2>
-            </div>
+            </div> --}}
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div>
-                    <label for="province_code" class="block text-sm font-medium text-gray-700">Provinsi <span class="text-red-500">*</span></label>
-                    <select id="province_code" name="province_code" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
-                        <option value="">Pilih Provinsi</option>
-                        @foreach($provinces as $province)
-                            <option value="{{ $province['code'] }}" data-id="{{ $province['id'] }}">{{ $province['name'] }}</option>
-                        @endforeach
-                    </select>
-                    <input type="hidden" id="province_id" name="province_id" value="">
-                </div>
-
-                <div>
-                    <label for="district_code" class="block text-sm font-medium text-gray-700">Kabupaten <span class="text-red-500">*</span></label>
-                    <select id="district_code" name="district_code" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" disabled required>
-                        <option value="">Pilih Kabupaten</option>
-                    </select>
-                    <input type="hidden" id="district_id" name="district_id" value="">
-                </div>
-
-                <div>
-                    <label for="subdistrict_code" class="block text-sm font-medium text-gray-700">Kecamatan <span class="text-red-500">*</span></label>
-                    <select id="subdistrict_code" name="subdistrict_code" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" disabled required>
-                        <option value="">Pilih Kecamatan</option>
-                    </select>
-                    <input type="hidden" id="subdistrict_id" name="subdistrict_id" value="">
-                </div>
-
-                <div>
-                    <label for="village_code" class="block text-sm font-medium text-gray-700">Desa <span class="text-red-500">*</span></label>
-                    <select id="village_code" name="village_code" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" disabled required>
-                        <option value="">Pilih Desa</option>
-                    </select>
-                    <input type="hidden" id="village_id" name="village_id" value="">
-                </div>
-            </div>
+            <!-- Hidden Location Fields (instead of visible dropdowns) -->
+            <input type="hidden" id="province_id" name="province_id" value="{{ request('province_id') }}">
+            <input type="hidden" id="district_id" name="district_id" value="{{ request('district_id') }}">
+            <input type="hidden" id="subdistrict_id" name="subdistrict_id" value="{{ request('sub_district_id') }}">
+            <input type="hidden" id="village_id" name="village_id" value="{{ request('village_id') }}">
 
             <!-- Father Information Section -->
             <div class="mb-2 mt-6">
@@ -251,28 +220,6 @@
                 <textarea id="child_address" name="child_address" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required></textarea>
             </div>
 
-            {{-- <!-- Informasi Surat Section -->
-            <div class="mb-2 mt-6">
-                <h2 class="text-xl font-bold text-gray-800">Informasi Surat</h2>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label for="letter_number" class="block text-sm font-medium text-gray-700">Nomor Surat</label>
-                    <input type="text" id="letter_number" name="letter_number" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
-                </div>
-
-                <div>
-                    <label for="signing" class="block text-sm font-medium text-gray-700">Pejabat Penandatangan</label>
-                    <select id="signing" name="signing" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
-                        <option value="">Pilih Pejabat</option>
-                        @foreach($signers as $signer)
-                            <option value="{{ $signer->id }}">{{ $signer->judul }} - {{ $signer->keterangan }}</option>
-                        @endforeach
-                    </select>
-                </div>
-            </div> --}}
-
             <div class="mt-6 flex justify-end space-x-4">
                 <button type="button" onclick="window.history.back()" class="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-lg">
                     Batal
@@ -285,5 +232,22 @@
     </div>
 </div>
 
-<script src="{{ asset('js/birth-certificate.js') }}"></script>
+<script src="{{ asset('js/sweet-alert-utils.js') }}"></script>
+<script src="{{ asset('js/citizen-only-form.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize parent select fields
+        initializeParentSelect('{{ route("citizens.administrasi") }}', 'father');
+        initializeParentSelect('{{ route("citizens.administrasi") }}', 'mother');
+
+        // Initialize SweetAlert messages
+        if ("{{ session('success') }}") {
+            showSuccessAlert("{{ session('success') }}");
+        }
+
+        if ("{{ session('error') }}") {
+            showErrorAlert("{{ session('error') }}");
+        }
+    });
+</script>
 </x-guest.surat-layout>
