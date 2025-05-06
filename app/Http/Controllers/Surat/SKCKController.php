@@ -11,6 +11,7 @@ use App\Services\JobService;
 use App\Services\WilayahService;
 use App\Services\CitizenService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class SKCKController extends Controller
 {
@@ -54,6 +55,12 @@ class SKCKController extends Controller
 
         $skckList = $query->paginate(10);
 
+        if (Auth::user()->role === 'admin desa') {
+            $query->where('village_id', Auth::user()->village_id);
+            return view('admin.desa.surat.skck.index', compact('skckList'))
+            ->with('village_id', Auth::user()->village_id);
+        }
+
         return view('superadmin.datamaster.surat.skck.index', compact('skckList'));
     }
 
@@ -73,6 +80,26 @@ class SKCKController extends Controller
         $districts = [];
         $subDistricts = [];
         $villages = [];
+
+        if (Auth::user()->role === 'admin desa') {
+            $provinces = $this->wilayahService->getProvinces();
+            $jobs = $this->jobService->getAllJobs();
+            $signers = Penandatangan::all();
+            $districts = [];
+            $subDistricts = [];
+            $villages = [];
+            $villageId = Auth::user()->village_id; // Add village ID
+
+            return view('admin.desa.surat.skck.create', compact(
+            'jobs',
+            'provinces',
+            'districts',
+            'subDistricts',
+            'villages',
+            'signers',
+            'villageId' // Pass village ID to the view
+            ));
+        }
 
         return view('superadmin.datamaster.surat.skck.create', compact(
             'jobs',
@@ -115,6 +142,11 @@ class SKCKController extends Controller
 
         try {
             SKCK::create($request->all());
+            if (Auth::user()->role === 'admin desa') {
+                return redirect()->route('admin.desa.surat.skck.index')
+                    ->with('success', 'Surat SKCK berhasil dibuat!');
+            }
+
             return redirect()->route('superadmin.surat.skck.index')
                 ->with('success', 'Surat SKCK berhasil dibuat!');
         } catch (\Exception $e) {
@@ -202,6 +234,22 @@ class SKCKController extends Controller
         $subDistricts = [];
         $villages = [];
 
+        if (Auth::user()->role === 'admin desa') {
+            $districts = $this->wilayahService->getDistrictsByVillage(Auth::user()->village_id);
+            $subDistricts = $this->wilayahService->getSubDistrictsByVillage(Auth::user()->village_id);
+            $villages = $this->wilayahService->getVillagesByVillage(Auth::user()->village_id);
+
+            return view('admin.desa.surat.skck.edit', compact(
+            'skck',
+            'jobs',
+            'provinces',
+            'districts',
+            'subDistricts',
+            'villages',
+            'signers'
+            ));
+        }
+
         return view('superadmin.datamaster.surat.skck.edit', compact(
             'skck',
             'jobs',
@@ -252,6 +300,11 @@ class SKCKController extends Controller
             
             $skck->update($data);
 
+            if (Auth::user()->role === 'admin desa') {
+                return redirect()->route('admin.desa.surat.skck.index')
+                    ->with('success', 'Surat SKCK berhasil diperbarui!');
+            }
+
             return redirect()->route('superadmin.surat.skck.index')
                 ->with('success', 'Surat SKCK berhasil diperbarui!');
         } catch (\Exception $e) {
@@ -270,6 +323,11 @@ class SKCKController extends Controller
         try {
             $skck = SKCK::findOrFail($id);
             $skck->delete();
+
+            if (Auth::user()->role === 'admin desa') {
+                return redirect()->route('admin.desa.surat.skck.index')
+                    ->with('success', 'Surat SKCK berhasil dihapus!');
+            }
 
             return redirect()->route('superadmin.surat.skck.index')
                 ->with('success', 'Surat SKCK berhasil dihapus!');
@@ -451,6 +509,25 @@ class SKCKController extends Controller
                 'logo_found' => !is_null($districtLogo),
                 'logo_path' => $districtLogo
             ]);
+
+            if (Auth::user()->role === 'admin desa') {
+                return view('admin.desa.surat.skck.SKCK', [
+                    'skck' => $skck,
+                    'job_name' => $jobName,
+                    'province_name' => $provinceName,
+                    'district_name' => $districtName,
+                    'subdistrict_name' => $subdistrictName,
+                    'village_name' => $villageName,
+                    'villageCode' => $villageCode, // Add the village code
+                    'gender' => $gender,
+                    'religion' => $religion,
+                    'citizenship' => $citizenship,
+                    'formatted_birth_date' => $birthDate,
+                    'formatted_letter_date' => $letterDate,
+                    'signing_name' => $signing_name,
+                    'district_logo' => $districtLogo // Add this line
+                ]);
+            }
 
             return view('superadmin.datamaster.surat.skck.SKCK', [
                 'skck' => $skck,

@@ -11,6 +11,7 @@ use App\Services\WilayahService;
 use App\Services\CitizenService;
 use Illuminate\Support\Facades\DB;
 use App\Services\JobService;
+use Illuminate\Support\Facades\Auth;
 
 
 class IzinKeramaianController extends Controller
@@ -58,6 +59,10 @@ class IzinKeramaianController extends Controller
 
         $keramaianList = $query->paginate(10);
 
+        if (Auth::user()->role === 'admin desa') {
+            return view('admin.desa.surat.keramaian.index', compact('keramaianList'));
+        }
+
         return view('superadmin.datamaster.surat.keramaian.index', compact('keramaianList'));
     }
 
@@ -77,6 +82,17 @@ class IzinKeramaianController extends Controller
         $districts = [];
         $subDistricts = [];
         $villages = [];
+
+        if (Auth::user()->role === 'admin desa') {
+            return view('admin.desa.surat.keramaian.create', compact(
+            'jobs',
+            'provinces',
+            'districts',
+            'subDistricts',
+            'villages',
+            'signers'
+            ));
+        }
 
         return view('superadmin.datamaster.surat.keramaian.create', compact(
             'jobs',
@@ -123,6 +139,11 @@ class IzinKeramaianController extends Controller
 
         try {
             IzinKeramaian::create($request->all());
+            if (Auth::user()->role === 'admin desa') {
+                return redirect()->route('admin.desa.surat.keramaian.index')
+                    ->with('success', 'Surat izin keramaian berhasil dibuat!');
+            }
+
             return redirect()->route('superadmin.surat.keramaian.index')
                 ->with('success', 'Surat izin keramaian berhasil dibuat!');
         } catch (\Exception $e) {
@@ -202,6 +223,18 @@ class IzinKeramaianController extends Controller
         $subDistricts = [];
         $villages = [];
 
+        if (Auth::user()->role === 'admin desa') {
+            return view('admin.desa.surat.keramaian.edit', compact(
+            'keramaian',
+            'jobs',
+            'provinces',
+            'districts',
+            'subDistricts',
+            'villages',
+            'signers'
+            ));
+        }
+
         return view('superadmin.datamaster.surat.keramaian.edit', compact(
             'keramaian',
             'jobs',
@@ -256,6 +289,11 @@ class IzinKeramaianController extends Controller
             
             $keramaian->update($data);
 
+            if (Auth::user()->role === 'admin desa') {
+                return redirect()->route('admin.desa.surat.keramaian.index')
+                    ->with('success', 'Surat izin keramaian berhasil diperbarui!');
+            }
+
             return redirect()->route('superadmin.surat.keramaian.index')
                 ->with('success', 'Surat izin keramaian berhasil diperbarui!');
         } catch (\Exception $e) {
@@ -274,6 +312,11 @@ class IzinKeramaianController extends Controller
         try {
             $keramaian = IzinKeramaian::findOrFail($id);
             $keramaian->delete();
+
+            if (Auth::user()->role === 'admin desa') {
+                return redirect()->route('admin.desa.surat.keramaian.index')
+                    ->with('success', 'Surat izin keramaian berhasil dihapus!');
+            }
 
             return redirect()->route('superadmin.surat.keramaian.index')
                 ->with('success', 'Surat izin keramaian berhasil dihapus!');
@@ -454,6 +497,25 @@ class IzinKeramaianController extends Controller
             ]);
 
             // Return view directly instead of generating PDF
+            if (Auth::user()->role === 'admin desa') {
+                return view('admin.desa.surat.keramaian.IjinKeramaian', compact(
+                    'keramaian',
+                    'provinceName',
+                    'districtName',
+                    'subdistrictName',
+                    'villageName',
+                    'villageCode', // Add the village code
+                    'jobName',
+                    'religionName',
+                    'genderName',
+                    'citizenStatusName',
+                    'birthDate',
+                    'eventDate',
+                    'signing_name',
+                    'districtLogo' // Add this line
+                ));
+            }
+
             return view('superadmin.datamaster.surat.keramaian.IjinKeramaian', compact(
                 'keramaian',
                 'provinceName',

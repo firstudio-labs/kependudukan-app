@@ -10,6 +10,7 @@ use App\Services\WilayahService;
 use App\Services\CitizenService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 class KelahiranController extends Controller
 {
@@ -53,6 +54,10 @@ class KelahiranController extends Controller
 
         $kelahiranList = $query->paginate(10);
 
+        if (Auth::user()->role === 'admin desa') {
+            return view('admin.desa.surat.kelahiran.index', compact('kelahiranList'));
+        }
+
         return view('superadmin.datamaster.surat.kelahiran.index', compact('kelahiranList'));
     }
 
@@ -72,6 +77,17 @@ class KelahiranController extends Controller
         $districts = [];
         $subDistricts = [];
         $villages = [];
+
+        if (Auth::user()->role === 'admin desa') {
+            return view('admin.desa.surat.kelahiran.create', compact(
+            'jobTypes',
+            'provinces',
+            'districts',
+            'subDistricts',
+            'villages',
+            'signers'
+            ));
+        }
 
         return view('superadmin.datamaster.surat.kelahiran.create', compact(
             'jobTypes',
@@ -136,6 +152,11 @@ class KelahiranController extends Controller
 
             // Log success
             Log::info('Successfully created kelahiran with ID: ' . $kelahiran->id);
+
+            if (Auth::user()->role === 'admin desa') {
+                return redirect()->route('admin.desa.surat.kelahiran.index')
+                    ->with('success', 'Surat keterangan kelahiran berhasil dibuat!');
+            }
 
             return redirect()->route('superadmin.surat.kelahiran.index')
                 ->with('success', 'Surat keterangan kelahiran berhasil dibuat!');
@@ -222,6 +243,18 @@ class KelahiranController extends Controller
         $subDistricts = [];
         $villages = [];
 
+        if (Auth::user()->role === 'admin desa') {
+            return view('admin.desa.surat.kelahiran.edit', compact(
+            'kelahiran',
+            'jobTypes',
+            'provinces',
+            'districts',
+            'subDistricts',
+            'villages',
+            'signers'
+            ));
+        }
+
         return view('superadmin.datamaster.surat.kelahiran.edit', compact(
             'kelahiran',
             'jobTypes',
@@ -281,6 +314,11 @@ class KelahiranController extends Controller
             
             $kelahiran->update($data);
 
+            if (Auth::user()->role === 'admin desa') {
+                return redirect()->route('admin.desa.surat.kelahiran.index')
+                    ->with('success', 'Surat keterangan kelahiran berhasil diperbarui!');
+            }
+
             return redirect()->route('superadmin.surat.kelahiran.index')
                 ->with('success', 'Surat keterangan kelahiran berhasil diperbarui!');
         } catch (\Exception $e) {
@@ -327,102 +365,102 @@ class KelahiranController extends Controller
 
             // Get province data - fetch all provinces and filter
             if (!empty($kelahiran->province_id)) {
-                try {
-                    $provinces = $this->wilayahService->getProvinces();
-                    
-                    // Log provinces for debugging
-                    \Log::debug('Retrieved provinces: ' . count($provinces));
-                    
-                    if (!empty($provinces)) {
-                        foreach ($provinces as $province) {
-                            if (isset($province['id']) && $province['id'] == $kelahiran->province_id) {
-                                $provinceName = $province['name'] ?? '';
-                                $provinceCode = $province['code'] ?? '';
-                                \Log::info('Found province', ['name' => $provinceName, 'code' => $provinceCode]);
-                                break;
-                            }
-                        }
-                    } else {
-                        \Log::warning('No provinces returned from wilayahService');
+            try {
+                $provinces = $this->wilayahService->getProvinces();
+                
+                // Log provinces for debugging
+                \Log::debug('Retrieved provinces: ' . count($provinces));
+                
+                if (!empty($provinces)) {
+                foreach ($provinces as $province) {
+                    if (isset($province['id']) && $province['id'] == $kelahiran->province_id) {
+                    $provinceName = $province['name'] ?? '';
+                    $provinceCode = $province['code'] ?? '';
+                    \Log::info('Found province', ['name' => $provinceName, 'code' => $provinceCode]);
+                    break;
                     }
-                } catch (\Exception $e) {
-                    \Log::error('Error retrieving provinces: ' . $e->getMessage());
                 }
+                } else {
+                \Log::warning('No provinces returned from wilayahService');
+                }
+            } catch (\Exception $e) {
+                \Log::error('Error retrieving provinces: ' . $e->getMessage());
+            }
             }
 
             // Get district/kabupaten data
             if (!empty($kelahiran->district_id) && !empty($provinceCode)) {
-                try {
-                    $districts = $this->wilayahService->getKabupaten($provinceCode);
-                    
-                    // Log districts for debugging
-                    \Log::debug('Retrieved districts: ' . count($districts));
-                    
-                    if (!empty($districts)) {
-                        foreach ($districts as $district) {
-                            if (isset($district['id']) && $district['id'] == $kelahiran->district_id) {
-                                $districtName = $district['name'] ?? '';
-                                $districtCode = $district['code'] ?? '';
-                                \Log::info('Found district', ['name' => $districtName, 'code' => $districtCode]);
-                                break;
-                            }
-                        }
-                    } else {
-                        \Log::warning('No districts returned for province code: ' . $provinceCode);
+            try {
+                $districts = $this->wilayahService->getKabupaten($provinceCode);
+                
+                // Log districts for debugging
+                \Log::debug('Retrieved districts: ' . count($districts));
+                
+                if (!empty($districts)) {
+                foreach ($districts as $district) {
+                    if (isset($district['id']) && $district['id'] == $kelahiran->district_id) {
+                    $districtName = $district['name'] ?? '';
+                    $districtCode = $district['code'] ?? '';
+                    \Log::info('Found district', ['name' => $districtName, 'code' => $districtCode]);
+                    break;
                     }
-                } catch (\Exception $e) {
-                    \Log::error('Error retrieving districts: ' . $e->getMessage());
                 }
+                } else {
+                \Log::warning('No districts returned for province code: ' . $provinceCode);
+                }
+            } catch (\Exception $e) {
+                \Log::error('Error retrieving districts: ' . $e->getMessage());
+            }
             }
 
             // Get subdistrict/kecamatan data
             if (!empty($kelahiran->subdistrict_id) && !empty($districtCode)) {
-                try {
-                    $subdistricts = $this->wilayahService->getKecamatan($districtCode);
-                    
-                    // Log subdistricts for debugging
-                    \Log::debug('Retrieved subdistricts: ' . count($subdistricts));
-                    
-                    if (!empty($subdistricts)) {
-                        foreach ($subdistricts as $subdistrict) {
-                            if (isset($subdistrict['id']) && $subdistrict['id'] == $kelahiran->subdistrict_id) {
-                                $subdistrictName = $subdistrict['name'] ?? '';
-                                $subdistrictCode = $subdistrict['code'] ?? '';
-                                \Log::info('Found subdistrict', ['name' => $subdistrictName, 'code' => $subdistrictCode]);
-                                break;
-                            }
-                        }
-                    } else {
-                        \Log::warning('No subdistricts returned for district code: ' . $districtCode);
+            try {
+                $subdistricts = $this->wilayahService->getKecamatan($districtCode);
+                
+                // Log subdistricts for debugging
+                \Log::debug('Retrieved subdistricts: ' . count($subdistricts));
+                
+                if (!empty($subdistricts)) {
+                foreach ($subdistricts as $subdistrict) {
+                    if (isset($subdistrict['id']) && $subdistrict['id'] == $kelahiran->subdistrict_id) {
+                    $subdistrictName = $subdistrict['name'] ?? '';
+                    $subdistrictCode = $subdistrict['code'] ?? '';
+                    \Log::info('Found subdistrict', ['name' => $subdistrictName, 'code' => $subdistrictCode]);
+                    break;
                     }
-                } catch (\Exception $e) {
-                    \Log::error('Error retrieving subdistricts: ' . $e->getMessage());
                 }
+                } else {
+                \Log::warning('No subdistricts returned for district code: ' . $districtCode);
+                }
+            } catch (\Exception $e) {
+                \Log::error('Error retrieving subdistricts: ' . $e->getMessage());
+            }
             }
 
             // Get village/desa data
             if (!empty($kelahiran->village_id) && !empty($subdistrictCode)) {
-                try {
-                    $villages = $this->wilayahService->getDesa($subdistrictCode);
-                    
-                    // Log villages for debugging
-                    \Log::debug('Retrieved villages: ' . count($villages));
-                    
-                    if (!empty($villages)) {
-                        foreach ($villages as $village) {
-                            if (isset($village['id']) && $village['id'] == $kelahiran->village_id) {
-                                $villageName = $village['name'] ?? '';
-                                $villageCode = $village['code'] ?? '';
-                                \Log::info('Found village', ['name' => $villageName, 'code' => $villageCode]);
-                                break;
-                            }
-                        }
-                    } else {
-                        \Log::warning('No villages returned for subdistrict code: ' . $subdistrictCode);
+            try {
+                $villages = $this->wilayahService->getDesa($subdistrictCode);
+                
+                // Log villages for debugging
+                \Log::debug('Retrieved villages: ' . count($villages));
+                
+                if (!empty($villages)) {
+                foreach ($villages as $village) {
+                    if (isset($village['id']) && $village['id'] == $kelahiran->village_id) {
+                    $villageName = $village['name'] ?? '';
+                    $villageCode = $village['code'] ?? '';
+                    \Log::info('Found village', ['name' => $villageName, 'code' => $villageCode]);
+                    break;
                     }
-                } catch (\Exception $e) {
-                    \Log::error('Error retrieving villages: ' . $e->getMessage());
                 }
+                } else {
+                \Log::warning('No villages returned for subdistrict code: ' . $subdistrictCode);
+                }
+            } catch (\Exception $e) {
+                \Log::error('Error retrieving villages: ' . $e->getMessage());
+            }
             }
 
             // Store location names in the kelahiran object
@@ -433,40 +471,40 @@ class KelahiranController extends Controller
 
             // Log location data to help with debugging
             \Log::info('Location data for kelahiran ID: ' . $id, [
-                'province_id' => $kelahiran->province_id,
-                'district_id' => $kelahiran->district_id,
-                'subdistrict_id' => $kelahiran->subdistrict_id,
-                'village_id' => $kelahiran->village_id,
-                'province_name' => $provinceName,
-                'district_name' => $districtName,
-                'subdistrict_name' => $subdistrictName,
-                'village_name' => $villageName
+            'province_id' => $kelahiran->province_id,
+            'district_id' => $kelahiran->district_id,
+            'subdistrict_id' => $kelahiran->subdistrict_id,
+            'village_id' => $kelahiran->village_id,
+            'province_name' => $provinceName,
+            'district_name' => $districtName,
+            'subdistrict_name' => $subdistrictName,
+            'village_name' => $villageName
             ]);
 
             // Get job names
             if ($kelahiran->father_job) {
-                $fatherJob = $this->jobService->getJobById($kelahiran->father_job);
-                if ($fatherJob) {
-                    $kelahiran->father_job_name = $fatherJob['name'];
-                }
+            $fatherJob = $this->jobService->getJobById($kelahiran->father_job);
+            if ($fatherJob) {
+                $kelahiran->father_job_name = $fatherJob['name'];
+            }
             }
 
             if ($kelahiran->mother_job) {
-                $motherJob = $this->jobService->getJobById($kelahiran->mother_job);
-                if ($motherJob) {
-                    $kelahiran->mother_job_name = $motherJob['name'];
-                }
+            $motherJob = $this->jobService->getJobById($kelahiran->mother_job);
+            if ($motherJob) {
+                $kelahiran->mother_job_name = $motherJob['name'];
+            }
             }
 
             // Convert religion codes to names
             $religions = [
-                1 => 'Islam',
-                2 => 'Kristen',
-                3 => 'Katholik',
-                4 => 'Hindu',
-                5 => 'Buddha',
-                6 => 'Kong Hu Cu',
-                7 => 'Lainnya'
+            1 => 'Islam',
+            2 => 'Kristen',
+            3 => 'Katholik',
+            4 => 'Hindu',
+            5 => 'Buddha',
+            6 => 'Kong Hu Cu',
+            7 => 'Lainnya'
             ];
 
             $kelahiran->father_religion_name = isset($religions[$kelahiran->father_religion]) ? $religions[$kelahiran->father_religion] : '';
@@ -483,8 +521,8 @@ class KelahiranController extends Controller
 
             // Current date for the letter - use Indonesian month names
             $bulanIndonesia = [
-                1 => 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-                'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+            1 => 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+            'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
             ];
 
             $tanggal = date('d');
@@ -495,37 +533,36 @@ class KelahiranController extends Controller
             // Get the signing name (keterangan) from Penandatangan model
             $signing_name = null;
             if (!empty($kelahiran->signing)) {
-                $penandatangan = \App\Models\Penandatangan::find($kelahiran->signing);
-                if ($penandatangan) {
-                    $signing_name = $penandatangan->keterangan;
-                }
+            $penandatangan = \App\Models\Penandatangan::find($kelahiran->signing);
+            if ($penandatangan) {
+                $signing_name = $penandatangan->keterangan;
+            }
             }
 
             // Get user image based on matching district_id
             $districtLogo = null;
             if (!empty($kelahiran->district_id)) {
-                $userWithLogo = \App\Models\User::where('districts_id', $kelahiran->district_id)
-                    ->whereNotNull('image')
-                    ->first();
+            $userWithLogo = \App\Models\User::where('districts_id', $kelahiran->district_id)
+                ->whereNotNull('image')
+                ->first();
 
-                if ($userWithLogo && $userWithLogo->image) {
-                    $districtLogo = $userWithLogo->image;
-                }
+            if ($userWithLogo && $userWithLogo->image) {
+                $districtLogo = $userWithLogo->image;
+            }
             }
 
             // Log the logo information for debugging
             \Log::info('District logo for Kelahiran ID: ' . $id, [
-                'district_id' => $kelahiran->district_id,
-                'logo_found' => !is_null($districtLogo),
-                'logo_path' => $districtLogo
+            'district_id' => $kelahiran->district_id,
+            'logo_found' => !is_null($districtLogo),
+            'logo_path' => $districtLogo
             ]);
 
-            return view('superadmin.datamaster.surat.kelahiran.Kelahiran', [
-                'kelahiran' => $kelahiran,
-                'currentDate' => $currentDate,
-                'signing_name' => $signing_name, // Pass the signing name to the view
-                'district_logo' => $districtLogo // Add this line
-            ]);
+            if (Auth::user()->role === 'admin desa') {
+            return view('admin.desa.surat.administrasi.index', compact('kelahiran'));
+            }
+
+            return view('superadmin.datamaster.surat.administrasi.index', compact('kelahiran'));
         } catch (\Exception $e) {
             Log::error('Error generating birth certificate PDF: ' . $e->getMessage());
             return back()->with('error', 'Gagal membuat PDF: ' . $e->getMessage());
@@ -660,6 +697,27 @@ class KelahiranController extends Controller
             }
 
             // Return view with properly processed data and pass the village code explicitly
+            if (Auth::user()->role === 'admin desa') {
+                return view('admin.desa.surat.kelahiran.Kelahiran', [
+                    'kelahiran' => $kelahiran,
+                    'addressString' => $addressString ?? '',
+                    'provinceName' => $provinceName,
+                    'districtName' => $districtName,
+                    'subdistrictName' => $subdistrictName,
+                    'villageName' => $villageName,
+                    'villageCode' => $villageCode,
+                    'province_name' => $provinceName,
+                    'district_name' => $districtName,
+                    'subdistrict_name' => $subdistrictName,
+                    'village_name' => $villageName,
+                    'formatted_father_birth_date' => $fatherBirthDate ?? '',
+                    'formatted_mother_birth_date' => $motherBirthDate ?? '',
+                    'formatted_child_birth_date' => $childBirthDate ?? '',
+                    'formatted_rt_letter_date' => $rtLetterDate ?? '',
+                    'signing_name' => $signing_name ?? ''
+                ]);
+            }
+
             return view('superadmin.datamaster.surat.kelahiran.Kelahiran', [
                 'kelahiran' => $kelahiran,
                 'addressString' => $addressString ?? '',
@@ -667,7 +725,7 @@ class KelahiranController extends Controller
                 'districtName' => $districtName,
                 'subdistrictName' => $subdistrictName,
                 'villageName' => $villageName,
-                'villageCode' => $villageCode, // Make sure villageCode is being passed
+                'villageCode' => $villageCode,
                 'province_name' => $provinceName,
                 'district_name' => $districtName,
                 'subdistrict_name' => $subdistrictName,

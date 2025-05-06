@@ -11,6 +11,7 @@ use App\Services\JobService;
 use App\Services\WilayahService;
 use App\Services\CitizenService;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 use Exception;
 
 class RumahSewaController extends Controller
@@ -57,6 +58,10 @@ class RumahSewaController extends Controller
 
         $rumahSewaList = $query->paginate(10);
 
+        if (Auth::user()->role === 'admin desa') {
+            return view('admin.desa.surat.rumah-sewa.index', compact('rumahSewaList'));
+        }
+
         return view('superadmin.datamaster.surat.rumah-sewa.index', compact('rumahSewaList'));
     }
 
@@ -76,6 +81,14 @@ class RumahSewaController extends Controller
         } catch (Exception $e) {
             Log::error('Error fetching signers: ' . $e->getMessage());
             $signers = collect();
+        }
+
+        if (Auth::user()->role === 'admin desa') {
+            return view('admin.desa.surat.rumah-sewa.create', compact(
+            'jobs',
+            'provinces',
+            'signers'
+            ));
         }
 
         return view('superadmin.datamaster.surat.rumah-sewa.create', compact(
@@ -130,6 +143,11 @@ class RumahSewaController extends Controller
             $rumahSewa = new RumahSewa();
             $rumahSewa->fill($validated);
             $rumahSewa->save();
+
+            if (Auth::user()->role === 'admin desa') {
+                return redirect()->route('admin.desa.surat.rumah-sewa.index')
+                    ->with('success', 'Izin rumah sewa berhasil dibuat!');
+            }
 
             return redirect()->route('superadmin.surat.rumah-sewa.index')
                 ->with('success', 'Izin rumah sewa berhasil dibuat!');
@@ -211,6 +229,15 @@ class RumahSewaController extends Controller
         $jobs = $this->jobService->getAllJobs();
         $signers = Penandatangan::all();
 
+        if (Auth::user()->role === 'admin desa') {
+            return view('admin.desa.surat.rumah-sewa.edit', compact(
+            'rumahSewa',
+            'jobs',
+            'provinces',
+            'signers'
+            ));
+        }
+
         return view('superadmin.datamaster.surat.rumah-sewa.edit', compact(
             'rumahSewa',
             'jobs',
@@ -266,6 +293,11 @@ class RumahSewaController extends Controller
 
             $rumahSewa->update($data);
 
+            if (Auth::user()->role === 'admin desa') {
+                return redirect()->route('admin.desa.surat.rumah-sewa.index')
+                    ->with('success', 'Surat izin rumah sewa berhasil diperbarui!');
+            }
+
             return redirect()->route('superadmin.surat.rumah-sewa.index')
                 ->with('success', 'Surat izin rumah sewa berhasil diperbarui!');
         } catch (\Exception $e) {
@@ -284,6 +316,11 @@ class RumahSewaController extends Controller
         try {
             $rumahSewa = RumahSewa::findOrFail($id);
             $rumahSewa->delete();
+
+            if (Auth::user()->role === 'admin desa') {
+                return redirect()->route('admin.desa.surat.rumah-sewa.index')
+                    ->with('success', 'Izin rumah sewa berhasil dihapus!');
+            }
 
             return redirect()->route('superadmin.surat.rumah-sewa.index')
                 ->with('success', 'Izin rumah sewa berhasil dihapus!');
@@ -426,6 +463,21 @@ class RumahSewaController extends Controller
             }
 
             // Return view directly instead of generating PDF
+            if (Auth::user()->role === 'admin desa') {
+                return view('admin.desa.surat.rumah-sewa.IjinRumahSewa', compact(
+                    'rumahSewa',
+                    'provinceName',
+                    'districtName',
+                    'subdistrictName',
+                    'villageName',
+                    'validUntilDate',
+                    'rtValue',
+                    'signing_name',
+                    'villageCode',
+                    'districtLogo'
+                ));
+            }
+
             return view('superadmin.datamaster.surat.rumah-sewa.IjinRumahSewa', compact(
                 'rumahSewa',
                 'provinceName',
@@ -565,6 +617,23 @@ class RumahSewaController extends Controller
             }
 
             // Return view with properly processed data, including the village code
+            if (Auth::user()->role === 'admin desa') {
+                return view('admin.desa.surat.rumah-sewa.IjinRumahSewa', [
+                    'rumahSewa' => $rumahSewa,
+                    'addressString' => $addressString,
+                    'rentalAddressString' => $rentalAddressString,
+                    'provinceName' => $provinceName,
+                    'districtName' => $districtName,
+                    'subdistrictName' => $subdistrictName,
+                    'villageName' => $villageName,
+                    'villageCode' => $villageCode, // Pass the village code
+                    'formatted_letter_date' => $letterDate,
+                    'validUntilDate' => $validUntilDate,
+                    'signing_name' => $signing_name,
+                    'rtValue' => $rumahSewa->rt
+                ]);
+            }
+
             return view('superadmin.datamaster.surat.rumah-sewa.IjinRumahSewa', [
                 'rumahSewa' => $rumahSewa,
                 'addressString' => $addressString,

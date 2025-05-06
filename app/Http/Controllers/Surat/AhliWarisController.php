@@ -59,7 +59,7 @@ class AhliWarisController extends Controller
         $ahliWarisList = $query->paginate(10);
 
         if (Auth::user()->role === 'admin desa') {
-            return view('admin.desa.datamaster.surat.ahli-waris.index', compact('ahliWarisList'));
+            return view('admin.desa.surat.ahli-waris.index', compact('ahliWarisList'));
         }
 
         return view('superadmin.datamaster.surat.ahli-waris.index', compact('ahliWarisList'));
@@ -91,7 +91,7 @@ class AhliWarisController extends Controller
         $villages = [];
 
         if (Auth::user()->role === 'admin desa') {
-            return view('admin.desa.datamaster.surat.ahli-waris.create', compact(
+            return view('admin.desa.surat.ahli-waris.create', compact(
             'jobs',
             'provinces',
             'districts',
@@ -239,7 +239,7 @@ class AhliWarisController extends Controller
         $villages = [];
 
         if (Auth::user()->role === 'admin desa') {
-            return view('admin.desa.datamaster.surat.ahli-waris.edit', compact(
+            return view('admin.desa.surat.ahli-waris.edit', compact(
             'ahliWaris',
             'jobs',
             'provinces',
@@ -512,7 +512,7 @@ class AhliWarisController extends Controller
 
             // Return view with properly processed data
             if (Auth::user()->role === 'admin desa') {
-                return view('admin.desa.datamaster.surat.ahli-waris.AhliWaris', [
+                return view('admin.desa.surat.ahli-waris.AhliWaris', [
                     'ahliWaris' => $ahliWaris,
                     'heirs' => $heirs,
                     'addressString' => $addressString,

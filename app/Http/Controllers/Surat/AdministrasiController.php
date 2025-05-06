@@ -61,7 +61,7 @@ class AdministrasiController extends Controller
             return view('admin.desa.surat.administrasi.index', compact('administrations'));
         }
 
-        return view('superadmin.surat.administrasi.index', compact('administrations'));
+        return view('superadmin.datamaster.surat.administrasi.index', compact('administrations'));
     }
 
     /**
@@ -94,7 +94,7 @@ class AdministrasiController extends Controller
             ));
         }
 
-        return view('superadmin.surat.administrasi.create', compact(
+        return view('superadmin.datamaster.surat.administrasi.create', compact(
             'jobs',
             'provinces',
             'districts',
@@ -209,7 +209,7 @@ class AdministrasiController extends Controller
             ));
         }
 
-        return view('superadmin.surat.administrasi.edit', compact(
+        return view('superadmin.datamaster.surat.administrasi.edit', compact(
             'administration',
             'jobs',
             'provinces',
@@ -560,7 +560,7 @@ class AdministrasiController extends Controller
                 ]);
             }
 
-            return view('superadmin.surat.administrasi.AdministrasiUmum', [
+            return view('superadmin.datamaster.surat.administrasi.AdministrasiUmum', [
                 'administration' => $administration,
                 'job_name' => $jobName,
                 'province_name' => $provinceName,

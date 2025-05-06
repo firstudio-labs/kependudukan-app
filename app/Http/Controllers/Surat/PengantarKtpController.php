@@ -11,6 +11,7 @@ use App\Services\JobService;
 use App\Services\WilayahService;
 use App\Services\CitizenService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class PengantarKtpController extends Controller
 {
@@ -47,14 +48,18 @@ class PengantarKtpController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('family_card_number', 'like', "%{$search}%")
-                  ->orWhere('application_type', 'like', "%{$search}%")
-                  ->orWhere('signing', 'like', "%{$search}%")
-                  ->orWhere('nik', 'like', "%{$search}%")
-                  ->orWhere('full_name', 'like', "%{$search}%");
+                    ->orWhere('application_type', 'like', "%{$search}%")
+                    ->orWhere('signing', 'like', "%{$search}%")
+                    ->orWhere('nik', 'like', "%{$search}%")
+                    ->orWhere('full_name', 'like', "%{$search}%");
             });
         }
 
         $ktpList = $query->paginate(10);
+
+        if (Auth::user()->role === 'admin desa') {
+            return view('admin.desa.surat.pengantar-ktp.index', compact('ktpList'));
+        }
 
         return view('superadmin.datamaster.surat.pengantar-ktp.index', compact('ktpList'));
     }
@@ -75,6 +80,17 @@ class PengantarKtpController extends Controller
         $districts = [];
         $subDistricts = [];
         $villages = [];
+
+        if (Auth::user()->role === 'admin desa') {
+            return view('admin.desa.surat.pengantar-ktp.create', compact(
+                'jobs',
+                'provinces',
+                'districts',
+                'subDistricts',
+                'villages',
+                'signers'
+            ));
+        }
 
         return view('superadmin.datamaster.surat.pengantar-ktp.create', compact(
             'jobs',
@@ -136,6 +152,11 @@ class PengantarKtpController extends Controller
 
             // Log successful creation
             \Log::info('PengantarKTP Created Successfully:', $ktp->toArray());
+
+            if (Auth::user()->role === 'admin desa') {
+                return redirect()->route('admin.desa.surat.pengantar-ktp.index')
+                    ->with('success', 'Surat pengantar KTP berhasil dibuat!');
+            }
 
             return redirect()->route('superadmin.surat.pengantar-ktp.index')
                 ->with('success', 'Surat pengantar KTP berhasil dibuat!');
@@ -215,47 +236,18 @@ class PengantarKtpController extends Controller
                 }
             }
 
-            // Now also fetch the subdistrict data for the bottom address section
-            // We need this for the subdistrict_name field
-            $addressSubDistricts = [];
-            // If we already have the district code from above, reuse it
-            if (!empty($districtCode)) {
-                $addressSubDistricts = $this->wilayahService->getKecamatan($districtCode);
+            if (Auth::user()->role === 'admin desa') {
+                return view('admin.desa.surat.pengantar-ktp.edit', compact(
+                    'ktp',
+                    'jobs',
+                    'provinces',
+                    'districts',
+                    'subDistricts',
+                    'villages',
+                    'signers'
+                ));
             }
 
-            // Now also fetch the village data for the bottom address section
-            // We need this for the village_name field
-            $addressVillages = [];
-            // Get the subdistrict code for the address section (might be different from the top section)
-            $addressSubDistrictCode = null;
-            if (!empty($ktp->subdistrict_name)) {
-                foreach ($addressSubDistricts as $subDistrict) {
-                    if ($subDistrict['id'] == $ktp->subdistrict_name) {
-                        $addressSubDistrictCode = $subDistrict['code'];
-                        break;
-                    }
-                }
-
-                if ($addressSubDistrictCode) {
-                    $addressVillages = $this->wilayahService->getDesa($addressSubDistrictCode);
-                }
-            }
-
-            // If we couldn't get the village data from subdistrict_name, try using the top section's subdistrict code
-            if (empty($addressVillages) && !empty($subDistrictCode)) {
-                $addressVillages = $this->wilayahService->getDesa($subDistrictCode);
-            }
-
-            // Merge the address sections with the regular ones if they're empty
-            if (empty($addressSubDistricts)) {
-                $addressSubDistricts = $subDistricts;
-            }
-
-            if (empty($addressVillages)) {
-                $addressVillages = $villages;
-            }
-
-            // Add the address section villages and subdistricts to the view
             return view('superadmin.datamaster.surat.pengantar-ktp.edit', compact(
                 'ktp',
                 'jobs',
@@ -263,8 +255,6 @@ class PengantarKtpController extends Controller
                 'districts',
                 'subDistricts',
                 'villages',
-                'addressSubDistricts',
-                'addressVillages',
                 'signers'
             ));
         } catch (\Exception $e) {
@@ -275,6 +265,7 @@ class PengantarKtpController extends Controller
             return redirect()->route('superadmin.surat.pengantar-ktp.index')
                 ->with('error', 'Gagal memuat data surat pengantar KTP: ' . $e->getMessage());
         }
+
     }
 
     /**
@@ -310,11 +301,16 @@ class PengantarKtpController extends Controller
         try {
             $pengantarKtp = PengantarKtp::findOrFail($id);
             $data = $request->all();
-            
+
             // Set is_accepted field if it's provided in the form
             $data['is_accepted'] = $request->has('is_accepted') ? 1 : 0;
-            
+
             $pengantarKtp->update($data);
+
+            if (Auth::user()->role === 'admin desa') {
+                return redirect()->route('admin.desa.surat.pengantar-ktp.index')
+                    ->with('success', 'Surat pengantar KTP berhasil diperbarui!');
+            }
 
             return redirect()->route('superadmin.surat.pengantar-ktp.index')
                 ->with('success', 'Surat pengantar KTP berhasil diperbarui!');
@@ -334,6 +330,11 @@ class PengantarKtpController extends Controller
         try {
             $ktp = PengantarKtp::findOrFail($id);
             $ktp->delete();
+
+            if (Auth::user()->role === 'admin desa') {
+                return redirect()->route('admin.desa.surat.pengantar-ktp.index')
+                    ->with('success', 'Surat pengantar KTP berhasil dihapus!');
+            }
 
             return redirect()->route('superadmin.surat.pengantar-ktp.index')
                 ->with('success', 'Surat pengantar KTP berhasil dihapus!');
@@ -476,6 +477,22 @@ class PengantarKtpController extends Controller
             $fullName = is_array($ktp->full_name) ? ($ktp->full_name[0] ?? '') : $ktp->full_name;
 
             // Pass data to the view
+            if (Auth::user()->role === 'admin desa') {
+                return view('admin.desa.surat.pengantar-ktp.PengantarKTP', compact(
+                    'ktp',
+                    'provinceName',
+                    'districtName',
+                    'subdistrictName',
+                    'villageName',
+                    'villageCode', // Add the village code
+                    'applicationType',
+                    'nik',
+                    'fullName',
+                    'signing_name', // Add the signing_name variable
+                    'district_logo' // Add this line
+                ));
+            }
+
             return view('superadmin.datamaster.surat.pengantar-ktp.PengantarKTP', compact(
                 'ktp',
                 'provinceName',
@@ -513,38 +530,39 @@ class PengantarKtpController extends Controller
             // Get the signing name (keterangan) from Penandatangan model
             $signing_name = null;
             if (!empty($ktp->signing)) {
-                $penandatangan = Penandatangan::find($ktp->signing);
-                if ($penandatangan) {
-                    $signing_name = $penandatangan->keterangan;
-                }
+            $penandatangan = Penandatangan::find($ktp->signing);
+            if ($penandatangan) {
+                $signing_name = $penandatangan->keterangan;
+            }
             }
 
             // Get village/desa data
             if (!empty($ktp->village_id)) {
-                $subdistrictCode = null;
-                if (!empty($ktp->subdistrict_id)) {
-                    $subdistricts = $this->wilayahService->getKecamatan($ktp->district_id);
-                    foreach ($subdistricts as $subdistrict) {
-                        if ($subdistrict['id'] == $ktp->subdistrict_id) {
-                            $subdistrictCode = $subdistrict['code'];
-                            break;
-                        }
-                    }
+            $subdistrictCode = null;
+            if (!empty($ktp->subdistrict_id)) {
+                $subdistricts = $this->wilayahService->getKecamatan($ktp->district_id);
+                foreach ($subdistricts as $subdistrict) {
+                if ($subdistrict['id'] == $ktp->subdistrict_id) {
+                    $subdistrictCode = $subdistrict['code'];
+                    break;
                 }
-
-                if ($subdistrictCode) {
-                    $villages = $this->wilayahService->getDesa($subdistrictCode);
-                    foreach ($villages as $village) {
-                        if ($village['id'] == $ktp->village_id) {
-                            $villageName = $village['name'];
-                            $villageCode = $village['code']; // Store the complete village code
-                            break;
-                        }
-                    }
                 }
             }
 
-            return view('superadmin.datamaster.surat.pengantar-ktp.PengantarKTP', [
+            if ($subdistrictCode) {
+                $villages = $this->wilayahService->getDesa($subdistrictCode);
+                foreach ($villages as $village) {
+                if ($village['id'] == $ktp->village_id) {
+                    $villageName = $village['name'];
+                    $villageCode = $village['code']; // Store the complete village code
+                    break;
+                }
+                }
+            }
+            }
+
+            if (Auth::user()->role === 'admin desa') {
+            return view('admin.desa.surat.kematian.index', [
                 'ktp' => $ktp,
                 'fullName' => $ktp->full_name,
                 'provinceName' => $ktp->province_id,
@@ -556,6 +574,21 @@ class PengantarKtpController extends Controller
                 'nikChars' => str_split($ktp->nik),
                 'applicationType' => $ktp->application_type,
                 'signing_name' => $signing_name // Pass the signing name to the view
+            ]);
+            }
+
+            return view('superadmin.datamaster.surat.kematian.index', [
+            'ktp' => $ktp,
+            'fullName' => $ktp->full_name,
+            'provinceName' => $ktp->province_id,
+            'districtName' => $ktp->district_id,
+            'subdistrictName' => $ktp->subdistrict_id,
+            'villageName' => $villageName,
+            'villageCode' => $villageCode, // Add the village code
+            'nameChars' => str_split($ktp->full_name),
+            'nikChars' => str_split($ktp->nik),
+            'applicationType' => $ktp->application_type,
+            'signing_name' => $signing_name // Pass the signing name to the view
             ]);
         } catch (\Exception $e) {
             return back()->with('error', 'Gagal menghasilkan PDF: ' . $e->getMessage());

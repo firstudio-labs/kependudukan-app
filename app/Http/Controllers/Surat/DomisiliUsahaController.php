@@ -11,6 +11,7 @@ use App\Services\JobService;
 use App\Services\WilayahService;
 use App\Services\CitizenService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class DomisiliUsahaController extends Controller
 {
@@ -57,6 +58,10 @@ class DomisiliUsahaController extends Controller
 
         $domisiliUsahaList = $query->paginate(10);
 
+        if (Auth::user()->role === 'admin desa') {
+            return view('admin.desa.surat.domisili-usaha.index', compact('domisiliUsahaList'));
+        }
+
         return view('superadmin.datamaster.surat.domisili-usaha.index', compact('domisiliUsahaList'));
     }
 
@@ -76,6 +81,17 @@ class DomisiliUsahaController extends Controller
         $districts = [];
         $subDistricts = [];
         $villages = [];
+
+        if (Auth::user()->role === 'admin desa') {
+            return view('admin.desa.surat.domisili-usaha.create', compact(
+            'jobs',
+            'provinces',
+            'districts',
+            'subDistricts',
+            'villages',
+            'signers'
+            ));
+        }
 
         return view('superadmin.datamaster.surat.domisili-usaha.create', compact(
             'jobs',
@@ -152,6 +168,11 @@ class DomisiliUsahaController extends Controller
             \Log::info('Attempting to save domisili usaha data', $data);
 
             DomisiliUsaha::create($data);
+
+            if (Auth::user()->role === 'admin desa') {
+                return redirect()->route('admin.desa.surat.domisili-usaha.index')
+                    ->with('success', 'Surat keterangan domisili usaha berhasil dibuat!');
+            }
 
             return redirect()->route('superadmin.surat.domisili-usaha.index')
                 ->with('success', 'Surat keterangan domisili usaha berhasil dibuat!');
@@ -246,6 +267,18 @@ class DomisiliUsahaController extends Controller
         $subDistricts = [];
         $villages = [];
 
+        if (Auth::user()->role === 'admin desa') {
+            return view('admin.desa.surat.domisili-usaha.edit', compact(
+            'domisiliUsaha',
+            'jobs',
+            'provinces',
+            'districts',
+            'subDistricts',
+            'villages',
+            'signers'
+            ));
+        }
+
         return view('superadmin.datamaster.surat.domisili-usaha.edit', compact(
             'domisiliUsaha',
             'jobs',
@@ -301,6 +334,11 @@ class DomisiliUsahaController extends Controller
             
             $domisiliUsaha->update($data);
 
+            if (Auth::user()->role === 'admin desa') {
+                return redirect()->route('admin.desa.surat.domisili-usaha.index')
+                    ->with('success', 'Surat keterangan domisili usaha berhasil diperbarui!');
+            }
+
             return redirect()->route('superadmin.surat.domisili-usaha.index')
                 ->with('success', 'Surat keterangan domisili usaha berhasil diperbarui!');
         } catch (\Exception $e) {
@@ -319,6 +357,11 @@ class DomisiliUsahaController extends Controller
         try {
             $domisiliUsaha = DomisiliUsaha::findOrFail($id);
             $domisiliUsaha->delete();
+
+            if (Auth::user()->role === 'admin desa') {
+                return redirect()->route('admin.desa.surat.domisili-usaha.index')
+                    ->with('success', 'Surat keterangan domisili usaha berhasil dihapus!');
+            }
 
             return redirect()->route('superadmin.surat.domisili-usaha.index')
                 ->with('success', 'Surat keterangan domisili usaha berhasil dihapus!');
@@ -504,6 +547,25 @@ class DomisiliUsahaController extends Controller
                 'logo_found' => !is_null($districtLogo),
                 'logo_path' => $districtLogo
             ]);
+
+            if (Auth::user()->role === 'admin desa') {
+                return view('admin.desa.surat.domisili-usaha.DomisiliUsaha', [
+                    'domisiliUsaha' => $domisiliUsaha,
+                    'job_name' => $jobName,
+                    'province_name' => $provinceName,
+                    'district_name' => $districtName,
+                    'subdistrict_name' => $subdistrictName,
+                    'village_name' => $villageName,
+                    'villageCode' => $villageCode, // Add the village code
+                    'gender' => $gender,
+                    'religion' => $religion,
+                    'citizenship' => $citizenship,
+                    'formatted_birth_date' => $birthDate,
+                    'formatted_letter_date' => $letterDate,
+                    'signing_name' => $signing_name,
+                    'district_logo' => $districtLogo // Add this line
+                ]);
+            }
 
             return view('superadmin.datamaster.surat.domisili-usaha.DomisiliUsaha', [
                 'domisiliUsaha' => $domisiliUsaha,
