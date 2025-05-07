@@ -274,11 +274,12 @@
                     imageContainer.innerHTML = '';
                     
                     // Add image if available
-                    if (laporan.gambar) {
+                     if (laporan.gambar) {
                         const imgElement = document.createElement('div');
                         imgElement.innerHTML = `
-                            <img src="/storage/laporan-desa/${laporan.gambar}" alt="Foto Laporan" class="w-full h-auto object-contain mx-auto rounded-lg shadow-sm">
-                        `;
+                <img src="/storage/${laporan.gambar}" alt="Foto Laporan" 
+                     class="w-full h-auto max-h-[300px] object-contain rounded-lg shadow-sm">
+            `;
                         imageContainer.appendChild(imgElement);
                     } else {
                         imageContainer.innerHTML = '<p class="text-sm text-gray-500">Tidak ada foto</p>';

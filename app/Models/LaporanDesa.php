@@ -21,29 +21,19 @@ class LaporanDesa extends Model
         'village_id'
     ];
 
-    /**
-     * Get the laporDesa that owns the laporan.
-     */
+
+    
     public function laporDesa()
     {
         return $this->belongsTo(LaporDesa::class, 'lapor_desa_id');
     }
 
-    /**
-     * Get the user that owns the laporan.
-     */
+  
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * Get the village that owns the laporan.
-     */
-    public function village()
-    {
-        return $this->belongsTo(Village::class);
-    }
 
     public function getLatitudeAttribute()
     {
@@ -71,4 +61,11 @@ class LaporanDesa extends Model
             $this->tag_lokasi = "$latitude, $longitude";
         }
     }
+
+    public function getGambarUrlAttribute()
+    {
+        return $this->gambar ? asset('storage/' . $this->gambar) : null;
+    }
+
+   
 }

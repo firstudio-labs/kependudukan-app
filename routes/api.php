@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\Api\JenisAsetController;
+use App\Http\Controllers\Api\KlasifikasiController;
+use App\Http\Controllers\Api\LaporanDesaController;
 use App\Http\Controllers\Api\LaporDesaApiController;
 use App\Http\Controllers\Api\LaporDesaController;
 use App\Http\Middleware\ApiTokenOwnerMiddleware;
@@ -48,6 +51,13 @@ Route::middleware(ApiTokenOwnerMiddleware::class)->group(function () {
         ]);
     });
 
+    //List Aset
+    Route::get('/klasifikasi', [KlasifikasiController::class, 'index']);
+    Route::get('/jenis-aset', [JenisAsetController::class, 'index']);
+    
+
+
+
     Route::prefix('user')->group(function () {
         //kelola aset
         Route::get('/kelola-aset', [KelolaAsetController::class, 'index'])
@@ -64,17 +74,17 @@ Route::middleware(ApiTokenOwnerMiddleware::class)->group(function () {
             ->name('user.kelola-aset.destroy');
 
         //laporan desa
-        Route::get('/laporan-desa', [LaporDesaController::class, 'index'])
+        Route::get('/laporan-desa', [LaporanDesaController::class, 'index'])
             ->name('user.laporan-desa.index');
-        Route::get('/laporan-desa/create', [LaporDesaController::class, 'create'])
+        Route::get('/laporan-desa/create', [LaporanDesaController::class, 'create'])
             ->name('user.laporan-desa.create');
-        Route::post('/laporan-desa', [LaporDesaController::class, 'store'])
+        Route::post('/laporan-desa', [LaporanDesaController::class, 'store'])
             ->name('user.laporan-desa.store');
-        Route::get('/laporan-desa/{id}/edit', [LaporDesaController::class, 'edit'])
+        Route::get('/laporan-desa/{id}/edit', [LaporanDesaController::class, 'edit'])
             ->name('user.laporan-desa.edit');
-        Route::put('/laporan-desa/{id}', [LaporDesaController::class, 'update'])
+        Route::put('/laporan-desa/{id}', [LaporanDesaController::class, 'update'])
             ->name('user.laporan-desa.update');
-        Route::delete('/laporan-desa/{id}', [LaporDesaController::class, 'destroy'])
+        Route::delete('/laporan-desa/{id}', [LaporanDesaController::class, 'destroy'])
             ->name('user.laporan-desa.destroy');
 
         //profile

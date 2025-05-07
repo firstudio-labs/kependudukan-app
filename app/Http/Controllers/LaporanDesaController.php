@@ -33,8 +33,6 @@ class LaporanDesaController extends Controller
             });
         }
 
-        // Include relationships for better display
-        $query->with(['laporDesa', 'user']);
 
         $laporans = $query->orderBy('created_at', 'desc')
             ->paginate(10)
@@ -86,13 +84,19 @@ class LaporanDesaController extends Controller
         }
         $data['tag_lokasi'] = $tag_lokasi;
 
-        // Handle image upload
+
+        $gambar = null;
         if ($request->hasFile('gambar')) {
             $file = $request->file('gambar');
-            $fileName = time() . '_' . Str::slug($request->judul_laporan) . '.' . $file->getClientOriginalExtension();
-            $path = $file->storeAs('public/laporan-desa', $fileName);
-            $data['gambar'] = $fileName;
+            $reportName = Str::slug(substr($request->judul_laporan, 0, 30));
+            $timestamp = time();
+            $filename = $timestamp . '_' . $reportName . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('uploads/documents/foto-lapordesa', $filename, 'public');
+            $gambar = $path;
         }
+
+        $data['gambar'] = $gambar;
+
 
         // Set user_id and village_id
         if (Auth::guard('penduduk')->check()) {
@@ -216,19 +220,18 @@ class LaporanDesaController extends Controller
         }
         $data['tag_lokasi'] = $tag_lokasi;
 
-        // Handle image upload
+        $gambar = null;
         if ($request->hasFile('gambar')) {
-            // Delete old image if exists
-            if ($laporanDesa->gambar && Storage::exists('public/laporan-desa/' . $laporanDesa->gambar)) {
-                Storage::delete('public/laporan-desa/' . $laporanDesa->gambar);
-            }
-
             $file = $request->file('gambar');
-            $fileName = time() . '_' . Str::slug($request->judul_laporan) . '.' . $file->getClientOriginalExtension();
-            $path = $file->storeAs('public/laporan-desa', $fileName);
-            $data['gambar'] = $fileName;
+            $reportName = Str::slug(substr($request->judul_laporan, 0, 30));
+            $timestamp = time();
+            $filename = $timestamp . '_' . $reportName . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('uploads/documents/foto-lapordesa', $filename, 'public');
+            $gambar = $path;
         }
 
+        $data['gambar'] = $gambar;
+        
         $laporanDesa->update($data);
 
         return redirect()->route('user.laporan-desa.index')
@@ -259,46 +262,5 @@ class LaporanDesaController extends Controller
             ->with('success', 'Laporan berhasil dihapus.');
     }
 
-    /**
-     * Admin function to manage reports
-     */
-    public function adminIndex()
-    {
-        $query = LaporanDesa::query();
-
-        // Admin desa only sees reports from their village
-        if (Auth::user()->role === 'admin desa') {
-            $query->where('village_id', Auth::user()->villages_id);
-        }
-
-        $laporans = $query->with(['laporDesa', 'user'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
-
-        return view('admin.desa.laporan-desa.index', compact('laporans'));
-    }
-
-    /**
-     * Admin function to update status
-     */
-    public function updateStatus(Request $request, $id)
-    {
-        $laporan = LaporanDesa::findOrFail($id);
-
-        // Only admin desa from the same village can update status
-        if (Auth::user()->role === 'admin desa' && $laporan->village_id != Auth::user()->villages_id) {
-            return abort(403, 'Unauthorized action.');
-        }
-
-        $request->validate([
-            'status' => 'required|in:Menunggu,Diproses,Selesai,Ditolak',
-        ]);
-
-        $laporan->update([
-            'status' => $request->status
-        ]);
-
-        return redirect()->route('admin.desa.laporan-desa.index')
-            ->with('success', 'Status laporan berhasil diperbarui.');
-    }
+  
 }
