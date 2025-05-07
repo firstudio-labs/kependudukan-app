@@ -20,12 +20,14 @@
 
 
                 <!-- Tombol Export -->
-                <form method="GET" action="{{ route('admin.desa.biodata.export') }}">
+                <form method="GET" action="{{ route('admin.desa.biodata.index') }}">
+                    @csrf
+                    <input type="hidden" name="export" value="1">
                     <button type="submit"
                         class="text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 flex items-center space-x-2">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
                             class="w-4 h-4">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
                         <span>Export Excel</span>
                     </button>
@@ -63,7 +65,7 @@
                         $pagination = $citizens['data']['pagination'] ?? [
                             'current_page' => 1,
                             'items_per_page' => 10,
-                            'total_items' => 0,
+                            'total_items' => 0
                         ];
 
                         $currentPage = $pagination['current_page'];
@@ -81,13 +83,13 @@
                             <td class="px-6 py-4">{{ $citizen['address'] }}</td>
                             <td class="px-6 py-4">{{ $citizen['family_status'] }}</td>
                             <td class="px-6 py-4">
-                                <span
-                                    class="px-2 py-1 rounded-full text-xs font-medium
-                                @if ($citizen['status'] == 'Active') bg-green-100 text-green-800
-                                @elseif($citizen['status'] == 'Inactive') bg-yellow-100 text-yellow-800
-                                @elseif($citizen['status'] == 'Deceased') bg-red-100 text-red-800
-                                @elseif($citizen['status'] == 'Moved') bg-blue-100 text-blue-800
-                                @else bg-gray-100 text-gray-800 @endif">
+                                <span class="px-2 py-1 rounded-full text-xs font-medium
+                                    @if($citizen['status'] == 'Active') bg-green-100 text-green-800
+                                    @elseif($citizen['status'] == 'Inactive') bg-yellow-100 text-yellow-800
+                                    @elseif($citizen['status'] == 'Deceased') bg-red-100 text-red-800
+                                    @elseif($citizen['status'] == 'Moved') bg-blue-100 text-blue-800
+                                    @else bg-gray-100 text-gray-800
+                                    @endif">
                                     {{ $citizen['status'] ?? 'Active' }}
                                 </span>
                             </td>
@@ -119,7 +121,7 @@
                 </tbody>
             </table>
 
-            @if (isset($citizens['data']['pagination']) && $citizens['data']['pagination']['total_page'] > 0)
+            @if(isset($citizens['data']['pagination']) && $citizens['data']['pagination']['total_page'] > 0)
                 @php
                     // Create a proper pagination object that the component can use
                     $paginationData = new \Illuminate\Pagination\LengthAwarePaginator(
@@ -130,7 +132,7 @@
                         [
                             'path' => request()->url(),
                             'query' => request()->query(),
-                        ],
+                        ]
                     );
                 @endphp
 

@@ -11,6 +11,7 @@ use App\Services\JobService;
 use App\Services\WilayahService;
 use App\Services\CitizenService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class KehilanganController extends Controller
 {
@@ -54,6 +55,10 @@ class KehilanganController extends Controller
 
         $kehilangans = $query->paginate(10);
 
+        if (Auth::user()->role === 'admin desa') {
+            return view('admin.desa.surat.kehilangan.index', compact('kehilangans'));
+        }
+
         return view('superadmin.datamaster.surat.kehilangan.index', compact('kehilangans'));
     }
 
@@ -73,6 +78,17 @@ class KehilanganController extends Controller
         $districts = [];
         $subDistricts = [];
         $villages = [];
+
+        if (Auth::user()->role === 'admin desa') {
+            return view('admin.desa.surat.kehilangan.create', compact(
+            'jobs',
+            'provinces',
+            'districts',
+            'subDistricts',
+            'villages',
+            'signers'
+            ));
+        }
 
         return view('superadmin.datamaster.surat.kehilangan.create', compact(
             'jobs',
@@ -115,6 +131,11 @@ class KehilanganController extends Controller
 
         try {
             Kehilangan::create($request->all());
+            if (Auth::user()->role === 'admin desa') {
+                return redirect()->route('admin.desa.surat.kehilangan.index')
+                    ->with('success', 'Surat kehilangan berhasil dibuat!');
+            }
+
             return redirect()->route('superadmin.surat.kehilangan.index')
                 ->with('success', 'Surat kehilangan berhasil dibuat!');
         } catch (\Exception $e) {
@@ -141,6 +162,18 @@ class KehilanganController extends Controller
         $districts = [];
         $subDistricts = [];
         $villages = [];
+
+        if (Auth::user()->role === 'admin desa') {
+            return view('admin.desa.surat.kehilangan.edit', compact(
+            'kehilangan',
+            'jobs',
+            'provinces',
+            'districts',
+            'subDistricts',
+            'villages',
+            'signers'
+            ));
+        }
 
         return view('superadmin.datamaster.surat.kehilangan.edit', compact(
             'kehilangan',
@@ -192,6 +225,11 @@ class KehilanganController extends Controller
             
             $kehilangan->update($data);
 
+            if (Auth::user()->role === 'admin desa') {
+                return redirect()->route('admin.desa.surat.kehilangan.index')
+                    ->with('success', 'Surat keterangan kehilangan berhasil diperbarui!');
+            }
+
             return redirect()->route('superadmin.surat.kehilangan.index')
                 ->with('success', 'Surat keterangan kehilangan berhasil diperbarui!');
         } catch (\Exception $e) {
@@ -210,6 +248,11 @@ class KehilanganController extends Controller
         try {
             $kehilangan = Kehilangan::findOrFail($id);
             $kehilangan->delete();
+
+            if (Auth::user()->role === 'admin desa') {
+                return redirect()->route('admin.desa.surat.kehilangan.index')
+                    ->with('success', 'Surat kehilangan berhasil dihapus!');
+            }
 
             return redirect()->route('superadmin.surat.kehilangan.index')
                 ->with('success', 'Surat kehilangan berhasil dihapus!');
@@ -391,6 +434,25 @@ class KehilanganController extends Controller
                 if ($penandatangan) {
                     $signing_name = $penandatangan->keterangan;
                 }
+            }
+
+            if (Auth::user()->role === 'admin desa') {
+                return view('admin.desa.surat.kehilangan.kehilangan', [
+                    'kehilangan' => $kehilangan,
+                    'provinceName' => $provinceName,
+                    'districtName' => $districtName,
+                    'subdistrictName' => $subdistrictName,
+                    'villageName' => $villageName,
+                    'villageCode' => $villageCode, // Add the village code
+                    'jobName' => $jobName,
+                    'gender' => $gender,
+                    'religion' => $religion,
+                    'citizenship' => $citizenship,
+                    'birthDate' => $birthDate,
+                    'letterDate' => $letterDate,
+                    'signing_name' => $signing_name, // Pass the signing name to the view
+                    'district_logo' => $districtLogo // Add this line
+                ]);
             }
 
             return view('superadmin.datamaster.surat.kehilangan.Kehilangan', [

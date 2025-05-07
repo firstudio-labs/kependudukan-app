@@ -12,6 +12,7 @@ use App\Services\WilayahService;
 use App\Services\CitizenService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 class AhliWarisController extends Controller
 {
@@ -57,6 +58,10 @@ class AhliWarisController extends Controller
 
         $ahliWarisList = $query->paginate(10);
 
+        if (Auth::user()->role === 'admin desa') {
+            return view('admin.desa.surat.ahli-waris.index', compact('ahliWarisList'));
+        }
+
         return view('superadmin.datamaster.surat.ahli-waris.index', compact('ahliWarisList'));
     }
 
@@ -84,6 +89,17 @@ class AhliWarisController extends Controller
         $districts = [];
         $subDistricts = [];
         $villages = [];
+
+        if (Auth::user()->role === 'admin desa') {
+            return view('admin.desa.surat.ahli-waris.create', compact(
+            'jobs',
+            'provinces',
+            'districts',
+            'subDistricts',
+            'villages',
+            'signers'
+            ));
+        }
 
         return view('superadmin.datamaster.surat.ahli-waris.create', compact(
             'jobs',
@@ -130,6 +146,11 @@ class AhliWarisController extends Controller
 
         try {
             AhliWaris::create($request->all());
+            if (Auth::user()->role === 'admin desa') {
+                return redirect()->route('admin.desa.surat.ahli-waris.index')
+                    ->with('success', 'Surat keterangan ahli waris berhasil dibuat!');
+            }
+
             return redirect()->route('superadmin.surat.ahli-waris.index')
                 ->with('success', 'Surat keterangan ahli waris berhasil dibuat!');
         } catch (\Exception $e) {
@@ -217,6 +238,18 @@ class AhliWarisController extends Controller
         $subDistricts = [];
         $villages = [];
 
+        if (Auth::user()->role === 'admin desa') {
+            return view('admin.desa.surat.ahli-waris.edit', compact(
+            'ahliWaris',
+            'jobs',
+            'provinces',
+            'districts',
+            'subDistricts',
+            'villages',
+            'signers'
+            ));
+        }
+
         return view('superadmin.datamaster.surat.ahli-waris.edit', compact(
             'ahliWaris',
             'jobs',
@@ -271,6 +304,11 @@ class AhliWarisController extends Controller
             
             $ahliWaris->update($data);
 
+            if (Auth::user()->role === 'admin desa') {
+                return redirect()->route('admin.desa.surat.ahli-waris.index')
+                    ->with('success', 'Surat keterangan ahli waris berhasil diperbarui!');
+            }
+
             return redirect()->route('superadmin.surat.ahli-waris.index')
                 ->with('success', 'Surat keterangan ahli waris berhasil diperbarui!');
         } catch (\Exception $e) {
@@ -289,6 +327,11 @@ class AhliWarisController extends Controller
         try {
             $ahliWaris = AhliWaris::findOrFail($id);
             $ahliWaris->delete();
+
+            if (Auth::user()->role === 'admin desa') {
+                return redirect()->route('admin.desa.surat.ahli-waris.index')
+                    ->with('success', 'Surat keterangan ahli waris berhasil dihapus!');
+            }
 
             return redirect()->route('superadmin.surat.ahli-waris.index')
                 ->with('success', 'Surat keterangan ahli waris berhasil dihapus!');
@@ -468,6 +511,31 @@ class AhliWarisController extends Controller
             ]);
 
             // Return view with properly processed data
+            if (Auth::user()->role === 'admin desa') {
+                return view('admin.desa.surat.ahli-waris.AhliWaris', [
+                    'ahliWaris' => $ahliWaris,
+                    'heirs' => $heirs,
+                    'addressString' => $addressString,
+                    'normalized_nik' => $nik,
+                    'province_name' => $provinceName,
+                    'district_name' => $districtName,
+                    'subdistrict_name' => $subdistrictName,
+                    'village_name' => $villageName,
+                    'provinceName' => $provinceName,
+                    'districtName' => $districtName,
+                    'subdistrictName' => $subdistrictName,
+                    'villageName' => $villageName,
+                    'villageCode' => $villageCode,
+                    'formatted_birth_date' => $birthDate,
+                    'formatted_death_date' => $deathDate,
+                    'formatted_letter_date' => $letterDate,
+                    'gender' => $gender,
+                    'religion' => $religion,
+                    'signing_name' => $signing_name,
+                    'district_logo' => $districtLogo
+                ]);
+            }
+
             return view('superadmin.datamaster.surat.ahli-waris.AhliWaris', [
                 'ahliWaris' => $ahliWaris,
                 'heirs' => $heirs,

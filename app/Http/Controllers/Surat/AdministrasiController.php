@@ -11,6 +11,7 @@ use App\Services\CitizenService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use App\Models\Penandatangan;
+use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 
 class AdministrasiController extends Controller
@@ -56,6 +57,10 @@ class AdministrasiController extends Controller
 
         $administrations = $query->paginate(10);
 
+        if (Auth::user()->role === 'admin desa') {
+            return view('admin.desa.surat.administrasi.index', compact('administrations'));
+        }
+
         return view('superadmin.datamaster.surat.administrasi.index', compact('administrations'));
     }
 
@@ -78,14 +83,24 @@ class AdministrasiController extends Controller
         $villages = [];
 
 
+        if (Auth::user()->role === 'admin desa') {
+            return view('admin.desa.surat.administrasi.create', compact(
+            'jobs',
+            'provinces',
+            'districts',
+            'subDistricts',
+            'villages',
+            'signers'
+            ));
+        }
+
         return view('superadmin.datamaster.surat.administrasi.create', compact(
             'jobs',
             'provinces',
             'districts',
             'subDistricts',
             'villages',
-            'signers',
-
+            'signers'
         ));
     }
 
@@ -121,6 +136,11 @@ class AdministrasiController extends Controller
 
         try {
             Administration::create($request->all());
+            if (Auth::user()->role === 'admin desa') {
+                return redirect()->route('admin.desa.surat.administrasi.index')
+                    ->with('success', 'Surat administrasi berhasil dibuat!');
+            }
+
             return redirect()->route('superadmin.surat.administrasi.index')
                 ->with('success', 'Surat administrasi berhasil dibuat!');
         } catch (\Exception $e) {
@@ -176,6 +196,18 @@ class AdministrasiController extends Controller
             'administration' => $administration->toArray(),
             'job_type_id' => $administration->job_type_id
         ]);
+
+        if (Auth::user()->role === 'admin desa') {
+            return view('admin.desa.surat.administrasi.edit', compact(
+            'administration',
+            'jobs',
+            'provinces',
+            'districts',
+            'subDistricts',
+            'villages',
+            'signers' // Add this line to pass signers to the view
+            ));
+        }
 
         return view('superadmin.datamaster.surat.administrasi.edit', compact(
             'administration',
@@ -234,6 +266,11 @@ class AdministrasiController extends Controller
 
             $administration->update($data);
 
+            if (Auth::user()->role === 'admin desa') {
+                return redirect()->route('admin.desa.surat.administrasi.index')
+                    ->with('success', 'Surat administrasi berhasil diperbarui!');
+            }
+
             return redirect()->route('superadmin.surat.administrasi.index')
                 ->with('success', 'Surat administrasi berhasil diperbarui!');
         } catch (\Exception $e) {
@@ -252,6 +289,11 @@ class AdministrasiController extends Controller
         try {
             $administration = Administration::findOrFail($id);
             $administration->delete();
+
+            if (Auth::user()->role === 'admin desa') {
+                return redirect()->route('admin.desa.surat.administrasi.index')
+                    ->with('success', 'Surat administrasi berhasil dihapus!');
+            }
 
             return redirect()->route('superadmin.surat.administrasi.index')
                 ->with('success', 'Surat administrasi berhasil dihapus!');
@@ -497,6 +539,26 @@ class AdministrasiController extends Controller
                 'logo_found' => !is_null($districtLogo),
                 'logo_path' => $districtLogo
             ]);
+
+            if (Auth::user()->role === 'admin desa') {
+                return view('admin.desa.surat.administrasi.AdministrasiUmum', [
+                    'administration' => $administration,
+                    'job_name' => $jobName,
+                    'province_name' => $provinceName,
+                    'district_name' => $districtName,
+                    'subdistrict_name' => $subdistrictName,
+                    'village_name' => $villageName,
+                    'village_code' => $villageCode, // Pass the complete village code
+                    'gender' => $gender,
+                    'religion' => $religion,
+                    'citizenship' => $citizenship,
+                    'formatted_birth_date' => $birthDate,
+                    'formatted_letter_date' => $letterDate,
+                    'rt' => $rt,
+                    'signing_name' => $signing_name, // Pass the signing name to the view
+                    'district_logo' => $districtLogo // Pass the district logo to the view
+                ]);
+            }
 
             return view('superadmin.datamaster.surat.administrasi.AdministrasiUmum', [
                 'administration' => $administration,

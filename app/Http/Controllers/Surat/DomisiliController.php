@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Penandatangan;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 
 class DomisiliController extends Controller
 {
@@ -57,6 +58,10 @@ class DomisiliController extends Controller
 
         $domisiliList = $query->paginate(10);
 
+        if (Auth::user()->role === 'admin desa') {
+            return view('admin.desa.surat.domisili.index', compact('domisiliList'));
+        }
+
         return view('superadmin.datamaster.surat.domisili.index', compact('domisiliList'));
     }
 
@@ -76,6 +81,17 @@ class DomisiliController extends Controller
         $districts = [];
         $subDistricts = [];
         $villages = [];
+
+        if (Auth::user()->role === 'admin desa') {
+            return view('admin.desa.surat.domisili.create', compact(
+            'jobs',
+            'provinces',
+            'districts',
+            'subDistricts',
+            'villages',
+            'signers'
+            ));
+        }
 
         return view('superadmin.datamaster.surat.domisili.create', compact(
             'jobs',
@@ -161,6 +177,11 @@ class DomisiliController extends Controller
             DB::commit();
 
             Log::info('Domisili created successfully', ['id' => $domisili->id]);
+
+            if (Auth::user()->role === 'admin desa') {
+                return redirect()->route('admin.desa.surat.domisili.index')
+                    ->with('success', 'Surat keterangan domisili berhasil dibuat!');
+            }
 
             return redirect()->route('superadmin.surat.domisili.index')
                 ->with('success', 'Surat keterangan domisili berhasil dibuat!');
@@ -256,6 +277,18 @@ class DomisiliController extends Controller
         $subDistricts = [];
         $villages = [];
 
+        if (Auth::user()->role === 'admin desa') {
+            return view('admin.desa.surat.domisili.edit', compact(
+            'domisili',
+            'jobs',
+            'provinces',
+            'districts',
+            'subDistricts',
+            'villages',
+            'signers'
+            ));
+        }
+
         return view('superadmin.datamaster.surat.domisili.edit', compact(
             'domisili',
             'jobs',
@@ -334,6 +367,11 @@ class DomisiliController extends Controller
         try {
             $domisili = Domisili::findOrFail($id);
             $domisili->delete();
+
+            if (Auth::user()->role === 'admin desa') {
+                return redirect()->route('admin.desa.surat.domisili.index')
+                    ->with('success', 'Surat keterangan domisili berhasil dihapus!');
+            }
 
             return redirect()->route('superadmin.surat.domisili.index')
                 ->with('success', 'Surat keterangan domisili berhasil dihapus!');
@@ -515,6 +553,25 @@ class DomisiliController extends Controller
                 'logo_found' => !is_null($districtLogo),
                 'logo_path' => $districtLogo
             ]);
+
+            if (Auth::user()->role === 'admin desa') {
+                return view('admin.desa.surat.domisili.Domisili', [
+                    'domisili' => $domisili,
+                    'job_name' => $jobName,
+                    'province_name' => $provinceName,
+                    'district_name' => $districtName,
+                    'subdistrict_name' => $subdistrictName,
+                    'village_name' => $villageName,
+                    'villageCode' => $villageCode, // Add the village code
+                    'gender' => $gender,
+                    'religion' => $religion,
+                    'citizenship' => $citizenship,
+                    'formatted_birth_date' => $birthDate,
+                    'formatted_letter_date' => $letterDate,
+                    'signing_name' => $signing_name, // Pass the signing name to the view
+                    'district_logo' => $districtLogo // Add this line
+                ]);
+            }
 
             return view('superadmin.datamaster.surat.domisili.Domisili', [
                 'domisili' => $domisili,

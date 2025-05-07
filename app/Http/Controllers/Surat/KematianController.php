@@ -11,6 +11,7 @@ use App\Services\JobService;
 use App\Services\WilayahService;
 use App\Services\CitizenService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class KematianController extends Controller
 {
@@ -56,6 +57,10 @@ class KematianController extends Controller
 
         $kematianList = $query->paginate(10);
 
+        if (Auth::user()->role === 'admin desa') {
+            return view('admin.desa.surat.kematian.index', compact('kematianList'));
+        }
+
         return view('superadmin.datamaster.surat.kematian.index', compact('kematianList'));
     }
 
@@ -75,6 +80,17 @@ class KematianController extends Controller
         $districts = [];
         $subDistricts = [];
         $villages = [];
+
+        if (Auth::user()->role === 'admin desa') {
+            return view('admin.desa.surat.kematian.create', compact(
+            'jobs',
+            'provinces',
+            'districts',
+            'subDistricts',
+            'villages',
+            'signers'
+            ));
+        }
 
         return view('superadmin.datamaster.surat.kematian.create', compact(
             'jobs',
@@ -122,6 +138,11 @@ class KematianController extends Controller
 
         try {
             Kematian::create($request->all());
+            if (Auth::user()->role === 'admin desa') {
+                return redirect()->route('admin.desa.surat.kematian.index')
+                    ->with('success', 'Surat keterangan kematian berhasil dibuat!');
+            }
+
             return redirect()->route('superadmin.surat.kematian.index')
                 ->with('success', 'Surat keterangan kematian berhasil dibuat!');
         } catch (\Exception $e) {
@@ -201,6 +222,18 @@ class KematianController extends Controller
         $subDistricts = [];
         $villages = [];
 
+        if (Auth::user()->role === 'admin desa') {
+            return view('admin.desa.surat.kematian.edit', compact(
+            'kematian',
+            'jobs',
+            'provinces',
+            'districts',
+            'subDistricts',
+            'villages',
+            'signers'
+            ));
+        }
+
         return view('superadmin.datamaster.surat.kematian.edit', compact(
             'kematian',
             'jobs',
@@ -256,6 +289,11 @@ class KematianController extends Controller
 
             $kematian->update($data);
 
+            if (Auth::user()->role === 'admin desa') {
+                return redirect()->route('admin.desa.surat.kematian.index')
+                    ->with('success', 'Surat keterangan kematian berhasil diperbarui!');
+            }
+
             return redirect()->route('superadmin.surat.kematian.index')
                 ->with('success', 'Surat keterangan kematian berhasil diperbarui!');
         } catch (\Exception $e) {
@@ -274,6 +312,11 @@ class KematianController extends Controller
         try {
             $kematian = Kematian::findOrFail($id);
             $kematian->delete();
+
+            if (Auth::user()->role === 'admin desa') {
+                return redirect()->route('admin.desa.surat.kematian.index')
+                    ->with('success', 'Surat keterangan kematian berhasil dihapus!');
+            }
 
             return redirect()->route('superadmin.surat.kematian.index')
                 ->with('success', 'Surat keterangan kematian berhasil dihapus!');
@@ -468,6 +511,26 @@ class KematianController extends Controller
                 'logo_found' => !is_null($districtLogo),
                 'logo_path' => $districtLogo
             ]);
+
+            if (Auth::user()->role === 'admin desa') {
+                return view('admin.desa.surat.kematian.kematian', [
+                    'kematian' => $kematian,
+                    'provinceName' => $provinceName,
+                    'districtName' => $districtName,
+                    'subdistrictName' => $subdistrictName,
+                    'villageName' => $villageName,
+                    'villageCode' => $villageCode, // Add the village code
+                    'jobName' => $jobName,
+                    'religionName' => $religionName,
+                    'genderName' => $genderName,
+                    'citizenStatusName' => $citizenStatusName,
+                    'birthDate' => $birthDate,
+                    'deathDate' => $deathDate,
+                    'rtLetterDate' => $rtLetterDate,
+                    'signing_name' => $signing_name, // Pass the signing name to the view
+                    'district_logo' => $districtLogo // Add this line
+                ]);
+            }
 
             // Return view directly instead of generating PDF
             return view('superadmin.datamaster.surat.kematian.Kematian', [

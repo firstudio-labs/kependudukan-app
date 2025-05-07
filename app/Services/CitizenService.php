@@ -187,6 +187,7 @@ class CitizenService
                 'X-API-Key' => $this->apiKey,
             ])->put("{$this->baseUrl}/api/citizens/{$nik}", $data);
 
+            dd($response->body());
             if ($response->successful()) {
                 return $response->json();
             } else {
@@ -355,12 +356,13 @@ class CitizenService
      * @param int $villageId
      * @return array
      */
-    public function getCitizensByVillageId($villageId)
+    public function getCitizensByVillageId($villageId, $page = 1)
     {
         try {
             $response = Http::withHeaders([
                 'X-API-Key' => $this->apiKey,
             ])->get("{$this->baseUrl}/api/citizens", [
+                'page' => $page,
                 'village_id' => $villageId,
                 'limit' => 1000
             ]);
