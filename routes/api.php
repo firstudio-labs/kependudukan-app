@@ -54,6 +54,7 @@ Route::middleware(ApiTokenOwnerMiddleware::class)->group(function () {
     //List Aset
     Route::get('/klasifikasi', [KlasifikasiController::class, 'index']);
     Route::get('/jenis-aset', [JenisAsetController::class, 'index']);
+    Route::get('/lapor-desa', [LaporDesaController::class, 'index']);
     
 
 
