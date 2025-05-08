@@ -52,22 +52,11 @@ class KelolaAsetController extends Controller
             // Get just the data items from the paginator
             $assets = $paginator->items();
 
-            // Process assets to attach location names
-            foreach ($assets as $asset) {
-                $this->attachLocationNames($asset);
-            }
-
             // Return a custom response without pagination metadata
             return response()->json([
                 'status' => 'success',
                 'message' => 'Data aset berhasil diambil',
                 'data' => $assets,
-                // Optional minimal pagination info
-                'page_info' => [
-                    'current_page' => $paginator->currentPage(),
-                    'total_items' => $paginator->total(),
-                    'total_pages' => $paginator->lastPage()
-                ]
             ], 200);
         } catch (\Exception $e) {
             Log::error('Error fetching assets: ' . $e->getMessage());
@@ -187,9 +176,6 @@ class KelolaAsetController extends Controller
                 'foto_aset_samping' => $foto_aset_samping,
             ]);
 
-            // Add location names to the asset
-            $this->attachLocationNames($aset);
-
             return response()->json([
                 'status' => 'success',
                 'message' => 'Data aset berhasil disimpan',
@@ -226,9 +212,6 @@ class KelolaAsetController extends Controller
                 $aset->tag_lat = $aset->getLatitudeAttribute();
                 $aset->tag_lng = $aset->getLongitudeAttribute();
             }
-
-            // Add location names to the asset
-            $this->attachLocationNames($aset);
 
             $data = [
                 'aset' => $aset,
@@ -334,9 +317,6 @@ class KelolaAsetController extends Controller
                 'foto_aset_samping' => $validated['foto_aset_samping'] ?? $aset->foto_aset_samping,
             ]);
 
-            // Add location names to the updated asset
-            $this->attachLocationNames($aset);
-
             return response()->json([
                 'status' => 'success',
                 'message' => 'Data aset berhasil diperbarui',
@@ -360,51 +340,6 @@ class KelolaAsetController extends Controller
                 'message' => 'Terjadi kesalahan: ' . $e->getMessage()
             ], 500);
         }
-    }
-
-    private function attachLocationNames($asset)
-    {
-        try {
-            // Province
-            $provinces = $this->wilayahService->getProvinces();
-            foreach ($provinces as $province) {
-                if ($province['id'] == $asset->province_id) {
-                    $asset->province_name = $province['name'];
-                    break;
-                }
-            }
-
-            // District/Kabupaten
-            $districts = $this->wilayahService->getKabupaten($asset->province_id);
-            foreach ($districts as $district) {
-                if ($district['id'] == $asset->district_id) {
-                    $asset->district_name = $district['name'];
-                    break;
-                }
-            }
-
-            // Sub-district/Kecamatan
-            $subDistricts = $this->wilayahService->getKecamatan($asset->district_id);
-            foreach ($subDistricts as $subDistrict) {
-                if ($subDistrict['id'] == $asset->sub_district_id) {
-                    $asset->sub_district_name = $subDistrict['name'];
-                    break;
-                }
-            }
-
-            // Village/Desa
-            $villages = $this->wilayahService->getDesa($asset->sub_district_id);
-            foreach ($villages as $village) {
-                if ($village['id'] == $asset->village_id) {
-                    $asset->village_name = $village['name'];
-                    break;
-                }
-            }
-        } catch (\Exception $e) {
-            Log::error('Error fetching location names: ' . $e->getMessage());
-        }
-
-        return $asset;
     }
 
     public function destroy(Request $request, $id)

@@ -26,7 +26,6 @@ class KelolaAsetController extends Controller
         $this->wilayahService = $wilayahService;
     }
 
-
     public function index(Request $request)
     {
         $search = $request->input('search');
@@ -44,10 +43,6 @@ class KelolaAsetController extends Controller
             })
             ->with(['klasifikasi', 'jenisAset'])
             ->paginate(10);
-
-        foreach ($assets as $asset) {
-            $this->attachLocationNames($asset);
-        }
 
         return view('user.kelola-aset.index', compact('assets'));
     }
@@ -99,7 +94,7 @@ class KelolaAsetController extends Controller
             Log::info('Asset creation request received', [
                 'request_data' => $request->all(),
                 'nik_pemilik' => $request->nik_pemilik,
-                'nik_input' => $request->input('nik-input') // Check if NIK comes from a different field name
+                'nik_input' => $request->input('nik-input')
             ]);
 
             $foto_aset_depan = null;
@@ -162,7 +157,6 @@ class KelolaAsetController extends Controller
             return back()->withInput()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
-
 
     public function edit($id)
     {
@@ -276,52 +270,6 @@ class KelolaAsetController extends Controller
         } catch (\Exception $e) {
             return back()->withInput()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
-    }
-
-
-    private function attachLocationNames($asset)
-    {
-        try {
-            // Province
-            $provinces = $this->wilayahService->getProvinces();
-            foreach ($provinces as $province) {
-                if ($province['id'] == $asset->province_id) {
-                    $asset->province_name = $province['name'];
-                    break;
-                }
-            }
-
-            // District/Kabupaten
-            $districts = $this->wilayahService->getKabupaten($asset->province_id);
-            foreach ($districts as $district) {
-                if ($district['id'] == $asset->district_id) {
-                    $asset->district_name = $district['name'];
-                    break;
-                }
-            }
-
-            // Sub-district/Kecamatan
-            $subDistricts = $this->wilayahService->getKecamatan($asset->district_id);
-            foreach ($subDistricts as $subDistrict) {
-                if ($subDistrict['id'] == $asset->sub_district_id) {
-                    $asset->sub_district_name = $subDistrict['name'];
-                    break;
-                }
-            }
-
-            // Village/Desa
-            $villages = $this->wilayahService->getDesa($asset->sub_district_id);
-            foreach ($villages as $village) {
-                if ($village['id'] == $asset->village_id) {
-                    $asset->village_name = $village['name'];
-                    break;
-                }
-            }
-        } catch (\Exception $e) {
-            Log::error('Error fetching location names: ' . $e->getMessage());
-        }
-
-        return $asset;
     }
 
     public function destroy($id)

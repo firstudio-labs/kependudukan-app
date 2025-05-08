@@ -161,8 +161,11 @@
                     <label for="foto_aset_depan" class="block text-sm font-medium text-gray-700">Foto Aset (Depan)</label>
                     <input type="file" id="foto_aset_depan" name="foto_aset_depan" 
                         class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none p-2 mt-1"
-                        accept="image/png,image/jpeg,image/jpg,image/gif">
+                        accept="image/png,image/jpeg,image/jpg,image/gif" onchange="previewImage(this, 'preview_depan')">
                     <p class="mt-1 text-sm text-gray-500">PNG, JPG or GIF (MAX. 2MB).</p>
+                    <div id="preview_depan" class="mt-2">
+                        <img id="preview_image_depan" src="#" alt="Preview" class="hidden max-w-xs rounded-lg shadow-md">
+                    </div>
                     @error('foto_aset_depan')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
@@ -173,8 +176,11 @@
                     <label for="foto_aset_samping" class="block text-sm font-medium text-gray-700">Foto Aset (Samping)</label>
                     <input type="file" id="foto_aset_samping" name="foto_aset_samping" 
                         class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none p-2 mt-1"
-                        accept="image/png,image/jpeg,image/jpg,image/gif">
+                        accept="image/png,image/jpeg,image/jpg,image/gif" onchange="previewImage(this, 'preview_samping')">
                     <p class="mt-1 text-sm text-gray-500">PNG, JPG or GIF (MAX. 2MB).</p>
+                    <div id="preview_samping" class="mt-2">
+                        <img id="preview_image_samping" src="#" alt="Preview" class="hidden max-w-xs rounded-lg shadow-md">
+                    </div>
                     @error('foto_aset_samping')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
@@ -392,41 +398,23 @@
             const subDistrictSelect = document.getElementById('sub_district_code');
             const villageSelect = document.getElementById('village_code');
 
-            
             const provinceIdInput = document.getElementById('province_id');
             const districtIdInput = document.getElementById('district_id');
             const subDistrictIdInput = document.getElementById('sub_district_id');
             const villageIdInput = document.getElementById('village_id');
 
-           
-            const tagLatInput = document.getElementById('tag_lat');
-            const tagLngInput = document.getElementById('tag_lng');
-            const tagLokasiInput = document.getElementById('tag_lokasi');
-            
-           function updateTagLokasi() {
-                const lat = tagLatInput ? tagLatInput.value.trim() : '';
-                const lng = tagLngInput ? tagLngInput.value.trim() : '';
+            // Get old values from data attributes
+            const oldValues = document.getElementById('old-values');
+            const oldDistrictCode = oldValues.dataset.oldDistrictCode;
+            const oldSubDistrictCode = oldValues.dataset.oldSubDistrictCode;
+            const oldVillageCode = oldValues.dataset.oldVillageCode;
 
-                if (lat && lng && tagLokasiInput) {
-                  
-                    tagLokasiInput.value = lat + ', ' + lng;
-                    console.log('Tag lokasi updated:', tagLokasiInput.value);
-                } else if (tagLokasiInput) {
-                    tagLokasiInput.value = '';
-                }
-            }
-            
-            if (tagLatInput) tagLatInput.addEventListener('change', updateTagLokasi);
-            if (tagLngInput) tagLngInput.addEventListener('change', updateTagLokasi);
-
-           
             function resetSelect(select, defaultText = 'Pilih', hiddenInput = null) {
                 select.innerHTML = `<option value="">${defaultText}</option>`;
                 select.disabled = true;
                 if (hiddenInput) hiddenInput.value = '';
             }
 
-           
             function populateSelect(select, data, defaultText, hiddenInput = null) {
                 try {
                     select.innerHTML = `<option value="">${defaultText}</option>`;
@@ -449,7 +437,6 @@
                 }
             }
 
-           
             function updateHiddenInput(select, hiddenInput) {
                 const selectedOption = select.options[select.selectedIndex];
                 if (selectedOption && selectedOption.hasAttribute('data-id')) {
@@ -459,11 +446,9 @@
                 }
             }
 
-           
+            // Handle province change
             provinceSelect.addEventListener('change', function () {
                 const provinceCode = this.value;
-
-                
                 updateHiddenInput(this, provinceIdInput);
 
                 resetSelect(districtSelect, 'Loading...', districtIdInput);
@@ -477,6 +462,12 @@
                             if (data && data.length > 0) {
                                 populateSelect(districtSelect, data, 'Pilih Kabupaten', districtIdInput);
                                 districtSelect.disabled = false;
+
+                                // If there's an old district code, select it
+                                if (oldDistrictCode) {
+                                    districtSelect.value = oldDistrictCode;
+                                    districtSelect.dispatchEvent(new Event('change'));
+                                }
                             } else {
                                 resetSelect(districtSelect, 'No data available', districtIdInput);
                             }
@@ -487,10 +478,9 @@
                 }
             });
 
-           
+            // Handle district change
             districtSelect.addEventListener('change', function () {
                 const districtCode = this.value;
-               
                 updateHiddenInput(this, districtIdInput);
 
                 resetSelect(subDistrictSelect, 'Loading...', subDistrictIdInput);
@@ -503,6 +493,12 @@
                             if (data && data.length > 0) {
                                 populateSelect(subDistrictSelect, data, 'Pilih Kecamatan', subDistrictIdInput);
                                 subDistrictSelect.disabled = false;
+
+                                // If there's an old sub-district code, select it
+                                if (oldSubDistrictCode) {
+                                    subDistrictSelect.value = oldSubDistrictCode;
+                                    subDistrictSelect.dispatchEvent(new Event('change'));
+                                }
                             } else {
                                 resetSelect(subDistrictSelect, 'No data available', subDistrictIdInput);
                             }
@@ -513,10 +509,9 @@
                 }
             });
 
-            
+            // Handle sub-district change
             subDistrictSelect.addEventListener('change', function () {
                 const subDistrictCode = this.value;
-              
                 updateHiddenInput(this, subDistrictIdInput);
 
                 resetSelect(villageSelect, 'Loading...', villageIdInput);
@@ -528,6 +523,11 @@
                             if (data && data.length > 0) {
                                 populateSelect(villageSelect, data, 'Pilih Desa', villageIdInput);
                                 villageSelect.disabled = false;
+
+                                // If there's an old village code, select it
+                                if (oldVillageCode) {
+                                    villageSelect.value = oldVillageCode;
+                                }
                             } else {
                                 resetSelect(villageSelect, 'No data available', villageIdInput);
                             }
@@ -538,11 +538,17 @@
                 }
             });
 
+            // Handle village change
             villageSelect.addEventListener('change', function () {
-                
                 updateHiddenInput(this, villageIdInput);
             });
 
+            // Trigger initial province change if there's a selected province
+            if (provinceSelect.value) {
+                provinceSelect.dispatchEvent(new Event('change'));
+            }
+
+            // Form submission validation
             document.querySelector('form').addEventListener('submit', function (e) {
                 const provinceId = document.getElementById('province_id').value;
                 const districtId = document.getElementById('district_id').value;
@@ -558,8 +564,6 @@
                     });
                     return false;
                 }
-                
-                updateTagLokasi();
             });
         });
     </script>
@@ -599,5 +603,34 @@
                 updateTagLokasi();
             });
         });
+    </script>
+
+    <!-- Add data attributes to store old values for dropdown dependencies -->
+    <div id="old-values"
+         data-old-district-code="{{ old('district_code') }}"
+         data-old-sub-district-code="{{ old('sub_district_code') }}"
+         data-old-village-code="{{ old('village_code') }}">
+    </div>
+
+    <script>
+        // Add this function at the beginning of your script section
+        function previewImage(input, previewId) {
+            const preview = document.getElementById('preview_image_' + previewId.split('_')[1]);
+            const previewContainer = document.getElementById(previewId);
+            
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.classList.remove('hidden');
+                }
+                
+                reader.readAsDataURL(input.files[0]);
+            } else {
+                preview.src = '#';
+                preview.classList.add('hidden');
+            }
+        }
     </script>
 </x-layout>
