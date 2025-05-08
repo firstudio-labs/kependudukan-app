@@ -61,7 +61,7 @@ class BiodataController extends Controller
                 }
             } else {
                 // Ambil warga berdasarkan village_id admin desa
-                $citizens = $this->citizenService->getCitizensByVillageId($villageId);
+                $citizens = $this->citizenService->getCitizensByVillageId($villageId, $page);
             }
 
             return view('admin.desa.biodata.index', compact('citizens', 'search'));
