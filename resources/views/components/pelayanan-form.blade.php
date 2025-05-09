@@ -24,15 +24,83 @@
 
     <!-- Form Langsung -->
     <div class="w-full md:w-3/5 md:ml-10">
-        @component('components.pelayanan-form', [
-            'provinces' => $provinces,
-            'keperluanList' => $keperluanList,
-            'selected_province_id' => old('province_id'),
-            'selected_district_id' => old('district_id'),
-            'selected_sub_district_id' => old('sub_district_id'),
-            'selected_village_id' => old('village_id')
-        ])
-        @endcomponent
+        <form action="{{ route('guest.pelayanan.store') }}" method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            @csrf
+
+            <!-- Heading Layanan Desa -->
+        <div class="md:col-span-2 mb-2">
+            <h2 class="text-xl font-bold text-gray-800">Layanan Desa</h2>
+        </div>
+
+        {{-- <!-- Nama -->
+        <div class="md:col-span-2">
+            <label for="nama" class="block text-sm font-medium text-gray-700">Nama <span class="text-red-500">*</span></label>
+            <input type="text" id="nama" name="nama" placeholder="Nama" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+        </div> --}}
+
+
+            <!-- Provinsi -->
+            <div>
+                <label for="province_code" class="block text-sm font-medium text-gray-700">Provinsi <span class="text-red-500">*</span></label>
+                <select id="province_code" name="province_code" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                    <option value="">Pilih Provinsi</option>
+                    @foreach($provinces as $province)
+                        <option value="{{ $province['code'] }}" data-id="{{ $province['id'] }}">{{ $province['name'] }}</option>
+                    @endforeach
+                </select>
+                <input type="hidden" id="province_id" name="province_id" value="">
+            </div>
+
+            <!-- Kabupaten -->
+            <div>
+                <label for="district_code" class="block text-sm font-medium text-gray-700">Kabupaten <span class="text-red-500">*</span></label>
+                <select id="district_code" name="district_code" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                    <option value="">Pilih Kabupaten</option>
+                </select>
+                <input type="hidden" id="district_id" name="district_id" value="">
+            </div>
+
+            <!-- Kecamatan -->
+            <div>
+                <label for="sub_district_code" class="block text-sm font-medium text-gray-700">Kecamatan <span class="text-red-500">*</span></label>
+                <select id="sub_district_code" name="sub_district_code" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                    <option value="">Pilih Kecamatan</option>
+                </select>
+                <input type="hidden" id="sub_district_id" name="sub_district_id" value="">
+            </div>
+
+            <!-- Desa -->
+            <div>
+                <label for="village_code" class="block text-sm font-medium text-gray-700">Desa <span class="text-red-500">*</span></label>
+                <select id="village_code" name="village_code" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                    <option value="">Pilih Desa</option>
+                </select>
+                <input type="hidden" id="village_id" name="village_id" value="">
+            </div>
+
+            {{-- <!-- Alamat -->
+            <div class="md:col-span-2">
+                <label for="alamat" class="block text-sm font-medium text-gray-700">Alamat <span class="text-red-500">*</span></label>
+                <input type="text" id="alamat" name="alamat" placeholder="Alamat" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+            </div> --}}
+
+            <!-- Keperluan -->
+            <div class="md:col-span-2">
+                <label for="keperluan" class="block text-sm font-medium text-gray-700">Keperluan <span class="text-red-500">*</span></label>
+                <select id="keperluan" name="keperluan" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                    <option value="">-- Pilih Keperluan --</option>
+                    @foreach($keperluanList as $keperluan)
+                        <option value="{{ $keperluan->id }}">{{ $keperluan->judul }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <!-- Tombol -->
+            <div class="md:col-span-2 flex justify-end">
+                <button type="submit" class="bg-[#969BE7] text-white px-6 py-2 rounded-full hover:bg-[#7d82d6]">Submit</button>
+                <button type="button" class="ml-4 bg-yellow-500 text-white px-4 py-2 rounded-full hover:bg-yellow-600">Tanya Petugas</button>
+            </div>
+        </form>
     </div>
 </div>
 
