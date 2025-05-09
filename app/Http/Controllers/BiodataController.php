@@ -33,6 +33,7 @@ class BiodataController extends Controller
     public function index(Request $request)
     {
         $page = $request->input('page', 1);
+        $limit = $request->input('limit', 10); // Set your desired limit here
         $search = $request->input('search');
 
         // Jika user adalah admin desa, ambil data warga berdasarkan village_id admin
@@ -40,32 +41,24 @@ class BiodataController extends Controller
             $villageId = Auth::user()->villages_id;
 
             if ($search) {
-                // Cari berdasarkan keyword terlebih dahulu
-                $citizens = $this->citizenService->searchCitizens($search);
-
-                // Jika pencarian error atau tidak ada hasil, fallback ke menampilkan semua warga desa
-                if (!$citizens || isset($citizens['status']) && $citizens['status'] === 'ERROR') {
-                    $citizens = $this->citizenService->getCitizensByVillageId($villageId);
-                    session()->flash('warning', 'Pencarian gagal, menampilkan semua data warga desa');
-                } else {
-                    // Filter hasil pencarian hanya untuk desa admin
-                    if (isset($citizens['data']['citizens']) && is_array($citizens['data']['citizens'])) {
-                        $filteredCitizens = array_filter($citizens['data']['citizens'], function($citizen) use ($villageId) {
-                            // Cek kedua kolom yang mungkin ada
-                            return (isset($citizen['villages_id']) && $citizen['villages_id'] == $villageId) ||
-                                   (isset($citizen['village_id']) && $citizen['village_id'] == $villageId);
-                        });
-
-                        $citizens['data']['citizens'] = array_values($filteredCitizens);
-                    }
-                }
+                $citizens = $this->citizenService->getCitizensByVillageId($villageId, $page, $limit, $search);
             } else {
-                // Ambil warga berdasarkan village_id admin desa
+                // Ambil warga berdasarkan village_id admin desa dengan parameter page
                 $citizens = $this->citizenService->getCitizensByVillageId($villageId, $page);
             }
 
-            return view('admin.desa.biodata.index', compact('citizens', 'search'));
-        } else {
+            // Siapkan data paginasi untuk view
+            $paginationData = [];
+            if (isset($citizens['data']['pagination'])) {
+                $paginationData = [
+                    'current_page' => $citizens['data']['pagination']['current_page'],
+                    'total_page' => $citizens['data']['pagination']['total_page'],
+                    'base_url' => route('admin.desa.biodata.index') . '?',
+                    'search' => $search
+                ];
+            }
+
+            return view('admin.desa.biodata.index', compact('citizens', 'search', 'paginationData'));        } else {
             // Untuk superadmin tampilkan semua data
             if ($search) {
                 $citizens = $this->citizenService->searchCitizens($search);

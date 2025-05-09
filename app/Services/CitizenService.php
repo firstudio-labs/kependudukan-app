@@ -352,31 +352,58 @@ class CitizenService
 
     /**
      * Get citizens by village ID
-     * 
+     *
      * @param int $villageId
      * @return array
      */
-    public function getCitizensByVillageId($villageId, $page = 1)
+    public function getCitizensByVillageId($villageId, $page = 1, $limit = 10, $search = null)
     {
         try {
             $response = Http::withHeaders([
                 'X-API-Key' => $this->apiKey,
-            ])->get("{$this->baseUrl}/api/citizens", [
-                'page' => $page,
-                'village_id' => $villageId,
-                'limit' => 1000
-            ]);
+            ])->get("{$this->baseUrl}/api/all-citizens");
 
             if ($response->successful()) {
                 $data = $response->json();
-                return $data;
+
+                $filtered = collect($data['data'])
+                    ->where('village_id', $villageId);
+
+                // Tambahkan filter pencarian jika parameter search diisi
+                if ($search) {
+                    $searchLower = strtolower($search);
+                    $filtered = $filtered->filter(function ($citizen) use ($searchLower) {
+                        return str_contains(strtolower($citizen['full_name']), $searchLower) ||
+                               str_contains((string) $citizen['nik'], $searchLower);
+                    });
+                }
+
+                $filtered = $filtered->values(); // reset index setelah filter
+
+                $paginated = $filtered->forPage($page, $limit);
+
+                return [
+                    'status' => 'OK',
+                    'message' => 'Filtered by village_id' . ($search ? ' and search' : ''),
+                    'data' => [
+                        'citizens' => $paginated->values(),
+                        'total_filtered' => $filtered->count(),
+                        'pagination' => [
+                            'current_page' => $page,
+                            'items_per_page' => $limit,
+                            'total_items' => $filtered->count(),
+                            'total_page' => ceil($filtered->count() / $limit),
+                            'next_page' => ($page * $limit) < $filtered->count() ? $page + 1 : null,
+                            'prev_page' => $page > 1 ? $page - 1 : null,
+                        ],
+                    ]
+                ];
+
             } else {
                 Log::error('API request failed when fetching citizens by village ID', [
                     'status_code' => $response->status(),
                     'village_id' => $villageId
                 ]);
-                
-                // Jika API tidak mendukung filter by village_id, gunakan metode alternatif
                 return $this->filterCitizensByVillageId($villageId);
             }
         } catch (\Exception $e) {
@@ -384,23 +411,23 @@ class CitizenService
                 'error' => $e->getMessage(),
                 'village_id' => $villageId
             ]);
-            
-            // Gunakan metode alternatif jika terjadi error
             return $this->filterCitizensByVillageId($villageId);
         }
     }
 
+
+
     /**
      * Filter citizens by village ID manually (fallback method)
-     * 
+     *
      * @param int $villageId
      * @return array
      */
-    private function filterCitizensByVillageId($villageId)
+    private function filterCitizensByVillageId($villageId, $page = 1, $limit = 10)
     {
         // Dapatkan semua warga terlebih dahulu
         $allCitizensData = $this->getAllCitizensWithHighLimit();
-        
+
         // Ekstrak array warga dari respons API
         $allCitizens = [];
         if (isset($allCitizensData['data']['citizens']) && is_array($allCitizensData['data']['citizens'])) {
@@ -410,24 +437,37 @@ class CitizenService
         } elseif (isset($allCitizensData['data']) && is_array($allCitizensData['data'])) {
             $allCitizens = $allCitizensData['data'];
         }
-        
+
         // Filter warga berdasarkan village_id atau villages_id
         $filteredCitizens = array_filter($allCitizens, function($citizen) use ($villageId) {
             // Cek kedua kolom yang mungkin ada
-            return (isset($citizen['villages_id']) && $citizen['villages_id'] == $villageId) || 
+            return (isset($citizen['villages_id']) && $citizen['villages_id'] == $villageId) ||
                    (isset($citizen['village_id']) && $citizen['village_id'] == $villageId);
         });
-        
+
+        $totalItems = count($filteredCitizens);
+    $offset = ($page - 1) * $limit;
+    $pagedCitizens = array_slice($filteredCitizens, $offset, $limit);
+
         // Kembalikan format yang sama dengan API
         return [
             'status' => 'OK',
-            'data' => ['citizens' => array_values($filteredCitizens)]
+            'data' => [
+                'citizens' => array_values($pagedCitizens),
+                'pagination' => [
+                    'current_page' => $page,
+                    'items_per_page' => $limit,
+                    'total_items' => $totalItems,
+                    'total_page' => ceil($totalItems / $limit),
+                    'has_more_pages' => ($page * $limit) < $totalItems
+                ]
+            ]
         ];
     }
 
     /**
      * Get citizens by village name
-     * 
+     *
      * @param string $villageName
      * @return array
      */
@@ -449,7 +489,7 @@ class CitizenService
                     'status_code' => $response->status(),
                     'village_name' => $villageName
                 ]);
-                
+
                 // Jika API tidak mendukung filter by village_name, gunakan metode alternatif
                 return $this->filterCitizensByVillageName($villageName);
             }
@@ -458,7 +498,7 @@ class CitizenService
                 'error' => $e->getMessage(),
                 'village_name' => $villageName
             ]);
-            
+
             // Gunakan metode alternatif jika terjadi error
             return $this->filterCitizensByVillageName($villageName);
         }
@@ -466,7 +506,7 @@ class CitizenService
 
     /**
      * Filter citizens by village name manually (fallback method)
-     * 
+     *
      * @param string $villageName
      * @return array
      */
@@ -474,7 +514,7 @@ class CitizenService
     {
         // Dapatkan semua warga terlebih dahulu
         $allCitizensData = $this->getAllCitizensWithHighLimit();
-        
+
         // Ekstrak array warga dari respons API
         $allCitizens = [];
         if (isset($allCitizensData['data']['citizens']) && is_array($allCitizensData['data']['citizens'])) {
@@ -484,14 +524,14 @@ class CitizenService
         } elseif (isset($allCitizensData['data']) && is_array($allCitizensData['data'])) {
             $allCitizens = $allCitizensData['data'];
         }
-        
+
         // Filter warga berdasarkan village_name
         $filteredCitizens = array_filter($allCitizens, function($citizen) use ($villageName) {
             // Pencocokan nama desa
             if (isset($citizen['village_name'])) {
                 return strtolower($citizen['village_name']) == strtolower($villageName);
             }
-            
+
             // Jika tidak ada village_name, coba cek villages_id dan cocokkan dengan data desa
             if (isset($citizen['villages_id'])) {
                 try {
@@ -503,10 +543,10 @@ class CitizenService
                     return false;
                 }
             }
-            
+
             return false;
         });
-        
+
         // Kembalikan format yang sama dengan API
         return [
             'status' => 'OK',

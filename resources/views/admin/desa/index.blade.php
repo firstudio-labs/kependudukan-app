@@ -27,19 +27,6 @@
             <div class="bg-white p-4 rounded-lg shadow-md transition-transform hover:scale-105">
                 <div class="flex justify-between items-start">
                     <div>
-                        <h3 class="text-md font-semibold text-gray-700">Total Super Admin</h3>
-                        <p class="mt-1 text-2xl font-bold text-[#7886C7]">{{ $userStats['superadmin'] ?? 0 }}</p>
-                        <p class="text-xs text-gray-500 mt-1">Pengelola Utama</p>
-                    </div>
-                    <div class="text-[#2D336B]">
-                        <i class="fas fa-user-shield text-xl md:text-2xl"></i>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-white p-4 rounded-lg shadow-md transition-transform hover:scale-105">
-                <div class="flex justify-between items-start">
-                    <div>
                         <h3 class="text-md font-semibold text-gray-700">Total Admin Desa</h3>
                         <p class="mt-1 text-2xl font-bold text-[#7886C7]">{{ $userStats['admin'] ?? 0 }}</p>
                         <p class="text-xs text-gray-500 mt-1">Administrator Desa</p>
@@ -50,31 +37,18 @@
                 </div>
             </div>
 
-            <div class="bg-white p-4 rounded-lg shadow-md transition-transform hover:scale-105">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <h3 class="text-md font-semibold text-gray-700">Total Operator Desa</h3>
-                        <p class="mt-1 text-2xl font-bold text-[#7886C7]">{{ $userStats['operator'] ?? 0 }}</p>
-                        <p class="text-xs text-gray-500 mt-1">Petugas Input Data</p>
-                    </div>
-                    <div class="text-[# 2D336B]">
-                        <i class="fas fa-user-cog text-xl md:text-2xl"></i>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-white p-4 rounded-lg shadow-md transition-transform hover:scale-105">
+            {{-- <div class="bg-white p-4 rounded-lg shadow-md transition-transform hover:scale-105">
                 <div class="flex justify-between items-start">
                     <div>
                         <h3 class="text-md font-semibold text-gray-700">Total User</h3>
                         <p class="mt-1 text-2xl font-bold text-[#7886C7]">{{ $userStats['user'] ?? 0 }}</p>
-                        <p class="text-xs text-gray-500 mt-1">Pengguna Terdaftar</p>
+                        <p class="text-xs text-gray-500 mt-1">Pengguna Terdaftar di Desa Ini</p>
                     </div>
                     <div class="text-[#2D336B]">
                         <i class="fas fa-users text-xl md:text-2xl"></i>
                     </div>
                 </div>
-            </div>
+            </div> --}}
 
             <div class="bg-white p-4 rounded-lg shadow-md transition-transform hover:scale-105">
                 <div class="flex justify-between items-start">
