@@ -150,8 +150,19 @@ class KelahiranSuratController extends Controller
             // Create the kelahiran record
             Kelahiran::create($data);
 
-            return redirect()->route('guest.surat.kelahiran')
-                ->with('success', 'Surat Keterangan Kelahiran berhasil dibuat!');
+            // Get location parameters for the redirect
+            $provinceId = $request->input('province_id');
+            $districtId = $request->input('district_id');
+            $subDistrictId = $request->input('subdistrict_id');
+            $villageId = $request->input('village_id');
+
+            // Redirect with location parameters
+            return redirect()->route('guest.pelayanan.list', [
+                'province_id' => $provinceId,
+                'district_id' => $districtId,
+                'sub_district_id' => $subDistrictId,
+                'village_id' => $villageId
+            ])->with('success', 'Silakan menuju bagian administrasi');
         } catch (\Exception $e) {
             Log::error('Error creating birth certificate: ' . $e->getMessage(), [
                 'request' => $request->all()

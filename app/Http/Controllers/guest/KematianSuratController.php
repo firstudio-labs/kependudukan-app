@@ -176,8 +176,19 @@ class KematianSuratController extends Controller
 
             Log::info('Kematian created successfully', ['id' => $kematian->id]);
 
-            return redirect()->route('guest.surat.kematian')
-                ->with('success', 'Surat keterangan kematian berhasil dibuat!');
+            // Get location parameters for the redirect
+            $provinceId = $request->input('province_id');
+            $districtId = $request->input('district_id');
+            $subDistrictId = $request->input('subdistrict_id');
+            $villageId = $request->input('village_id');
+
+            // Redirect with location parameters
+            return redirect()->route('guest.pelayanan.list', [
+                'province_id' => $provinceId,
+                'district_id' => $districtId,
+                'sub_district_id' => $subDistrictId,
+                'village_id' => $villageId
+            ])->with('success', 'Silakan menuju bagian administrasi');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Failed to create kematian: ' . $e->getMessage(), [

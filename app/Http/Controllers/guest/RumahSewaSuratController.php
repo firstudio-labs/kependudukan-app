@@ -148,8 +148,19 @@ class RumahSewaSuratController extends Controller
             $rumahSewa->fill($validated);
             $rumahSewa->save();
 
-            return redirect()->route('guest.surat.rumah-sewa')
-                ->with('success', 'Surat Izin Rumah Sewa berhasil dibuat!');
+            // Get location parameters for the redirect
+            $provinceId = $request->input('province_id');
+            $districtId = $request->input('district_id');
+            $subDistrictId = $request->input('subdistrict_id');
+            $villageId = $request->input('village_id');
+
+            // Redirect with location parameters
+            return redirect()->route('guest.pelayanan.list', [
+                'province_id' => $provinceId,
+                'district_id' => $districtId,
+                'sub_district_id' => $subDistrictId,
+                'village_id' => $villageId
+            ])->with('success', 'Silakan menuju bagian administrasi');
         } catch (\Exception $e) {
             // Log the error
             Log::error('Failed to create Rumah Sewa: ' . $e->getMessage());

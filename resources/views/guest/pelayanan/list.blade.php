@@ -7,6 +7,8 @@
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <script>
         tailwind.config = {
             theme: {
@@ -475,6 +477,86 @@
             </div>
         </div>
     </div>
+<script>
+        // Function to show success alert without timer
+        function showSuccessAlert(message) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Sukses!',
+                text: message,
+                showConfirmButton: true
+            });
+        }
+
+        // Function to show error alert without timer
+        function showErrorAlert(message) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal!',
+                text: message,
+                showConfirmButton: true
+            });
+        }
+
+        // Function to show warning alert without timer
+        function showWarningAlert(message) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Perhatian!',
+                text: message,
+                showConfirmButton: true
+            });
+        }
+
+        // Function to show info alert without timer
+        function showInfoAlert(message) {
+            Swal.fire({
+                icon: 'info',
+                title: 'Informasi',
+                text: message,
+                showConfirmButton: true
+            });
+        }
+
+        // Function to show confirmation dialog
+        function showConfirmDialog(title, message, confirmCallback, cancelCallback) {
+            Swal.fire({
+                title: title,
+                text: message,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Ya',
+                cancelButtonText: 'Tidak',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed && typeof confirmCallback === 'function') {
+                    confirmCallback();
+                } else if (result.dismiss === Swal.DismissReason.cancel && typeof cancelCallback === 'function') {
+                    cancelCallback();
+                }
+            });
+        }
+
+        // Check for flash messages and display alerts
+        document.addEventListener('DOMContentLoaded', function() {
+            @if(session('success'))
+                showSuccessAlert("{{ session('success') }}");
+            @endif
+
+            @if(session('error'))
+                showErrorAlert("{{ session('error') }}");
+            @endif
+
+            @if(session('warning'))
+                showWarningAlert("{{ session('warning') }}");
+            @endif
+
+            @if(session('info'))
+                showInfoAlert("{{ session('info') }}");
+            @endif
+        });
+    </script>
 
 </body>
 </html>
+

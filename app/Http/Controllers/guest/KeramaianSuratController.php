@@ -174,8 +174,19 @@ class KeramaianSuratController extends Controller
 
             Log::info('Keramaian created successfully', ['id' => $keramaian->id]);
 
-            return redirect()->route('guest.surat.keramaian')
-                ->with('success', 'Surat izin keramaian berhasil dibuat!');
+            // Get location parameters for the redirect
+            $provinceId = $request->input('province_id');
+            $districtId = $request->input('district_id');
+            $subDistrictId = $request->input('subdistrict_id');
+            $villageId = $request->input('village_id');
+
+            // Redirect with location parameters
+            return redirect()->route('guest.pelayanan.list', [
+                'province_id' => $provinceId,
+                'district_id' => $districtId,
+                'sub_district_id' => $subDistrictId,
+                'village_id' => $villageId
+            ])->with('success', 'Silakan menuju bagian administrasi');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Failed to create keramaian: ' . $e->getMessage(), [

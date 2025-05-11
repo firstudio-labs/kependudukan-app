@@ -164,8 +164,19 @@ class KTPSuratController extends Controller
 
                 Log::info('KTP Pengantar created successfully', ['id' => $ktp->id]);
 
-                return redirect()->route('guest.surat.ktp')
-                    ->with('success', 'Surat pengantar KTP berhasil dibuat!');
+                // Get location parameters for the redirect
+                $provinceId = $request->input('province_id');
+                $districtId = $request->input('district_id');
+                $subDistrictId = $request->input('subdistrict_id');
+                $villageId = $request->input('village_id');
+
+                // Redirect with location parameters
+                return redirect()->route('guest.pelayanan.list', [
+                    'province_id' => $provinceId,
+                    'district_id' => $districtId,
+                    'sub_district_id' => $subDistrictId,
+                    'village_id' => $villageId
+                ])->with('success', 'Silakan menuju bagian administrasi');
             } catch (\Exception $e) {
                 throw new \Exception('Gagal mendapatkan data wilayah: ' . $e->getMessage());
             }

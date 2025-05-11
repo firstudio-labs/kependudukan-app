@@ -139,8 +139,19 @@ class AhliWarisSuratController extends Controller
             // Create the ahli waris record
             AhliWaris::create($request->all());
 
-            return redirect()->route('guest.surat.ahli-waris')
-                ->with('success', 'Surat Keterangan Ahli Waris berhasil dibuat!');
+            // Get location parameters for the redirect
+            $provinceId = $request->input('province_id');
+            $districtId = $request->input('district_id');
+            $subDistrictId = $request->input('subdistrict_id');
+            $villageId = $request->input('village_id');
+
+            // Redirect with location parameters
+            return redirect()->route('guest.pelayanan.list', [
+                'province_id' => $provinceId,
+                'district_id' => $districtId,
+                'sub_district_id' => $subDistrictId,
+                'village_id' => $villageId
+            ])->with('success', 'Silakan menuju bagian administrasi');
         } catch (\Exception $e) {
             Log::error('Error creating ahli waris certificate: ' . $e->getMessage(), [
                 'request' => $request->all()
