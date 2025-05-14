@@ -348,7 +348,7 @@
                     <!-- Card 5: Purple -->
                     <div class="glass-card rounded-2xl p-3 text-center hover:shadow-lg transition duration-300 w-[150px] md:w-[170px]">
                         <div class="icon-circle purple w-16 h-16 md:w-20 md:h-20">
-                            <i class="fa fa-cross fa-xl text-purple-600"></i>
+                            <i class="fa-solid fa-house-medical fa-xl text-purple-600"></i>
                         </div>
                         <a href="{{ route('guest.surat.kematian', [
                             'province_id' => $province_id ?? null,
@@ -460,6 +460,23 @@
                         ]) }}" class="block">
                             <button class="modern-button pink text-white py-2 w-full rounded-3xl font-medium shadow-md text-sm">
                                 Surat Keterangan Domisili Usaha
+                            </button>
+                        </a>
+                    </div>
+
+                    <!-- Card 12: Purple -->
+                    <div class="glass-card rounded-2xl p-3 text-center hover:shadow-lg transition duration-300 w-[150px] md:w-[170px]">
+                        <div class="icon-circle purple w-16 h-16 md:w-20 md:h-20">
+                            <i class="fa fa-book fa-xl text-purple-600"></i>
+                        </div>
+                        <a href="{{ route('guest.buku-tamu', [
+                            'province_id' => $province_id ?? null,
+                            'district_id' => $district_id ?? null,
+                            'sub_district_id' => $sub_district_id ?? null,
+                            'village_id' => $village_id ?? null
+                        ]) }}" class="block">
+                            <button class="modern-button purple text-white py-2 w-full rounded-3xl font-medium shadow-md text-sm">
+                                Buku Tamu
                             </button>
                         </a>
                     </div>
