@@ -69,15 +69,18 @@
                             @if($administration->is_accepted)
                                 <span class="text-green-600 font-semibold">Acceptance</span>
                             @endif
-                            <a href="{{ route('superadmin.surat.administrasi.pdf', $administration->id) }}" class="text-blue-600 hover:text-blue-800" aria-label="Export PDF" target="_blank" title="Export PDF">
+                            {{-- <a href="{{ route('admin.desa.surat.administrasi.show', $administration->id) }}" class="text-green-600 hover:text-green-800" aria-label="Detail" title="View Details">
+                                <i class="fa-solid fa-eye"></i>
+                            </a> --}}
+                            <a href="{{ route('admin.desa.surat.administrasi.pdf', $administration->id) }}" class="text-blue-600 hover:text-blue-800" aria-label="Export PDF" target="_blank" title="Export PDF">
                                 <i class="fa-solid fa-file-pdf"></i>
                             </a>
                             @if(!$administration->is_accepted)
-                                <a href="{{ route('superadmin.surat.administrasi.edit', $administration->id) }}" class="text-yellow-600 hover:text-yellow-800" aria-label="Edit">
+                                <a href="{{ route('admin.desa.surat.administrasi.edit', $administration->id) }}" class="text-yellow-600 hover:text-yellow-800" aria-label="Edit">
                                     <i class="fa-solid fa-pen-to-square"></i>
                                 </a>
                             @endif
-                            <form action="{{ route('superadmin.surat.administrasi.delete', $administration->id) }}" method="POST" class="delete-form">
+                            <form action="{{ route('admin.desa.surat.administrasi.delete', $administration->id) }}" method="POST" class="delete-form">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="font-medium text-red-600 hover:underline">

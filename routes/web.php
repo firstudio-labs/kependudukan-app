@@ -501,206 +501,209 @@ Route::middleware(['auth:web', 'role:admin desa'])->group(function () {
         ->name('admin.desa.datakk.export');
 
     // Administrasi routes
-    Route::get('/admin.desa/surat/administrasi/index', [AdministrasiController::class, 'index'])
+    Route::get('/admin/desa/surat/administrasi/index', [AdministrasiController::class, 'index'])
         ->name('admin.desa.surat.administrasi.index');
-    Route::get('/admin.desa/surat/administrasi/create', [AdministrasiController::class, 'create'])
+    Route::get('/admin/desa/surat/administrasi/create', [AdministrasiController::class, 'create'])
         ->name('admin.desa.surat.administrasi.create');
-    Route::post('/admin.desa/surat/administrasi', [AdministrasiController::class, 'store'])
+    Route::post('/admin/desa/surat/administrasi', [AdministrasiController::class, 'store'])
         ->name('admin.desa.surat.administrasi.store');
-    Route::get('/admin.desa/surat/administrasi/{id}/detail', [AdministrasiController::class, 'show'])
+    Route::get('/admin/desa/surat/administrasi/{id}/detail', [AdministrasiController::class, 'show'])
         ->name('admin.desa.surat.administrasi.show');
-    Route::get('/admin.desa/surat/administrasi/{id}/edit', [AdministrasiController::class, 'edit'])
+    Route::get('/admin/desa/surat/administrasi/{id}/edit', [AdministrasiController::class, 'edit'])
         ->name('admin.desa.surat.administrasi.edit');
-    Route::put('/admin.desa/surat/administrasi/{id}', [AdministrasiController::class, 'update'])
+    Route::put('/admin/desa/surat/administrasi/{id}', [AdministrasiController::class, 'update'])
         ->name('admin.desa.surat.administrasi.update');
-    Route::delete('/admin.desa/surat/administrasi/{id}', [AdministrasiController::class, 'destroy'])
+    Route::delete('/admin/desa/surat/administrasi/{id}', [AdministrasiController::class, 'destroy'])
         ->name('admin.desa.surat.administrasi.delete');
-    Route::get('/admin.desa/surat/administrasi/{id}/pdf', [AdministrasiController::class, 'generatePDF'])
+    Route::get('/admin/desa/surat/administrasi/{id}/pdf', [AdministrasiController::class, 'generatePDF'])
         ->name('admin.desa.surat.administrasi.pdf');
 
     // Kehilangan routes
-    Route::get('/admin.desa/surat/kehilangan/index', [KehilanganController::class, 'index'])
+    Route::get('/admin/desa/surat/kehilangan/index', [KehilanganController::class, 'index'])
         ->name('admin.desa.surat.kehilangan.index');
-    Route::get('/admin.desa/surat/kehilangan/create', [KehilanganController::class, 'create'])
+    Route::get('/admin/desa/surat/kehilangan/create', [KehilanganController::class, 'create'])
         ->name('admin.desa.surat.kehilangan.create');
-    Route::post('/admin.desa/surat/kehilangan', [KehilanganController::class, 'store'])
+    Route::post('/admin/desa/surat/kehilangan', [KehilanganController::class, 'store'])
         ->name('admin.desa.surat.kehilangan.store');
-    Route::get('/admin.desa/surat/kehilangan/{id}/detail', [KehilanganController::class, 'show'])
+    Route::get('/admin/desa/surat/kehilangan/{id}/detail', [KehilanganController::class, 'show'])
         ->name('admin.desa.surat.kehilangan.show');
-    Route::get('/admin.desa/surat/kehilangan/{id}/edit', [KehilanganController::class, 'edit'])
+    Route::get('/admin/desa/surat/kehilangan/{id}/edit', [KehilanganController::class, 'edit'])
         ->name('admin.desa.surat.kehilangan.edit');
-    Route::put('/admin.desa/surat/kehilangan/{id}', [KehilanganController::class, 'update'])
+    Route::put('/admin/desa/surat/kehilangan/{id}', [KehilanganController::class, 'update'])
         ->name('admin.desa.surat.kehilangan.update');
-    Route::delete('/admin.desa/surat/kehilangan/{id}', [KehilanganController::class, 'destroy'])
+    Route::delete('/admin/desa/surat/kehilangan/{id}', [KehilanganController::class, 'destroy'])
         ->name('admin.desa.surat.kehilangan.delete');
     // Add new PDF export route
-    Route::get('/admin.desa/surat/kehilangan/{id}/pdf', [KehilanganController::class, 'generatePDF'])
+    Route::get('/admin/desa/surat/kehilangan/{id}/pdf', [KehilanganController::class, 'generatePDF'])
         ->name('admin.desa.surat.kehilangan.pdf');
 
     // SKCK routes
-    Route::get('/admin.desa/surat/skck/index', [SKCKController::class, 'index'])
+    Route::get('/admin/desa/surat/skck/index', [SKCKController::class, 'index'])
         ->name('admin.desa.surat.skck.index');
-    Route::get('/admin.desa/surat/skck/create', [SKCKController::class, 'create'])
+    Route::get('/admin/desa/surat/skck/create', [SKCKController::class, 'create'])
         ->name('admin.desa.surat.skck.create');
-    Route::post('/admin.desa/surat/skck', [SKCKController::class, 'store'])
+    Route::post('/admin/desa/surat/skck', [SKCKController::class, 'store'])
         ->name('admin.desa.surat.skck.store');
-    Route::get('/admin.desa/surat/skck/{id}/detail', [SKCKController::class, 'show'])
+    Route::get('/admin/desa/surat/skck/{id}/detail', [SKCKController::class, 'show'])
         ->name('admin.desa.surat.skck.show');
-    Route::get('/admin.desa/surat/skck/{id}/edit', [SKCKController::class, 'edit'])
+    Route::get('/admin/desa/surat/skck/{id}/edit', [SKCKController::class, 'edit'])
         ->name('admin.desa.surat.skck.edit');
-    Route::put('/admin.desa/surat/skck/{id}', [SKCKController::class, 'update'])
+    Route::put('/admin/desa/surat/skck/{id}', [SKCKController::class, 'update'])
         ->name('admin.desa.surat.skck.update');
-    Route::delete('/admin.desa/surat/skck/{id}', [SKCKController::class, 'destroy'])
+    Route::delete('/admin/desa/surat/skck/{id}', [SKCKController::class, 'destroy'])
         ->name('admin.desa.surat.skck.delete');
-    Route::get('/admin.desa/surat/skck/{id}/pdf', [SKCKController::class, 'generatePDF'])
+    Route::get('/admin/desa/surat/skck/{id}/pdf', [SKCKController::class, 'generatePDF'])
         ->name('admin.desa.surat.skck.pdf');
 
     // Domisili routes
-    Route::get('/admin.desa/surat/domisili/index', [DomisiliController::class, 'index'])
+    Route::get('/admin/desa/surat/domisili/index', [DomisiliController::class, 'index'])
         ->name('admin.desa.surat.domisili.index');
-    Route::get('/admin.desa/surat/domisili/create', [DomisiliController::class, 'create'])
+    Route::get('/admin/desa/surat/domisili/create', [DomisiliController::class, 'create'])
         ->name('admin.desa.surat.domisili.create');
-    Route::post('/admin.desa/surat/domisili', [DomisiliController::class, 'store'])
+    Route::post('/admin/desa/surat/domisili', [DomisiliController::class, 'store'])
         ->name('admin.desa.surat.domisili.store');
-    Route::get('/admin.desa/surat/domisili/{id}/detail', [DomisiliController::class, 'show'])
+    Route::get('/admin/desa/surat/domisili/{id}/detail', [DomisiliController::class, 'show'])
         ->name('admin.desa.surat.domisili.show');
-    Route::get('/admin.desa/surat/domisili/{id}/edit', [DomisiliController::class, 'edit'])
+    Route::get('/admin/desa/surat/domisili/{id}/edit', [DomisiliController::class, 'edit'])
         ->name('admin.desa.surat.domisili.edit');
-    Route::put('/admin.desa/surat/domisili/{id}', [DomisiliController::class, 'update'])
+    Route::put('/admin/desa/surat/domisili/{id}', [DomisiliController::class, 'update'])
         ->name('admin.desa.surat.domisili.update');
-    Route::delete('/admin.desa/surat/domisili/{id}', [DomisiliController::class, 'destroy'])
+    Route::delete('/admin/desa/surat/domisili/{id}', [DomisiliController::class, 'destroy'])
         ->name('admin.desa.surat.domisili.delete');
     // Add new PDF export route for domisili
-    Route::get('/admin.desa/surat/domisili/{id}/pdf', [DomisiliController::class, 'generatePDF'])
+    Route::get('/admin/desa/surat/domisili/{id}/pdf', [DomisiliController::class, 'generatePDF'])
         ->name('admin.desa.surat.domisili.pdf');
 
     // Domisili Usaha routes
-    Route::get('/admin.desa/surat/domisili-usaha', [DomisiliUsahaController::class, 'index'])
+    Route::get('/admin/desa/surat/domisili-usaha/index', [DomisiliUsahaController::class, 'index'])
         ->name('admin.desa.surat.domisili-usaha.index');
-    Route::get('/admin.desa/surat/domisili-usaha/create', [DomisiliUsahaController::class, 'create'])
+    Route::get('/admin/desa/surat/domisili-usaha/create', [DomisiliUsahaController::class, 'create'])
         ->name('admin.desa.surat.domisili-usaha.create');
-    Route::post('/admin.desa/surat/domisili-usaha', [DomisiliUsahaController::class, 'store'])
+    Route::post('/admin/desa/surat/domisili-usaha', [DomisiliUsahaController::class, 'store'])
         ->name('admin.desa.surat.domisili-usaha.store');
-    Route::get('/admin.desa/surat/domisili-usaha/{id}/detail', [DomisiliUsahaController::class, 'show'])
+    Route::get('/admin/desa/surat/domisili-usaha/{id}/detail', [DomisiliUsahaController::class, 'show'])
         ->name('admin.desa.surat.domisili-usaha.show');
-    Route::get('/admin.desa/surat/domisili-usaha/{id}/edit', [DomisiliUsahaController::class, 'edit'])
+    Route::get('/admin/desa/surat/domisili-usaha/{id}/edit', [DomisiliUsahaController::class, 'edit'])
         ->name('admin.desa.surat.domisili-usaha.edit');
-    Route::put('/admin.desa/surat/domisili-usaha/{id}', [DomisiliUsahaController::class, 'update'])
+    Route::put('/admin/desa/surat/domisili-usaha/{id}', [DomisiliUsahaController::class, 'update'])
         ->name('admin.desa.surat.domisili-usaha.update');
-    Route::delete('/admin.desa/surat/domisili-usaha/{id}', [DomisiliUsahaController::class, 'destroy'])
+    Route::delete('/admin/desa/surat/domisili-usaha/{id}', [DomisiliUsahaController::class, 'destroy'])
         ->name('admin.desa.surat.domisili-usaha.delete');
     // Add new PDF export route for domisili-usaha
-    Route::get('/admin.desa/surat/domisili-usaha/{id}/pdf', [DomisiliUsahaController::class, 'generatePDF'])
+    Route::get('/admin/desa/surat/domisili-usaha/{id}/pdf', [DomisiliUsahaController::class, 'generatePDF'])
         ->name('admin.desa.surat.domisili-usaha.pdf');
 
     // Ahli Waris routes
-    Route::get('/admin.desa/surat/ahli-waris', [AhliWarisController::class, 'index'])
+    Route::get('/admin/desa/surat/ahli-waris/index', [AhliWarisController::class, 'index'])
         ->name('admin.desa.surat.ahli-waris.index');
-    Route::get('/admin.desa/surat/ahli-waris/create', [AhliWarisController::class, 'create'])
+    Route::get('/admin/desa/surat/ahli-waris/create', [AhliWarisController::class, 'create'])
         ->name('admin.desa.surat.ahli-waris.create');
-    Route::post('/admin.desa/surat/ahli-waris', [AhliWarisController::class, 'store'])
+    Route::post('/admin/desa/surat/ahli-waris', [AhliWarisController::class, 'store'])
         ->name('admin.desa.surat.ahli-waris.store');
-    Route::get('/admin.desa/surat/ahli-waris/{id}/detail', [AhliWarisController::class, 'show'])
+    Route::get('/admin/desa/surat/ahli-waris/{id}/detail', [AhliWarisController::class, 'show'])
         ->name('admin.desa.surat.ahli-waris.show');
-    Route::get('/admin.desa/surat/ahli-waris/{id}/edit', [AhliWarisController::class, 'edit'])
+    Route::get('/admin/desa/surat/ahli-waris/{id}/edit', [AhliWarisController::class, 'edit'])
         ->name('admin.desa.surat.ahli-waris.edit');
-    Route::put('/admin.desa/surat/ahli-waris/{id}', [AhliWarisController::class, 'update'])
+    Route::put('/admin/desa/surat/ahli-waris/{id}', [AhliWarisController::class, 'update'])
         ->name('admin.desa.surat.ahli-waris.update');
-    Route::delete('/admin.desa/surat/ahli-waris/{id}', [AhliWarisController::class, 'destroy'])
+    Route::delete('/admin/desa/surat/ahli-waris/{id}', [AhliWarisController::class, 'destroy'])
         ->name('admin.desa.surat.ahli-waris.delete');
     // Add PDF route
-    Route::get('/admin.desa/surat/ahli-waris/{id}/pdf', [AhliWarisController::class, 'generatePDF'])
+    Route::get('/admin/desa/surat/ahli-waris/{id}/pdf', [AhliWarisController::class, 'generatePDF'])
         ->name('admin.desa.surat.ahli-waris.pdf');
 
     // Birth Certificate (Kelahiran) routes
-    Route::get('/admin.desa/surat/kelahiran', [KelahiranController::class, 'index'])
+    Route::get('/admin/desa/surat/kelahiran/index', [KelahiranController::class, 'index'])
         ->name('admin.desa.surat.kelahiran.index');
-    Route::get('/admin.desa/surat/kelahiran/create', [KelahiranController::class, 'create'])
+    Route::get('/admin/desa/surat/kelahiran/create', [KelahiranController::class, 'create'])
         ->name('admin.desa.surat.kelahiran.create');
-    Route::post('/admin.desa/surat/kelahiran', [KelahiranController::class, 'store'])
+    Route::post('/admin/desa/surat/kelahiran', [KelahiranController::class, 'store'])
         ->name('admin.desa.surat.kelahiran.store');
-    Route::get('/admin.desa/surat/kelahiran/{id}/detail', [KelahiranController::class, 'show'])
+    Route::get('/admin/desa/surat/kelahiran/{id}/detail', [KelahiranController::class, 'show'])
         ->name('admin.desa.surat.kelahiran.show');
-    Route::get('/admin.desa/surat/kelahiran/{id}/edit', [KelahiranController::class, 'edit'])
+    Route::get('/admin/desa/surat/kelahiran/{id}/edit', [KelahiranController::class, 'edit'])
         ->name('admin.desa.surat.kelahiran.edit');
-    Route::put('/admin.desa/surat/kelahiran/{id}', [KelahiranController::class, 'update'])
+    Route::put('/admin/desa/surat/kelahiran/{id}', [KelahiranController::class, 'update'])
         ->name('admin.desa.surat.kelahiran.update');
-    Route::delete('/admin.desa/surat/kelahiran/{id}', [KelahiranController::class, 'destroy'])
+    Route::delete('/admin/desa/surat/kelahiran/{id}', [KelahiranController::class, 'destroy'])
         ->name('admin.desa.surat.kelahiran.delete');
-    Route::get('/admin.desa/surat/kelahiran/{id}/pdf', [KelahiranController::class, 'exportPDF'])
+    Route::get('/admin/desa/surat/kelahiran/{id}/pdf', [KelahiranController::class, 'exportPDF'])
         ->name('admin.desa.surat.kelahiran.pdf');
 
     // Death Certificate (Kematian) routes
-    Route::get('/admin.desa/surat/kematian', [KematianController::class, 'index'])
+    Route::get('/admin/desa/surat/kematian/index', [KematianController::class, 'index'])
         ->name('admin.desa.surat.kematian.index');
-    Route::get('/admin.desa/surat/kematian/create', [KematianController::class, 'create'])
+    Route::get('/admin/desa/surat/kematian/create', [KematianController::class, 'create'])
         ->name('admin.desa.surat.kematian.create');
-    Route::post('/admin.desa/surat/kematian', [KematianController::class, 'store'])
+    Route::post('/admin/desa/surat/kematian', [KematianController::class, 'store'])
         ->name('admin.desa.surat.kematian.store');
-    Route::get('/admin.desa/surat/kematian/{id}/detail', [KematianController::class, 'show'])
+    Route::get('/admin/desa/surat/kematian/{id}/detail', [KematianController::class, 'show'])
         ->name('admin.desa.surat.kematian.show');
-    Route::get('/admin.desa/surat/kematian/{id}/edit', [KematianController::class, 'edit'])
+    Route::get('/admin/desa/surat/kematian/{id}/edit', [KematianController::class, 'edit'])
         ->name('admin.desa.surat.kematian.edit');
-    Route::put('/admin.desa/surat/kematian/{id}', [KematianController::class, 'update'])
+    Route::put('/admin/desa/surat/kematian/{id}', [KematianController::class, 'update'])
         ->name('admin.desa.surat.kematian.update');
-    Route::delete('/admin.desa/surat/kematian/{id}', [KematianController::class, 'destroy'])
+    Route::delete('/admin/desa/surat/kematian/{id}', [KematianController::class, 'destroy'])
         ->name('admin.desa.surat.kematian.delete');
-    Route::get('/admin.desa/surat/kematian/{id}/export-pdf', [KematianController::class, 'exportPDF'])->name('admin.desa.surat.kematian.export-pdf');
+    Route::get('/admin/desa/surat/kematian/{id}/export-pdf', [KematianController::class, 'exportPDF'])
+        ->name('admin.desa.surat.kematian.export-pdf');
 
     // Entertainment Permit (Izin Keramaian) routes
-    Route::get('/admin.desa/surat/keramaian', [IzinKeramaianController::class, 'index'])
+    Route::get('/admin/desa/surat/keramaian/index', [IzinKeramaianController::class, 'index'])
         ->name('admin.desa.surat.keramaian.index');
-    Route::get('/admin.desa/surat/keramaian/create', [IzinKeramaianController::class, 'create'])
+    Route::get('/admin/desa/surat/keramaian/create', [IzinKeramaianController::class, 'create'])
         ->name('admin.desa.surat.keramaian.create');
-    Route::post('/admin.desa/surat/keramaian', [IzinKeramaianController::class, 'store'])
+    Route::post('/admin/desa/surat/keramaian', [IzinKeramaianController::class, 'store'])
         ->name('admin.desa.surat.keramaian.store');
-    Route::get('/admin.desa/surat/keramaian/{id}/detail', [IzinKeramaianController::class, 'show'])
+    Route::get('/admin/desa/surat/keramaian/{id}/detail', [IzinKeramaianController::class, 'show'])
         ->name('admin.desa.surat.keramaian.show');
-    Route::get('/admin.desa/surat/keramaian/{id}/edit', [IzinKeramaianController::class, 'edit'])
+    Route::get('/admin/desa/surat/keramaian/{id}/edit', [IzinKeramaianController::class, 'edit'])
         ->name('admin.desa.surat.keramaian.edit');
-    Route::put('/admin.desa/surat/keramaian/{id}', [IzinKeramaianController::class, 'update'])
+    Route::put('/admin/desa/surat/keramaian/{id}', [IzinKeramaianController::class, 'update'])
         ->name('admin.desa.surat.keramaian.update');
-    Route::delete('/admin.desa/surat/keramaian/{id}', [IzinKeramaianController::class, 'destroy'])
+    Route::delete('/admin/desa/surat/keramaian/{id}', [IzinKeramaianController::class, 'destroy'])
         ->name('admin.desa.surat.keramaian.delete');
     // Add new route for PDF export
-    Route::get('/admin.desa/surat/keramaian/{id}/export-pdf', [IzinKeramaianController::class, 'exportPDF'])
+    Route::get('/admin/desa/surat/keramaian/{id}/export-pdf', [IzinKeramaianController::class, 'exportPDF'])
         ->name('admin.desa.surat.keramaian.export-pdf');
 
     // Rental House Permit (Izin Rumah Sewa) routes
-    Route::get('/admin.desa/surat/rumah-sewa', [RumahSewaController::class, 'index'])
+    // Rental House Permit (Izin Rumah Sewa) routes
+    Route::get('/admin/desa/surat/rumah-sewa/index', [RumahSewaController::class, 'index'])
         ->name('admin.desa.surat.rumah-sewa.index');
-    Route::get('/admin.desa/surat/rumah-sewa/create', [RumahSewaController::class, 'create'])
+    Route::get('/admin/desa/surat/rumah-sewa/create', [RumahSewaController::class, 'create'])
         ->name('admin.desa.surat.rumah-sewa.create');
-    Route::post('/admin.desa/surat/rumah-sewa', [RumahSewaController::class, 'store'])
+    Route::post('/admin/desa/surat/rumah-sewa', [RumahSewaController::class, 'store'])
         ->name('admin.desa.surat.rumah-sewa.store');
-    Route::get('/admin.desa/surat/rumah-sewa/{id}/detail', [RumahSewaController::class, 'show'])
+    Route::get('/admin/desa/surat/rumah-sewa/{id}/detail', [RumahSewaController::class, 'show'])
         ->name('admin.desa.surat.rumah-sewa.show');
-    Route::get('/admin.desa/surat/rumah-sewa/{id}/edit', [RumahSewaController::class, 'edit'])
+    Route::get('/admin/desa/surat/rumah-sewa/{id}/edit', [RumahSewaController::class, 'edit'])
         ->name('admin.desa.surat.rumah-sewa.edit');
-    Route::put('/admin.desa/surat/rumah-sewa/{id}', [RumahSewaController::class, 'update'])
+    Route::put('/admin/desa/surat/rumah-sewa/{id}', [RumahSewaController::class, 'update'])
         ->name('admin.desa.surat.rumah-sewa.update');
-    Route::delete('/admin.desa/surat/rumah-sewa/{id}', [RumahSewaController::class, 'destroy'])
+    Route::delete('/admin/desa/surat/rumah-sewa/{id}', [RumahSewaController::class, 'destroy'])
         ->name('admin.desa.surat.rumah-sewa.delete');
     // Add new route for PDF export
-    Route::get('/admin.desa/surat/rumah-sewa/{id}/export-pdf', [RumahSewaController::class, 'exportPDF'])
+    Route::get('/admin/desa/surat/rumah-sewa/{id}/export-pdf', [RumahSewaController::class, 'exportPDF'])
         ->name('admin.desa.surat.rumah-sewa.export-pdf');
 
     // Pengantar KTP routes
-    Route::get('/admin.desa/surat/pengantar-ktp', [PengantarKtpController::class, 'index'])
+    Route::get('/admin/desa/surat/pengantar-ktp/index', [PengantarKtpController::class, 'index'])
         ->name('admin.desa.surat.pengantar-ktp.index');
-    Route::get('/admin.desa/surat/pengantar-ktp/create', [PengantarKtpController::class, 'create'])
+    Route::get('/admin/desa/surat/pengantar-ktp/create', [PengantarKtpController::class, 'create'])
         ->name('admin.desa.surat.pengantar-ktp.create');
-    Route::post('/admin.desa/surat/pengantar-ktp', [PengantarKtpController::class, 'store'])
+    Route::post('/admin/desa/surat/pengantar-ktp', [PengantarKtpController::class, 'store'])
         ->name('admin.desa.surat.pengantar-ktp.store');
-    Route::get('/admin.desa/surat/pengantar-ktp/{id}/detail', [PengantarKtpController::class, 'show'])
+    Route::get('/admin/desa/surat/pengantar-ktp/{id}/detail', [PengantarKtpController::class, 'show'])
         ->name('admin.desa.surat.pengantar-ktp.show');
-    Route::get('/admin.desa/surat/pengantar-ktp/{id}/edit', [PengantarKtpController::class, 'edit'])
+    Route::get('/admin/desa/surat/pengantar-ktp/{id}/edit', [PengantarKtpController::class, 'edit'])
         ->name('admin.desa.surat.pengantar-ktp.edit');
-    Route::put('/admin.desa/surat/pengantar-ktp/{id}', [PengantarKtpController::class, 'update'])
+    Route::put('/admin/desa/surat/pengantar-ktp/{id}', [PengantarKtpController::class, 'update'])
         ->name('admin.desa.surat.pengantar-ktp.update');
-    Route::delete('/admin.desa/surat/pengantar-ktp/{id}', [PengantarKtpController::class, 'destroy'])
+    Route::delete('/admin/desa/surat/pengantar-ktp/{id}', [PengantarKtpController::class, 'destroy'])
         ->name('admin.desa.surat.pengantar-ktp.delete');
-    Route::get('/surat/pengantar-ktp/{id}/export-pdf', [PengantarKtpController::class, 'exportPDF'])->name('admin.desa.surat.pengantar-ktp.export-pdf');
+    Route::get('/admin/desa/surat/pengantar-ktp/{id}/export-pdf', [PengantarKtpController::class, 'exportPDF'])
+        ->name('admin.desa.surat.pengantar-ktp.export-pdf');
 
 
 });

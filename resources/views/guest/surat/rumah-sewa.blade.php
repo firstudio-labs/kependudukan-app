@@ -135,7 +135,9 @@
 </div>
 
 <script src="{{ asset('js/sweet-alert-utils.js') }}"></script>
-<script src="{{ asset('js/citizen-only-form.js') }}"></script>
+{{-- <script src="{{ asset('js/citizen-only-form.js') }}"></script> --}}
+<script src="{{ asset('js/rental-house.js') }}"></script>
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Initialize citizen data select fields
