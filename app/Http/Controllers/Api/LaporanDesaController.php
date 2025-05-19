@@ -142,7 +142,22 @@ class LaporanDesaController extends Controller
 
             // Set user_id and village_id
             $data['user_id'] = $tokenOwner->id;
-            $data['village_id'] = $tokenOwner->villages_id ?? 1;
+
+            // Get the citizen data from the service to properly retrieve village_id
+            $pendudukNIK = $tokenOwner->nik;
+            $citizenService = app(\App\Services\CitizenService::class);
+            $citizenData = $citizenService->getCitizenByNIK($pendudukNIK);
+
+            if ($citizenData && isset($citizenData['data']) && isset($citizenData['data']['villages_id'])) {
+                // Use village_id from citizen profile data
+                $data['village_id'] = $citizenData['data']['villages_id'];
+            } elseif ($citizenData && isset($citizenData['data']) && isset($citizenData['data']['village_id'])) {
+                // Alternative field name
+                $data['village_id'] = $citizenData['data']['village_id'];
+            } else {
+                // Fallback to user's villages_id if available, or default to 1
+                $data['village_id'] = $tokenOwner->villages_id ?? 1;
+            }
 
             // Set initial status
             $data['status'] = 'Menunggu';
@@ -172,10 +187,10 @@ class LaporanDesaController extends Controller
     {
         try {
             $laporanDesa = LaporanDesa::findOrFail($id);
-            
+
             // Get token owner from request attributes
             $tokenOwner = $request->attributes->get('token_owner');
-            
+
             // Check permissions
             if ($laporanDesa->user_id !== $tokenOwner->id) {
                 return response()->json([
@@ -313,6 +328,19 @@ class LaporanDesaController extends Controller
                 $data['gambar'] = $fileName;
             }
 
+            // Update village_id from citizen profile data
+            $pendudukNIK = $tokenOwner->nik;
+            $citizenService = app(\App\Services\CitizenService::class);
+            $citizenData = $citizenService->getCitizenByNIK($pendudukNIK);
+
+            if ($citizenData && isset($citizenData['data']) && isset($citizenData['data']['villages_id'])) {
+                // Use village_id from citizen profile data
+                $data['village_id'] = $citizenData['data']['villages_id'];
+            } elseif ($citizenData && isset($citizenData['data']) && isset($citizenData['data']['village_id'])) {
+                // Alternative field name
+                $data['village_id'] = $citizenData['data']['village_id'];
+            }
+
             $laporanDesa->update($data);
 
             // Return the updated model with relative path format for gambar
@@ -351,10 +379,10 @@ class LaporanDesaController extends Controller
     {
         try {
             $laporanDesa = LaporanDesa::findOrFail($id);
-            
+
             // Get token owner from request attributes
             $tokenOwner = $request->attributes->get('token_owner');
-            
+
             // Check permissions
             if ($laporanDesa->user_id !== $tokenOwner->id) {
                 return response()->json([

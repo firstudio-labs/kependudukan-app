@@ -40,7 +40,8 @@ use App\Http\Controllers\guest\AhliWarisSuratController;
 use App\Http\Controllers\guest\RumahSewaSuratController;
 use App\Http\Controllers\adminKabupaten\ProfileKabController;
 use App\Http\Controllers\LaporanDesaController;
-use App\Http\Controllers\LaporDesaController;  // Change from User\LaporDesaController to LaporDesaController
+use App\Http\Controllers\LaporDesaController;
+use App\Http\Controllers\adminDesa\LaporanDesaController as AdminDesaLaporanDesaController;
 use App\Http\Controllers\guest\BukuTamuController;
 
 
@@ -495,6 +496,14 @@ Route::middleware(['auth:web', 'role:admin desa'])->group(function () {
         ->name('admin.desa.datamaster.lapordesa.update');
     Route::delete('/admin/desa/datamaster/lapordesa/{id}', [LaporDesaController::class, 'destroy'])
         ->name('admin.desa.datamaster.lapordesa.destroy');
+
+    // Laporan Desa Routes
+    Route::get('/admin/desa/laporan-desa', [AdminDesaLaporanDesaController::class, 'index'])
+        ->name(name: 'admin.desa.laporan-desa.index');
+    Route::get('/admin/desa/laporan-desa/{id}', [AdminDesaLaporanDesaController::class, 'show'])
+        ->name('admin.desa.laporan-desa.show');
+    Route::put('/admin/desa/laporan-desa/{id}/status', [AdminDesaLaporanDesaController::class, 'updateStatus'])
+        ->name('admin.desa.laporan-desa.update-status');
 
     // Di dalam grup middleware admin desa
     Route::get('/admin/desa/datakk/export', [DataKKController::class, 'export'])

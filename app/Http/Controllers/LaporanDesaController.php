@@ -101,8 +101,22 @@ class LaporanDesaController extends Controller
         // Set user_id and village_id
         if (Auth::guard('penduduk')->check()) {
             $data['user_id'] = Auth::guard('penduduk')->id();
-            // Get village_id from the user's profile or set a default
-            $data['village_id'] = Auth::guard('penduduk')->user()->villages_id ?? 1;
+
+            // Get the citizen data from the service to properly retrieve village_id
+            $pendudukNIK = Auth::guard('penduduk')->user()->nik;
+            $citizenService = app(\App\Services\CitizenService::class);
+            $citizenData = $citizenService->getCitizenByNIK($pendudukNIK);
+
+            if ($citizenData && isset($citizenData['data']) && isset($citizenData['data']['villages_id'])) {
+                // Use village_id from citizen profile data
+                $data['village_id'] = $citizenData['data']['villages_id'];
+            } elseif ($citizenData && isset($citizenData['data']) && isset($citizenData['data']['village_id'])) {
+                // Alternative field name
+                $data['village_id'] = $citizenData['data']['village_id'];
+            } else {
+                // Fallback to user's villages_id if available, or default to 1
+                $data['village_id'] = Auth::guard('penduduk')->user()->villages_id ?? 1;
+            }
         }
 
         // Set initial status
@@ -231,7 +245,22 @@ class LaporanDesaController extends Controller
         }
 
         $data['gambar'] = $gambar;
-        
+
+        // Update village_id if there was a change in the user's profile
+        if (Auth::guard('penduduk')->check()) {
+            $pendudukNIK = Auth::guard('penduduk')->user()->nik;
+            $citizenService = app(\App\Services\CitizenService::class);
+            $citizenData = $citizenService->getCitizenByNIK($pendudukNIK);
+
+            if ($citizenData && isset($citizenData['data']) && isset($citizenData['data']['villages_id'])) {
+                // Use village_id from citizen profile data
+                $data['village_id'] = $citizenData['data']['villages_id'];
+            } elseif ($citizenData && isset($citizenData['data']) && isset($citizenData['data']['village_id'])) {
+                // Alternative field name
+                $data['village_id'] = $citizenData['data']['village_id'];
+            }
+        }
+
         $laporanDesa->update($data);
 
         return redirect()->route('user.laporan-desa.index')
@@ -262,5 +291,5 @@ class LaporanDesaController extends Controller
             ->with('success', 'Laporan berhasil dihapus.');
     }
 
-  
+
 }
