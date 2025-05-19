@@ -38,7 +38,7 @@
 
                 <div id="heirs-container">
                     <!-- Template for heir row, will be cloned by JavaScript -->
-                    <div class="heir-row mb-4 template" style="display:none">
+                    <div class="heir-row mb-4">
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">NIK <span class="text-red-500">*</span></label>
@@ -119,16 +119,47 @@
                     </button>
                 </div>
 
-                <!-- Data Wilayah Section -->
-                {{-- <div class="mb-2 mt-6"> --}}
-                    {{-- <h2 class="text-xl font-bold text-gray-800">Data Wilayah</h2> --}}
-                {{-- </div> --}}
+                {{-- <!-- Data Wilayah Section -->
+                <div class="mb-2 mt-6">
+                    <h2 class="text-xl font-bold text-gray-800">Data Wilayah</h2>
+                </div>
 
-                <!-- Hidden Location Fields (instead of visible dropdowns) -->
-                <input type="hidden" id="province_id" name="province_id" value="{{ request('province_id') }}">
-                <input type="hidden" id="district_id" name="district_id" value="{{ request('district_id') }}">
-                <input type="hidden" id="subdistrict_id" name="subdistrict_id" value="{{ request('sub_district_id') }}">
-                <input type="hidden" id="village_id" name="village_id" value="{{ request('village_id') }}">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div>
+                        <label for="province_code" class="block text-sm font-medium text-gray-700">Provinsi <span class="text-red-500">*</span></label>
+                        <select id="province_code" name="province_code" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                            <option value="">Pilih Provinsi</option>
+                            @foreach($provinces as $province)
+                                <option value="{{ $province['code'] }}" data-id="{{ $province['id'] }}">{{ $province['name'] }}</option>
+                            @endforeach
+                        </select>
+                        <input type="hidden" id="province_id" name="province_id" value="">
+                    </div>
+
+                    <div>
+                        <label for="district_code" class="block text-sm font-medium text-gray-700">Kabupaten <span class="text-red-500">*</span></label>
+                        <select id="district_code" name="district_code" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" disabled required>
+                            <option value="">Pilih Kabupaten</option>
+                        </select>
+                        <input type="hidden" id="district_id" name="district_id" value="">
+                    </div>
+
+                    <div>
+                        <label for="subdistrict_code" class="block text-sm font-medium text-gray-700">Kecamatan <span class="text-red-500">*</span></label>
+                        <select id="subdistrict_code" name="subdistrict_code" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" disabled required>
+                            <option value="">Pilih Kecamatan</option>
+                        </select>
+                        <input type="hidden" id="subdistrict_id" name="subdistrict_id" value="">
+                    </div>
+
+                    <div>
+                        <label for="village_code" class="block text-sm font-medium text-gray-700">Desa <span class="text-red-500">*</span></label>
+                        <select id="village_code" name="village_code" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" disabled required>
+                            <option value="">Pilih Desa</option>
+                        </select>
+                        <input type="hidden" id="village_id" name="village_id" value="">
+                    </div>
+                </div> --}}
 
                 <!-- Informasi Surat Section -->
                 <div class="mb-2 mt-6">
@@ -189,113 +220,5 @@
         </div>
     </div>
     <script src="{{ asset('js/location-dropdowns.js') }}"></script>
-    <script src="{{ asset('js/sweet-alert-utils.js') }}"></script>
-    <script src="{{ asset('js/citizen-only-form.js') }}"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Setup inheritance form
-            setupInheritanceForm();
-
-            // Initialize SweetAlert messages
-            if ("{{ session('success') }}") {
-                showSuccessAlert("{{ session('success') }}");
-            }
-
-            if ("{{ session('error') }}") {
-                showErrorAlert("{{ session('error') }}");
-            }
-
-            function setupInheritanceForm() {
-                // Get heirs container
-                const heirsContainer = document.getElementById('heirs-container');
-                const template = heirsContainer.querySelector('.heir-row.template');
-
-                // Add first heir row
-                addHeirRow();
-
-                // Add button handler
-                document.getElementById('add-heir').addEventListener('click', addHeirRow);
-
-                function addHeirRow() {
-                    // Clone template
-                    const row = template.cloneNode(true);
-                    row.classList.remove('template');
-                    row.style.display = '';
-                    heirsContainer.appendChild(row);
-
-                    // Initialize selects in this row
-                    const nikSelect = row.querySelector('.nik-select');
-                    const nameSelect = row.querySelector('.fullname-select');
-
-                    $(nikSelect).select2({
-                        placeholder: 'Ketik untuk mencari NIK',
-                        minimumInputLength: 1,
-                        ajax: {
-                            url: '{{ route("citizens.administrasi") }}',
-                            dataType: 'json',
-                            delay: 250,
-                            data: function(params) {
-                                return {
-                                    search: params.term
-                                };
-                            },
-                            processResults: function(data) {
-                                let results = [];
-                                if (data.data) {
-                                    results = data.data.map(citizen => ({
-                                        id: citizen.nik,
-                                        text: citizen.nik,
-                                        citizen: citizen
-                                    }));
-                                }
-                                return { results };
-                            }
-                        }
-                    });
-
-                    $(nameSelect).select2({
-                        placeholder: 'Ketik untuk mencari nama',
-                        minimumInputLength: 1,
-                        ajax: {
-                            url: '{{ route("citizens.administrasi") }}',
-                            dataType: 'json',
-                            delay: 250,
-                            data: function(params) {
-                                return {
-                                    search: params.term
-                                };
-                            },
-                            processResults: function(data) {
-                                let results = [];
-                                if (data.data) {
-                                    results = data.data.map(citizen => ({
-                                        id: citizen.full_name,
-                                        text: citizen.full_name,
-                                        citizen: citizen
-                                    }));
-                                }
-                                return { results };
-                            }
-                        }
-                    });
-
-                    // Remove button handler
-                    row.querySelector('.remove-heir').addEventListener('click', function() {
-                        if (heirsContainer.querySelectorAll('.heir-row:not(.template)').length > 1) {
-                            row.remove();
-                        } else {
-                            alert('Minimal harus ada satu ahli waris');
-                        }
-                    });
-
-                    // Set up interconnection between NIK and name
-                    setupHeirFieldsConnection(nikSelect, nameSelect, row);
-                }
-
-                function setupHeirFieldsConnection(nikSelect, nameSelect, row) {
-                    // Rest of connection logic
-                }
-            }
-        });
-    </script>
+    <script src="{{ asset('js/inheritance-certificate.js') }}"></script>
 </x-guest.surat-layout>

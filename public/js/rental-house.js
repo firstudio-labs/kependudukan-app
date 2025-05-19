@@ -62,15 +62,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
             allCitizens = processedData;
 
-            // Setup the interfaces
-            setupLocationHandlers();
+            // Setup the interfaces - independent of each other now
+            if (document.getElementById('province_code')) {
+                setupLocationHandlers();
+            }
             setupOrganizerFields();
             setupResponsibleNameField();
         },
         error: function(error) {
             console.error('Failed to load citizen data:', error);
             // Setup the interfaces anyway with empty data
-            setupLocationHandlers();
+            if (document.getElementById('province_code')) {
+                setupLocationHandlers();
+            }
             setupOrganizerFields();
             setupResponsibleNameField();
         }
@@ -86,6 +90,13 @@ document.addEventListener('DOMContentLoaded', function() {
         const districtIdInput = document.getElementById('district_id');
         const subDistrictIdInput = document.getElementById('subdistrict_id');
         const villageIdInput = document.getElementById('village_id');
+
+        // Ensure all elements exist before proceeding
+        if (!provinceSelect || !districtSelect || !subDistrictSelect || !villageSelect ||
+            !provinceIdInput || !districtIdInput || !subDistrictIdInput || !villageIdInput) {
+            console.warn('Some location elements are missing. Location setup skipped.');
+            return;
+        }
 
         // Helper function to reset select options
         function resetSelect(select, defaultText = 'Pilih', hiddenInput = null) {
@@ -251,6 +262,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const nikSelect = document.getElementById('nikSelect');
         const nameSelect = document.getElementById('fullNameSelect');
 
+        // Check if the elements exist
+        if (!nikSelect || !nameSelect) {
+            console.error("NIK or Name select elements not found");
+            return;
+        }
+
         // Track if we're in the middle of an update to prevent recursion
         let isUpdating = false;
 
@@ -305,10 +322,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 $(nameSelect).val(citizen.full_name).trigger('change.select2');
 
                 // Fill address field
-                $('#address').val(citizen.address || '');
+                const addressField = document.getElementById('address');
+                if (addressField) {
+                    addressField.value = citizen.address || '';
+                }
 
-                // Also populate location fields from citizen data
-                populateLocationFields(citizen);
+                // Only try to populate location fields if they exist
+                if (document.getElementById('province_code')) {
+                    populateLocationFields(citizen);
+                }
             }
 
             isUpdating = false;
@@ -327,10 +349,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
 
                 // Fill address field
-                $('#address').val(citizen.address || '');
+                const addressField = document.getElementById('address');
+                if (addressField) {
+                    addressField.value = citizen.address || '';
+                }
 
-                // Also populate location fields from citizen data
-                populateLocationFields(citizen);
+                // Only try to populate location fields if they exist
+                if (document.getElementById('province_code')) {
+                    populateLocationFields(citizen);
+                }
             }
 
             isUpdating = false;
@@ -339,6 +366,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // New function to populate location fields from citizen data
     function populateLocationFields(citizen) {
+        // Check if location elements exist first
+        const provinceSelect = document.getElementById('province_code');
+        const provinceIdInput = document.getElementById('province_id');
+
+        if (!provinceSelect || !provinceIdInput) {
+            console.log('Location fields not found, skipping population');
+            return;
+        }
+
         // Support both naming conventions for subdistrict
         const subDistrictId = citizen.subdistrict_id || citizen.sub_district_id;
 
@@ -355,7 +391,6 @@ document.addEventListener('DOMContentLoaded', function() {
         $('#village_id').val(citizen.village_id);
 
         // Find and select the correct province option
-        const provinceSelect = document.getElementById('province_code');
         let provinceFound = false;
 
         for (let i = 0; i < provinceSelect.options.length; i++) {
@@ -368,10 +403,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 fetch(`/location/districts/${option.value}`)
                     .then(response => response.json())
                     .then(districts => {
+                        const districtSelect = document.getElementById('district_code');
+                        if (!districtSelect) return;
+
                         if (!districts || !Array.isArray(districts) || districts.length === 0) return;
 
                         // Populate district dropdown
-                        const districtSelect = document.getElementById('district_code');
                         districtSelect.innerHTML = '<option value="">Pilih Kabupaten</option>';
 
                         let districtFound = false;
@@ -399,10 +436,12 @@ document.addEventListener('DOMContentLoaded', function() {
                             fetch(`/location/sub-districts/${selectedDistrictCode}`)
                                 .then(response => response.json())
                                 .then(subdistricts => {
+                                    const subdistrictSelect = document.getElementById('subdistrict_code');
+                                    if (!subdistrictSelect) return;
+
                                     if (!subdistricts || !Array.isArray(subdistricts) || subdistricts.length === 0) return;
 
                                     // Populate subdistrict dropdown
-                                    const subdistrictSelect = document.getElementById('subdistrict_code');
                                     subdistrictSelect.innerHTML = '<option value="">Pilih Kecamatan</option>';
 
                                     let subdistrictFound = false;
@@ -430,10 +469,12 @@ document.addEventListener('DOMContentLoaded', function() {
                                         fetch(`/location/villages/${selectedSubdistrictCode}`)
                                             .then(response => response.json())
                                             .then(villages => {
+                                                const villageSelect = document.getElementById('village_code');
+                                                if (!villageSelect) return;
+
                                                 if (!villages || !Array.isArray(villages) || villages.length === 0) return;
 
                                                 // Populate village dropdown
-                                                const villageSelect = document.getElementById('village_code');
                                                 villageSelect.innerHTML = '<option value="">Pilih Desa</option>';
 
                                                 villages.forEach(village => {
@@ -476,6 +517,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Setup responsible name field as an independent selection
     function setupResponsibleNameField() {
+        const responsibleSelect = document.getElementById('responsibleNameSelect');
+
+        if (!responsibleSelect) {
+            console.warn('Responsible name select element not found');
+            return;
+        }
+
         // Process citizens for Select2 - only names
         function prepareNameOptions() {
             const nameOptions = [];
@@ -494,7 +542,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         const nameOptions = prepareNameOptions();
-        const responsibleSelect = document.getElementById('responsibleNameSelect');
 
         // Initialize Name Select2 with pre-loaded data
         $(responsibleSelect).select2({
@@ -517,17 +564,23 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Form validation
-    document.querySelector('form').addEventListener('submit', function(e) {
-        const provinceId = document.getElementById('province_id').value;
-        const districtId = document.getElementById('district_id').value;
-        const subDistrictId = document.getElementById('subdistrict_id').value;
-        const villageId = document.getElementById('village_id');
+    // Form validation - only run if form exists
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            // Only validate location fields if they exist
+            if (document.getElementById('province_code')) {
+                const provinceId = document.getElementById('province_id').value;
+                const districtId = document.getElementById('district_id').value;
+                const subDistrictId = document.getElementById('subdistrict_id').value;
+                const villageId = document.getElementById('village_id');
 
-        if (!provinceId || !districtId || !subDistrictId || !villageId) {
-            e.preventDefault();
-            alert('Silakan pilih Provinsi, Kabupaten, Kecamatan, dan Desa');
-            return false;
-        }
-    });
+                if (!provinceId || !districtId || !subDistrictId || !villageId) {
+                    e.preventDefault();
+                    alert('Silakan pilih Provinsi, Kabupaten, Kecamatan, dan Desa');
+                    return false;
+                }
+            }
+        });
+    }
 });
