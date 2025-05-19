@@ -225,7 +225,7 @@ class BiodataController extends Controller
         $villages = $this->wilayahService->getDesa($citizen['data']['sub_district_id']);
 
         if (Auth::user()->role == 'admin desa') {
-            return view('admin.desa.biodata.edit', compact(
+            return view('admin.desa.biodata.update', compact(
                 'citizen',
                 'provinces',
                 'jobs',

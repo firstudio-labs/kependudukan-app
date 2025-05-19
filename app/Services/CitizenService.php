@@ -187,7 +187,7 @@ class CitizenService
                 'X-API-Key' => $this->apiKey,
             ])->put("{$this->baseUrl}/api/citizens/{$nik}", $data);
 
-            dd($response->body());
+            // dd($response->body());
             if ($response->successful()) {
                 return $response->json();
             } else {
