@@ -157,6 +157,7 @@ class BiodataController extends Controller
                 'country' => 'nullable|string|max:100',
                 'foreign_postal_code' => 'nullable|string|max:20',
                 'status' => 'nullable|string|in:Active,Inactive,Deceased,Moved',
+                'rf_id_tag' => 'nullable|integer',
             ]);
 
             // Batch process nullable fields
@@ -297,6 +298,7 @@ class BiodataController extends Controller
                 'country' => 'nullable|string|max:100',
                 'foreign_postal_code' => 'nullable|string|max:20',
                 'status' => 'nullable|string|in:Active,Inactive,Deceased,Moved',
+                'rf_id_tag' => 'nullable|integer',
             ]);
 
             // Process nullable fields

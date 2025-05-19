@@ -478,6 +478,11 @@
                             <option value="Moved">Moved</option>
                         </select>
                     </div>
+                    <div>
+    <label for="rf_id_tag" class="block text-sm font-medium text-gray-700">RF ID Tag</label>
+    <input type="number" id="rf_id_tag" name="rf_id_tag"
+        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+</div>
                 </div>
 
                 <div class="mt-6 flex justify-end space-x-4">
@@ -581,7 +586,7 @@
                     'divorce_certificate', 'divorce_certificate_no', 'divorce_certificate_date',
                     'blood_type', 'mental_disorders', 'disabilities', 'citizen_status',
                     'telephone', 'email', 'nik_mother', 'mother', 'nik_father', 'father',
-                    'coordinate', 'status'
+                    'coordinate', 'status', 'rf_id_tag'
                 ];
 
                 // Reset each field to its default value
@@ -792,6 +797,7 @@
                         nik_father: document.getElementById('nik_father').value,
                         father: document.getElementById('father').value,
                         status: document.getElementById('status').value,
+                        rf_id_tag: document.getElementById('rf_id_tag').value,
 
                         // Foreign address (copied from KK data)
                         foreign_address: kkFormData.foreign_address,
@@ -1002,6 +1008,7 @@
                             nik_father: document.getElementById('nik_father').value || '',
                             father: document.getElementById('father').value || '',
                             status: document.getElementById('status').value || '',
+                            rf_id_tag: document.getElementById('rf_id_tag').value || '',
 
                             // Foreign address data
                             foreign_address: kkFormData.foreign_address,

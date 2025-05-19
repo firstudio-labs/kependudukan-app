@@ -38,12 +38,11 @@ class DataKKController extends Controller
                 'id' => Auth::user()->id,
                 'username' => Auth::user()->username,
                 'villages_id' => Auth::user()->villages_id ?? 'Not set',
-                'role' => Auth::user()->role,
-                'villages_id_type' => gettype(Auth::user()->villages_id)
+                'role' => Auth::user()->role
             ]);
         }
 
-        // Jika parameter export ada, langsung panggil fungsi export
+        // If export parameter exists, call the export function directly
         if ($request->has('export')) {
             return $this->export();
         }
@@ -58,66 +57,68 @@ class DataKKController extends Controller
             Log::info('Admin desa has villages_id: ' . $villagesId);
         }
 
-        // Get data from API
-        if ($search) {
-            $kk = $this->citizenService->searchCitizens($search);
+        // Get data based on user role and search parameters
+        if (Auth::user()->role === 'admin desa' && $villagesId) {
+            if ($search) {
+                // First try searching with keyword
+                $kk = $this->citizenService->searchCitizens($search);
 
-            // If search fails, fallback to getting all citizens
-            if (!$kk || isset($kk['status']) && $kk['status'] === 'ERROR') {
-                $kk = $this->citizenService->getAllCitizens($page);
-                session()->flash('warning', 'Search failed, showing all results instead');
+                // If search fails, fallback to village-specific citizens
+                            // Filter hasil untuk desa admin saja
+            if ($kkData && isset($kkData['status']) && $kkData['status'] === 'OK' && isset($kkData['data'])) {
+                // Filter hasil pencarian untuk desa admin saja
+                $filteredKK = [];
+                if (isset($kkData['data']['citizens']) && is_array($kkData['data']['citizens'])) {
+                    foreach ($kkData['data']['citizens'] as $citizen) {
+                        if (isset($citizen['village_id']) && $citizen['village_id'] == $villagesId) {
+                            $filteredKK[] = $citizen;
+                        }
+                    }
+                    $kkData['data']['citizens'] = $filteredKK;
+                    $kkData['data']['count'] = count($filteredKK);
+                }
+                $kk = $kkData;
+            } else {
+                // If search fails, get all citizens from the village
+                $kk = $this->citizenService->getCitizensByVillageId($villagesId, $page);
+                session()->flash('warning', 'Pencarian gagal, menampilkan semua data KK desa');
+            }
+
+            } else {
+                // Direct call to get citizens by village ID with pagination
+                $kk = $this->citizenService->getCitizensByVillageId($villagesId, $page);
+
+                // Verify village ID filtering
+                Log::info('Direct KK village query results', [
+                    'village_id' => $villagesId,
+                    'has_data' => isset($kk['data']['citizens']),
+                    'count' => isset($kk['data']['citizens']) ? count($kk['data']['citizens']) : 0,
+                    'pagination' => isset($kk['data']['pagination']) ? $kk['data']['pagination'] : 'none'
+                ]);
             }
         } else {
-            $kk = $this->citizenService->getAllCitizens($page);
-        }
-
-        // Manually filter the results by villages_id if admin desa is logged in
-        if (Auth::user()->role === 'admin desa' && $villagesId && isset($kk['data']['citizens']) && is_array($kk['data']['citizens'])) {
-            $originalCount = count($kk['data']['citizens']);
-
-            // Filter the citizens array
-            $filteredCitizens = array_filter($kk['data']['citizens'], function($citizen) use ($villagesId) {
-                // Check for villages_id match in different possible field names
-                $citizenVillageId = null;
-
-                if (isset($citizen['villages_id'])) {
-                    $citizenVillageId = $citizen['villages_id'];
-                } else if (isset($citizen['village_id'])) {
-                    $citizenVillageId = $citizen['village_id'];
+            // For superadmin or other roles, show all data
+            if ($search) {
+                $kk = $this->citizenService->searchCitizens($search);
+                if (!$kk || isset($kk['status']) && $kk['status'] === 'ERROR') {
+                    $kk = $this->citizenService->getAllCitizens($page);
+                    session()->flash('warning', 'Search failed, showing all results instead');
                 }
-
-                // Log individual citizen data for debugging
-                if ($citizenVillageId == $villagesId) {
-                    Log::debug('Citizen matched filter', [
-                        'citizen_name' => $citizen['full_name'] ?? 'Unknown',
-                        'villages_id' => $citizenVillageId,
-                        'filter_villages_id' => $villagesId
-                    ]);
-                }
-
-                return $citizenVillageId == $villagesId;
-            });
-
-            // Re-index the array to maintain sequential keys
-            $filteredCitizens = array_values($filteredCitizens);
-            $filteredCount = count($filteredCitizens);
-
-            // Log the filtering results
-            Log::info('Filtered KK data for admin desa:', [
-                'villages_id' => $villagesId,
-                'original_count' => $originalCount,
-                'filtered_count' => $filteredCount
-            ]);
-
-            // Replace the original citizens array with the filtered one
-            $kk['data']['citizens'] = $filteredCitizens;
-
-            // Update pagination data if it exists
-            if (isset($kk['data']['pagination'])) {
-                $kk['data']['pagination']['total_items'] = $filteredCount;
-                $kk['data']['pagination']['total_page'] = ceil($filteredCount / ($kk['data']['pagination']['items_per_page'] ?? 10));
+            } else {
+                $kk = $this->citizenService->getAllCitizens($page);
             }
         }
+        // Prepare pagination data
+    $paginationData = [];
+    if (isset($kk['data']['pagination'])) {
+        $paginationData = [
+            'current_page' => $kk['data']['pagination']['current_page'],
+            'total_page' => $kk['data']['pagination']['total_page'],
+            'base_url' => route('admin.desa.datakk.index') . '?',
+            'search' => $search
+        ];
+    }
+
 
         // Get family member counts for each KK
         if (isset($kk['data']['citizens']) && is_array($kk['data']['citizens'])) {
@@ -139,10 +140,10 @@ class DataKKController extends Controller
         }
 
         if (Auth::user()->role === 'admin desa') {
-            return view('admin.desa.datakk.index', compact('kk', 'search'));
+            return view('admin.desa.datakk.index', compact('kk', 'search', 'paginationData'));
         }
 
-        return view('superadmin.datakk.index', compact('kk', 'search'));
+        return view('superadmin.datakk.index', compact('kk', 'search', 'paginationData'));
     }
 
     public function create()
@@ -208,6 +209,7 @@ class DataKKController extends Controller
             'negara_bagian' => $request->negara_bagian,
             'negara' => $request->negara,
             'kode_pos_luar_negeri' => $request->kode_pos_luar_negeri,
+            'rf_id_tag' => $request->rf_id_tag,
         ]);
 
         // If you have family members in the request, create them
@@ -356,6 +358,9 @@ class DataKKController extends Controller
             ? $this->citizenService->searchCitizens($search)
             : $this->citizenService->getAllCitizensWithHighLimit();
 
+        // Normalize village IDs in the response
+        $response = $this->citizenService->normalizeVillageIdFields($response);
+
         // Extract citizens array from the response structure
         $citizens = [];
         $status = 'ERROR';
@@ -376,15 +381,8 @@ class DataKKController extends Controller
 
             // Filter by villages_id
             $citizens = array_filter($citizens, function($citizen) use ($villagesId) {
-                $citizenVillageId = null;
-
-                if (isset($citizen['villages_id'])) {
-                    $citizenVillageId = $citizen['villages_id'];
-                } else if (isset($citizen['village_id'])) {
-                    $citizenVillageId = $citizen['village_id'];
-                }
-
-                return $citizenVillageId == $villagesId;
+                // Now we can consistently use villages_id
+                return isset($citizen['villages_id']) && $citizen['villages_id'] == $villagesId;
             });
 
             // Re-index array
@@ -625,6 +623,7 @@ class DataKKController extends Controller
                 'country' => 'nullable|string|max:100',
                 'foreign_postal_code' => 'nullable|string|max:20',
                 'status' => 'nullable|string|in:Active,Inactive,Deceased,Moved',
+                'rf_id_tag' => 'nullable|integer',
             ]);
 
             // Pemeriksaan apakah validasi gagal
@@ -753,6 +752,7 @@ class DataKKController extends Controller
                     'country' => 'nullable|string|max:100',
                     'foreign_postal_code' => 'nullable|string|max:20',
                     'status' => 'nullable|string|in:Active,Inactive,Deceased,Moved',
+                    'rf_id_tag' => 'nullable|integer',
                 ]);
 
                 if ($validator->fails()) {
