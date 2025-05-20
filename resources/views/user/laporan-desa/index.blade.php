@@ -277,7 +277,7 @@
                      if (laporan.gambar) {
                         const imgElement = document.createElement('div');
                         imgElement.innerHTML = `
-                <img src="/storage/${laporan.gambar}" alt="Foto Laporan" 
+                <img src="${laporan.gambar_url}" alt="Foto Laporan" 
                      class="w-full h-auto max-h-[300px] object-contain rounded-lg shadow-sm">
             `;
                         imageContainer.appendChild(imgElement);

@@ -22,13 +22,13 @@ class LaporanDesa extends Model
     ];
 
 
-    
+
     public function laporDesa()
     {
         return $this->belongsTo(LaporDesa::class, 'lapor_desa_id');
     }
 
-  
+
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -64,8 +64,8 @@ class LaporanDesa extends Model
 
     public function getGambarUrlAttribute()
     {
-        return $this->gambar ? asset('storage/' . $this->gambar) : null;
+        return $this->gambar ? '/storage/' . $this->gambar : null;
     }
 
-   
+
 }

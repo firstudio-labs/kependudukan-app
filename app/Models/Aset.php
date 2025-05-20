@@ -75,11 +75,11 @@ class Aset extends Model
     // Ensure these accessors use the correct storage paths
     public function getFotoAsetDepanUrlAttribute()
     {
-        return $this->foto_aset_depan ? asset('storage/' . $this->foto_aset_depan) : null;
+        return $this->foto_aset_depan ? '/storage/' . $this->foto_aset_depan : null;
     }
 
     public function getFotoAsetSampingUrlAttribute()
     {
-        return $this->foto_aset_samping ? asset('storage/' . $this->foto_aset_samping) : null;
+        return $this->foto_aset_samping ? '/storage/' . $this->foto_aset_samping : null;
     }
 }

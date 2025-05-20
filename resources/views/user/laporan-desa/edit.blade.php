@@ -83,8 +83,8 @@
                                 </p>
                                 <div id="image-preview"
                                     class="mt-2 w-64 h-auto overflow-hidden rounded-md border border-gray-300">
-                                    <img src="{{ asset('storage/uploads/documents/foto-lapordesa/' . $laporanDesa->gambar) }}"
-                                        alt="Preview gambar" class="w-full h-auto object-cover">
+                                    <img src="{{ $laporanDesa->gambar_url }}" alt="Preview gambar"
+                                        class="w-full h-auto object-cover">
                                 </div>
                             @else
                                 <p id="file-name" class="text-sm text-gray-500">Tidak ada gambar saat ini</p>
@@ -197,13 +197,13 @@
                         // Restore original file view if input is cleared
                         @if($laporanDesa->gambar)
                             fileName.textContent = 'File saat ini: {{ $laporanDesa->gambar }}';
-                            imagePreview.innerHTML = '<img src="{{ asset('storage/uploads/documents/foto-lapordesa/' . $laporanDesa->gambar) }}" alt="Preview gambar" class="w-full h-auto object-cover">';
+                            imagePreview.innerHTML = '<img src="{{ $laporanDesa->gambar_url }}" alt="Preview gambar" class="w-full h-auto object-cover">';
                         @else
                             fileName.textContent = 'Tidak ada file yang dipilih';
                             imagePreview.innerHTML = '';
                             imagePreview.classList.add('hidden');
                         @endif
-                        }
+                                    }
                 });
             });
         </script>

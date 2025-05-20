@@ -52,6 +52,16 @@ class KelolaAsetController extends Controller
             // Get just the data items from the paginator
             $assets = $paginator->items();
 
+            // Add image URLs to each asset
+            foreach ($assets as $asset) {
+                if ($asset->foto_aset_depan) {
+                    $asset->foto_aset_depan_url = '/storage/' . $asset->foto_aset_depan;
+                }
+                if ($asset->foto_aset_samping) {
+                    $asset->foto_aset_samping_url = '/storage/' . $asset->foto_aset_samping;
+                }
+            }
+
             // Return a custom response without pagination metadata
             return response()->json([
                 'status' => 'success',
@@ -176,6 +186,14 @@ class KelolaAsetController extends Controller
                 'foto_aset_samping' => $foto_aset_samping,
             ]);
 
+            // Add image URLs if images exist
+            if ($aset->foto_aset_depan) {
+                $aset->foto_aset_depan_url = '/storage/' . $aset->foto_aset_depan;
+            }
+            if ($aset->foto_aset_samping) {
+                $aset->foto_aset_samping_url = '/storage/' . $aset->foto_aset_samping;
+            }
+
             return response()->json([
                 'status' => 'success',
                 'message' => 'Data aset berhasil disimpan',
@@ -211,6 +229,14 @@ class KelolaAsetController extends Controller
             if (!empty($aset->tag_lokasi)) {
                 $aset->tag_lat = $aset->getLatitudeAttribute();
                 $aset->tag_lng = $aset->getLongitudeAttribute();
+            }
+
+            // Add image URLs if images exist
+            if ($aset->foto_aset_depan) {
+                $aset->foto_aset_depan_url = '/storage/' . $aset->foto_aset_depan;
+            }
+            if ($aset->foto_aset_samping) {
+                $aset->foto_aset_samping_url = '/storage/' . $aset->foto_aset_samping;
             }
 
             $data = [
@@ -316,6 +342,15 @@ class KelolaAsetController extends Controller
                 'foto_aset_depan' => $validated['foto_aset_depan'] ?? $aset->foto_aset_depan,
                 'foto_aset_samping' => $validated['foto_aset_samping'] ?? $aset->foto_aset_samping,
             ]);
+
+            // Refresh and add image URLs
+            $aset = $aset->fresh();
+            if ($aset->foto_aset_depan) {
+                $aset->foto_aset_depan_url = '/storage/' . $aset->foto_aset_depan;
+            }
+            if ($aset->foto_aset_samping) {
+                $aset->foto_aset_samping_url = '/storage/' . $aset->foto_aset_samping;
+            }
 
             return response()->json([
                 'status' => 'success',

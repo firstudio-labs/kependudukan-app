@@ -55,9 +55,17 @@ class LaporanDesaController extends Controller
 
             $laporans = $query->orderBy('created_at', 'desc')->paginate($perPage);
 
+            // Add gambar_url to each laporan item
+            $items = collect($laporans->items())->map(function ($laporan) {
+                if ($laporan->gambar) {
+                    $laporan->gambar_url = '/storage/' . $laporan->gambar;
+                }
+                return $laporan;
+            });
+
             return response()->json([
                 'status' => 'success',
-                'data' => $laporans->items(),
+                'data' => $items,
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -164,6 +172,11 @@ class LaporanDesaController extends Controller
 
             $laporanDesa = LaporanDesa::create($data);
 
+            // Add gambar_url if image exists
+            if ($laporanDesa->gambar) {
+                $laporanDesa->gambar_url = '/storage/' . $laporanDesa->gambar;
+            }
+
             return response()->json([
                 'status' => 'success',
                 'message' => 'Laporan berhasil dikirim dan sedang menunggu diproses.',
@@ -233,7 +246,7 @@ class LaporanDesaController extends Controller
 
             // Add image URL if exists
             if ($laporanDesa->gambar) {
-                $laporanDesa->gambar_url = asset('storage/' . $laporanDesa->gambar);
+                $laporanDesa->gambar_url = '/storage/' . $laporanDesa->gambar;
             }
 
             return response()->json([
@@ -348,7 +361,7 @@ class LaporanDesaController extends Controller
 
             // Format the gambar URL before returning it
             if ($updatedLaporan->gambar) {
-                $updatedLaporan->gambar_path = 'uploads/documents/foto-lapordesa/' . $updatedLaporan->gambar;
+                $updatedLaporan->gambar_url = '/storage/' . $updatedLaporan->gambar;
             }
 
             return response()->json([
