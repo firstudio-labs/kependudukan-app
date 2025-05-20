@@ -84,19 +84,14 @@ class LaporanDesaController extends Controller
         }
         $data['tag_lokasi'] = $tag_lokasi;
 
-
-        $gambar = null;
         if ($request->hasFile('gambar')) {
             $file = $request->file('gambar');
             $reportName = Str::slug(substr($request->judul_laporan, 0, 30));
             $timestamp = time();
             $filename = $timestamp . '_' . $reportName . '.' . $file->getClientOriginalExtension();
             $path = $file->storeAs('uploads/documents/foto-lapordesa', $filename, 'public');
-            $gambar = $path;
+            $data['gambar'] = $path;
         }
-
-        $data['gambar'] = $gambar;
-
 
         // Set user_id and village_id
         if (Auth::guard('penduduk')->check()) {
@@ -234,17 +229,19 @@ class LaporanDesaController extends Controller
         }
         $data['tag_lokasi'] = $tag_lokasi;
 
-        $gambar = null;
         if ($request->hasFile('gambar')) {
+            // Delete previous image if exists
+            if ($laporanDesa->gambar && Storage::exists('public/' . $laporanDesa->gambar)) {
+                Storage::delete('public/' . $laporanDesa->gambar);
+            }
+
             $file = $request->file('gambar');
             $reportName = Str::slug(substr($request->judul_laporan, 0, 30));
             $timestamp = time();
             $filename = $timestamp . '_' . $reportName . '.' . $file->getClientOriginalExtension();
             $path = $file->storeAs('uploads/documents/foto-lapordesa', $filename, 'public');
-            $gambar = $path;
+            $data['gambar'] = $path;
         }
-
-        $data['gambar'] = $gambar;
 
         // Update village_id if there was a change in the user's profile
         if (Auth::guard('penduduk')->check()) {
@@ -281,8 +278,8 @@ class LaporanDesaController extends Controller
         }
 
         // Delete image if exists
-        if ($laporanDesa->gambar && Storage::exists('public/laporan-desa/' . $laporanDesa->gambar)) {
-            Storage::delete('public/laporan-desa/' . $laporanDesa->gambar);
+        if ($laporanDesa->gambar && Storage::exists('public/' . $laporanDesa->gambar)) {
+            Storage::delete('public/' . $laporanDesa->gambar);
         }
 
         $laporanDesa->delete();

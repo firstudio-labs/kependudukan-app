@@ -134,7 +134,7 @@ class LaporanDesaController extends Controller
                 $timestamp = time();
                 $fileName = $timestamp . '_' . $reportName . '.' . $file->getClientOriginalExtension();
                 $path = $file->storeAs('uploads/documents/foto-lapordesa', $fileName, 'public');
-                $data['gambar'] = $fileName;
+                $data['gambar'] = $path;
             }
 
             // Get token owner from request attributes
@@ -233,7 +233,7 @@ class LaporanDesaController extends Controller
 
             // Add image URL if exists
             if ($laporanDesa->gambar) {
-                $laporanDesa->gambar_url = asset('storage/laporan-desa/' . $laporanDesa->gambar);
+                $laporanDesa->gambar_url = asset('storage/' . $laporanDesa->gambar);
             }
 
             return response()->json([
@@ -314,8 +314,8 @@ class LaporanDesaController extends Controller
 
             if ($request->hasFile('gambar')) {
                 // Delete previous image if exists
-                if ($laporanDesa->gambar && Storage::exists('public/uploads/documents/foto-lapordesa/' . $laporanDesa->gambar)) {
-                    Storage::delete('public/uploads/documents/foto-lapordesa/' . $laporanDesa->gambar);
+                if ($laporanDesa->gambar && Storage::exists('public/' . $laporanDesa->gambar)) {
+                    Storage::delete('public/' . $laporanDesa->gambar);
                 }
 
                 $file = $request->file('gambar');
@@ -324,8 +324,8 @@ class LaporanDesaController extends Controller
                 $fileName = $timestamp . '_' . $reportName . '.' . $file->getClientOriginalExtension();
                 $path = $file->storeAs('uploads/documents/foto-lapordesa', $fileName, 'public');
 
-                // Store only the relative path, not full path
-                $data['gambar'] = $fileName;
+                // Store the full relative path
+                $data['gambar'] = $path;
             }
 
             // Update village_id from citizen profile data
@@ -399,8 +399,8 @@ class LaporanDesaController extends Controller
             }
 
             // Delete image if exists
-            if ($laporanDesa->gambar && Storage::exists('public/laporan-desa/' . $laporanDesa->gambar)) {
-                Storage::delete('public/laporan-desa/' . $laporanDesa->gambar);
+            if ($laporanDesa->gambar && Storage::exists('public/' . $laporanDesa->gambar)) {
+                Storage::delete('public/' . $laporanDesa->gambar);
             }
 
             $laporanDesa->delete();
