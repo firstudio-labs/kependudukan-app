@@ -5,6 +5,7 @@
  */
 
 // Initialize citizen data (NIK and Name) select fields with Select2
+// Initialize citizen data (NIK and Name) select fields with Select2
 function initializeCitizenSelect(routeUrl, onDataLoaded = null) {
     let isUpdating = false;
     let allCitizens = [];
@@ -41,6 +42,9 @@ function initializeCitizenSelect(routeUrl, onDataLoaded = null) {
             // Now initialize Select2 with the pre-loaded data
             setupSelect2WithData(allCitizens);
 
+            // Initialize RF ID Tag event listener
+            setupRfIdTagListener(allCitizens);
+
             // If callback provided, call it with the loaded citizen data
             if (typeof onDataLoaded === 'function') {
                 onDataLoaded(allCitizens);
@@ -51,6 +55,64 @@ function initializeCitizenSelect(routeUrl, onDataLoaded = null) {
             setupSelect2WithData([]);
         }
     });
+
+    // Add RF ID Tag event listener
+    function setupRfIdTagListener(citizens) {
+        const rfIdInput = document.getElementById('rf_id_tag');
+        if (!rfIdInput) return;
+
+        // Tambahkan event untuk input dan paste
+        rfIdInput.addEventListener('input', function() {
+            const rfIdValue = this.value.trim();
+            if (rfIdValue.length > 0) {
+                // Cari data warga dengan RF ID Tag yang sama
+                const matchedCitizen = citizens.find(citizen => {
+                    // Jika citizen tidak memiliki rf_id_tag, lewati
+                    if (citizen.rf_id_tag === undefined || citizen.rf_id_tag === null) {
+                        return false;
+                    }
+
+                    // Konversi ke string dan normalisasi
+                    const normalizedInput = rfIdValue.toString().replace(/^0+/, '').trim();
+                    const normalizedStored = citizen.rf_id_tag.toString().replace(/^0+/, '').trim();
+
+                    // Cek kecocokan persis
+                    const exactMatch = normalizedInput === normalizedStored;
+
+                    // Cek kecocokan sebagian (jika input adalah bagian dari rf_id_tag)
+                    const partialMatch = normalizedStored.includes(normalizedInput) && normalizedInput.length >= 5;
+
+                    // Kembalikan true jika ada kecocokan persis atau sebagian
+                    return exactMatch || partialMatch;
+                });
+
+                // Jika ditemukan, isi form
+                if (matchedCitizen) {
+                    populateCitizenData(matchedCitizen);
+
+                    // Update dropdown NIK dan Nama
+                    if ($('#nikSelect').length) {
+                        $('#nikSelect').val(matchedCitizen.nik).trigger('change');
+                    }
+                    if ($('#fullNameSelect').length) {
+                        $('#fullNameSelect').val(matchedCitizen.full_name).trigger('change');
+                    }
+
+                    // Feedback visual berhasil
+                    $(rfIdInput).addClass('border-green-500').removeClass('border-red-500 border-gray-300');
+                    setTimeout(() => {
+                        $(rfIdInput).removeClass('border-green-500').addClass('border-gray-300');
+                    }, 2000);
+                } else if (rfIdValue.length >= 5) {
+                    // Feedback visual tidak ditemukan (hanya untuk input yang cukup panjang)
+                    $(rfIdInput).addClass('border-red-500').removeClass('border-green-500 border-gray-300');
+                    setTimeout(() => {
+                        $(rfIdInput).removeClass('border-red-500').addClass('border-gray-300');
+                    }, 2000);
+                }
+            }
+        });
+    }
 
     function setupSelect2WithData(citizens) {
         // Create NIK options array

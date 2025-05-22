@@ -157,7 +157,7 @@ class BiodataController extends Controller
                 'country' => 'nullable|string|max:100',
                 'foreign_postal_code' => 'nullable|string|max:20',
                 'status' => 'nullable|string|in:Active,Inactive,Deceased,Moved',
-                'rf_id_tag' => 'nullable|integer',
+                'rf_id_tag' => 'nullable|string',
             ]);
 
             // Batch process nullable fields
@@ -298,8 +298,9 @@ class BiodataController extends Controller
                 'country' => 'nullable|string|max:100',
                 'foreign_postal_code' => 'nullable|string|max:20',
                 'status' => 'nullable|string|in:Active,Inactive,Deceased,Moved',
-                'rf_id_tag' => 'nullable|integer',
+                'rf_id_tag' => 'nullable|string',
             ]);
+            // dd($validatedData);
 
             // Process nullable fields
             $this->processNullableFields($validatedData);
@@ -314,7 +315,7 @@ class BiodataController extends Controller
 
                 if (Auth::user()->role == 'admin desa') {
                     return redirect()
-                        ->route('admin.desa.biodata.index')
+                        ->route('admin.desa.biodata.index', ['page' => $page])
                         ->with('success', 'Biodata berhasil diperbarui!');
                 }
 
@@ -737,7 +738,7 @@ class BiodataController extends Controller
             'state',
             'country',
             'foreign_postal_code',
-            'status'
+            'status',
         ];
         foreach ($nullableStringFields as $field) {
             $data[$field] = empty($data[$field]) ? " " : $data[$field];
@@ -762,7 +763,8 @@ class BiodataController extends Controller
             'family_status',
             'mental_disorders',
             'education_status',
-            'job_type_id'
+            'job_type_id',
+
         ];
         foreach ($integerFields as $field) {
             if (isset($data[$field])) {

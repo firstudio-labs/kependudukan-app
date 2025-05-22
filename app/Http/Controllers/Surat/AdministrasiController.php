@@ -375,6 +375,7 @@ class AdministrasiController extends Controller
                 'sub_district_id' => $citizen['sub_district_id'] ?? '',
                 'village_id' => $citizen['village_id'] ?? '',
                 'family_status' => $citizen['family_status'] ?? '',
+                'rf_id_tag' => $citizen['rf_id_tag'] ?? null,
             ];
         }, $citizens);
 

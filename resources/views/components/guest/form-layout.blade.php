@@ -128,6 +128,14 @@
                     <label for="rt" class="block text-sm font-medium text-gray-700">RT <span class="text-red-500">*</span></label>
                     <input type="text" id="rt" name="rt" placeholder="RT" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                 </div>
+
+               <div>
+    <label for="rf_id_tag" class="block text-sm font-medium text-gray-700">RF ID Tag</label>
+    <input type="text" id="rf_id_tag" name="rf_id_tag"
+        value="{{ $citizen['data']['rf_id_tag'] ?? '' }}"
+        class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2 transition-colors duration-200"
+        placeholder="Scan RF ID Tag">
+</div>
             </div>
 
             <!-- Alamat -->
@@ -195,6 +203,17 @@
 
         // Setup form validation
         setupFormValidation();
+
+        const rfIdInput = document.getElementById('rf_id_tag');
+        if (rfIdInput) {
+            rfIdInput.title = "Masukkan RF ID Tag untuk mengisi data otomatis";
+
+            // Add helper text below the input
+            const helperText = document.createElement('p');
+            helperText.className = 'text-xs text-gray-500 mt-1';
+            helperText.textContent = 'Masukkan RF ID Tag untuk mengisi data otomatis';
+            rfIdInput.parentNode.appendChild(helperText);
+        }
     });
 </script>
 
