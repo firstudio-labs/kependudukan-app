@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\adminDesa\ProfileDesaController;
+use App\Http\Controllers\User\RiwayatSuratController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
@@ -677,7 +678,6 @@ Route::middleware(['auth:web', 'role:admin desa'])->group(function () {
         ->name('admin.desa.surat.keramaian.export-pdf');
 
     // Rental House Permit (Izin Rumah Sewa) routes
-    // Rental House Permit (Izin Rumah Sewa) routes
     Route::get('/admin/desa/surat/rumah-sewa/index', [RumahSewaController::class, 'index'])
         ->name('admin.desa.surat.rumah-sewa.index');
     Route::get('/admin/desa/surat/rumah-sewa/create', [RumahSewaController::class, 'create'])
@@ -804,6 +804,34 @@ Route::middleware(['auth:penduduk'])->group(function () {
         ->name('user.laporan-desa.destroy');
     Route::get('/user/laporan-desa/{id}', [LaporanDesaController::class, 'show'])
         ->name('user.laporan-desa.show');
+
+    //riwayat surat routes
+    Route::get('/user/riwayat-surat', [RiwayatSuratController::class, 'index'])
+        ->name('user.riwayat-surat.index');
+
+    // Detail surat routes
+    Route::get('/user/surat/skck/{id}/detail', [RiwayatSuratController::class, 'showSKCK'])
+        ->name('user.surat.skck.detail');
+    Route::get('/user/surat/administrasi/{id}/detail', [RiwayatSuratController::class, 'showAdministrasi'])
+        ->name('user.surat.administrasi.detail');
+    Route::get('/user/surat/domisili/{id}/detail', [RiwayatSuratController::class, 'showDomisili'])
+        ->name('user.surat.domisili.detail');
+    Route::get('/user/surat/domisili-usaha/{id}/detail', [RiwayatSuratController::class, 'showDomisiliUsaha'])
+        ->name('user.surat.domisili-usaha.detail');
+    Route::get('/user/surat/kehilangan/{id}/detail', [RiwayatSuratController::class, 'showKehilangan'])
+        ->name('user.surat.kehilangan.detail');
+    Route::get('/user/surat/ktp/{id}/detail', [RiwayatSuratController::class, 'showKTP'])
+        ->name('user.surat.ktp.detail');
+    Route::get('/user/surat/rumah-sewa/{id}/detail', [RiwayatSuratController::class, 'showRumahSewa'])
+        ->name('user.surat.rumah-sewa.detail');
+    Route::get('/user/surat/keramaian/{id}/detail', [RiwayatSuratController::class, 'showKeramaian'])
+        ->name('user.surat.keramaian.detail');
+    Route::get('/user/surat/kelahiran/{id}/detail', [RiwayatSuratController::class, 'showKelahiran'])
+        ->name('user.surat.kelahiran.detail');
+    Route::get('/user/surat/kematian/{id}/detail', [RiwayatSuratController::class, 'showKematian'])
+        ->name('user.surat.kematian.detail');
+    Route::get('/user/surat/ahli-waris/{id}/detail', [RiwayatSuratController::class, 'showAhliWaris'])
+        ->name('user.surat.ahli-waris.detail');
 });
 
 // User management routes

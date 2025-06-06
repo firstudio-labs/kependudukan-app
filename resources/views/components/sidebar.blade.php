@@ -347,8 +347,8 @@ if (Auth::guard('web')->check()) {
                             <li class="-ml-5">
                                 <a href="{{ route('admin.desa.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
                                                                             {{ request()->routeIs('admin.desa.index')
-                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+            ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+            : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <i class="fa-solid fa-gauge-high text-lg transition-all duration-300"></i>
                                     <span>Dashboard</span>
                                 </a>
@@ -370,16 +370,16 @@ if (Auth::guard('web')->check()) {
                                     <li>
                                         <a href="{{ route('admin.desa.biodata.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
                                                                                     {{ request()->routeIs('admin.desa.biodata*')
-                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+            ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+            : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                             <span>Biodata</span>
                                         </a>
                                     </li>
                                     <li>
                                         <a href="{{ route('admin.desa.datakk.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
                                                                                     {{ request()->routeIs('admin.desa.datakk*')
-                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+            ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+            : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                             <span>Data KK</span>
                                         </a>
                                     </li>
@@ -390,8 +390,8 @@ if (Auth::guard('web')->check()) {
                             <li class="-ml-5">
                                 <a href="{{ route('admin.desa.datamaster.lapordesa.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
                                                                                 {{ request()->routeIs('admin.desa.datamaster.lapordesa.*')
-                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+            ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+            : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <i class="fa-solid fa-bullhorn text-lg transition-all duration-300"></i>
                                     <span>Master Lapor Desa</span>
                                 </a>
@@ -491,8 +491,8 @@ if (Auth::guard('web')->check()) {
                             <li class="-ml-5">
                                 <a href="{{ route('admin.desa.laporan-desa.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
                                                                                                             {{ request()->routeIs('admin.desa.laporan-desa.*')
-                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+            ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+            : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <i class="fa-solid fa-clipboard-list text-lg transition-all duration-300"></i>
                                     <span>Laporan Desa</span>
                                 </a>
@@ -560,57 +560,67 @@ if (Auth::guard('web')->check()) {
                         </a>
                     </li>
                 @elseif ($user->role == 'user')
-                    <li class="-ml-5">
-                        <a href="/user/index" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                    {{ request()->is('user/index')
-            ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-            : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
-                            <i class="fa-regular fa-clipboard text-lg transition-all duration-300"></i>
-                            <span>Dashboard</span>
-                        </a>
-                    </li>
+                            <li class="-ml-5">
+                                <a href="/user/index" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                                                                                                            {{ request()->is('user/index')
+                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                    <i class="fa-regular fa-clipboard text-lg transition-all duration-300"></i>
+                                    <span>Dashboard</span>
+                                </a>
+                            </li>
 
-                    <li class="-ml-5">
-                        <a href="{{ route('user.profile.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                            {{ request()->routeIs('user.profile.*')
-            ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-            : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
-                            <i class="fa-solid fa-user text-lg transition-all duration-300"></i>
-                            <span>Profile</span>
-                        </a>
-                    </li>
+                            <li class="-ml-5">
+                                <a href="{{ route('user.profile.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                                                                                                                                    {{ request()->routeIs('user.profile.*')
+                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                    <i class="fa-solid fa-user text-lg transition-all duration-300"></i>
+                                    <span>Profile</span>
+                                </a>
+                            </li>
 
-                    <li class="-ml-5">
-                        <a href="{{ route('user.kelola-aset.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                            {{ request()->routeIs('user.kelola-aset.*')
-            ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-            : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
-                            <i class="fa-solid fa-boxes-stacked text-lg transition-all duration-300"></i>
-                            <span>Kelola Aset</span>
-                        </a>
-                    </li>
+                            <li class="-ml-5">
+                                <a href="{{ route('user.kelola-aset.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                                                                                                                    {{ request()->routeIs('user.kelola-aset.*')
+                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                    <i class="fa-solid fa-boxes-stacked text-lg transition-all duration-300"></i>
+                                    <span>Kelola Aset</span>
+                                </a>
+                            </li>
 
-                    <li class="-ml-5">
-                        <a href="{{ route('user.laporan-desa.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 
-                                                                                    {{ request()->routeIs('user.lapordesa.*')
-            ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-            : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
-                            <i class="fa-solid fa-clipboard-list"></i>
-                            <span>Lapor Desa</span>
-                        </a>
-                    </li>
+                            <li class="-ml-5">
+                                <a href="{{ route('user.laporan-desa.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 
+                                                                                            {{ request()->routeIs('user.lapordesa.*')
+                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                    <i class="fa-solid fa-clipboard-list"></i>
+                                    <span>Lapor Desa</span>
+                                </a>
+                            </li>
 
-                    <!-- Add Logout Button for User (Penduduk) -->
-                    <li class="-ml-5 mt-8">
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <button type="submit"
-                                class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-red-100 hover:text-red-700">
-                                <i class="fa-solid fa-right-from-bracket text-lg transition-all duration-300"></i>
-                                <span>Logout</span>
-                            </button>
-                        </form>
-                    </li>
+                            <li class="-ml-5">
+                                <a href="{{ route('user.riwayat-surat.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                            {{ request()->routeIs('user.riwayat-surat*')
+                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                    <i class="fa-solid fa-envelope-open-text text-lg transition-all duration-300"></i>
+                                    <span>Riwayat Surat</span>
+                                </a>
+                            </li>
+
+                            <!-- Add Logout Button for User (Penduduk) -->
+                            <li class="-ml-5 mt-8">
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button type="submit"
+                                        class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-red-100 hover:text-red-700">
+                                        <i class="fa-solid fa-right-from-bracket text-lg transition-all duration-300"></i>
+                                        <span>Logout</span>
+                                    </button>
+                                </form>
+                            </li>
                 @endif
             </ul>
         </div>
