@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\adminDesa\ProfileDesaController;
+use App\Http\Controllers\BeritaDesaController;
 use App\Http\Controllers\User\RiwayatSuratController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
@@ -44,6 +45,7 @@ use App\Http\Controllers\LaporanDesaController;
 use App\Http\Controllers\LaporDesaController;
 use App\Http\Controllers\adminDesa\LaporanDesaController as AdminDesaLaporanDesaController;
 use App\Http\Controllers\guest\BukuTamuController;
+use App\Http\Controllers\superadmin\BeritaDesaController as SuperadminBeritaDesaController;
 
 
 // Homepage route should use our new method to force logout
@@ -418,6 +420,22 @@ Route::middleware(['auth:web', 'role:superadmin'])->group(function () {
         ->name('superadmin.datamaster.lapordesa.update');
     Route::delete('/superadmin/datamaster/lapordesa/{id}', [LaporDesaController::class, 'destroy'])
         ->name('superadmin.datamaster.lapordesa.destroy');
+
+    //Berita Desa untuk Superadmin
+    Route::get('/superadmin/berita-desa', [SuperadminBeritaDesaController::class, 'index'])
+        ->name('superadmin.berita-desa.index');
+    Route::get('/superadmin/berita-desa/create', [SuperadminBeritaDesaController::class, 'create'])
+        ->name('superadmin.berita-desa.create');
+    Route::post('/superadmin/berita-desa', [SuperadminBeritaDesaController::class, 'store'])
+        ->name('superadmin.berita-desa.store');
+    Route::get('/superadmin/berita-desa/{id}/edit', [SuperadminBeritaDesaController::class, 'edit'])
+        ->name('superadmin.berita-desa.edit');
+    Route::put('/superadmin/berita-desa/{id}', [SuperadminBeritaDesaController::class, 'update'])
+        ->name('superadmin.berita-desa.update');
+    Route::delete('/superadmin/berita-desa/{id}', [SuperadminBeritaDesaController::class, 'destroy'])
+        ->name('superadmin.berita-desa.destroy');
+    Route::get('/superadmin/berita-desa/{id}', [SuperadminBeritaDesaController::class, 'show'])
+        ->name('superadmin.berita-desa.show');
 });
 
 // Route untuk admin kabupaten - menggunakan web guard
@@ -714,6 +732,21 @@ Route::middleware(['auth:web', 'role:admin desa'])->group(function () {
     Route::get('/admin/desa/surat/pengantar-ktp/{id}/export-pdf', [PengantarKtpController::class, 'exportPDF'])
         ->name('admin.desa.surat.pengantar-ktp.export-pdf');
 
+    //Berita Desa
+    Route::get('/admin/desa/berita-desa', [BeritaDesaController::class, 'index'])
+        ->name('admin.desa.berita-desa.index');
+    Route::get('/admin/desa/berita-desa/create', [BeritaDesaController::class, 'create'])
+        ->name('admin.desa.berita-desa.create');
+    Route::post('/admin/desa/berita-desa', [BeritaDesaController::class, 'store'])
+        ->name('admin.desa.berita-desa.store');
+    Route::get('/admin/desa/berita-desa/{id}/edit', [BeritaDesaController::class, 'edit'])
+        ->name('admin.desa.berita-desa.edit');
+    Route::put('/admin/desa/berita-desa/{id}', [BeritaDesaController::class, 'update'])
+        ->name('admin.desa.berita-desa.update');
+    Route::delete('/admin/desa/berita-desa/{id}', [BeritaDesaController::class, 'destroy'])
+        ->name('admin.desa.berita-desa.destroy');
+    Route::get('/admin/desa/berita-desa/{id}', [BeritaDesaController::class, 'show'])
+        ->name('admin.desa.berita-desa.show');
 
 });
 
@@ -832,6 +865,8 @@ Route::middleware(['auth:penduduk'])->group(function () {
         ->name('user.surat.kematian.detail');
     Route::get('/user/surat/ahli-waris/{id}/detail', [RiwayatSuratController::class, 'showAhliWaris'])
         ->name('user.surat.ahli-waris.detail');
+
+
 });
 
 // User management routes
