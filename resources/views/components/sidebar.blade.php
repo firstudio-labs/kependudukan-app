@@ -49,7 +49,7 @@
                 @if ($user->role == 'superadmin')
                     <li class="-ml-5">
                         <a href="{{ route('superadmin.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                                    {{ request()->routeIs('superadmin.index')
+                                                                                                                                                                    {{ request()->routeIs('superadmin.index')
                     ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
                     : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                             <i class="fa-solid fa-gauge-high text-lg transition-all duration-300"></i>
@@ -71,7 +71,7 @@
                             <!-- Users submenu -->
                             <li>
                                 <a href="{{ route('superadmin.datamaster.user.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                                        {{ request()->routeIs('superadmin.datamaster.user*')
+                                                                                                                                                                        {{ request()->routeIs('superadmin.datamaster.user*')
                     ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
                     : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Users</span>
@@ -93,7 +93,7 @@
                         <ul id="pendudukDropdown" class="hidden space-y-2 pl-6">
                             <li>
                                 <a href="{{ route('superadmin.biodata.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                                        {{ request()->routeIs('superadmin.biodata*')
+                                                                                                                                                                        {{ request()->routeIs('superadmin.biodata*')
                     ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
                     : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Biodata</span>
@@ -101,7 +101,7 @@
                             </li>
                             <li>
                                 <a href="{{ route('superadmin.datakk.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                                        {{ request()->routeIs('superadmin.datakk*')
+                                                                                                                                                                        {{ request()->routeIs('superadmin.datakk*')
                     ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
                     : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Data KK</span>
@@ -123,7 +123,7 @@
                         <ul id="kelolaAsetDropdown" class="hidden space-y-2 pl-6">
                             <li>
                                 <a href="{{ route('superadmin.datamaster.klasifikasi.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                                                            {{ request()->routeIs('superadmin.datamaster.klasifikasi*')
+                                                                                                                                                                                            {{ request()->routeIs('superadmin.datamaster.klasifikasi*')
                     ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
                     : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Klasifikasi</span>
@@ -131,7 +131,7 @@
                             </li>
                             <li>
                                 <a href="{{ route('superadmin.datamaster.jenis-aset.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                                                            {{ request()->routeIs('superadmin.datamaster.jenis-aset*')
+                                                                                                                                                                                            {{ request()->routeIs('superadmin.datamaster.jenis-aset*')
                     ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
                     : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Jenis Aset</span>
@@ -143,7 +143,7 @@
                     <!-- In your sidebar component or layout -->
                     <li class="-ml-5">
                         <a href="{{ route('superadmin.datamaster.lapordesa.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                {{ request()->routeIs('superadmin.datamaster.lapordesa.*')
+                                                                                                                {{ request()->routeIs('superadmin.datamaster.lapordesa.*')
                     ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
                     : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                             <i class="fa-solid fa-bullhorn text-lg transition-all duration-300"></i>
@@ -165,77 +165,77 @@
                             <li>
                                 <a href="{{ route('superadmin.surat.administrasi.index') }}"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                    {{ request()->routeIs('superadmin.surat.administrasi*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                                                                                                                    {{ request()->routeIs('superadmin.surat.administrasi*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Surat Administrasi</span>
                                 </a>
                             </li>
                             <li>
                                 <a href="{{ route('superadmin.surat.kehilangan.index') }}"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                    {{ request()->routeIs('superadmin.surat.kehilangan*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                                                                                                                    {{ request()->routeIs('superadmin.surat.kehilangan*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Surat Kehilangan</span>
                                 </a>
                             </li>
                             <li>
                                 <a href="{{ route('superadmin.surat.skck.index') }}"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                    {{ request()->routeIs('superadmin.surat.skck*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                                                                                                                    {{ request()->routeIs('superadmin.surat.skck*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Surat SKCK</span>
                                 </a>
                             </li>
                             <li>
                                 <a href="{{ route('superadmin.surat.domisili.index') }}"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                    {{ request()->routeIs('superadmin.surat.domisili*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                                                                                                                    {{ request()->routeIs('superadmin.surat.domisili*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Surat Domisili</span>
                                 </a>
                             </li>
                             <li>
                                 <a href="{{ route('superadmin.surat.domisili-usaha.index') }}"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                    {{ request()->routeIs('superadmin.surat.domisili-usaha*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                                                                                                                    {{ request()->routeIs('superadmin.surat.domisili-usaha*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Surat Domisili Usaha</span>
                                 </a>
                             </li>
                             <li>
                                 <a href="{{ route('superadmin.surat.ahli-waris.index') }}"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                    {{ request()->routeIs('superadmin.surat.ahli-waris*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                                                                                                                    {{ request()->routeIs('superadmin.surat.ahli-waris*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Surat Ahli Waris</span>
                                 </a>
                             </li>
                             <li>
                                 <a href="{{ route('superadmin.surat.kelahiran.index') }}"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                    {{ request()->routeIs('superadmin.surat.kelahiran*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                                                                                                                    {{ request()->routeIs('superadmin.surat.kelahiran*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Surat Kelahiran</span>
                                 </a>
                             </li>
                             <li>
                                 <a href="{{ route('superadmin.surat.kematian.index') }}"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                    {{ request()->routeIs('superadmin.surat.kematian*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                                                                                                                    {{ request()->routeIs('superadmin.surat.kematian*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Surat Kematian</span>
                                 </a>
                             </li>
                             <li>
                                 <a href="{{ route('superadmin.surat.keramaian.index') }}"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                    {{ request()->routeIs('superadmin.surat.keramaian*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                                                                                                                    {{ request()->routeIs('superadmin.surat.keramaian*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Izin Keramaian</span>
                                 </a>
                             </li>
                             <li>
                                 <a href="{{ route('superadmin.surat.rumah-sewa.index') }}"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                    {{ request()->routeIs('superadmin.surat.rumah-sewa*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                                                                                                                    {{ request()->routeIs('superadmin.surat.rumah-sewa*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Surat Rumah Sewa</span>
                                 </a>
                             </li>
                             <li>
                                 <a href="{{ route('superadmin.surat.pengantar-ktp.index') }}"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                    {{ request()->routeIs('superadmin.surat.pengantar-ktp*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                                                                                                                    {{ request()->routeIs('superadmin.surat.pengantar-ktp*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Pengantar KTP</span>
                                 </a>
                             </li>
@@ -255,7 +255,7 @@
                         <ul id="masterSuratDropdown" class="hidden space-y-2 pl-6">
                             <li>
                                 <a href="{{ route('superadmin.datamaster.surat.penandatangan.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                                        {{ request()->routeIs('superadmin.datamaster.surat.penandatangan*')
+                                                                                                                                                                        {{ request()->routeIs('superadmin.datamaster.surat.penandatangan*')
                     ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
                     : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Penandatangan</span>
@@ -277,7 +277,7 @@
                         <ul id="masterKeperluanDropdown" class="hidden space-y-2 pl-6">
                             <li>
                                 <a href="{{ route('superadmin.datamaster.masterkeperluan.keperluan.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                                        {{ request()->routeIs('superadmin.datamaster.masterkeperluan.keperluan*')
+                                                                                                                                                                        {{ request()->routeIs('superadmin.datamaster.masterkeperluan.keperluan*')
                     ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
                     : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Keperluan</span>
@@ -299,7 +299,7 @@
                         <ul id="wilayahDropdown" class="hidden space-y-2 pl-6">
                             <li>
                                 <a href="{{ route('superadmin.datamaster.wilayah.provinsi.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                                        {{ request()->routeIs('superadmin.datamaster.wilayah.provinsi*')
+                                                                                                                                                                        {{ request()->routeIs('superadmin.datamaster.wilayah.provinsi*')
                     ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
                     : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Provinsi</span>
@@ -307,7 +307,7 @@
                             </li>
                             <li>
                                 <a href="{{ route('superadmin.datamaster.wilayah.kabupaten.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                                        {{ request()->routeIs('superadmin.datamaster.wilayah.kabupaten*')
+                                                                                                                                                                        {{ request()->routeIs('superadmin.datamaster.wilayah.kabupaten*')
                     ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
                     : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Kabupaten</span>
@@ -315,7 +315,7 @@
                             </li>
                             <li>
                                 <a href="{{ route('superadmin.datamaster.wilayah.kecamatan.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                                        {{ request()->routeIs('superadmin.datamaster.wilayah.kecamatan*')
+                                                                                                                                                                        {{ request()->routeIs('superadmin.datamaster.wilayah.kecamatan*')
                     ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
                     : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Kecamatan</span>
@@ -323,7 +323,7 @@
                             </li>
                             <li>
                                 <a href="{{ route('superadmin.datamaster.wilayah.desa.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                                        {{ request()->routeIs('superadmin.datamaster.wilayah.desa*')
+                                                                                                                                                                        {{ request()->routeIs('superadmin.datamaster.wilayah.desa*')
                     ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
                     : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Desa</span>
@@ -358,7 +358,7 @@
                     <li class="-ml-5">
                         <a href="{{ route('admin.desa.index') }}"
                             class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                    {{ request()->routeIs('admin.desa.index') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                                    {{ request()->routeIs('admin.desa.index') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                             <i class="fa-solid fa-gauge-high text-lg transition-all duration-300"></i>
                             <span>Dashboard</span>
                         </a>
@@ -368,7 +368,7 @@
                     <li class="-ml-5">
                         <a href="{{ route('admin.desa.berita-desa.index') }}"
                             class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                    {{ request()->routeIs('admin.desa.berita-desa*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                                    {{ request()->routeIs('admin.desa.berita-desa*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                             <i class="fa-solid fa-newspaper text-lg transition-all duration-300"></i>
                             <span>Berita Desa</span>
                         </a>
@@ -387,7 +387,7 @@
                         <ul id="pendudukDropdown" class="hidden space-y-2 pl-6">
                             <li>
                                 <a href="{{ route('admin.desa.biodata.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                            {{ request()->routeIs('admin.desa.biodata*')
+                                                                                                                            {{ request()->routeIs('admin.desa.biodata*')
                     ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
                     : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Biodata</span>
@@ -395,7 +395,7 @@
                             </li>
                             <li>
                                 <a href="{{ route('admin.desa.datakk.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                            {{ request()->routeIs('admin.desa.datakk*')
+                                                                                                                            {{ request()->routeIs('admin.desa.datakk*')
                     ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
                     : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Data KK</span>
@@ -407,7 +407,7 @@
                     <!-- Master Lapor Desa -->
                     <li class="-ml-5">
                         <a href="{{ route('admin.desa.datamaster.lapordesa.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                        {{ request()->routeIs('admin.desa.datamaster.lapordesa.*')
+                                                                                                                        {{ request()->routeIs('admin.desa.datamaster.lapordesa.*')
                     ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
                     : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                             <i class="fa-solid fa-bullhorn text-lg transition-all duration-300"></i>
@@ -428,77 +428,77 @@
                             <li>
                                 <a href="{{ route('admin.desa.surat.administrasi.index') }}"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                                    {{ request()->routeIs('admin.desa.surat.administrasi*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                                                                                                                                    {{ request()->routeIs('admin.desa.surat.administrasi*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Surat Administrasi</span>
                                 </a>
                             </li>
                             <li>
                                 <a href="{{ route('admin.desa.surat.kehilangan.index') }}"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                                    {{ request()->routeIs('admin.desa.surat.kehilangan*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                                                                                                                                    {{ request()->routeIs('admin.desa.surat.kehilangan*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Surat Kehilangan</span>
                                 </a>
                             </li>
                             <li>
                                 <a href="{{ route('admin.desa.surat.skck.index') }}"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                                    {{ request()->routeIs('admin.desa.surat.skck*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                                                                                                                                    {{ request()->routeIs('admin.desa.surat.skck*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Surat SKCK</span>
                                 </a>
                             </li>
                             <li>
                                 <a href="{{ route('admin.desa.surat.domisili.index') }}"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                                    {{ request()->routeIs('admin.desa.surat.domisili*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                                                                                                                                    {{ request()->routeIs('admin.desa.surat.domisili*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Surat Domisili</span>
                                 </a>
                             </li>
                             <li>
                                 <a href="{{ route('admin.desa.surat.domisili-usaha.index') }}"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                                    {{ request()->routeIs('admin.desa.surat.domisili-usaha*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                                                                                                                                    {{ request()->routeIs('admin.desa.surat.domisili-usaha*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Surat Domisili Usaha</span>
                                 </a>
                             </li>
                             <li>
                                 <a href="{{ route('admin.desa.surat.ahli-waris.index') }}"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                                    {{ request()->routeIs('admin.desa.surat.ahli-waris*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                                                                                                                                    {{ request()->routeIs('admin.desa.surat.ahli-waris*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Surat Ahli Waris</span>
                                 </a>
                             </li>
                             <li>
                                 <a href="{{ route('admin.desa.surat.kelahiran.index') }}"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                                    {{ request()->routeIs('admin.desa.surat.kelahiran*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                                                                                                                                    {{ request()->routeIs('admin.desa.surat.kelahiran*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Surat Kelahiran</span>
                                 </a>
                             </li>
                             <li>
                                 <a href="{{ route('admin.desa.surat.kematian.index') }}"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                                    {{ request()->routeIs('admin.desa.surat.kematian*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                                                                                                                                    {{ request()->routeIs('admin.desa.surat.kematian*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Surat Kematian</span>
                                 </a>
                             </li>
                             <li>
                                 <a href="{{ route('admin.desa.surat.keramaian.index') }}"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                                    {{ request()->routeIs('admin.desa.surat.keramaian*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                                                                                                                                    {{ request()->routeIs('admin.desa.surat.keramaian*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Izin Keramaian</span>
                                 </a>
                             </li>
                             <li>
                                 <a href="{{ route('admin.desa.surat.rumah-sewa.index') }}"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                                    {{ request()->routeIs('admin.desa.surat.rumah-sewa*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                                                                                                                                    {{ request()->routeIs('admin.desa.surat.rumah-sewa*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Surat Rumah Sewa</span>
                                 </a>
                             </li>
                             <li>
                                 <a href="{{ route('admin.desa.surat.pengantar-ktp.index') }}"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                                    {{ request()->routeIs('admin.desa.surat.pengantar-ktp*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                                                                                                                                    {{ request()->routeIs('admin.desa.surat.pengantar-ktp*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Pengantar KTP</span>
                                 </a>
                             </li>
@@ -508,7 +508,7 @@
                     <!-- Laporan Desa -->
                     <li class="-ml-5">
                         <a href="{{ route('admin.desa.laporan-desa.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                    {{ request()->routeIs('admin.desa.laporan-desa.*')
+                                                                                                                                                    {{ request()->routeIs('admin.desa.laporan-desa.*')
                     ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
                     : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                             <i class="fa-solid fa-clipboard-list text-lg transition-all duration-300"></i>
@@ -548,7 +548,7 @@
 
                     <li class="-ml-5">
                         <a href="{{ route('admin.kabupaten.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                {{ request()->routeIs('admin.kabupaten.index')
+                                                                                                                                                {{ request()->routeIs('admin.kabupaten.index')
                     ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
                     : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                             <i class="fa-solid fa-gauge-high text-lg transition-all duration-300"></i>
@@ -570,7 +570,7 @@
                 @elseif ($user->role == 'operator')
                     <li class="-ml-5">
                         <a href="{{ route('operator.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                {{ request()->routeIs('operator.index')
+                                                                                                                                                {{ request()->routeIs('operator.index')
                     ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
                     : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                             <i class="fa-solid fa-gauge-high text-lg transition-all duration-300"></i>
@@ -580,7 +580,7 @@
                 @elseif ($user->role == 'user')
                     <li class="-ml-5">
                         <a href="/user/index" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                                    {{ request()->is('user/index')
+                                                                                                                                                                    {{ request()->is('user/index')
                     ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
                     : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                             <i class="fa-regular fa-clipboard text-lg transition-all duration-300"></i>
@@ -590,7 +590,7 @@
 
                     <li class="-ml-5">
                         <a href="{{ route('user.profile.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                {{ request()->routeIs('user.profile*')
+                                                                                                                {{ request()->routeIs('user.profile*')
                     ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
                     : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                             <i class="fa-solid fa-user text-lg transition-all duration-300"></i>
@@ -600,7 +600,7 @@
 
                     <li class="-ml-5">
                         <a href="{{ route('user.riwayat-surat.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                {{ request()->routeIs('user.riwayat-surat*')
+                                                                                                                {{ request()->routeIs('user.riwayat-surat*')
                     ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
                     : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                             <i class="fa-solid fa-history text-lg transition-all duration-300"></i>
@@ -610,7 +610,7 @@
 
                     <li class="-ml-5">
                         <a href="{{ route('user.laporan-desa.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                {{ request()->routeIs('user.laporan-desa*')
+                                                                                                                {{ request()->routeIs('user.laporan-desa*')
                     ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
                     : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                             <i class="fa-solid fa-bullhorn text-lg transition-all duration-300"></i>
@@ -620,7 +620,7 @@
 
                     <li class="-ml-5">
                         <a href="{{ route('user.berita-desa.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                {{ request()->routeIs('user.berita-desa*')
+                                                                                                                {{ request()->routeIs('user.berita-desa*')
                     ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
                     : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                             <i class="fa-solid fa-newspaper text-lg transition-all duration-300"></i>

@@ -46,6 +46,7 @@ use App\Http\Controllers\LaporDesaController;
 use App\Http\Controllers\adminDesa\LaporanDesaController as AdminDesaLaporanDesaController;
 use App\Http\Controllers\guest\BukuTamuController;
 use App\Http\Controllers\superadmin\BeritaDesaController as SuperadminBeritaDesaController;
+use App\Http\Controllers\User\BeritaDesaController as UserBeritaDesaController;
 
 
 // Homepage route should use our new method to force logout
@@ -747,7 +748,6 @@ Route::middleware(['auth:web', 'role:admin desa'])->group(function () {
         ->name('admin.desa.berita-desa.destroy');
     Route::get('/admin/desa/berita-desa/{id}', [BeritaDesaController::class, 'show'])
         ->name('admin.desa.berita-desa.show');
-
 });
 
 // Route untuk operator - menggunakan web guard
@@ -866,6 +866,11 @@ Route::middleware(['auth:penduduk'])->group(function () {
     Route::get('/user/surat/ahli-waris/{id}/detail', [RiwayatSuratController::class, 'showAhliWaris'])
         ->name('user.surat.ahli-waris.detail');
 
+    // Berita Desa routes
+    Route::get('/user/berita-desa', [UserBeritaDesaController::class, 'index'])
+        ->name('user.berita-desa.index');
+    Route::get('/user/berita-desa/{id}', [UserBeritaDesaController::class, 'show'])
+        ->name('user.berita-desa.show');
 
 });
 
