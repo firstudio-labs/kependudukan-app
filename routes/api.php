@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\BeritaDesaController;
 use App\Http\Controllers\Api\JenisAsetController;
 use App\Http\Controllers\Api\KlasifikasiController;
 use App\Http\Controllers\Api\LaporanDesaController;
@@ -25,12 +26,15 @@ use App\Http\Controllers\Api\ProfileController;
 
 
 Route::middleware('guest')->group(function () {
+    //homepage
     Route::get('/', [AuthController::class, 'homepage'])->name('homepage');
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [AuthController::class, 'login']);
     Route::get('/register', [AuthController::class, 'showRegistrationForm'])->name('register');
     Route::post('/register', [AuthController::class, 'register']);
 });
+
+//logout
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::middleware(ApiTokenOwnerMiddleware::class)->group(function () {
@@ -51,13 +55,10 @@ Route::middleware(ApiTokenOwnerMiddleware::class)->group(function () {
         ]);
     });
 
-    //List Aset
+    //Superadmin list
     Route::get('/klasifikasi', [KlasifikasiController::class, 'index']);
     Route::get('/jenis-aset', [JenisAsetController::class, 'index']);
     Route::get('/lapor-desa', [LaporDesaController::class, 'index']);
-    
-
-
 
     Route::prefix('user')->group(function () {
         //kelola aset
@@ -110,13 +111,14 @@ Route::middleware(ApiTokenOwnerMiddleware::class)->group(function () {
             ->name('user.family-member.view-document');
         Route::delete('/family-member/{nik}/delete-document/{documentType}', [ProfileController::class, 'deleteFamilyMemberDocument'])
             ->name('user.family-member.delete-document');
+
+        //berita desa
+        Route::get('/berita-desa', [BeritaDesaController::class, 'index'])
+            ->name('user.berita-desa.index');
+        Route::get('/berita-desa/{id}', [BeritaDesaController::class, 'show'])
+            ->name('user.berita-desa.show');
     });
 });
-
-
-
-
-
 
 Route::fallback(function () {
     return response()->json(['message' => 'API endpoint not found'], 404);

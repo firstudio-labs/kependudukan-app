@@ -55,9 +55,11 @@ class BeritaDesaController extends Controller
 
         if ($request->hasFile('gambar')) {
             $file = $request->file('gambar');
-            $filename = time() . '_' . Str::slug($request->judul) . '.' . $file->getClientOriginalExtension();
-            $path = $file->storeAs('public/berita-desa', $filename);
-            $data['gambar'] = str_replace('public/', '', $path);
+            $beritaName = Str::slug(substr($request->judul, 0, 30));
+            $timestamp = time();
+            $filename = $timestamp . '_' . $beritaName . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('uploads/documents/berita-desa', $filename, 'public');
+            $data['gambar'] = $path;
         }
 
         BeritaDesa::create($data);
@@ -97,14 +99,16 @@ class BeritaDesaController extends Controller
 
         if ($request->hasFile('gambar')) {
             // Hapus gambar lama jika ada
-            if ($berita->gambar) {
+            if ($berita->gambar && Storage::exists('public/' . $berita->gambar)) {
                 Storage::delete('public/' . $berita->gambar);
             }
 
             $file = $request->file('gambar');
-            $filename = time() . '_' . Str::slug($request->judul) . '.' . $file->getClientOriginalExtension();
-            $path = $file->storeAs('public/berita-desa', $filename);
-            $data['gambar'] = str_replace('public/', '', $path);
+            $beritaName = Str::slug(substr($request->judul, 0, 30));
+            $timestamp = time();
+            $filename = $timestamp . '_' . $beritaName . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('uploads/documents/berita-desa', $filename, 'public');
+            $data['gambar'] = $path;
         }
 
         $berita->update($data);
@@ -122,7 +126,7 @@ class BeritaDesaController extends Controller
     {
         $berita = BeritaDesa::findOrFail($id);
 
-        if ($berita->gambar) {
+        if ($berita->gambar && Storage::exists('public/' . $berita->gambar)) {
             Storage::delete('public/' . $berita->gambar);
         }
 

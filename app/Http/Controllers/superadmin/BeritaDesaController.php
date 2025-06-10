@@ -42,14 +42,16 @@ class BeritaDesaController extends Controller
             'komentar' => 'nullable|string',
         ]);
 
-        $data = $request->all();
+        $data = $request->only(['judul', 'deskripsi', 'komentar']);
         $data['user_id'] = Auth::id();
 
         if ($request->hasFile('gambar')) {
-            $gambar = $request->file('gambar');
-            $filename = time() . '_' . Str::slug($request->judul) . '.' . $gambar->getClientOriginalExtension();
-            $gambar->storeAs('public/berita-desa', $filename);
-            $data['gambar'] = 'berita-desa/' . $filename;
+            $file = $request->file('gambar');
+            $beritaName = Str::slug(substr($request->judul, 0, 30));
+            $timestamp = time();
+            $filename = $timestamp . '_' . $beritaName . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('uploads/documents/berita-desa', $filename, 'public');
+            $data['gambar'] = $path;
         }
 
         BeritaDesa::create($data);
@@ -88,7 +90,7 @@ class BeritaDesaController extends Controller
         ]);
 
         $berita = BeritaDesa::findOrFail($id);
-        $data = $request->all();
+        $data = $request->only(['judul', 'deskripsi', 'komentar']);
 
         if ($request->hasFile('gambar')) {
             // Hapus gambar lama jika ada
@@ -96,10 +98,12 @@ class BeritaDesaController extends Controller
                 Storage::delete('public/' . $berita->gambar);
             }
 
-            $gambar = $request->file('gambar');
-            $filename = time() . '_' . Str::slug($request->judul) . '.' . $gambar->getClientOriginalExtension();
-            $gambar->storeAs('public/berita-desa', $filename);
-            $data['gambar'] = 'berita-desa/' . $filename;
+            $file = $request->file('gambar');
+            $beritaName = Str::slug(substr($request->judul, 0, 30));
+            $timestamp = time();
+            $filename = $timestamp . '_' . $beritaName . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('uploads/documents/berita-desa', $filename, 'public');
+            $data['gambar'] = $path;
         }
 
         $berita->update($data);

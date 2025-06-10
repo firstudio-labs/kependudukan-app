@@ -19,8 +19,17 @@ class BeritaDesa extends Model
         'user_id'
     ];
 
+    // Tambahkan gambar_url ke appends agar selalu muncul di JSON
+    protected $appends = ['gambar_url'];
+
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    // Accessor untuk URL gambar
+    public function getGambarUrlAttribute()
+    {
+        return $this->gambar ? asset('storage/' . $this->gambar) : null;
     }
 }
