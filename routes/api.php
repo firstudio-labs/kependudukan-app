@@ -4,8 +4,8 @@ use App\Http\Controllers\Api\BeritaDesaController;
 use App\Http\Controllers\Api\JenisAsetController;
 use App\Http\Controllers\Api\KlasifikasiController;
 use App\Http\Controllers\Api\LaporanDesaController;
-use App\Http\Controllers\Api\LaporDesaApiController;
 use App\Http\Controllers\Api\LaporDesaController;
+use App\Http\Controllers\Api\RiwayatSuratController;
 use App\Http\Middleware\ApiTokenOwnerMiddleware;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -117,6 +117,35 @@ Route::middleware(ApiTokenOwnerMiddleware::class)->group(function () {
             ->name('user.berita-desa.index');
         Route::get('/berita-desa/{id}', [BeritaDesaController::class, 'show'])
             ->name('user.berita-desa.show');
+
+
+        //riwayat surat
+        Route::get('/riwayat-surat', [RiwayatSuratController::class, 'index'])
+            ->name('user.riwayat-surat.index');
+        Route::get('/riwayat-surat/skck/{id}/detail', [RiwayatSuratController::class, 'showSKCK'])
+            ->name('user.riwayat-surat.skck.detail');
+        Route::get('/riwayat-surat/administrasi/{id}/detail', [RiwayatSuratController::class, 'showAdministrasi'])
+            ->name('user.riwayat-surat.administrasi.detail');
+        Route::get('/riwayat-surat/domisili/{id}/detail', [RiwayatSuratController::class, 'showDomisili'])
+            ->name('user.riwayat-surat.domisili.detail');
+        Route::get('/riwayat-surat/domisili-usaha/{id}/detail', [RiwayatSuratController::class, 'showDomisiliUsaha'])
+            ->name('user.riwayat-surat.domisili-usaha.detail');
+        Route::get('/riwayat-surat/kehilangan/{id}/detail', [RiwayatSuratController::class, 'showKehilangan'])
+            ->name('user.riwayat-surat.kehilangan.detail');
+        Route::get('/riwayat-surat/ktp/{id}/detail', [RiwayatSuratController::class, 'showKTP'])
+            ->name('user.riwayat-surat.ktp.detail');
+        Route::get('/riwayat-surat/rumah-sewa/{id}/detail', [RiwayatSuratController::class, 'showRumahSewa'])
+            ->name('user.riwayat-surat.rumah-sewa.detail');
+        Route::get('/riwayat-surat/keramaian/{id}/detail', [RiwayatSuratController::class, 'showKeramaian'])
+            ->name('user.riwayat-surat.keramaian.detail');
+        Route::get('/riwayat-surat/kelahiran/{id}/detail', [RiwayatSuratController::class, 'showKelahiran'])
+            ->name('user.riwayat-surat.kelahiran.detail');
+        Route::get('/riwayat-surat/kematian/{id}/detail', [RiwayatSuratController::class, 'showKematian'])
+            ->name('user.riwayat-surat.kematian.detail');
+        Route::get('/riwayat-surat/ahli-waris/{id}/detail', [RiwayatSuratController::class, 'showAhliWaris'])
+            ->name('user.riwayat-surat.ahli-waris.detail');
+
+
     });
 });
 
