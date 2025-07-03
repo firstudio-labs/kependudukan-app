@@ -83,6 +83,19 @@
                         </div>
                     </div>
 
+                    <div class="mb-4">
+                        <h3 class="text-lg font-semibold text-gray-700">Nama Kepala Desa</h3>
+                        <p class="text-gray-600">{{ $user->kepalaDesa?->nama ?? '-' }}</p>
+                    </div>
+
+                    @if($user->kepalaDesa?->tanda_tangan)
+                    <div class="mb-4">
+                        <h3 class="text-lg font-semibold text-gray-700">Tanda Tangan</h3>
+                        <img src="{{ asset('storage/' . $user->kepalaDesa->tanda_tangan) }}"
+                             alt="Tanda Tangan" class="h-20">
+                    </div>
+                    @endif
+
                     <div class="flex justify-end">
                         <a href="{{ route('admin.desa.profile.edit') }}"
                             class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">

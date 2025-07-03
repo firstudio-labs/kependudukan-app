@@ -61,7 +61,13 @@ class User extends Authenticatable
         // Untuk mengambil nama desa, kita gunakan accessor
         return $this->belongsTo('App\Models\Village', 'villages_id');
     }
-    
+
+    public function kepalaDesa()
+    {
+        return $this->hasOne(KepalaDesa::class);
+    }
+
+
     /**
      * Mendapatkan nama desa dari village_id
      */
@@ -70,7 +76,7 @@ class User extends Authenticatable
         if (!$this->villages_id) {
             return 'Tidak Ada Desa';
         }
-        
+
         try {
             $villageData = app(\App\Services\WilayahService::class)->getVillageById($this->villages_id);
             if ($villageData && isset($villageData['name'])) {

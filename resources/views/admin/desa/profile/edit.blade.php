@@ -86,6 +86,30 @@
                                     <span class="text-red-500 text-sm">{{ $message }}</span>
                                 @enderror
                             </div>
+
+                            <div>
+                                <label for="nama" class="block text-gray-600 text-sm font-medium mb-1">Nama Kepala Desa</label>
+                                <input type="text" id="nama" name="nama" value="{{ old('nama', $user->kepalaDesa?->nama) }}"
+                                    class="w-full p-2 border border-gray-300 rounded">
+                                @error('nama')
+                                    <span class="text-red-500 text-sm">{{ $message }}</span>
+                                @enderror
+                            </div>
+
+                            <div>
+                                <label for="tanda_tangan" class="block text-gray-600 text-sm font-medium mb-1">Tanda Tangan</label>
+                                <input type="file" id="tanda_tangan" name="tanda_tangan" accept="image/*"
+                                    class="w-full p-2 border border-gray-300 rounded">
+                                @if($user->kepalaDesa?->tanda_tangan)
+                                    <div class="mt-2">
+                                        <img src="{{ asset('storage/' . $user->kepalaDesa->tanda_tangan) }}"
+                                             alt="Tanda Tangan" class="h-20">
+                                    </div>
+                                @endif
+                                @error('tanda_tangan')
+                                    <span class="text-red-500 text-sm">{{ $message }}</span>
+                                @enderror
+                            </div>
                         </div>
                     </div>
 

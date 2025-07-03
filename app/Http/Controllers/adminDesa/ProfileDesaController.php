@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use App\Models\KepalaDesa;
 
 class ProfileDesaController extends Controller
 {
@@ -49,6 +50,8 @@ class ProfileDesaController extends Controller
             'email' => 'required|email|max:255|unique:users,email,' . $user->id,
             'no_hp' => 'nullable|string|max:15',
             'alamat' => 'nullable|string',
+            'nama' => 'required|string|max:255',
+            'tanda_tangan' => 'nullable|image|max:2048',
             'current_password' => 'nullable|required_with:new_password',
             'new_password' => 'nullable|min:6|confirmed',
             'image' => 'nullable|image|max:2048',
@@ -83,6 +86,26 @@ class ProfileDesaController extends Controller
         }
 
         $user->save();
+
+        // Handle kepala desa data
+        $kepalaDesa = KepalaDesa::firstOrNew(['user_id' => $user->id]);
+        $kepalaDesa->nama = $request->nama;
+
+        // Handle tanda tangan upload
+        if ($request->hasFile('tanda_tangan')) {
+            // Delete old tanda tangan if exists
+            if ($kepalaDesa->tanda_tangan && Storage::disk('public')->exists($kepalaDesa->tanda_tangan)) {
+                Storage::disk('public')->delete($kepalaDesa->tanda_tangan);
+            }
+
+            // Save new tanda tangan
+            $tandaTangan = $request->file('tanda_tangan');
+            $filename = 'tanda_tangan_' . $user->id . '_' . time() . '.' . $tandaTangan->getClientOriginalExtension();
+            $path = $tandaTangan->storeAs('images/tanda_tangan', $filename, 'public');
+            $kepalaDesa->tanda_tangan = $path;
+        }
+
+        $kepalaDesa->save();
 
         return redirect()->route('admin.desa.profile.index')
             ->with('success', 'Profil berhasil diperbarui.');

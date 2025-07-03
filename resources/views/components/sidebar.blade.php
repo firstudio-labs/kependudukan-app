@@ -355,24 +355,32 @@
 
 
                 @elseif ($user->role == 'admin desa')
-                    <li class="-ml-5">
-                        <a href="{{ route('admin.desa.index') }}"
-                            class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                    {{ request()->routeIs('admin.desa.index') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
-                            <i class="fa-solid fa-gauge-high text-lg transition-all duration-300"></i>
-                            <span>Dashboard</span>
-                        </a>
-                    </li>
+                <li class="mb-4">
+                    <a href="{{ route('admin.desa.profile.index') }}"
+                        class="flex flex-col items-center p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-all duration-300">
+                        <div class="w-16 h-16 rounded-full overflow-hidden mb-2 border-2 border-[#2D336B]">
+                            @if ($user->image)
+                                <img src="{{ asset('storage/' . $user->image) }}" alt="Profile photo"
+                                    class="w-full h-full object-cover">
+                            @else
+                                <img src="https://flowbite.com/docs/images/people/profile-picture-5.jpg" alt="Profile photo"
+                                    class="w-full h-full object-cover">
+                            @endif
+                        </div>
+                        <span class="text-[#2D336B] font-semibold">{{ $user->username }}</span>
+                        <span class="text-xs text-gray-500">{{ ucfirst($user->role) }}</span>
+                    </a>
+                </li>
 
-                    <!-- Berita Desa -->
-                    <li class="-ml-5">
-                        <a href="{{ route('admin.desa.berita-desa.index') }}"
-                            class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                    {{ request()->routeIs('admin.desa.berita-desa*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
-                            <i class="fa-solid fa-newspaper text-lg transition-all duration-300"></i>
-                            <span>Berita Desa</span>
-                        </a>
-                    </li>
+                <!-- Dashboard Menu -->
+                <li class="-ml-5">
+                    <a href="{{ route('admin.desa.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                        {{ request()->routeIs('admin.desa.index') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                        <i class="fa-solid fa-gauge-high text-lg transition-all duration-300"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+
 
                     <!-- Master Penduduk Dropdown -->
                     <li class="-ml-5">
