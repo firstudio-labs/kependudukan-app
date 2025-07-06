@@ -32,8 +32,13 @@ class BiodataController extends Controller
 
     public function index(Request $request)
     {
+        // Cek apakah ini request untuk export
+        if ($request->has('export')) {
+            return $this->export();
+        }
+
         $page = $request->input('page', 1);
-        $limit = $request->input('limit', 10); // Set your desired limit here
+        $limit = $request->input('limit', 10);
         $search = $request->input('search');
 
         // Jika user adalah admin desa, ambil data warga berdasarkan village_id admin
@@ -58,7 +63,8 @@ class BiodataController extends Controller
                 ];
             }
 
-            return view('admin.desa.biodata.index', compact('citizens', 'search', 'paginationData'));        } else {
+            return view('admin.desa.biodata.index', compact('citizens', 'search', 'paginationData'));
+        } else {
             // Untuk superadmin tampilkan semua data
             if ($search) {
                 $citizens = $this->citizenService->searchCitizens($search);
@@ -602,101 +608,76 @@ class BiodataController extends Controller
     public function export()
     {
         try {
-            // Ambil data dari service
-            $response = null;
-
-            // Jika user adalah admin desa, hanya ambil data warga berdasarkan village_id admin
-            if (Auth::user()->role == 'admin desa') {
-                $villageId = Auth::user()->villages_id;
-                $response = $this->citizenService->getCitizensByVillageId($villageId);
-            } else {
-                // Untuk superadmin tampilkan semua data
-                $response = $this->citizenService->getAllCitizens();
-            }
-
             $exportData = [];
-
-            // Header untuk Excel
             $exportData[] = [
-                'NIK',
-                'Nomor KK',
-                'Nama Lengkap',
-                'Jenis Kelamin',
-                'Tanggal Lahir',
-                'Tempat Lahir',
-                'Usia',
-                'Alamat',
-                'RT',
-                'RW',
-                'Provinsi',
-                'Kabupaten',
-                'Kecamatan',
-                'Desa',
-                'Kode Pos',
-                'Status Kewarganegaraan',
-                'Agama',
-                'Golongan Darah',
-                'Status Dalam Keluarga',
-                'Nama Ayah',
-                'Nama Ibu',
-                'NIK Ayah',
-                'NIK Ibu',
+                'NIK', 'Nomor KK', 'Nama Lengkap', 'Jenis Kelamin', 'Tanggal Lahir', 'Tempat Lahir', 'Usia', 'Alamat', 'RT', 'RW',
+                'Provinsi', 'Kabupaten', 'Kecamatan', 'Desa', 'Kode Pos', 'Status Kewarganegaraan', 'Agama', 'Golongan Darah',
+                'Status Dalam Keluarga', 'Nama Ayah', 'Nama Ibu', 'NIK Ayah', 'NIK Ibu',
             ];
 
-            // Periksa response struktur data
-            if (isset($response['data']['citizens']) && is_array($response['data']['citizens'])) {
-                $citizens = $response['data']['citizens'];
-
-                foreach ($citizens as $citizen) {
-                    $exportData[] = [
-                        $citizen['nik'] ?? '',
-                        $citizen['kk'] ?? '',
-                        $citizen['full_name'] ?? '',
-                        $citizen['gender'] ?? '',
-                        $citizen['birth_date'] ?? '',
-                        $citizen['birth_place'] ?? '',
-                        $citizen['age'] ?? '',
-                        $citizen['address'] ?? '',
-                        $citizen['rt'] ?? '',
-                        $citizen['rw'] ?? '',
-                        $citizen['province_id'] ?? '',
-                        $citizen['district_id'] ?? '',
-                        $citizen['sub_district_id'] ?? '',
-                        $citizen['village_id'] ?? '',
-                        $citizen['postal_code'] ?? '',
-                        $citizen['citizen_status'] ?? '',
-                        $citizen['religion'] ?? '',
-                        $citizen['blood_type'] ?? '',
-                        $citizen['family_status'] ?? '',
-                        $citizen['father'] ?? '',
-                        $citizen['mother'] ?? '',
-                        $citizen['nik_father'] ?? '',
-                        $citizen['nik_mother'] ?? '',
-                    ];
+            if (Auth::user()->role == 'admin desa') {
+                $villageId = Auth::user()->villages_id;
+                // Ambil semua data tanpa limit
+                $response = $this->citizenService->getAllCitizensWithHighLimit();
+                $citizens = [];
+                if (isset($response['data']['citizens']) && is_array($response['data']['citizens'])) {
+                    $citizens = $response['data']['citizens'];
+                } elseif (isset($response['citizens']) && is_array($response['citizens'])) {
+                    $citizens = $response['citizens'];
+                } elseif (isset($response['data']) && is_array($response['data'])) {
+                    $citizens = $response['data'];
                 }
+                // Filter hanya untuk desa admin
+                $citizens = array_filter($citizens, function($c) use ($villageId) {
+                    return (isset($c['village_id']) && $c['village_id'] == $villageId) ||
+                           (isset($c['villages_id']) && $c['villages_id'] == $villageId);
+                });
             } else {
-                // Jika data kosong, beri pesan
-                if (Auth::user()->role == 'admin desa') {
-                    return redirect()->route('admin.desa.biodata.index')
-                        ->with('error', 'Tidak ada data yang bisa diekspor atau format data tidak sesuai');
+                // Superadmin: ambil semua data
+                $response = $this->citizenService->getAllCitizensWithHighLimit();
+                $citizens = [];
+                if (isset($response['data']['citizens']) && is_array($response['data']['citizens'])) {
+                    $citizens = $response['data']['citizens'];
+                } elseif (isset($response['citizens']) && is_array($response['citizens'])) {
+                    $citizens = $response['citizens'];
+                } elseif (isset($response['data']) && is_array($response['data'])) {
+                    $citizens = $response['data'];
                 }
+            }
 
-                return redirect()->route('superadmin.biodata.index')
-                    ->with('error', 'Tidak ada data yang bisa diekspor atau format data tidak sesuai');
+            foreach ($citizens as $citizen) {
+                $exportData[] = [
+                    $citizen['nik'] ?? '',
+                    $citizen['kk'] ?? '',
+                    $citizen['full_name'] ?? '',
+                    $citizen['gender'] ?? '',
+                    $citizen['birth_date'] ?? '',
+                    $citizen['birth_place'] ?? '',
+                    $citizen['age'] ?? '',
+                    $citizen['address'] ?? '',
+                    $citizen['rt'] ?? '',
+                    $citizen['rw'] ?? '',
+                    $citizen['province_id'] ?? '',
+                    $citizen['district_id'] ?? '',
+                    $citizen['sub_district_id'] ?? '',
+                    $citizen['village_id'] ?? '',
+                    $citizen['postal_code'] ?? '',
+                    $citizen['citizen_status'] ?? '',
+                    $citizen['religion'] ?? '',
+                    $citizen['blood_type'] ?? '',
+                    $citizen['family_status'] ?? '',
+                    $citizen['father'] ?? '',
+                    $citizen['mother'] ?? '',
+                    $citizen['nik_father'] ?? '',
+                    $citizen['nik_mother'] ?? '',
+                ];
             }
 
             $filename = 'biodata_' . date('Ymd_His') . '.xlsx';
-            return Excel::download(new \App\Exports\CitizensExport($exportData), $filename);
+            return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\CitizensExport($exportData), $filename);
         } catch (\Exception $e) {
-            Log::error('Error exporting data: ' . $e->getMessage());
-
-            if (Auth::user()->role == 'admin desa') {
-                return redirect()->route('admin.desa.biodata.index')
-                    ->with('error', 'Gagal mengekspor data: ' . $e->getMessage());
-            }
-
-            return redirect()->route('superadmin.biodata.index')
-                ->with('error', 'Gagal mengekspor data: ' . $e->getMessage());
+            \Log::error('Error exporting data: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Gagal mengekspor data: ' . $e->getMessage());
         }
     }
 
