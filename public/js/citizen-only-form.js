@@ -5,7 +5,6 @@
  */
 
 // Initialize citizen data (NIK and Name) select fields with Select2
-// Initialize citizen data (NIK and Name) select fields with Select2
 function initializeCitizenSelect(routeUrl, onDataLoaded = null) {
     let isUpdating = false;
     let allCitizens = [];
@@ -39,8 +38,11 @@ function initializeCitizenSelect(routeUrl, onDataLoaded = null) {
 
             allCitizens = processedData;
 
-            // Now initialize Select2 with the pre-loaded data
-            setupSelect2WithData(allCitizens);
+            // Initialize NIK input listener
+            setupNikInputListener(allCitizens);
+
+            // Initialize name select with Select2
+            setupNameSelect(allCitizens);
 
             // Initialize RF ID Tag event listener
             setupRfIdTagListener(allCitizens);
@@ -51,10 +53,11 @@ function initializeCitizenSelect(routeUrl, onDataLoaded = null) {
             }
         },
         error: function(error) {
-            // Initialize Select2 anyway with empty data
-            setupSelect2WithData([]);
+            console.error('Error loading citizens:', error);
         }
     });
+
+
 
     // Add RF ID Tag event listener
     function setupRfIdTagListener(citizens) {
@@ -112,80 +115,83 @@ function initializeCitizenSelect(routeUrl, onDataLoaded = null) {
                 }
             }
         });
+
+        // Tambahkan event untuk paste
+        rfIdInput.addEventListener('paste', function() {
+            // Trigger input event after paste
+            setTimeout(() => {
+                this.dispatchEvent(new Event('input'));
+            }, 10);
+        });
     }
 
-    function setupSelect2WithData(citizens) {
-        // Create NIK options array
-        const nikOptions = [];
+    function setupNikInputListener(citizens) {
+        // Setup NIK input listener (for regular input field)
+        const nikInput = document.getElementById('nikSelect');
+        if (nikInput) {
+            // Remove any existing event listeners
+            const newNikInput = nikInput.cloneNode(true);
+            nikInput.parentNode.replaceChild(newNikInput, nikInput);
+
+            // Add input event listener
+            newNikInput.addEventListener('input', function() {
+                const nikValue = this.value.trim();
+
+                // Only process if NIK is exactly 16 digits
+                if (nikValue.length === 16 && /^\d+$/.test(nikValue)) {
+                    // Find citizen with matching NIK
+                    const matchedCitizen = citizens.find(citizen => {
+                        const citizenNik = citizen.nik ? citizen.nik.toString() : '';
+                        return citizenNik === nikValue;
+                    });
+
+                    if (matchedCitizen) {
+                        // Fill form with citizen data
+                        populateCitizenData(matchedCitizen);
+
+                        // Update full name select if it exists
+                        if ($('#fullNameSelect').length) {
+                            $('#fullNameSelect').val(matchedCitizen.full_name).trigger('change');
+                        }
+
+                        // Visual feedback for success
+                        $(newNikInput).addClass('border-green-500').removeClass('border-red-500 border-gray-300');
+                        setTimeout(() => {
+                            $(newNikInput).removeClass('border-green-500').addClass('border-gray-300');
+                        }, 2000);
+                    } else {
+                        // Show error alert for NIK not found
+                        Swal.fire({
+                            title: 'Data Tidak Ditemukan',
+                            text: 'NIK yang dimasukkan tidak terdaftar dalam sistem',
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+
+                        // Visual feedback for error
+                        $(newNikInput).addClass('border-red-500').removeClass('border-green-500 border-gray-300');
+                        setTimeout(() => {
+                            $(newNikInput).removeClass('border-red-500').addClass('border-gray-300');
+                        }, 2000);
+                    }
+                }
+            });
+        }
+    }
+
+    function setupNameSelect(citizens) {
+        // Create name options array
         const nameOptions = [];
 
         // Process citizen data for Select2
-        for (let i = 0; i < citizens.length; i++) {
-            const citizen = citizens[i];
-
-            // Handle cases where NIK might be coming from various fields
-            let nikValue = null;
-
-            if (typeof citizen.nik !== 'undefined' && citizen.nik !== null) {
-                nikValue = citizen.nik;
-            } else if (typeof citizen.id !== 'undefined' && citizen.id !== null && !isNaN(citizen.id)) {
-                // If id is numeric (not a name), it might be the NIK
-                nikValue = citizen.id;
-            }
-
-            if (nikValue !== null) {
-                const nikString = nikValue.toString();
-                nikOptions.push({
-                    id: nikString,
-                    text: nikString,
-                    citizen: citizen,
-                    address: citizen.address // Explicitly include address for data-address attribute
-                });
-            }
-
-            // Only add if full_name is available
+        citizens.forEach(citizen => {
             if (citizen.full_name) {
                 nameOptions.push({
                     id: citizen.full_name,
                     text: citizen.full_name,
-                    citizen: citizen,
-                    address: citizen.address // Explicitly include address for data-address attribute
+                    citizen: citizen
                 });
             }
-        }
-
-        // Initialize NIK Select2
-        $('#nikSelect').select2({
-            placeholder: 'Pilih NIK',
-            width: '100%',
-            data: nikOptions,
-            language: {
-                noResults: function() {
-                    return 'Tidak ada data yang ditemukan';
-                },
-                searching: function() {
-                    return 'Mencari...';
-                }
-            },
-            escapeMarkup: function(markup) {
-                return markup;
-            },
-            templateResult: function(data) {
-                if (data.loading) return data.text;
-                return '<div>' + data.text + '</div>';
-            },
-            templateSelection: function(data) {
-                // This sets data-address on the rendered option
-                if (data.address) {
-                    setTimeout(() => {
-                        $('.select2-selection').attr('data-address', data.address);
-                    }, 0);
-                }
-                return data.text;
-            }
-        }).on("select2:open", function() {
-            // This ensures all options are visible when dropdown opens
-            $('.select2-results__options').css('max-height', '400px');
         });
 
         // Initialize Full Name Select2
@@ -200,45 +206,10 @@ function initializeCitizenSelect(routeUrl, onDataLoaded = null) {
                 searching: function() {
                     return 'Mencari...';
                 }
-            },
-            templateSelection: function(data) {
-                // This sets data-address on the rendered option
-                if (data.address) {
-                    setTimeout(() => {
-                        $('.select2-selection').attr('data-address', data.address);
-                    }, 0);
-                }
-                return data.text;
             }
         }).on("select2:open", function() {
             // This ensures all options are visible when dropdown opens
             $('.select2-results__options').css('max-height', '400px');
-        });
-
-        // When NIK is selected, fill in other fields
-        $('#nikSelect').on('select2:select', function (e) {
-            if (isUpdating) return; // Prevent recursion
-            isUpdating = true;
-
-            // Get the selected citizen data
-            const citizen = e.params.data.citizen;
-
-            if (citizen) {
-                // Set Full Name in dropdown
-                $('#fullNameSelect').val(citizen.full_name).trigger('change.select2'); // Just update UI
-
-                // Fill other form fields
-                populateCitizenData(citizen);
-
-                // Set domicile_address immediately from citizen data
-                if (citizen.address) {
-                    $('#domicile_address').val(citizen.address);
-                }
-
-                // Note: We don't populate location dropdowns here since they should already be set
-            }
-
-            isUpdating = false;
         });
 
         // When Full Name is selected, fill in other fields
@@ -249,34 +220,16 @@ function initializeCitizenSelect(routeUrl, onDataLoaded = null) {
             const citizen = e.params.data.citizen;
 
             if (citizen) {
-                // Set NIK in dropdown without triggering the full change event
+                // Set NIK in input
                 const nikValue = citizen.nik ? citizen.nik.toString() : '';
-                $('#nikSelect').val(nikValue).trigger('change.select2');  // Just update the UI
+                $('#nikSelect').val(nikValue);
 
                 // Fill other form fields
                 populateCitizenData(citizen);
-
-                // Set domicile_address immediately from citizen data
-                if (citizen.address) {
-                    $('#domicile_address').val(citizen.address);
-                }
-
-                // Note: We don't populate location dropdowns here since they should already be set
             }
 
             isUpdating = false;
         });
-
-        // Manually trigger domicile address update if a citizen is already selected
-        setTimeout(() => {
-            const nikSelect = document.querySelector('#nikSelect');
-            if (nikSelect && nikSelect.value) {
-                const selectedCitizen = allCitizens.find(c => c.nik == nikSelect.value || c.id == nikSelect.value);
-                if (selectedCitizen && selectedCitizen.address) {
-                    document.querySelector('#domicile_address').value = selectedCitizen.address;
-                }
-            }
-        }, 500);
     }
 }
 
@@ -396,44 +349,78 @@ function initializeParentSelect(routeUrl, parentType = 'father') {
 
             allCitizens = processedData;
 
-            // Now initialize Select2 with the pre-loaded data
-            setupParentSelect2WithData(allCitizens, parentType);
+            // Now initialize the parent interface
+            setupParentInterface(allCitizens, parentType);
         },
         error: function(error) {
-            // Initialize Select2 anyway with empty data
-            setupParentSelect2WithData([], parentType);
+            console.error('Error loading citizens data:', error);
         }
     });
 
-    function setupParentSelect2WithData(citizens, parentType) {
-        // Create NIK options array
-        const nikOptions = [];
+    function setupParentInterface(citizens, parentType) {
+        // Setup NIK input
+        setupParentNikInput(citizens, parentType);
+
+        // Setup name select
+        setupParentNameSelect(citizens, parentType);
+    }
+
+    function setupParentNikInput(citizens, parentType) {
+        const nikInput = document.getElementById(`${parentType}_nik`);
+        if (!nikInput) return;
+
+        // Add input event listener
+        nikInput.addEventListener('input', function() {
+            const nikValue = this.value.trim();
+
+            // Only process if NIK is exactly 16 digits
+            if (nikValue.length === 16 && /^\d+$/.test(nikValue)) {
+                // Find citizen with matching NIK
+                const matchedCitizen = citizens.find(citizen => {
+                    const citizenNik = citizen.nik ? citizen.nik.toString() : '';
+                    return citizenNik === nikValue;
+                });
+
+                if (matchedCitizen) {
+                    // Fill parent fields
+                    populateParentData(matchedCitizen, parentType);
+
+                    // Update full name select
+                    $(`#${parentType}_full_name`).val(matchedCitizen.full_name).trigger('change');
+
+                    // Visual feedback for success
+                    $(nikInput).addClass('border-green-500').removeClass('border-red-500 border-gray-300');
+                    setTimeout(() => {
+                        $(nikInput).removeClass('border-green-500').addClass('border-gray-300');
+                    }, 2000);
+                } else {
+                    // Show error alert for NIK not found
+                    Swal.fire({
+                        title: 'Data Tidak Ditemukan',
+                        text: `NIK ${parentType === 'father' ? 'Ayah' : 'Ibu'} tidak terdaftar dalam sistem`,
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+
+                    // Visual feedback for error
+                    $(nikInput).addClass('border-red-500').removeClass('border-green-500 border-gray-300');
+                    setTimeout(() => {
+                        $(nikInput).removeClass('border-red-500').addClass('border-gray-300');
+                    }, 2000);
+                }
+            }
+        });
+    }
+
+    function setupParentNameSelect(citizens, parentType) {
+        const nameSelect = document.getElementById(`${parentType}_full_name`);
+        if (!nameSelect) return;
+
+        // Create name options array
         const nameOptions = [];
 
         // Process citizen data for Select2
-        for (let i = 0; i < citizens.length; i++) {
-            const citizen = citizens[i];
-
-            // Handle cases where NIK might be coming from various fields
-            let nikValue = null;
-
-            if (typeof citizen.nik !== 'undefined' && citizen.nik !== null) {
-                nikValue = citizen.nik;
-            } else if (typeof citizen.id !== 'undefined' && citizen.id !== null && !isNaN(citizen.id)) {
-                // If id is numeric (not a name), it might be the NIK
-                nikValue = citizen.id;
-            }
-
-            if (nikValue !== null) {
-                const nikString = nikValue.toString();
-                nikOptions.push({
-                    id: nikString,
-                    text: nikString,
-                    citizen: citizen
-                });
-            }
-
-            // Only add if full_name is available
+        citizens.forEach(citizen => {
             if (citizen.full_name) {
                 nameOptions.push({
                     id: citizen.full_name,
@@ -441,31 +428,6 @@ function initializeParentSelect(routeUrl, parentType = 'father') {
                     citizen: citizen
                 });
             }
-        }
-
-        // Initialize NIK Select2
-        $(`#${parentType}_nik`).select2({
-            placeholder: `Pilih NIK ${parentType === 'father' ? 'Ayah' : 'Ibu'}`,
-            width: '100%',
-            data: nikOptions,
-            language: {
-                noResults: function() {
-                    return 'Tidak ada data yang ditemukan';
-                },
-                searching: function() {
-                    return 'Mencari...';
-                }
-            },
-            escapeMarkup: function(markup) {
-                return markup;
-            },
-            templateResult: function(data) {
-                if (data.loading) return data.text;
-                return '<div>' + data.text + '</div>';
-            }
-        }).on("select2:open", function() {
-            // This ensures all options are visible when dropdown opens
-            $('.select2-results__options').css('max-height', '400px');
         });
 
         // Initialize Full Name Select2
@@ -486,25 +448,6 @@ function initializeParentSelect(routeUrl, parentType = 'father') {
             $('.select2-results__options').css('max-height', '400px');
         });
 
-        // When NIK is selected, fill in other fields
-        $(`#${parentType}_nik`).on('select2:select', function (e) {
-            if (isUpdating) return; // Prevent recursion
-            isUpdating = true;
-
-            // Get the selected citizen data
-            const citizen = e.params.data.citizen;
-
-            if (citizen) {
-                // Set Full Name in dropdown
-                $(`#${parentType}_full_name`).val(citizen.full_name).trigger('change.select2'); // Just update UI
-
-                // Fill other form fields
-                populateParentData(citizen, parentType);
-            }
-
-            isUpdating = false;
-        });
-
         // When Full Name is selected, fill in other fields
         $(`#${parentType}_full_name`).on('select2:select', function (e) {
             if (isUpdating) return; // Prevent recursion
@@ -513,9 +456,9 @@ function initializeParentSelect(routeUrl, parentType = 'father') {
             const citizen = e.params.data.citizen;
 
             if (citizen) {
-                // Set NIK in dropdown without triggering the full change event
+                // Set NIK in input
                 const nikValue = citizen.nik ? citizen.nik.toString() : '';
-                $(`#${parentType}_nik`).val(nikValue).trigger('change.select2');  // Just update the UI
+                $(`#${parentType}_nik`).val(nikValue);
 
                 // Fill other form fields
                 populateParentData(citizen, parentType);

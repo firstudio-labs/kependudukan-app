@@ -43,6 +43,12 @@ class AdministrasiController extends Controller
     {
         $query = Administration::query();
 
+        // Jika user adalah admin desa, filter berdasarkan village_id
+        if (Auth::user()->role === 'admin desa') {
+            $villageId = Auth::user()->villages_id; // field pada tabel users
+            $query->where('village_id', $villageId); // field pada tabel administration
+        }
+
         // Add search functionality
         if ($request->has('search') && !empty($request->search)) {
             $search = $request->search;

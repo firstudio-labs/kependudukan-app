@@ -42,13 +42,17 @@ class KelahiranController extends Controller
     {
         $query = Kelahiran::query();
 
-        // Add search functionality
+        // Jika user adalah admin desa, filter berdasarkan village_id
+        if (\Auth::user()->role === 'admin desa') {
+            $villageId = \Auth::user()->villages_id;
+            $query->where('village_id', $villageId);
+        }
+
+        // Add search functionality jika ada
         if ($request->has('search') && !empty($request->search)) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('child_name', 'like', "%{$search}%")
-                  ->orWhere('child_birth_place', 'like', "%{$search}%")
-                  ->orWhere('signing', 'like', "%{$search}%");
+                $q->where('full_name', 'like', "%{$search}%");
             });
         }
 
@@ -308,10 +312,10 @@ class KelahiranController extends Controller
         try {
             $kelahiran = Kelahiran::findOrFail($id);
             $data = $request->all();
-            
+
             // Set is_accepted field if it's provided in the form
             $data['is_accepted'] = $request->has('is_accepted') ? 1 : 0;
-            
+
             $kelahiran->update($data);
 
             if (Auth::user()->role === 'admin desa') {
@@ -331,7 +335,7 @@ class KelahiranController extends Controller
         }
     }
 
-    
+
     public function destroy($id)
     {
         try {
@@ -367,10 +371,10 @@ class KelahiranController extends Controller
             if (!empty($kelahiran->province_id)) {
             try {
                 $provinces = $this->wilayahService->getProvinces();
-                
+
                 // Log provinces for debugging
                 \Log::debug('Retrieved provinces: ' . count($provinces));
-                
+
                 if (!empty($provinces)) {
                 foreach ($provinces as $province) {
                     if (isset($province['id']) && $province['id'] == $kelahiran->province_id) {
@@ -392,10 +396,10 @@ class KelahiranController extends Controller
             if (!empty($kelahiran->district_id) && !empty($provinceCode)) {
             try {
                 $districts = $this->wilayahService->getKabupaten($provinceCode);
-                
+
                 // Log districts for debugging
                 \Log::debug('Retrieved districts: ' . count($districts));
-                
+
                 if (!empty($districts)) {
                 foreach ($districts as $district) {
                     if (isset($district['id']) && $district['id'] == $kelahiran->district_id) {
@@ -417,10 +421,10 @@ class KelahiranController extends Controller
             if (!empty($kelahiran->subdistrict_id) && !empty($districtCode)) {
             try {
                 $subdistricts = $this->wilayahService->getKecamatan($districtCode);
-                
+
                 // Log subdistricts for debugging
                 \Log::debug('Retrieved subdistricts: ' . count($subdistricts));
-                
+
                 if (!empty($subdistricts)) {
                 foreach ($subdistricts as $subdistrict) {
                     if (isset($subdistrict['id']) && $subdistrict['id'] == $kelahiran->subdistrict_id) {
@@ -442,10 +446,10 @@ class KelahiranController extends Controller
             if (!empty($kelahiran->village_id) && !empty($subdistrictCode)) {
             try {
                 $villages = $this->wilayahService->getDesa($subdistrictCode);
-                
+
                 // Log villages for debugging
                 \Log::debug('Retrieved villages: ' . count($villages));
-                
+
                 if (!empty($villages)) {
                 foreach ($villages as $village) {
                     if (isset($village['id']) && $village['id'] == $kelahiran->village_id) {

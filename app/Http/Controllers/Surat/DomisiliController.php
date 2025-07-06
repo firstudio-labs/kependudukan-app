@@ -44,15 +44,17 @@ class DomisiliController extends Controller
     {
         $query = Domisili::query();
 
-        // Add search functionality
+        // Jika user adalah admin desa, filter berdasarkan village_id
+        if (\Auth::user()->role === 'admin desa') {
+            $villageId = \Auth::user()->villages_id;
+            $query->where('village_id', $villageId);
+        }
+
+        // Add search functionality jika ada
         if ($request->has('search') && !empty($request->search)) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('nik', 'like', "%{$search}%")
-                  ->orWhere('full_name', 'like', "%{$search}%")
-                  ->orWhere('domicile_address', 'like', "%{$search}%")
-                  ->orWhere('purpose', 'like', "%{$search}%")
-                  ->orWhere('signing', 'like', "%{$search}%");
+                $q->where('full_name', 'like', "%{$search}%");
             });
         }
 
@@ -343,10 +345,10 @@ class DomisiliController extends Controller
         try {
             $domisili = Domisili::findOrFail($id);
             $data = $request->all();
-            
+
             // Set is_accepted field if it's provided in the form
             $data['is_accepted'] = $request->has('is_accepted') ? 1 : 0;
-            
+
             $domisili->update($data);
 
             return redirect()->route('superadmin.surat.domisili.index')

@@ -6,7 +6,7 @@
 <div class="flex flex-col lg:flex-row gap-6">
     <!-- Card Nomor Antrian -->
     <div class="bg-white/10 backdrop-blur-xl rounded-2xl shadow-md border border-white/20 p-6 text-center w-full lg:w-1/3 self-start">
-        <button class="text-black font-semibold px-4 py-2 rounded-xl mb-4 bg-white/10 backdrop-blur-lg border border-white/20 shadow-sm">
+        {{-- <button class="text-black font-semibold px-4 py-2 rounded-xl mb-4 bg-white/10 backdrop-blur-lg border border-white/20 shadow-sm">
             Antrian Layanan Desa
         </button>
 
@@ -19,10 +19,13 @@
             @endif
         </div>
 
-        <p class="mt-4 text-sm italic text-black">Quod Enchiridion Epictetus stoici scripsit. Rodrigo Abela</p>
+        <p class="mt-4 text-sm italic text-black">Quod Enchiridion Epictetus stoici scripsit. Rodrigo Abela</p> --}}
     </div>
 
-    <div class="w-full lg:w-2/3">
+    <div class="w-full lg:w-2/3" id="ktp-form-container"
+         data-citizen-route="{{ route('citizens.administrasi') }}"
+         data-success="{{ session('success') }}"
+         data-error="{{ session('error') }}">
         <h1 class="text-2xl font-bold text-gray-800 mb-6">Buat Surat Pengantar KTP</h1>
 
         <form method="POST" action="{{ route('guest.surat.ktp.store') }}">
@@ -31,13 +34,48 @@
             <!-- Data Wilayah Section -->
             {{-- <div class="mb-2 mt-6">
                 <h2 class="text-xl font-bold text-gray-800">Data Wilayah</h2>
-            </div> --}}
+            </div>
 
-            <!-- Hidden Location Fields (instead of visible dropdowns) -->
-            <input type="hidden" id="province_id" name="province_id" value="{{ request('province_id') }}">
-            <input type="hidden" id="district_id" name="district_id" value="{{ request('district_id') }}">
-            <input type="hidden" id="subdistrict_id" name="subdistrict_id" value="{{ request('sub_district_id') }}">
-            <input type="hidden" id="village_id" name="village_id" value="{{ request('village_id') }}">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Provinsi -->
+                <div>
+                    <label for="province_code" class="block text-sm font-medium text-gray-700">Provinsi <span class="text-red-500">*</span></label>
+                    <select id="province_code" name="province_code" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2" required>
+                        <option value="">Pilih Provinsi</option>
+                        @foreach($provinces as $province)
+                            <option value="{{ $province['code'] }}" data-id="{{ $province['id'] }}">{{ $province['name'] }}</option>
+                        @endforeach
+                    </select>
+                    <input type="hidden" id="province_id" name="province_id" value="">
+                </div>
+
+                <!-- Kabupaten -->
+                <div>
+                    <label for="district_code" class="block text-sm font-medium text-gray-700">Kabupaten <span class="text-red-500">*</span></label>
+                    <select id="district_code" name="district_code" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2" required>
+                        <option value="">Pilih Kabupaten</option>
+                    </select>
+                    <input type="hidden" id="district_id" name="district_id" value="">
+                </div>
+
+                <!-- Kecamatan -->
+                <div>
+                    <label for="subdistrict_code" class="block text-sm font-medium text-gray-700">Kecamatan <span class="text-red-500">*</span></label>
+                    <select id="subdistrict_code" name="subdistrict_code" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2" required>
+                        <option value="">Pilih Kecamatan</option>
+                    </select>
+                    <input type="hidden" id="subdistrict_id" name="subdistrict_id" value="">
+                </div>
+
+                <!-- Desa -->
+                <div>
+                    <label for="village_code" class="block text-sm font-medium text-gray-700">Desa <span class="text-red-500">*</span></label>
+                    <select id="village_code" name="village_code" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2" required>
+                        <option value="">Pilih Desa</option>
+                    </select>
+                    <input type="hidden" id="village_id" name="village_id" value="">
+                </div>
+            </div> --}}
 
             <!-- Data Pemohon Section -->
             <div class="mb-2 mt-6">
@@ -48,9 +86,13 @@
                 <!-- NIK with Search -->
                 <div>
                     <label for="nikSelect" class="block text-sm font-medium text-gray-700">NIK <span class="text-red-500">*</span></label>
-                    <select id="nikSelect" name="nik" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
-                        <option value="">Pilih NIK</option>
-                    </select>
+                    <input type="text" id="nikSelect" name="nik"
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
+                           placeholder="Masukkan NIK (16 digit)"
+                           maxlength="16"
+                           pattern="\d{16}"
+                           required>
+                    <p class="text-xs text-gray-500 mt-1">Masukkan 16 digit NIK untuk pencarian otomatis</p>
                 </div>
 
                 <!-- Nama Lengkap with Search -->
@@ -86,6 +128,13 @@
                     <label for="hamlet" class="block text-sm font-medium text-gray-700">Dusun <span class="text-red-500">*</span></label>
                     <input type="text" id="hamlet" name="hamlet" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                 </div>
+
+                <!-- RF ID Tag -->
+                <div>
+                    <label for="rf_id_tag" class="block text-sm font-medium text-gray-700">RF ID Tag</label>
+                    <input type="text" id="rf_id_tag" name="rf_id_tag" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                    <small class="text-gray-500">Scan atau masukkan RF ID Tag</small>
+                </div>
             </div>
 
             <!-- Alamat -->
@@ -110,6 +159,23 @@
                         <option value="Pergantian">Pergantian</option>
                     </select>
                 </div>
+
+                {{-- <!-- Nomor Surat -->
+                <div>
+                    <label for="letter_number" class="block text-sm font-medium text-gray-700">Nomor Surat</label>
+                    <input type="text" id="letter_number" name="letter_number" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                </div>
+
+                <!-- Pejabat Penandatangan -->
+                <div>
+                    <label for="signing" class="block text-sm font-medium text-gray-700">Pejabat Penandatangan</label>
+                    <select id="signing" name="signing" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                        <option value="">Pilih Pejabat</option>
+                        @foreach($signers as $signer)
+                            <option value="{{ $signer->id }}">{{ $signer->judul }} - {{ $signer->keterangan }}</option>
+                        @endforeach
+                    </select>
+                </div> --}}
             </div>
 
             <div class="flex justify-end mt-6">
@@ -124,6 +190,8 @@
     </div>
 </div>
 
+
+
     <!-- JavaScript Variables for use in external file -->
     <script>
         const BASE_URL = "{{ url('/') }}";
@@ -132,22 +200,6 @@
         const ERROR_MESSAGE = "{{ session('error') }}";
     </script>
 
-    <!-- Include the external JavaScript files -->
-    <script src="{{ asset('js/sweet-alert-utils.js') }}"></script>
-    <script src="{{ asset('js/citizen-only-form.js') }}"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize citizen data select fields
-            initializeCitizenSelect('{{ route("citizens.administrasi") }}');
-
-            // Initialize SweetAlert messages
-            if ("{{ session('success') }}") {
-                showSuccessAlert("{{ session('success') }}");
-            }
-
-            if ("{{ session('error') }}") {
-                showErrorAlert("{{ session('error') }}");
-            }
-        });
-    </script>
+    <!-- Include the external JavaScript file -->
+    <script src="{{ asset('js/pengantar-ktp-url.js') }}"></script>
 </x-guest.surat-layout>

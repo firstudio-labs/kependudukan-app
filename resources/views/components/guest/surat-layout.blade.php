@@ -38,6 +38,7 @@
 
     <!-- Scripts -->
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="{{ asset('js/sweet-alert-utils.js') }}"></script>
     <script>
         // Initialize AOS animations
         AOS.init({

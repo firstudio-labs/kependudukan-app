@@ -6,7 +6,7 @@
 <div class="flex flex-col lg:flex-row gap-6">
     <!-- Card Nomor Antrian -->
     <div class="bg-white/10 backdrop-blur-xl rounded-2xl shadow-md border border-white/20 p-6 text-center w-full lg:w-1/3 self-start">
-        <button class="text-black font-semibold px-4 py-2 rounded-xl mb-4 bg-white/10 backdrop-blur-lg border border-white/20 shadow-sm">
+        {{-- <button class="text-black font-semibold px-4 py-2 rounded-xl mb-4 bg-white/10 backdrop-blur-lg border border-white/20 shadow-sm">
             Antrian Layanan Desa
         </button>
 
@@ -19,7 +19,7 @@
             @endif
         </div>
 
-        <p class="mt-4 text-sm italic text-black">Quod Enchiridion Epictetus stoici scripsit. Rodrigo Abela</p>
+        <p class="mt-4 text-sm italic text-black">Quod Enchiridion Epictetus stoici scripsit. Rodrigo Abela</p> --}}
     </div>
     <div class="w-full lg:w-2/3" id="rental-house-form-container"
          data-citizen-route="{{ route('citizens.administrasi') }}"
@@ -79,15 +79,19 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                    <label for="nikSelect" class="block text-sm font-medium text-gray-700">NIK <span class="text-red-500">*</span></label>
-                    <select id="nikSelect" name="nik" class="nik-select mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
-                        <option value="">Pilih NIK</option>
-                    </select>
+                    <label for="nik" class="block text-sm font-medium text-gray-700">NIK <span class="text-red-500">*</span></label>
+                    <input type="text" id="nik" name="nik"
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
+                           placeholder="Masukkan NIK (16 digit)"
+                           maxlength="16"
+                           pattern="\d{16}"
+                           required>
+                    <p class="text-xs text-gray-500 mt-1">Masukkan 16 digit NIK untuk pencarian otomatis</p>
                 </div>
 
                 <div>
-                    <label for="fullNameSelect" class="block text-sm font-medium text-gray-700">Nama Penyelenggara <span class="text-red-500">*</span></label>
-                    <select id="fullNameSelect" name="full_name" class="fullname-select mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                    <label for="full_name" class="block text-sm font-medium text-gray-700">Nama Penyelenggara <span class="text-red-500">*</span></label>
+                    <select id="full_name" name="full_name" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                         <option value="">Pilih Nama</option>
                     </select>
                 </div>
@@ -97,6 +101,12 @@
                     <select id="responsibleNameSelect" name="responsible_name" class="responsiblename-select mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                         <option value="">Pilih Nama Penanggung Jawab</option>
                     </select>
+                </div>
+
+                <div>
+                    <label for="rf_id_tag" class="block text-sm font-medium text-gray-700">RF ID Tag</label>
+                    <input type="text" id="rf_id_tag" name="rf_id_tag" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                    <small class="text-gray-500">Scan atau masukkan RF ID Tag</small>
                 </div>
             </div>
 
@@ -181,6 +191,7 @@
         </form>
     </div>
 </div>
+<script src="{{ asset('js/sweet-alert-utils.js') }}"></script>
 <script src="{{ asset('js/rental-house-url.js') }}"></script>
 
 </x-guest.surat-layout>

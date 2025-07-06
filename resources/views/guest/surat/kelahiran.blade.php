@@ -48,10 +48,14 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                    <label for="father_nik" class="block text-sm font-medium text-gray-700">NIK Ayah</label>
-                    <select id="father_nik" name="father_nik" class="father-nik-select mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
-                        <option value="">Pilih NIK</option>
-                    </select>
+                    <label for="father_nik" class="block text-sm font-medium text-gray-700">NIK Ayah <span class="text-red-500">*</span></label>
+                    <input type="text" id="father_nik" name="father_nik"
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
+                           placeholder="Masukkan NIK Ayah (16 digit)"
+                           maxlength="16"
+                           pattern="\d{16}"
+                           required>
+                    <p class="text-xs text-gray-500 mt-1">Masukkan 16 digit NIK untuk pencarian otomatis</p>
                 </div>
 
                 <div>
@@ -110,10 +114,14 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                    <label for="mother_nik" class="block text-sm font-medium text-gray-700">NIK Ibu</label>
-                    <select id="mother_nik" name="mother_nik" class="mother-nik-select mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
-                        <option value="">Pilih NIK</option>
-                    </select>
+                    <label for="mother_nik" class="block text-sm font-medium text-gray-700">NIK Ibu <span class="text-red-500">*</span></label>
+                    <input type="text" id="mother_nik" name="mother_nik"
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
+                           placeholder="Masukkan NIK Ibu (16 digit)"
+                           maxlength="16"
+                           pattern="\d{16}"
+                           required>
+                    <p class="text-xs text-gray-500 mt-1">Masukkan 16 digit NIK untuk pencarian otomatis</p>
                 </div>
 
                 <div>

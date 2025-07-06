@@ -42,17 +42,19 @@ class RumahSewaController extends Controller
      */
     public function index(Request $request)
     {
-        $query = RumahSewa::with('penandatangan');
+        $query = RumahSewa::query();
 
-        // Add search functionality
+        // Jika user adalah admin desa, filter berdasarkan village_id
+        if (\Auth::user()->role === 'admin desa') {
+            $villageId = \Auth::user()->villages_id;
+            $query->where('village_id', $villageId);
+        }
+
+        // Add search functionality jika ada
         if ($request->has('search') && !empty($request->search)) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('full_name', 'like', "%{$search}%")
-                  ->orWhere('nik', 'like', "%{$search}%")
-                  ->orWhere('responsible_name', 'like', "%{$search}%")
-                  ->orWhere('rental_address', 'like', "%{$search}%")
-                  ->orWhere('rental_type', 'like', "%{$search}%");
+                $q->where('full_name', 'like', "%{$search}%");
             });
         }
 

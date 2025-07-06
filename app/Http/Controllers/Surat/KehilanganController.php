@@ -42,14 +42,17 @@ class KehilanganController extends Controller
     {
         $query = Kehilangan::query();
 
-        // Add search functionality
+        // Jika user adalah admin desa, filter berdasarkan village_id
+        if (\Auth::user()->role === 'admin desa') {
+            $villageId = \Auth::user()->villages_id;
+            $query->where('village_id', $villageId);
+        }
+
+        // Add search functionality jika ada
         if ($request->has('search') && !empty($request->search)) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('nik', 'like', "%{$search}%")
-                  ->orWhere('full_name', 'like', "%{$search}%")
-                  ->orWhere('lost_items', 'like', "%{$search}%")
-                  ->orWhere('signing', 'like', "%{$search}%");
+                $q->where('full_name', 'like', "%{$search}%");
             });
         }
 
@@ -219,10 +222,10 @@ class KehilanganController extends Controller
         try {
             $kehilangan = Kehilangan::findOrFail($id);
             $data = $request->all();
-            
+
             // Set is_accepted field if it's provided in the form
             $data['is_accepted'] = $request->has('is_accepted') ? 1 : 0;
-            
+
             $kehilangan->update($data);
 
             if (Auth::user()->role === 'admin desa') {

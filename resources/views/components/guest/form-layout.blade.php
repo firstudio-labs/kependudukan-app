@@ -22,7 +22,7 @@
 <div class="flex flex-col lg:flex-row gap-6">
     <!-- Card Nomor Antrian -->
     <div class="bg-white/10 backdrop-blur-xl rounded-2xl shadow-md border border-white/20 p-6 text-center w-full lg:w-1/3 self-start">
-        <button class="text-black font-semibold px-4 py-2 rounded-xl mb-4 bg-white/10 backdrop-blur-lg border border-white/20 shadow-sm">
+        {{-- <button class="text-black font-semibold px-4 py-2 rounded-xl mb-4 bg-white/10 backdrop-blur-lg border border-white/20 shadow-sm">
             Antrian Layanan Desa
         </button>
 
@@ -35,7 +35,7 @@
             @endif
         </div>
 
-        <p class="mt-4 text-sm italic text-black">Quod Enchiridion Epictetus stoici scripsit. Rodrigo Abela</p>
+        <p class="mt-4 text-sm italic text-black">Quod Enchiridion Epictetus stoici scripsit. Rodrigo Abela</p> --}}
     </div>
 
     <!-- Form Section -->
@@ -62,9 +62,13 @@
                 <!-- NIK -->
                 <div>
                     <label for="nikSelect" class="block text-sm font-medium text-gray-700">NIK <span class="text-red-500">*</span></label>
-                    <select id="nikSelect" name="nik" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
-                        <option value="">Pilih NIK</option>
-                    </select>
+                    <input type="text" id="nikSelect" name="nik"
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
+                           placeholder="Masukkan NIK (16 digit)"
+                           maxlength="16"
+                           pattern="\d{16}"
+                           required>
+                    <p class="text-xs text-gray-500 mt-1">Masukkan 16 digit NIK untuk pencarian otomatis</p>
                 </div>
 
                 <!-- Nama Lengkap -->
@@ -151,7 +155,7 @@
 
             <!-- Tombol -->
             <div class="flex justify-end mt-6">
-                <button type="button" onclick="window.history.back()" class="bg-gray-500 text-white px-6 py-2 rounded-full hover:bg-gray-600 mr-4">Kembali</button>
+                <button type="button" onclick="window.history.back()" class="bg-gray-500 text-white px-6 py-2 rounded-full hover:bg-gray-600 mr-4">Batal</button>
                 <button type="submit" class="bg-[#969BE7] text-white px-6 py-2 rounded-full hover:bg-[#7d82d6]">Submit</button>
             </div>
         </form>
@@ -219,3 +223,6 @@
 
 <!-- Slot for additional scripts -->
 {{ $scripts ?? '' }}
+
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
