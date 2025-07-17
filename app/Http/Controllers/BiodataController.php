@@ -586,6 +586,14 @@ class BiodataController extends Controller
             $import = new CitizensImport($this->citizenService);
             Excel::import($import, $request->file('excel_file'));
 
+            // Log import summary
+            Log::info('Import completed', [
+                'total_processed' => $import->processedRows,
+                'success_count' => $import->successCount,
+                'skipped_rows' => $import->skippedRows,
+                'error_count' => count($import->errors)
+            ]);
+
             if (count($import->errors) > 0) {
                 $errorMessages = "<ul class='text-left'>";
                 foreach ($import->errors as $error) {
@@ -593,13 +601,26 @@ class BiodataController extends Controller
                 }
                 $errorMessages .= "</ul>";
 
+                $summaryMessage = "Import selesai dengan beberapa error:<br>";
+                $summaryMessage .= "• Total baris diproses: {$import->processedRows}<br>";
+                $summaryMessage .= "• Berhasil diimport: {$import->successCount}<br>";
+                $summaryMessage .= "• Baris yang dilewati: {$import->skippedRows}<br>";
+                $summaryMessage .= "• Jumlah error: " . count($import->errors) . "<br><br>";
+                $summaryMessage .= "Detail error:";
+
                 return redirect()->route('superadmin.biodata.index')
-                    ->with('import_errors', $errorMessages);
+                    ->with('import_errors', $summaryMessage . $errorMessages);
             }
 
+            $successMessage = "Import data berhasil!<br>";
+            $successMessage .= "• Total baris diproses: {$import->processedRows}<br>";
+            $successMessage .= "• Berhasil diimport: {$import->successCount}<br>";
+            $successMessage .= "• Baris yang dilewati: {$import->skippedRows}";
+
             return redirect()->route('superadmin.biodata.index')
-                ->with('success', 'Import data berhasil! ' . $import->successCount . ' data telah diimport.');
+                ->with('success', $successMessage);
         } catch (\Exception $e) {
+            Log::error('Import failed with exception: ' . $e->getMessage());
             return redirect()->route('superadmin.biodata.index')
                 ->with('error', 'Gagal import data: ' . $e->getMessage());
         }
@@ -683,16 +704,30 @@ class BiodataController extends Controller
 
     public function downloadTemplate()
     {
-        $filePath = storage_path('app/templates/biodata_template.xlsx');
+        try {
+            // Create template data with correct field names for Excel
+            $templateData = [
+                [
+                    'nik', 'no_kk', 'nama_lgkp', 'jenis_kelamin', 'tanggal_lahir', 'umur', 'tempat_lahir', 'alamat', 'no_rt', 'no_rw',
+                    'kode_pos', 'no_prop', 'nama_prop', 'no_kab', 'nama_kab', 'no_kec', 'nama_kec', 'no_kel', 'kelurahan',
+                    'shdk', 'status_kawin', 'pendidikan', 'agama', 'pekerjaan', 'golongan_darah', 'akta_lahir', 'no_akta_lahir',
+                    'akta_kawin', 'no_akta_kawin', 'akta_cerai', 'no_akta_cerai', 'nama_ayah', 'nama_ibu', 'nik_ayah', 'nik_ibu'
+                ],
+                [
+                    '1234567890123456', '1234567890123456', 'John Doe', 'Laki-laki', '1990-01-01', '33', 'Jakarta',
+                    'Jl. Contoh No. 123', '001', '001', '12345', '31', 'DKI Jakarta', '3171', 'Jakarta Pusat', '317101', 'Gambir', '31710101', 'Gambir',
+                    'Kepala Keluarga', 'Kawin Tercatat', 'SLTA/SMA/Sederajat', 'Islam', 'Pegawai Negeri Sipil', 'A',
+                    'Ada', '1234567890123456', 'Ada', '1234567890123457', 'Tidak Ada', '', 'John Father', 'Jane Mother', '1234567890123456', '1234567890123457'
+                ]
+            ];
 
-        if (!file_exists($filePath)) {
+            $filename = 'template_biodata_' . date('Ymd_His') . '.xlsx';
+            return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\CitizensExport($templateData, true), $filename);
+        } catch (\Exception $e) {
+            Log::error('Error creating template: ' . $e->getMessage());
             return redirect()->route('superadmin.biodata.index')
-                ->with('error', 'Template tidak ditemukan.');
+                ->with('error', 'Gagal membuat template: ' . $e->getMessage());
         }
-
-        return Response::download($filePath, 'template_biodata.xlsx', [
-            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        ]);
     }
 
     private function processNullableFields(&$data)

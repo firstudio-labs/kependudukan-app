@@ -68,18 +68,18 @@
                             {{ $ktp->signer ? $ktp->signer->judul : $ktp->signing }}
                         </td>
                         <td class="flex items-center px-6 py-4 space-x-2">
-                            @if($pengantarKtp->is_accepted)
+                            @if($ktp->is_accepted)
                                 <span class="text-green-600 font-semibold">Acceptance</span>
                             @endif
-                            <a href="{{ route('superadmin.surat.pengantar-ktp.pdf', $pengantarKtp->id) }}" class="text-blue-600 hover:text-blue-800" aria-label="Export PDF" target="_blank">
+                            <a href="{{ route('superadmin.surat.pengantar-ktp.pdf', $ktp->id) }}" class="text-blue-600 hover:text-blue-800" aria-label="Export PDF" target="_blank">
                                 <i class="fa-solid fa-file-pdf"></i>
                             </a>
-                            @if(!$pengantarKtp->is_accepted)
-                                <a href="{{ route('superadmin.surat.pengantar-ktp.edit', $pengantarKtp->id) }}" class="text-yellow-600 hover:text-yellow-800" aria-label="Edit">
+                            @if(!$ktp->is_accepted)
+                                <a href="{{ route('superadmin.surat.pengantar-ktp.edit', $ktp->id) }}" class="text-yellow-600 hover:text-yellow-800" aria-label="Edit">
                                     <i class="fa-solid fa-pen-to-square"></i>
                                 </a>
                             @endif
-                            <form action="{{ route('superadmin.surat.pengantar-ktp.delete', $pengantarKtp->id) }}" method="POST" onsubmit="return confirmDelete(event)">
+                            <form action="{{ route('superadmin.surat.pengantar-ktp.delete', $ktp->id) }}" method="POST" onsubmit="return confirmDelete(event)">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="font-medium text-red-600 hover:underline">

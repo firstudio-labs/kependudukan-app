@@ -378,8 +378,7 @@
                     icon: 'success',
                     title: 'Sukses!',
                     text: "{{ session('success') }}",
-                    timer: 3000,
-                    showConfirmButton: false
+                    confirmButtonColor: '#2D336B',
                 });
             @endif
 
@@ -388,8 +387,7 @@
                     icon: 'error',
                     title: 'Gagal!',
                     text: "{{ session('error') }}",
-                    timer: 3000,
-                    showConfirmButton: false
+                    confirmButtonColor: '#2D336B',
                 });
             @endif
 

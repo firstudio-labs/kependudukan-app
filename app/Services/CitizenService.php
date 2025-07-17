@@ -183,12 +183,17 @@ class CitizenService
                 $data['kk'] = (int) $data['kk'];
             }
 
+            Log::info('Updating citizen with NIK: ' . $nik . ', data: ' . json_encode($data));
+
             $response = Http::withHeaders([
                 'X-API-Key' => $this->apiKey,
             ])->put("{$this->baseUrl}/api/citizens/{$nik}", $data);
 
-            // dd($response->body());
+            Log::info('API response status: ' . $response->status());
+            Log::info('API response body: ' . $response->body());
+
             if ($response->successful()) {
+                Log::info('Citizen updated successfully');
                 return $response->json();
             } else {
                 Log::error('API request failed: ' . $response->status());
@@ -196,7 +201,7 @@ class CitizenService
             }
         } catch (\Exception $e) {
             Log::error('Error updating citizen: ' . $e->getMessage());
-            return ['status' => 'ERROR', 'message' => 'Error updating citizen'];
+            return ['status' => 'ERROR', 'message' => 'Error updating citizen: ' . $e->getMessage()];
         }
     }
 
@@ -289,6 +294,8 @@ class CitizenService
     public function createCitizen($data)
     {
         try {
+            Log::info('Creating citizen with data: ' . json_encode($data));
+
             $response = Http::timeout(10) // Reduced timeout
                 ->withHeaders([
                     'X-API-Key' => $this->apiKey,
@@ -296,21 +303,28 @@ class CitizenService
                     'Accept' => 'application/json'
                 ])->post("{$this->baseUrl}/api/citizens", $data);
 
+            Log::info('API response status: ' . $response->status());
+            Log::info('API response body: ' . $response->body());
+
             if ($response->successful()) {
+                Log::info('Citizen created successfully');
                 return [
                     'status' => 'CREATED',
                     'message' => 'Data berhasil disimpan'
                 ];
             }
 
+            $errorMessage = $response->json()['message'] ?? 'Gagal menyimpan data';
+            Log::error('Failed to create citizen: ' . $errorMessage);
             return [
                 'status' => 'ERROR',
-                'message' => $response->json()['message'] ?? 'Gagal menyimpan data'
+                'message' => $errorMessage
             ];
         } catch (\Exception $e) {
+            Log::error('Exception creating citizen: ' . $e->getMessage());
             return [
                 'status' => 'ERROR',
-                'message' => 'Terjadi kesalahan sistem'
+                'message' => 'Terjadi kesalahan sistem: ' . $e->getMessage()
             ];
         }
     }

@@ -346,6 +346,7 @@ Route::middleware(['auth:web', 'role:superadmin'])->group(function () {
     Route::delete('/superadmin/surat/pengantar-ktp/{id}', [PengantarKtpController::class, 'destroy'])
         ->name('superadmin.surat.pengantar-ktp.delete');
     Route::get('/surat/pengantar-ktp/{id}/export-pdf', [PengantarKtpController::class, 'exportPDF'])->name('superadmin.surat.pengantar-ktp.export-pdf');
+    Route::get('/superadmin/surat/pengantar-ktp/{id}/pdf', [PengantarKtpController::class, 'exportPDF'])->name('superadmin.surat.pengantar-ktp.pdf');
 
     // Routes for Excel import
     Route::post('/superadmin/biodata/import', [BiodataController::class, 'import'])->name('superadmin.biodata.import');
@@ -917,3 +918,5 @@ Route::get('/citizens/administrasi', [AdministrasiController::class, 'fetchAllCi
 
 Route::post('/superadmin/datakk/store-family-members', [DataKKController::class, 'storeFamilyMembers'])
     ->name('superadmin.datakk.store-family-members');
+
+Route::post('/superadmin/biodata/import', [BiodataController::class, 'import'])->name('superadmin.biodata.import');
