@@ -99,8 +99,9 @@
                 <div>
                     <label for="fullNameSelect" class="block text-sm font-medium text-gray-700">Nama Lengkap <span class="text-red-500">*</span></label>
                     <select id="fullNameSelect" name="full_name" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
-                        <option value="">Pilih Nama Lengkap</option>
+                        <option value="">Ketik nama untuk mencari...</option>
                     </select>
+                    <p class="text-xs text-gray-500 mt-1">Ketik minimal 3 karakter untuk mencari nama</p>
                 </div>
 
                 <!-- Nomor Kartu Keluarga -->
@@ -132,8 +133,10 @@
                 <!-- RF ID Tag -->
                 <div>
                     <label for="rf_id_tag" class="block text-sm font-medium text-gray-700">RF ID Tag</label>
-                    <input type="text" id="rf_id_tag" name="rf_id_tag" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
-                    <small class="text-gray-500">Scan atau masukkan RF ID Tag</small>
+                    <input type="text" id="rf_id_tag" name="rf_id_tag"
+                           class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2 transition-colors duration-200"
+                           placeholder="Scan RF ID Tag">
+                    <p class="text-xs text-gray-500 mt-1">Masukkan RF ID Tag untuk mengisi data otomatis</p>
                 </div>
             </div>
 

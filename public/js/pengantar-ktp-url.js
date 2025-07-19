@@ -264,18 +264,46 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // Initialize Full Name Select2
+        // Initialize Full Name Select2 dengan minimum input length
         $('#fullNameSelect').select2({
-            placeholder: 'Pilih Nama Lengkap',
+            placeholder: 'Ketik nama untuk mencari...',
             width: '100%',
             data: nameOptions,
+            minimumInputLength: 3, // Minimal 3 karakter sebelum dropdown muncul
             language: {
                 noResults: function() {
                     return 'Tidak ada data yang ditemukan';
                 },
                 searching: function() {
                     return 'Mencari...';
+                },
+                inputTooShort: function() {
+                    return 'Ketik minimal 3 karakter untuk mencari';
                 }
+            },
+            // Tambahkan delay untuk mengurangi request berlebihan
+            delay: 300,
+            // Fungsi untuk filter data berdasarkan input
+            matcher: function(params, data) {
+                // Jika tidak ada input, jangan tampilkan hasil
+                if (!params.term) {
+                    return null;
+                }
+
+                // Jika input kurang dari 3 karakter, jangan tampilkan hasil
+                if (params.term.length < 3) {
+                    return null;
+                }
+
+                // Cari berdasarkan nama yang mengandung input
+                const term = params.term.toLowerCase();
+                const text = data.text.toLowerCase();
+
+                if (text.indexOf(term) > -1) {
+                    return data;
+                }
+
+                return null;
             }
         }).on("select2:open", function() {
             // This ensures all options are visible when dropdown opens
@@ -1054,28 +1082,47 @@ document.addEventListener('DOMContentLoaded', function() {
         const rfIdInput = document.getElementById('rf_id_tag');
         if (!rfIdInput) return;
 
+        // Tambahkan event untuk input dan paste
         rfIdInput.addEventListener('input', function() {
             const rfIdValue = this.value.trim();
             if (rfIdValue.length > 0) {
                 // Cari data warga dengan RF ID Tag yang sama
                 const matchedCitizen = citizens.find(citizen => {
+                    // Jika citizen tidak memiliki rf_id_tag, lewati
                     if (citizen.rf_id_tag === undefined || citizen.rf_id_tag === null) {
                         return false;
                     }
 
+                    // Konversi ke string dan normalisasi
                     const normalizedInput = rfIdValue.toString().replace(/^0+/, '').trim();
                     const normalizedStored = citizen.rf_id_tag.toString().replace(/^0+/, '').trim();
 
+                    // Cek kecocokan persis
                     const exactMatch = normalizedInput === normalizedStored;
+
+                    // Cek kecocokan sebagian (jika input adalah bagian dari rf_id_tag)
                     const partialMatch = normalizedStored.includes(normalizedInput) && normalizedInput.length >= 5;
 
+                    // Kembalikan true jika ada kecocokan persis atau sebagian
                     return exactMatch || partialMatch;
                 });
 
+                // Jika ditemukan, isi form
                 if (matchedCitizen) {
-                    // Update NIK and Name dropdowns
-                    $('#nikSelect').val(matchedCitizen.nik).trigger('change');
-                    $('#fullNameSelect').val(matchedCitizen.full_name).trigger('change');
+                    populateCitizenData(matchedCitizen);
+
+                    // Update dropdown NIK dan Nama dengan trigger yang benar
+                    if ($('#nikSelect').length) {
+                        $('#nikSelect').val(matchedCitizen.nik).trigger('change.select2');
+                    }
+                    if ($('#fullNameSelect').length) {
+                        $('#fullNameSelect').val(matchedCitizen.full_name).trigger('change.select2');
+                    }
+
+                    // Set domicile_address jika ada
+                    if (matchedCitizen.address && $('#domicile_address').length) {
+                        $('#domicile_address').val(matchedCitizen.address);
+                    }
 
                     // Feedback visual berhasil
                     $(rfIdInput).addClass('border-green-500').removeClass('border-red-500 border-gray-300');
@@ -1083,13 +1130,21 @@ document.addEventListener('DOMContentLoaded', function() {
                         $(rfIdInput).removeClass('border-green-500').addClass('border-gray-300');
                     }, 2000);
                 } else if (rfIdValue.length >= 5) {
-                    // Feedback visual tidak ditemukan
+                    // Feedback visual tidak ditemukan (hanya untuk input yang cukup panjang)
                     $(rfIdInput).addClass('border-red-500').removeClass('border-green-500 border-gray-300');
                     setTimeout(() => {
                         $(rfIdInput).removeClass('border-red-500').addClass('border-gray-300');
                     }, 2000);
                 }
             }
+        });
+
+        // Tambahkan event untuk paste
+        rfIdInput.addEventListener('paste', function() {
+            // Trigger input event after paste
+            setTimeout(() => {
+                this.dispatchEvent(new Event('input'));
+            }, 10);
         });
     }
 
