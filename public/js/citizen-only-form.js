@@ -93,12 +93,17 @@ function initializeCitizenSelect(routeUrl, onDataLoaded = null) {
                 if (matchedCitizen) {
                     populateCitizenData(matchedCitizen);
 
-                    // Update dropdown NIK dan Nama
+                    // Update dropdown NIK dan Nama dengan trigger yang benar
                     if ($('#nikSelect').length) {
-                        $('#nikSelect').val(matchedCitizen.nik).trigger('change');
+                        $('#nikSelect').val(matchedCitizen.nik).trigger('change.select2');
                     }
                     if ($('#fullNameSelect').length) {
-                        $('#fullNameSelect').val(matchedCitizen.full_name).trigger('change');
+                        $('#fullNameSelect').val(matchedCitizen.full_name).trigger('change.select2');
+                    }
+
+                    // Set domicile_address jika ada
+                    if (matchedCitizen.address && $('#domicile_address').length) {
+                        $('#domicile_address').val(matchedCitizen.address);
                     }
 
                     // Feedback visual berhasil
