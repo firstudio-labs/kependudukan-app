@@ -100,6 +100,13 @@
                         <option value="7">Lainnya</option>
                     </select>
                 </div>
+                <div>
+                    <label for="father_rf_id_tag" class="block text-sm font-medium text-gray-700">RF ID Tag Ayah</label>
+                    <input type="text" id="father_rf_id_tag" name="father_rf_id_tag"
+                           class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2 transition-colors duration-200"
+                           placeholder="Scan RF ID Tag Ayah">
+                    <p class="text-xs text-gray-500 mt-1">Masukkan RF ID Tag Ayah untuk mengisi data otomatis</p>
+                </div>
             </div>
 
             <div class="mt-2">
@@ -166,6 +173,14 @@
                         <option value="7">Lainnya</option>
                     </select>
                 </div>
+
+                <div>
+                    <label for="mother_rf_id_tag" class="block text-sm font-medium text-gray-700">RF ID Tag Ibu</label>
+                    <input type="text" id="mother_rf_id_tag" name="mother_rf_id_tag"
+                           class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2 transition-colors duration-200"
+                           placeholder="Scan RF ID Tag Ibu">
+                    <p class="text-xs text-gray-500 mt-1">Masukkan RF ID Tag Ibu untuk mengisi data otomatis</p>
+                </div>
             </div>
 
             <div class="mt-2">
@@ -228,6 +243,12 @@
                 <textarea id="child_address" name="child_address" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required></textarea>
             </div>
 
+            <!-- Di bagian Data Ayah, setelah field agama (sekitar baris 85), tambahkan: -->
+
+
+            <!-- Di bagian Data Ibu, setelah field agama (sekitar baris 145), tambahkan: -->
+
+
             <div class="mt-6 flex justify-end space-x-4">
                 <button type="button" onclick="window.history.back()" class="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-lg">
                     Batal
@@ -242,6 +263,7 @@
 
 <script src="{{ asset('js/sweet-alert-utils.js') }}"></script>
 <script src="{{ asset('js/citizen-only-form.js') }}"></script>
+<script src="{{ asset('js/birth-certificate-url.js') }}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Initialize parent select fields
