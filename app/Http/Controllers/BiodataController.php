@@ -145,7 +145,7 @@ class BiodataController extends Controller
                 'divorce_certificate_date' => 'nullable|date',
                 'family_status' => 'required|integer|in:1,2,3,4,5,6,7',
                 'mental_disorders' => 'required|integer|in:1,2',
-                'disabilities' => 'nullable|integer|in:1,2,3,4,5,6',
+                'disabilities' => 'nullable|integer|in:0,1,2,3,4,5,6',
                 'education_status' => 'required|integer|in:1,2,3,4,5,6,7,8,9,10',
                 'job_type_id' => 'required|integer',
                 'nik_mother' => 'nullable|string|size:16',
@@ -220,6 +220,9 @@ class BiodataController extends Controller
             return back()->with('error', 'Data tidak ditemukan');
         }
 
+        // Normalize select values to ensure they are numeric for the form
+        $this->normalizeSelectValues($citizen['data']);
+
         // Format date fields to yyyy-MM-dd for HTML date inputs
         $this->formatDatesForView($citizen['data']);
 
@@ -286,7 +289,7 @@ class BiodataController extends Controller
                 'divorce_certificate_date' => 'nullable|date',
                 'family_status' => 'required|integer|in:1,2,3,4,5,6,7',
                 'mental_disorders' => 'required|integer|in:1,2',
-                'disabilities' => 'nullable|integer|in:1,2,3,4,5,6',
+                'disabilities' => 'nullable|integer|in:0,1,2,3,4,5,6',
                 'education_status' => 'required|integer|in:1,2,3,4,5,6,7,8,9,10',
                 'job_type_id' => 'required|integer',
                 'nik_mother' => 'nullable|string|size:16',
@@ -468,35 +471,32 @@ class BiodataController extends Controller
 
     private function normalizeSelectValues(&$data)
     {
-        $genderMap = ['Laki-Laki' => 1, 'Perempuan' => 2];
-        $citizenStatusMap = ['WNI' => 1, 'WNA' => 2];
-        $certificateMap = ['Ada' => 1, 'Tidak Ada' => 2];
+        $genderMap = [
+            'Laki-Laki' => 1, 'Laki-laki' => 1, 'Perempuan' => 2,
+            'laki-laki' => 1, 'laki-laki' => 1, 'perempuan' => 2,
+            'LAKI-LAKI' => 1, 'PEREMPUAN' => 2
+        ];
+        $citizenStatusMap = ['WNI' => 2, 'WNA' => 1, 'wni' => 2, 'wna' => 1];
+        $certificateMap = [
+            'Ada' => 1, 'Tidak Ada' => 2,
+            'ada' => 1, 'tidak ada' => 2,
+            'ADA' => 1, 'TIDAK ADA' => 2
+        ];
         $bloodTypeMap = [
-            'A' => 1,
-            'B' => 2,
-            'AB' => 3,
-            'O' => 4,
-            'A+' => 5,
-            'A-' => 6,
-            'B+' => 7,
-            'B-' => 8,
-            'AB+' => 9,
-            'AB-' => 10,
-            'O+' => 11,
-            'O-' => 12,
-            'Tidak Tahu' => 13
+            'A' => 1, 'B' => 2, 'AB' => 3, 'O' => 4,
+            'A+' => 5, 'A-' => 6, 'B+' => 7, 'B-' => 8,
+            'AB+' => 9, 'AB-' => 10, 'O+' => 11, 'O-' => 12, 'Tidak Tahu' => 13,
+            'a' => 1, 'b' => 2, 'ab' => 3, 'o' => 4,
+            'a+' => 5, 'a-' => 6, 'b+' => 7, 'b-' => 8,
+            'ab+' => 9, 'ab-' => 10, 'o+' => 11, 'o-' => 12, 'tidak tahu' => 13
         ];
         $religionMap = [
-            'Islam' => 1,
-            'Kristen' => 2,
-            'Katolik' => 3,
-            'Katholik' => 3,
-            'Hindu' => 4,
-            'Buddha' => 5,
-            'Budha' => 5,
-            'Kong Hu Cu' => 6,
-            'Konghucu' => 6,
-            'Lainnya' => 7
+            'Islam' => 1, 'Kristen' => 2, 'Katolik' => 3, 'Katholik' => 3,
+            'Hindu' => 4, 'Buddha' => 5, 'Budha' => 5,
+            'Kong Hu Cu' => 6, 'Konghucu' => 6, 'Lainnya' => 7,
+            'islam' => 1, 'kristen' => 2, 'katolik' => 3, 'katholik' => 3,
+            'hindu' => 4, 'buddha' => 5, 'budha' => 5,
+            'kong hu cu' => 6, 'konghucu' => 6, 'lainnya' => 7
         ];
         $maritalStatusMap = [
             'Belum Kawin' => 1,
@@ -504,23 +504,22 @@ class BiodataController extends Controller
             'Kawin Belum Tercatat' => 3,
             'Cerai Hidup Tercatat' => 4,
             'Cerai Hidup Belum Tercatat' => 5,
-            'Cerai Mati' => 6
+            'Cerai Mati' => 6,
+            'BELUM KAWIN' => 1,
+            'KAWIN TERCATAT' => 2,
+            'KAWIN BELUM TERCATAT' => 3,
+            'CERAI HIDUP TERCATAT' => 4,
+            'CERAI HIDUP BELUM TERCATAT' => 5,
+            'CERAI MATI' => 6
         ];
         $familyStatusMap = [
-            'ANAK' => 1,
-            'Anak' => 1,
-            'KEPALA KELUARGA' => 2,
-            'Kepala Keluarga' => 2,
-            'ISTRI' => 3,
-            'Istri' => 3,
-            'ORANG TUA' => 4,
-            'Orang Tua' => 4,
-            'MERTUA' => 5,
-            'Mertua' => 5,
-            'CUCU' => 6,
-            'Cucu' => 6,
-            'FAMILI LAIN' => 7,
-            'Famili Lain' => 7
+            'ANAK' => 1, 'Anak' => 1, 'anak' => 1,
+            'KEPALA KELUARGA' => 2, 'Kepala Keluarga' => 2, 'kepala keluarga' => 2,
+            'ISTRI' => 3, 'Istri' => 3, 'istri' => 3,
+            'ORANG TUA' => 4, 'Orang Tua' => 4, 'orang tua' => 4,
+            'MERTUA' => 5, 'Mertua' => 5, 'mertua' => 5,
+            'CUCU' => 6, 'Cucu' => 6, 'cucu' => 6,
+            'FAMILI LAIN' => 7, 'Famili Lain' => 7, 'famili lain' => 7
         ];
         $disabilitiesMap = [
             'Fisik' => 1,
@@ -534,13 +533,25 @@ class BiodataController extends Controller
             'Tidak/Belum Sekolah' => 1,
             'Belum tamat SD/Sederajat' => 2,
             'Tamat SD' => 3,
+            'Tamat SD/Sederajat' => 3,
             'SLTP/SMP/Sederajat' => 4,
             'SLTA/SMA/Sederajat' => 5,
             'Diploma I/II' => 6,
             'Akademi/Diploma III/ Sarjana Muda' => 7,
             'Diploma IV/ Strata I/ Strata II' => 8,
             'Strata III' => 9,
-            'Lainnya' => 10
+            'Lainnya' => 10,
+            'tidak/belum sekolah' => 1,
+            'belum tamat sd/sederajat' => 2,
+            'tamat sd' => 3,
+            'tamat sd/sederajat' => 3,
+            'sltp/smp/sederajat' => 4,
+            'slta/sma/sederajat' => 5,
+            'diploma i/ii' => 6,
+            'akademi/diploma iii/ sarjana muda' => 7,
+            'diploma iv/ strata i/ strata ii' => 8,
+            'strata iii' => 9,
+            'lainnya' => 10
         ];
 
         $fieldsToNormalize = [
@@ -559,16 +570,64 @@ class BiodataController extends Controller
         ];
 
         foreach ($fieldsToNormalize as $field => $mapping) {
-            if (isset($data[$field]) && is_string($data[$field])) {
+            if (isset($data[$field])) {
                 $value = trim($data[$field]);
 
+                // If it's already numeric, keep it as is
+                if (is_numeric($value)) {
+                    $data[$field] = (int)$value;
+                    continue;
+                }
+
+                // Try to map string values to numeric
                 if (array_key_exists($value, $mapping)) {
                     $data[$field] = $mapping[$value];
                     Log::info("Normalized {$field} from '{$value}' to {$data[$field]}");
-                } else if (is_numeric($value)) {
-                    $data[$field] = (int)$value;
                 } else if (!empty($value)) {
                     Log::warning("Could not normalize {$field} value: '{$value}'");
+                    // Set default values for unknown string values
+                    switch ($field) {
+                        case 'gender':
+                            $data[$field] = 1; // Default to Laki-laki
+                            break;
+                        case 'citizen_status':
+                            $data[$field] = 2; // Default to WNI
+                            break;
+                        case 'birth_certificate':
+                        case 'marital_certificate':
+                        case 'divorce_certificate':
+                        case 'mental_disorders':
+                            $data[$field] = 2; // Default to Tidak Ada
+                            break;
+                        case 'blood_type':
+                            $data[$field] = 13; // Default to Tidak Tahu
+                            break;
+                        case 'religion':
+                            $data[$field] = 1; // Default to Islam
+                            break;
+                        case 'marital_status':
+                            $data[$field] = 1; // Default to Belum Kawin
+                            break;
+                        case 'family_status':
+                            $data[$field] = 2; // Default to Kepala Keluarga
+                            break;
+                        case 'disabilities':
+                            $data[$field] = null; // Default to null (Tidak Ada)
+                            break;
+                        case 'education_status':
+                            $data[$field] = 1; // Default to Tidak/Belum Sekolah
+                            break;
+                    }
+                } else {
+                    // Handle empty values
+                    switch ($field) {
+                        case 'disabilities':
+                            $data[$field] = null; // Empty disabilities = null
+                            break;
+                        default:
+                            // Keep existing logic for other fields
+                            break;
+                    }
                 }
             }
         }
@@ -748,9 +807,18 @@ class BiodataController extends Controller
 
     private function processNullableFields(&$data)
     {
-        $nullableIntegerFields = ['marital_status', 'marital_certificate', 'divorce_certificate', 'postal_code', 'disabilities'];
+        $nullableIntegerFields = ['marital_status', 'marital_certificate', 'divorce_certificate', 'postal_code'];
         foreach ($nullableIntegerFields as $field) {
             $data[$field] = empty($data[$field]) ? 0 : (int) $data[$field];
+        }
+
+        // Special handling for disabilities field
+        if (isset($data['disabilities'])) {
+            if (empty($data['disabilities']) || $data['disabilities'] == '0') {
+                $data['disabilities'] = null;
+            } else {
+                $data['disabilities'] = (int) $data['disabilities'];
+            }
         }
 
         $nullableStringFields = [

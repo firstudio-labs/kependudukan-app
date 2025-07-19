@@ -206,12 +206,20 @@ class CitizensImport implements ToCollection, WithHeadingRow, WithValidation
             'FAMILI LAIN' => 7, 'Famili Lain' => 7, 'famili lain' => 7
         ];
         $disabilitiesMap = [
+            'Tidak Ada' => 0,
             'Fisik' => 1,
             'Netra/Buta' => 2,
             'Rungu/Wicara' => 3,
             'Mental/Jiwa' => 4,
             'Fisik dan Mental' => 5,
-            'Lainnya' => 6
+            'Lainnya' => 6,
+            'tidak ada' => 0,
+            'fisik' => 1,
+            'netra/buta' => 2,
+            'rungu/wicara' => 3,
+            'mental/jiwa' => 4,
+            'fisik dan mental' => 5,
+            'lainnya' => 6
         ];
 
         // Ambil mapping pekerjaan dari API (cache di static agar tidak bolak-balik request)
@@ -251,7 +259,7 @@ class CitizensImport implements ToCollection, WithHeadingRow, WithValidation
             'divorce_certificate' => isset($certificateMap[$get('akta_cerai', '')]) ? $certificateMap[$get('akta_cerai', '')] : (int) $get('akta_cerai', 2),
             'family_status' => isset($familyStatusMap[$get('shdk', '')]) ? $familyStatusMap[$get('shdk', '')] : (int) $get('shdk', 2),
             'mental_disorders' => 2, // Otomatis 2 (Tidak Ada) jika tidak ada kolom
-            'disabilities' => isset($disabilitiesMap[$get('disabilities', '')]) ? $disabilitiesMap[$get('disabilities', '')] : (isset($row['disabilities']) ? (int) $row['disabilities'] : 0),
+            'disabilities' => isset($disabilitiesMap[$get('disabilities', '')]) ? $disabilitiesMap[$get('disabilities', '')] : (isset($row['disabilities']) ? (int) $row['disabilities'] : null),
             'education_status' => $this->mapEducationStatus($get('pendidikan', '')),
             'birth_date' => $this->formatDate($get('tanggal_lahir', '')),
             'birth_place' => $get('tempat_lahir', ''),
