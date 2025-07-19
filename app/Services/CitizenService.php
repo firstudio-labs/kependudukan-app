@@ -118,21 +118,12 @@ class CitizenService
     public function getAllCitizensWithHighLimit($search = null)
     {
         try {
-            Log::info('Requesting citizens data with high limit');
-
             $response = Http::withHeaders([
                 'X-API-Key' => $this->apiKey,
             ])->get("{$this->baseUrl}/api/all-citizens");
 
             if ($response->successful()) {
                 $data = $response->json();
-                Log::info('API responded successfully', [
-                    'status_code' => $response->status(),
-                    'has_data' => isset($data['data']),
-                    'data_structure' => json_encode(array_keys($data)),
-                    'citizens_type' => isset($data['citizens']) ? gettype($data['citizens']) : 'not set',
-                    'citizen_count' => isset($data['citizens']) ? count($data['citizens']) : 'N/A'
-                ]);
 
                 // Check different possible structures for the response
                 if (isset($data['citizens']) && is_array($data['citizens'])) {
@@ -183,17 +174,11 @@ class CitizenService
                 $data['kk'] = (int) $data['kk'];
             }
 
-            Log::info('Updating citizen with NIK: ' . $nik . ', data: ' . json_encode($data));
-
             $response = Http::withHeaders([
                 'X-API-Key' => $this->apiKey,
             ])->put("{$this->baseUrl}/api/citizens/{$nik}", $data);
 
-            Log::info('API response status: ' . $response->status());
-            Log::info('API response body: ' . $response->body());
-
             if ($response->successful()) {
-                Log::info('Citizen updated successfully');
                 return $response->json();
             } else {
                 Log::error('API request failed: ' . $response->status());
@@ -227,14 +212,10 @@ class CitizenService
     public function getFamilyMembersByKK($kk)
     {
         try {
-            // Add logging for debugging
-            Log::info('Fetching family members for KK: ' . $kk);
-
             $cacheKey = "family_members_kk_{$kk}";
 
             // Try to get from cache first
             if (Cache::has($cacheKey)) {
-                Log::info('Returning family members from cache for KK: ' . $kk);
                 return Cache::get($cacheKey);
             }
 
@@ -244,11 +225,6 @@ class CitizenService
 
             if ($response->successful()) {
                 $result = $response->json();
-
-                // Log the count of family members found
-                if (isset($result['data']) && is_array($result['data'])) {
-                    Log::info('Found ' . count($result['data']) . ' family members for KK: ' . $kk);
-                }
 
                 // Cache the result for 5 minutes
                 Cache::put($cacheKey, $result, now()->addMinutes(5));
@@ -270,19 +246,15 @@ class CitizenService
             // Convert to integer to ensure consistent format
             $nik = (int) $nik;
 
-            Log::info('Making API request to get citizen by NIK: ' . $nik);
-
             $response = Http::withHeaders([
                 'X-API-Key' => $this->apiKey,
             ])->get("{$this->baseUrl}/api/citizens/{$nik}");
 
             if ($response->successful()) {
                 $result = $response->json();
-                Log::info('Successful API response for NIK: ' . $nik);
                 return $result;
             } else {
                 Log::error('API request failed for NIK: ' . $nik . ', Status: ' . $response->status());
-                Log::error('Response body: ' . $response->body());
                 return null;
             }
         } catch (\Exception $e) {
@@ -294,20 +266,14 @@ class CitizenService
     public function createCitizen($data)
     {
         try {
-            Log::info('Creating citizen with data: ' . json_encode($data));
-
-            $response = Http::timeout(10) // Reduced timeout
+            $response = Http::timeout(10)
                 ->withHeaders([
                     'X-API-Key' => $this->apiKey,
                     'Content-Type' => 'application/json',
                     'Accept' => 'application/json'
                 ])->post("{$this->baseUrl}/api/citizens", $data);
 
-            Log::info('API response status: ' . $response->status());
-            Log::info('API response body: ' . $response->body());
-
             if ($response->successful()) {
-                Log::info('Citizen created successfully');
                 return [
                     'status' => 'CREATED',
                     'message' => 'Data berhasil disimpan'
@@ -429,8 +395,6 @@ class CitizenService
         }
     }
 
-
-
     /**
      * Filter citizens by village ID manually (fallback method)
      *
@@ -460,8 +424,8 @@ class CitizenService
         });
 
         $totalItems = count($filteredCitizens);
-    $offset = ($page - 1) * $limit;
-    $pagedCitizens = array_slice($filteredCitizens, $offset, $limit);
+        $offset = ($page - 1) * $limit;
+        $pagedCitizens = array_slice($filteredCitizens, $offset, $limit);
 
         // Kembalikan format yang sama dengan API
         return [

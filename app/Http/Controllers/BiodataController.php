@@ -586,14 +586,6 @@ class BiodataController extends Controller
             $import = new CitizensImport($this->citizenService);
             Excel::import($import, $request->file('excel_file'));
 
-            // Log import summary
-            Log::info('Import completed', [
-                'total_processed' => $import->processedRows,
-                'success_count' => $import->successCount,
-                'skipped_rows' => $import->skippedRows,
-                'error_count' => count($import->errors)
-            ]);
-
             if (count($import->errors) > 0) {
                 $errorMessages = "<ul class='text-left'>";
                 foreach ($import->errors as $error) {
@@ -608,20 +600,44 @@ class BiodataController extends Controller
                 $summaryMessage .= "• Jumlah error: " . count($import->errors) . "<br><br>";
                 $summaryMessage .= "Detail error:";
 
-                return redirect()->route('superadmin.biodata.index')
+                // Preserve current page and search parameters
+                $redirectParams = [];
+                if ($request->has('current_page')) {
+                    $redirectParams['page'] = $request->input('current_page');
+                }
+                if ($request->has('current_search')) {
+                    $redirectParams['search'] = $request->input('current_search');
+                }
+
+                return redirect()->route('superadmin.biodata.index', $redirectParams)
                     ->with('import_errors', $summaryMessage . $errorMessages);
             }
 
-            $successMessage = "Import data berhasil!<br>";
-            $successMessage .= "• Total baris diproses: {$import->processedRows}<br>";
-            $successMessage .= "• Berhasil diimport: {$import->successCount}<br>";
-            $successMessage .= "• Baris yang dilewati: {$import->skippedRows}";
+            $successMessage = "Data berhasil diimport";
 
-            return redirect()->route('superadmin.biodata.index')
+            // Preserve current page and search parameters
+            $redirectParams = [];
+            if ($request->has('current_page')) {
+                $redirectParams['page'] = $request->input('current_page');
+            }
+            if ($request->has('current_search')) {
+                $redirectParams['search'] = $request->input('current_search');
+            }
+
+            return redirect()->route('superadmin.biodata.index', $redirectParams)
                 ->with('success', $successMessage);
         } catch (\Exception $e) {
             Log::error('Import failed with exception: ' . $e->getMessage());
-            return redirect()->route('superadmin.biodata.index')
+            // Preserve current page and search parameters
+            $redirectParams = [];
+            if ($request->has('current_page')) {
+                $redirectParams['page'] = $request->input('current_page');
+            }
+            if ($request->has('current_search')) {
+                $redirectParams['search'] = $request->input('current_search');
+            }
+
+            return redirect()->route('superadmin.biodata.index', $redirectParams)
                 ->with('error', 'Gagal import data: ' . $e->getMessage());
         }
     }

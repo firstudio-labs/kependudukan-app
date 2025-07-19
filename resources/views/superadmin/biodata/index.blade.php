@@ -320,6 +320,8 @@
                 <!-- Modal Body -->
                 <div class="p-4 md:p-5">
                     <form method="POST" action="{{ route('superadmin.biodata.import') }}" enctype="multipart/form-data">
+                        <input type="hidden" name="current_page" value="{{ request('page', 1) }}">
+                        <input type="hidden" name="current_search" value="{{ request('search', '') }}">
                         @csrf
                         <div class="mb-4">
                             <label for="excel_file" class="block text-sm font-medium text-gray-700 mb-2">Pilih File Excel</label>
@@ -379,6 +381,9 @@
                     title: 'Sukses!',
                     text: "{{ session('success') }}",
                     confirmButtonColor: '#2D336B',
+                    timer: 3000,
+                    timerProgressBar: true,
+                    showConfirmButton: false
                 });
             @endif
 
@@ -388,6 +393,9 @@
                     title: 'Gagal!',
                     text: "{{ session('error') }}",
                     confirmButtonColor: '#2D336B',
+                    timer: 5000,
+                    timerProgressBar: true,
+                    showConfirmButton: false
                 });
             @endif
 
@@ -397,6 +405,9 @@
                     title: 'Import Error',
                     html: "{!! session('import_errors') !!}",
                     confirmButtonColor: '#2D336B',
+                    timer: 8000,
+                    timerProgressBar: true,
+                    showConfirmButton: false
                 });
             @endif
         });
