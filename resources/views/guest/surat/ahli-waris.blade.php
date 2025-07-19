@@ -103,6 +103,12 @@
                                 </select>
                             </div>
 
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">RF ID Tag</label>
+                                <input type="text" name="rf_id_tag[]" class="rf-id-tag mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2 transition-colors duration-200" placeholder="Scan RF ID Tag">
+                                <p class="text-xs text-gray-500 mt-1">Masukkan RF ID Tag untuk mengisi data otomatis</p>
+                            </div>
+
                             <div class="sm:col-span-2">
                                 <label class="block text-sm font-medium text-gray-700">Alamat <span class="text-red-500">*</span></label>
                                 <textarea name="address[]" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required></textarea>
