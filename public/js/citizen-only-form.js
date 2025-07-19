@@ -194,18 +194,46 @@ function initializeCitizenSelect(routeUrl, onDataLoaded = null) {
             }
         });
 
-        // Initialize Full Name Select2
+        // Initialize Full Name Select2 dengan minimum input length
         $('#fullNameSelect').select2({
-            placeholder: 'Pilih Nama Lengkap',
+            placeholder: 'Ketik nama untuk mencari...',
             width: '100%',
             data: nameOptions,
+            minimumInputLength: 3, // Minimal 3 karakter sebelum dropdown muncul
             language: {
                 noResults: function() {
                     return 'Tidak ada data yang ditemukan';
                 },
                 searching: function() {
                     return 'Mencari...';
+                },
+                inputTooShort: function() {
+                    return 'Ketik minimal 3 karakter untuk mencari';
                 }
+            },
+            // Tambahkan delay untuk mengurangi request berlebihan
+            delay: 300,
+            // Fungsi untuk filter data berdasarkan input
+            matcher: function(params, data) {
+                // Jika tidak ada input, jangan tampilkan hasil
+                if (!params.term) {
+                    return null;
+                }
+
+                // Jika input kurang dari 3 karakter, jangan tampilkan hasil
+                if (params.term.length < 3) {
+                    return null;
+                }
+
+                // Cari berdasarkan nama yang mengandung input
+                const term = params.term.toLowerCase();
+                const text = data.text.toLowerCase();
+
+                if (text.indexOf(term) > -1) {
+                    return data;
+                }
+
+                return null;
             }
         }).on("select2:open", function() {
             // This ensures all options are visible when dropdown opens
