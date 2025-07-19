@@ -920,3 +920,80 @@ Route::post('/superadmin/datakk/store-family-members', [DataKKController::class,
     ->name('superadmin.datakk.store-family-members');
 
 Route::post('/superadmin/biodata/import', [BiodataController::class, 'import'])->name('superadmin.biodata.import');
+
+// Route untuk testing citizen data dengan village_id
+Route::get('/test/citizens/{village_id}', function($villageId) {
+    $citizenService = app(\App\Services\CitizenService::class);
+    $response = $citizenService->getAllCitizensWithHighLimit();
+
+    // Filter berdasarkan village_id
+    $citizens = [];
+    if (isset($response['data']['citizens'])) {
+        $citizens = array_filter($response['data']['citizens'], function($citizen) use ($villageId) {
+            $citizenVillageId = $citizen['village_id'] ??
+                               $citizen['villages_id'] ??
+                               $citizen['sub_district_id'] ??
+                               null;
+            return $citizenVillageId == $villageId;
+        });
+    }
+
+    return response()->json([
+        'village_id' => $villageId,
+        'total_citizens' => count($citizens),
+        'sample_citizens' => array_slice($citizens, 0, 5),
+        'debug' => [
+            'api_response_structure' => array_keys($response),
+            'has_citizens' => isset($response['data']['citizens']),
+            'total_from_api' => isset($response['data']['citizens']) ? count($response['data']['citizens']) : 0
+        ]
+    ]);
+})->name('test.citizens');
+
+// Route untuk testing struktur data
+Route::get('/test/data-structure/{village_id}', function($villageId) {
+    $citizenService = app(\App\Services\CitizenService::class);
+    $response = $citizenService->getAllCitizensWithHighLimit();
+
+    // Log response structure
+    \Log::info('Test data structure API response', [
+        'village_id' => $villageId,
+        'response_keys' => array_keys($response),
+        'has_data' => isset($response['data']),
+        'data_type' => isset($response['data']) ? gettype($response['data']) : 'not_set'
+    ]);
+
+    // Extract citizens
+    $citizens = [];
+    if (isset($response['data']) && isset($response['data']['citizens'])) {
+        $citizens = $response['data']['citizens'];
+    } elseif (isset($response['data']) && is_array($response['data'])) {
+        $citizens = $response['data'];
+    }
+
+    // Filter by village_id
+    $filteredCitizens = [];
+    foreach ($citizens as $citizen) {
+        $citizenVillageId = $citizen['village_id'] ??
+                           $citizen['villages_id'] ??
+                           $citizen['sub_district_id'] ??
+                           null;
+
+        if ($citizenVillageId == $villageId) {
+            $filteredCitizens[] = $citizen;
+        }
+    }
+
+    return response()->json([
+        'village_id' => $villageId,
+        'total_citizens' => count($filteredCitizens),
+        'sample_citizens' => array_slice($filteredCitizens, 0, 3),
+        'debug' => [
+            'api_response_structure' => array_keys($response),
+            'has_citizens' => isset($response['data']['citizens']),
+            'total_from_api' => isset($response['data']['citizens']) ? count($response['data']['citizens']) : 0,
+            'sample_original_citizen' => isset($response['data']['citizens']) && !empty($response['data']['citizens']) ? $response['data']['citizens'][0] : null,
+            'filtered_structure' => !empty($filteredCitizens) ? array_keys($filteredCitizens[0]) : []
+        ]
+    ]);
+})->name('test.data.structure');

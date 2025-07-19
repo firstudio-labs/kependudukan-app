@@ -318,51 +318,79 @@ class AdministrasiController extends Controller
     {
         // Get search parameters
         $search = $request->input('search');
+        $villageId = $request->input('village_id');
+
+        // Log minimal untuk debugging
+        \Log::info('fetchAllCitizens called', [
+            'search' => $search,
+            'village_id' => $villageId
+        ]);
 
         // Use cache for non-search queries to improve performance
-        $cacheKey = "admin_citizens_all";
+        $cacheKey = "admin_citizens_all" . ($villageId ? "_village_{$villageId}" : "");
 
         // Only use cache for non-search queries
         if (!$search && Cache::has($cacheKey)) {
             return response()->json(Cache::get($cacheKey));
         }
 
-        // Use getAllCitizensWithHighLimit to get all citizens without pagination limits
+        // Ambil semua data citizen dari API (tanpa filter)
         $response = $search
             ? $this->citizenService->searchCitizens($search)
             : $this->citizenService->getAllCitizensWithHighLimit();
-
-        // Log the response to see what we're receiving
-        \Log::info('Citizens API response', [
-            'structure' => json_encode(array_keys($response)),
-            'hasData' => isset($response['data']),
-            'count' => isset($response['data']) && is_array($response['data']) ? count($response['data']) : 'N/A'
-        ]);
 
         // Extract citizens array from the response structure
         $citizens = [];
         $status = 'ERROR';
 
         if (isset($response['data']) && isset($response['data']['citizens']) && is_array($response['data']['citizens'])) {
-            // Format from API: { data: { citizens: [...] } }
             $citizens = $response['data']['citizens'];
             $status = 'OK';
         } elseif (isset($response['data']) && is_array($response['data'])) {
-            // Format directly: { data: [...] }
             $citizens = $response['data'];
             $status = 'OK';
         } elseif (isset($response['citizens']) && is_array($response['citizens'])) {
-            // Format: { citizens: [...] }
             $citizens = $response['citizens'];
             $status = 'OK';
         }
 
-        // Log the number of citizens extracted
-        \Log::info('Extracted citizens', ['count' => count($citizens)]);
+        // Filter citizens by village_id if provided (optimized)
+        if ($villageId && !empty($villageId)) {
+            $originalCount = count($citizens);
 
-        // Filter and include all fields needed for the administration form
-        $citizens = array_map(function($citizen) {
-            return [
+            // Optimized filtering
+            $filteredCitizens = array_filter($citizens, function($citizen) use ($villageId) {
+                $citizenVillageId = $citizen['village_id'] ??
+                                   $citizen['villages_id'] ??
+                                   $citizen['sub_district_id'] ??
+                                   null;
+                return $citizenVillageId == $villageId;
+            });
+
+            // Fallback jika tidak ada data yang cocok
+            if (empty($filteredCitizens)) {
+                \Log::warning('No citizens found for village_id, using all citizens as fallback', [
+                    'village_id' => $villageId,
+                    'total_citizens' => $originalCount
+                ]);
+                $filteredCitizens = $citizens;
+            } else {
+                \Log::info('Filtered citizens by village_id', [
+                    'villageId' => $villageId,
+                    'originalCount' => $originalCount,
+                    'filteredCount' => count($filteredCitizens)
+                ]);
+            }
+
+            $citizens = $filteredCitizens;
+        }
+
+        // Optimized processing - hanya log sample untuk debugging
+        $processedCitizens = [];
+        $sampleLogged = false;
+
+        foreach ($citizens as $citizen) {
+            $processedCitizen = [
                 'nik' => $citizen['nik'] ?? null,
                 'kk' => $citizen['kk'] ?? null,
                 'full_name' => $citizen['full_name'] ?? '',
@@ -379,17 +407,33 @@ class AdministrasiController extends Controller
                 'province_id' => $citizen['province_id'] ?? '',
                 'district_id' => $citizen['district_id'] ?? '',
                 'sub_district_id' => $citizen['sub_district_id'] ?? '',
-                'village_id' => $citizen['village_id'] ?? '',
+                'village_id' => $citizen['village_id'] ?? $citizen['villages_id'] ?? '',
                 'family_status' => $citizen['family_status'] ?? '',
                 'rf_id_tag' => $citizen['rf_id_tag'] ?? null,
             ];
-        }, $citizens);
+
+            // Log sample citizen hanya sekali untuk debugging
+            if (!$sampleLogged && (empty($processedCitizen['nik']) || empty($processedCitizen['full_name']))) {
+                \Log::warning('Sample citizen with missing required fields', [
+                    'original_citizen' => $citizen,
+                    'processed_citizen' => $processedCitizen
+                ]);
+                $sampleLogged = true;
+            }
+
+            $processedCitizens[] = $processedCitizen;
+        }
 
         // Prepare the response data
         $responseData = [
             'status' => $status,
-            'count' => count($citizens),
-            'data' => $citizens
+            'count' => count($processedCitizens),
+            'data' => array_values($processedCitizens), // Pastikan array
+            'debug' => [
+                'village_id_requested' => $villageId,
+                'total_citizens' => count($processedCitizens),
+                'filtered' => !empty($villageId)
+            ]
         ];
 
         // Cache non-search results for 15 minutes
@@ -592,5 +636,25 @@ class AdministrasiController extends Controller
             ]);
             return back()->with('error', 'Gagal menghasilkan PDF: ' . $e->getMessage());
         }
+    }
+
+    // Tambahkan method untuk cache management
+    private function getCacheKey($search, $villageId)
+    {
+        if ($search) {
+            return "admin_citizens_search_" . md5($search);
+        }
+
+        if ($villageId) {
+            return "admin_citizens_village_{$villageId}";
+        }
+
+        return "admin_citizens_all";
+    }
+
+    private function shouldUseCache($search)
+    {
+        // Hanya cache untuk non-search queries
+        return !$search;
     }
 }

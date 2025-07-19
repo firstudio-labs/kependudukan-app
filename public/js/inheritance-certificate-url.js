@@ -40,13 +40,18 @@ document.addEventListener('DOMContentLoaded', function() {
         showSweetAlert('error', 'Gagal!', error);
     }
 
-    // Load citizens data
+    // Get village_id from URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const villageId = urlParams.get('village_id');
+
+    // Load citizens data with village filter
     $.ajax({
         url: citizenApiRoute,
         type: 'GET',
         dataType: 'json',
         data: {
-            limit: 10000
+            limit: 10000,
+            village_id: villageId // Tambahkan filter village_id
         },
         headers: {
             'Accept': 'application/json',

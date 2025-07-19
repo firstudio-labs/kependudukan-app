@@ -37,13 +37,18 @@ document.addEventListener('DOMContentLoaded', function() {
         showSweetAlert('error', 'Gagal!', error);
     }
 
-    // Load citizens data
+    // Get village_id from URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const villageId = urlParams.get('village_id');
+
+    // Load citizens data with village filter
     $.ajax({
         url: citizenApiRoute,
         type: 'GET',
         dataType: 'json',
         data: {
-            limit: 10000
+            limit: 10000,
+            village_id: villageId // Tambahkan filter village_id
         },
         headers: {
             'Accept': 'application/json',
@@ -114,11 +119,11 @@ function setupRfIdTagListener(citizens) {
                 populateCitizenData(matchedCitizen);
 
                 // Update dropdown NIK dan Nama dengan trigger yang benar
-                if ($('#nik').length) {
-                    $('#nik').val(matchedCitizen.nik).trigger('change');
+                if ($('#nikSelect').length) {
+                    $('#nikSelect').val(matchedCitizen.nik).trigger('change');
                 }
-                if ($('#full_name').length) {
-                    $('#full_name').val(matchedCitizen.full_name).trigger('change');
+                if ($('#fullNameSelect').length) {
+                    $('#fullNameSelect').val(matchedCitizen.full_name).trigger('change');
                 }
 
                 // Set address jika ada
@@ -150,20 +155,25 @@ function setupRfIdTagListener(citizens) {
     });
 }
 
-// Function to setup NIK input
+// Function to setup NIK input - FIXED VERSION
 function setupNikInput(citizens) {
-    const nikInput = document.getElementById('nik');
+    const nikInput = document.getElementById('nikSelect'); // FIXED: Use correct ID
     if (!nikInput) {
         console.warn('NIK input element not found');
-            return;
-        }
+        return;
+    }
+
+    console.log('Setting up NIK input:', nikInput);
 
     // Add input event listener
     nikInput.addEventListener('input', function() {
         const nikValue = this.value.trim();
+        console.log('NIK input value:', nikValue);
 
         // Only process if NIK is exactly 16 digits
         if (nikValue.length === 16 && /^\d+$/.test(nikValue)) {
+            console.log('Processing NIK:', nikValue);
+
             // Find citizen with matching NIK
             const matchedCitizen = citizens.find(citizen => {
                 const citizenNik = citizen.nik ? citizen.nik.toString() : '';
@@ -171,11 +181,13 @@ function setupNikInput(citizens) {
             });
 
             if (matchedCitizen) {
+                console.log('Found citizen:', matchedCitizen);
+
                 // Fill form fields
                 populateCitizenData(matchedCitizen);
 
-                // Update full name select
-                $('#full_name').val(matchedCitizen.full_name).trigger('change');
+                // Update full name select - FIXED: Use correct ID
+                $('#fullNameSelect').val(matchedCitizen.full_name).trigger('change');
 
                 // Visual feedback for success
                 $(nikInput).addClass('border-green-500').removeClass('border-red-500 border-gray-300');
@@ -183,6 +195,8 @@ function setupNikInput(citizens) {
                     $(nikInput).removeClass('border-green-500').addClass('border-gray-300');
                 }, 2000);
             } else {
+                console.log('No citizen found for NIK:', nikValue);
+
                 // Show error alert for NIK not found
                 Swal.fire({
                     title: 'Data Tidak Ditemukan',
@@ -201,13 +215,15 @@ function setupNikInput(citizens) {
     });
 }
 
-// Function to setup name select
+// Function to setup name select - FIXED VERSION
 function setupNameSelect(citizens) {
-    const nameSelect = document.getElementById('full_name');
+    const nameSelect = document.getElementById('fullNameSelect'); // FIXED: Use correct ID
     if (!nameSelect) {
         console.warn('Name select element not found');
         return;
     }
+
+    console.log('Setting up name select:', nameSelect);
 
     // Create name options array
     const nameOptions = [];
@@ -224,7 +240,7 @@ function setupNameSelect(citizens) {
     });
 
     // Initialize Full Name Select2 dengan minimum input length
-    $('#full_name').select2({
+    $('#fullNameSelect').select2({
         placeholder: 'Ketik nama untuk mencari...',
         width: '100%',
         data: nameOptions,
@@ -270,12 +286,12 @@ function setupNameSelect(citizens) {
     });
 
     // When Full Name is selected, fill in other fields
-    $('#full_name').on('select2:select', function (e) {
+    $('#fullNameSelect').on('select2:select', function (e) {
         const citizen = e.params.data.citizen;
         if (citizen) {
-            // Set NIK in input
+            // Set NIK in input - FIXED: Use correct ID
             const nikValue = citizen.nik ? citizen.nik.toString() : '';
-            $('#nik').val(nikValue);
+            $('#nikSelect').val(nikValue);
 
             // Fill other form fields
             populateCitizenData(citizen);
@@ -283,7 +299,7 @@ function setupNameSelect(citizens) {
     });
 }
 
-// Function to setup responsible name select
+// Function to setup responsible name select - LEAVE AS IS
 function setupResponsibleNameSelect(citizens) {
     const responsibleNameSelect = document.getElementById('responsibleNameSelect');
     if (!responsibleNameSelect) {
@@ -387,8 +403,8 @@ if (form) {
         setupLocationFromUrl();
 
         // Continue with any other validation
-        const nikSelect = document.getElementById('nik');
-        const nameSelect = document.getElementById('full_name');
+        const nikSelect = document.getElementById('nikSelect');
+        const nameSelect = document.getElementById('fullNameSelect');
 
         if (!nikSelect.value || !nameSelect.value) {
             e.preventDefault();

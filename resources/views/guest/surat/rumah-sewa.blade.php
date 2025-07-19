@@ -71,4 +71,43 @@
 
             <div>
                 <label for="alley_number" class="block text-sm font-medium text-gray-700">Gang/Nomor <span class="text-red-500">*</span></label>
-                <input t
+                <input type="text" id="alley_number" name="alley_number" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+            </div>
+
+            <div>
+                <label for="rt" class="block text-sm font-medium text-gray-700">RT <span class="text-red-500">*</span></label>
+                <input type="text" id="rt" name="rt" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+            </div>
+
+            <div>
+                <label for="rw" class="block text-sm font-medium text-gray-700">RW <span class="text-red-500">*</span></label>
+                <input type="text" id="rw" name="rw" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+            </div>
+
+            <div>
+                <label for="rental_purpose" class="block text-sm font-medium text-gray-700">Tujuan Sewa <span class="text-red-500">*</span></label>
+                <input type="text" id="rental_purpose" name="rental_purpose" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+            </div>
+
+            <div>
+                <label for="rental_duration" class="block text-sm font-medium text-gray-700">Jangka Waktu Sewa <span class="text-red-500">*</span></label>
+                <input type="text" id="rental_duration" name="rental_duration" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+            </div>
+        </div>
+
+        <div class="mt-6 flex justify-end space-x-4">
+            <button type="button" onclick="window.history.back()" class="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-lg">
+                Batal
+            </button>
+            <button type="submit" class="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-[#7886C7] text-base font-medium text-white hover:bg-[#2D336B] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-lg">
+                Simpan
+            </button>
+        </div>
+    </form>
+</div>
+
+<script src="{{ asset('js/sweet-alert-utils.js') }}"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js"></script>
+<script src="{{ asset('js/rental-house-url.js') }}"></script>
+</x-guest.surat-layout>

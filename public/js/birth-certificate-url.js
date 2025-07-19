@@ -38,25 +38,62 @@ document.addEventListener('DOMContentLoaded', function() {
     if (subDistrictId) document.getElementById('subdistrict_id').value = subDistrictId;
     if (villageId) document.getElementById('village_id').value = villageId;
 
-    // Load citizens data
-    $.ajax({
-        url: citizenApiRoute,
-        type: 'GET',
-        dataType: 'json',
-        data: {
-            limit: 10000
-        },
-        headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        success: function(data) {
+    // Load citizens data with village_id filter
+    loadCitizensData();
+
+    async function loadCitizensData() {
+        try {
+            console.log('Loading citizens with village_id:', villageId);
+
+            const response = await $.ajax({
+                url: citizenApiRoute,
+                type: 'GET',
+                dataType: 'json',
+                data: {
+                    limit: 10000,
+                    village_id: villageId // Tambahkan parameter village_id untuk filter di server
+                },
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            // Transform the response to match what we expect
             let citizens = [];
-            if (data && data.data && Array.isArray(data.data)) {
-                citizens = data.data;
-            } else if (Array.isArray(data)) {
-                citizens = data;
+            if (response && response.data && Array.isArray(response.data)) {
+                citizens = response.data;
+            } else if (Array.isArray(response)) {
+                citizens = response;
+            } else if (response && response.data && typeof response.data === 'object' && !Array.isArray(response.data)) {
+                // Handle case where data.data is an object with numeric keys
+                citizens = Object.values(response.data);
+            }
+
+            // Make sure we have valid data
+            if (!Array.isArray(citizens)) {
+                console.error('Invalid citizen data format:', citizens);
+                // Fallback: try to get data without village_id filter
+                if (villageId) {
+                    console.log('Retrying without village_id filter...');
+                    await loadCitizensDataWithoutFilter();
+                    return;
+                }
+                return;
+            }
+
+            console.log('Processed citizen data count:', citizens.length);
+
+            // Log first few citizens for debugging
+            if (citizens.length > 0) {
+                console.log('Sample citizen data:', citizens[0]);
+
+                // Check if required fields are present
+                const sampleCitizen = citizens[0];
+                if (!sampleCitizen.nik || !sampleCitizen.full_name) {
+                    console.warn('Sample citizen missing required fields:', sampleCitizen);
+                }
             }
 
             allCitizens = citizens;
@@ -70,13 +107,70 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Setup all components
             setupBirthCertificateInterface();
-        },
-        error: function(error) {
+        } catch (error) {
             console.error('Error loading citizens data:', error);
+
+            // Fallback: try without village_id filter
+            if (villageId) {
+                console.log('Error occurred, retrying without village_id filter...');
+                await loadCitizensDataWithoutFilter();
+            } else {
+                // Setup interface anyway with empty data
+                setupBirthCertificateInterface();
+            }
+        }
+    }
+
+    // Fallback function to load citizens without village_id filter
+    async function loadCitizensDataWithoutFilter() {
+        try {
+            const response = await $.ajax({
+                url: citizenApiRoute,
+                type: 'GET',
+                dataType: 'json',
+                data: {
+                    limit: 10000
+                },
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            let citizens = [];
+            if (response && response.data && Array.isArray(response.data)) {
+                citizens = response.data;
+            } else if (Array.isArray(response)) {
+                citizens = response;
+            } else if (response && response.data && typeof response.data === 'object' && !Array.isArray(response.data)) {
+                citizens = Object.values(response.data);
+            }
+
+            if (Array.isArray(citizens)) {
+                allCitizens = citizens;
+                nameOptions = citizens.map(citizen => ({
+                    id: citizen.full_name,
+                    text: citizen.full_name,
+                    citizen: citizen
+                })).filter(option => option.id);
+
+                setupBirthCertificateInterface();
+            }
+        } catch (error) {
+            console.error('Fallback also failed:', error);
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Gagal memuat data warga. Silakan coba lagi.',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+            }
             // Setup interface anyway with empty data
             setupBirthCertificateInterface();
         }
-    });
+    }
 
     function setupBirthCertificateInterface() {
         // Setup NIK inputs for both parents
@@ -90,6 +184,72 @@ document.addEventListener('DOMContentLoaded', function() {
         // Add RF ID Tag event listeners for both parents
         setupRfIdTagListener('father');
         setupRfIdTagListener('mother');
+    }
+
+    // Function to handle NIK input for both parents - FIXED VERSION
+    function setupParentNikInput(parentType) {
+        // Use the correct ID format for birth certificate form
+        const nikInput = document.getElementById(`${parentType}_nik`);
+        if (!nikInput) {
+            console.warn(`NIK input for ${parentType} not found`);
+            return;
+        }
+
+        console.log(`Setting up NIK input for ${parentType}:`, nikInput);
+
+        // Add input event listener directly without cloning
+        nikInput.addEventListener('input', function() {
+            const nikValue = this.value.trim();
+            console.log(`NIK input for ${parentType}:`, nikValue);
+
+            // Only process if NIK is exactly 16 digits
+            if (nikValue.length === 16 && /^\d+$/.test(nikValue)) {
+                console.log(`Processing NIK for ${parentType}:`, nikValue);
+
+                // Find citizen with matching NIK
+                const matchedCitizen = allCitizens.find(citizen => {
+                    const citizenNik = citizen.nik ? citizen.nik.toString() : '';
+                    return citizenNik === nikValue;
+                });
+
+                if (matchedCitizen) {
+                    console.log(`Found citizen for ${parentType}:`, matchedCitizen);
+
+                    // Fill parent fields
+                    populateParentFields(matchedCitizen, parentType);
+
+                    // Update full name select
+                    $(`#${parentType}_full_name`).val(matchedCitizen.full_name).trigger('change');
+
+                    // Also set child address if it's empty
+                    if (!$('#child_address').val() && matchedCitizen.address) {
+                        $('#child_address').val(matchedCitizen.address);
+                    }
+
+                    // Visual feedback for success
+                    $(nikInput).addClass('border-green-500').removeClass('border-red-500 border-gray-300');
+                    setTimeout(() => {
+                        $(nikInput).removeClass('border-green-500').addClass('border-gray-300');
+                    }, 2000);
+                } else {
+                    console.log(`No citizen found for NIK: ${nikValue}`);
+
+                    // Show error alert for NIK not found
+                    Swal.fire({
+                        title: 'Data Tidak Ditemukan',
+                        text: `NIK ${parentType === 'father' ? 'Ayah' : 'Ibu'} tidak terdaftar dalam sistem`,
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+
+                    // Visual feedback for error
+                    $(nikInput).addClass('border-red-500').removeClass('border-green-500 border-gray-300');
+                    setTimeout(() => {
+                        $(nikInput).removeClass('border-red-500').addClass('border-gray-300');
+                    }, 2000);
+                }
+            }
+        });
     }
 
     function setupParentNameSelect(parentType) {
@@ -175,12 +335,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const rfIdInput = document.getElementById(`${parentType}_rf_id_tag`);
         if (!rfIdInput) return;
 
-        // Remove existing event listeners
-        const newRfIdInput = rfIdInput.cloneNode(true);
-        rfIdInput.parentNode.replaceChild(newRfIdInput, rfIdInput);
-
-        // Tambahkan event untuk input dan paste
-        newRfIdInput.addEventListener('input', function() {
+        // Add event listener directly without cloning
+        rfIdInput.addEventListener('input', function() {
             const rfIdValue = this.value.trim();
             if (rfIdValue.length > 0) {
                 // Cari data warga dengan RF ID Tag yang sama
@@ -223,22 +379,22 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
 
                     // Feedback visual berhasil
-                    $(newRfIdInput).addClass('border-green-500').removeClass('border-red-500 border-gray-300');
+                    $(rfIdInput).addClass('border-green-500').removeClass('border-red-500 border-gray-300');
                     setTimeout(() => {
-                        $(newRfIdInput).removeClass('border-green-500').addClass('border-gray-300');
+                        $(rfIdInput).removeClass('border-green-500').addClass('border-gray-300');
                     }, 2000);
                 } else if (rfIdValue.length >= 5) {
                     // Feedback visual tidak ditemukan (hanya untuk input yang cukup panjang)
-                    $(newRfIdInput).addClass('border-red-500').removeClass('border-green-500 border-gray-300');
+                    $(rfIdInput).addClass('border-red-500').removeClass('border-green-500 border-gray-300');
                     setTimeout(() => {
-                        $(newRfIdInput).removeClass('border-red-500').addClass('border-gray-300');
+                        $(rfIdInput).removeClass('border-red-500').addClass('border-gray-300');
                     }, 2000);
                 }
             }
         });
 
         // Tambahkan event untuk paste
-        newRfIdInput.addEventListener('paste', function() {
+        rfIdInput.addEventListener('paste', function() {
             // Trigger input event after paste
             setTimeout(() => {
                 this.dispatchEvent(new Event('input'));
@@ -292,61 +448,4 @@ function showAlert(type, text) {
     } else {
         alert(text);
     }
-}
-
-// Add this function to handle NIK input for both parents
-function setupParentNikInput(parentType) {
-    const nikInput = document.getElementById(`${parentType}_nik`);
-    if (!nikInput) return;
-
-    // Remove existing event listeners
-    const newNikInput = nikInput.cloneNode(true);
-    nikInput.parentNode.replaceChild(newNikInput, nikInput);
-
-    // Add input event listener
-    newNikInput.addEventListener('input', function() {
-        const nikValue = this.value.trim();
-
-        // Only process if NIK is exactly 16 digits
-        if (nikValue.length === 16 && /^\d+$/.test(nikValue)) {
-            // Find citizen with matching NIK
-            const matchedCitizen = allCitizens.find(citizen => {
-                const citizenNik = citizen.nik ? citizen.nik.toString() : '';
-                return citizenNik === nikValue;
-            });
-
-            if (matchedCitizen) {
-                // Fill parent fields
-                populateParentFields(matchedCitizen, parentType);
-
-                // Update full name select
-                $(`#${parentType}_full_name`).val(matchedCitizen.full_name).trigger('change.select2');
-
-                // Also set child address if it's empty
-                if (!$('#child_address').val() && matchedCitizen.address) {
-                    $('#child_address').val(matchedCitizen.address);
-                }
-
-                // Visual feedback for success
-                $(newNikInput).addClass('border-green-500').removeClass('border-red-500 border-gray-300');
-                setTimeout(() => {
-                    $(newNikInput).removeClass('border-green-500').addClass('border-gray-300');
-                }, 2000);
-            } else {
-                // Show error alert for NIK not found
-                Swal.fire({
-                    title: 'Data Tidak Ditemukan',
-                    text: `NIK ${parentType === 'father' ? 'Ayah' : 'Ibu'} tidak terdaftar dalam sistem`,
-                    icon: 'error',
-                    confirmButtonText: 'OK'
-                });
-
-                // Visual feedback for error
-                $(newNikInput).addClass('border-red-500').removeClass('border-green-500 border-gray-300');
-                setTimeout(() => {
-                    $(newNikInput).removeClass('border-red-500').addClass('border-gray-300');
-                }, 2000);
-            }
-        }
-    });
 }

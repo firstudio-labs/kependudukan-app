@@ -157,15 +157,22 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Load citizens data from the administrasi route
+    // Load citizens data from the administrasi route with village_id filter
     async function fetchCitizens() {
         try {
+            // Get village_id from URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const villageId = urlParams.get('village_id');
+
+            console.log('Fetching citizens with village_id:', villageId);
+
             const response = await $.ajax({
                 url: CITIZENS_URL,
                 type: 'GET',
                 dataType: 'json',
                 data: {
-                    limit: 10000 // Increase limit to load more citizens at once
+                    limit: 10000, // Increase limit to load more citizens at once
+                    village_id: villageId // Tambahkan parameter village_id untuk filter di server
                 },
                 headers: {
                     'Accept': 'application/json',
@@ -180,6 +187,34 @@ document.addEventListener('DOMContentLoaded', function() {
                 citizensList = response.data;
             } else if (response && Array.isArray(response)) {
                 citizensList = response;
+            } else if (response && response.data && typeof response.data === 'object' && !Array.isArray(response.data)) {
+                // Handle case where data.data is an object with numeric keys
+                citizensList = Object.values(response.data);
+            }
+
+            // Make sure we have valid data
+            if (!Array.isArray(citizensList)) {
+                console.error('Invalid citizen data format:', citizensList);
+                // Fallback: try to get data without village_id filter
+                if (villageId) {
+                    console.log('Retrying without village_id filter...');
+                    await fetchCitizensWithoutFilter();
+                    return;
+                }
+                return;
+            }
+
+            console.log('Processed citizen data count:', citizensList.length);
+
+            // Log first few citizens for debugging
+            if (citizensList.length > 0) {
+                console.log('Sample citizen data:', citizensList[0]);
+
+                // Check if required fields are present
+                const sampleCitizen = citizensList[0];
+                if (!sampleCitizen.nik || !sampleCitizen.full_name) {
+                    console.warn('Sample citizen missing required fields:', sampleCitizen);
+                }
             }
 
             allCitizens = citizensList;
@@ -194,6 +229,57 @@ document.addEventListener('DOMContentLoaded', function() {
             setupRfIdTagListener(citizensList);
         } catch (error) {
             console.error('Error fetching citizens data:', error);
+
+            // Fallback: try without village_id filter
+            if (villageId) {
+                console.log('Error occurred, retrying without village_id filter...');
+                await fetchCitizensWithoutFilter();
+            }
+        }
+    }
+
+    // Fallback function to fetch citizens without village_id filter
+    async function fetchCitizensWithoutFilter() {
+        try {
+            const response = await $.ajax({
+                url: CITIZENS_URL,
+                type: 'GET',
+                dataType: 'json',
+                data: {
+                    limit: 10000
+                },
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            let citizensList = [];
+            if (response && response.data && Array.isArray(response.data)) {
+                citizensList = response.data;
+            } else if (response && Array.isArray(response)) {
+                citizensList = response;
+            } else if (response && response.data && typeof response.data === 'object' && !Array.isArray(response.data)) {
+                citizensList = Object.values(response.data);
+            }
+
+            if (Array.isArray(citizensList)) {
+                allCitizens = citizensList;
+                setupNikInput(citizensList);
+                setupNameSelect(citizensList);
+                setupRfIdTagListener(citizensList);
+            }
+        } catch (error) {
+            console.error('Fallback also failed:', error);
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Gagal memuat data warga. Silakan coba lagi.',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+            }
         }
     }
 
