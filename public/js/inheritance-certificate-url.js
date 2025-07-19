@@ -18,6 +18,7 @@ function showSweetAlert(type, title, text) {
 document.addEventListener('DOMContentLoaded', function() {
     // Store the loaded citizens for reuse
     let allCitizens = [];
+    let nameOptions = []; // Cache untuk options Select2
 
     // Get variables from data attributes
     const formContainer = document.getElementById('inheritance-form-container');
@@ -69,6 +70,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
             allCitizens = processedData;
 
+            // Pre-process name options untuk Select2
+            nameOptions = allCitizens.map(citizen => ({
+                id: citizen.full_name,
+                text: citizen.full_name,
+                citizen: citizen
+            })).filter(option => option.id); // Filter out empty names
+
             // Setup the heirs interface
             setupHeirsInterface();
         },
@@ -88,7 +96,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Remove the first heir row template
         heirsContainer.innerHTML = '';
 
-        // Function to initialize a new heir row
+        // Function to initialize a new heir row (optimized)
         function initializeHeirRow(heirRow) {
             // Setup NIK input
             const nikInput = heirRow.querySelector('.nik-select');
@@ -138,29 +146,15 @@ document.addEventListener('DOMContentLoaded', function() {
             // Setup RF ID Tag listener
             setupHeirRfIdListener(heirRow);
 
-            // Setup name select
+            // Setup name select (optimized)
             const nameSelect = heirRow.querySelector('.fullname-select');
             if (nameSelect) {
-                // Create name options array
-                const nameOptions = [];
-
-                // Process citizen data for Select2
-                allCitizens.forEach(citizen => {
-                    if (citizen.full_name) {
-                        nameOptions.push({
-                            id: citizen.full_name,
-                            text: citizen.full_name,
-                            citizen: citizen
-                        });
-                    }
-                });
-
-                // Initialize Select2 dengan minimum input length
+                // Initialize Select2 dengan data yang sudah di-cache
                 $(nameSelect).select2({
                     placeholder: 'Ketik nama untuk mencari...',
                     width: '100%',
-                    data: nameOptions,
-                    minimumInputLength: 3, // Minimal 3 karakter sebelum dropdown muncul
+                    data: nameOptions, // Gunakan data yang sudah di-cache
+                    minimumInputLength: 3,
                     language: {
                         noResults: function() {
                             return 'Tidak ada data yang ditemukan';
@@ -172,21 +166,16 @@ document.addEventListener('DOMContentLoaded', function() {
                             return 'Ketik minimal 3 karakter untuk mencari';
                         }
                     },
-                    // Tambahkan delay untuk mengurangi request berlebihan
                     delay: 300,
-                    // Fungsi untuk filter data berdasarkan input
                     matcher: function(params, data) {
-                        // Jika tidak ada input, jangan tampilkan hasil
                         if (!params.term) {
                             return null;
                         }
 
-                        // Jika input kurang dari 3 karakter, jangan tampilkan hasil
                         if (params.term.length < 3) {
                             return null;
                         }
 
-                        // Cari berdasarkan nama yang mengandung input
                         const term = params.term.toLowerCase();
                         const text = data.text.toLowerCase();
 
@@ -298,11 +287,15 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
 
-        // Function to add a new heir row
+        // Function to add a new heir row (optimized)
         function addHeirRow() {
             const heirRowClone = firstHeirRow.cloneNode(true);
             heirsContainer.appendChild(heirRowClone);
-            initializeHeirRow(heirRowClone);
+
+            // Gunakan setTimeout untuk memastikan DOM sudah siap
+            setTimeout(() => {
+                initializeHeirRow(heirRowClone);
+            }, 10);
         }
 
         // Add first heir row
@@ -394,12 +387,5 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Set RW field
         $(heirRow).find('input[name="rw[]"]').val(citizen.rw || '');
-
-        // Debug log
-        console.log('Populating fields for citizen:', citizen);
-        console.log('Gender value:', gender);
-        console.log('Religion value:', religion);
-        console.log('Family status value:', familyStatus);
-        console.log('Address value:', citizen.address);
     }
 });

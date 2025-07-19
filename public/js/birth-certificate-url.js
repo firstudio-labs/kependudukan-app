@@ -1,6 +1,6 @@
 /**
  * Birth Certificate Form Handler
- * Uses hidden location fields populated from URL parameters
+ * Optimized version without conflicts
  */
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -8,9 +8,15 @@ document.addEventListener('DOMContentLoaded', function() {
     let isFatherUpdating = false;
     let isMotherUpdating = false;
     let allCitizens = [];
+    let nameOptions = []; // Cache untuk options Select2
 
     // Get form container and API route
     const formContainer = document.getElementById('birth-form-container');
+    if (!formContainer) {
+        console.error('Form container not found');
+        return;
+    }
+
     const citizenApiRoute = formContainer.dataset.citizenRoute;
     const success = formContainer.dataset.success;
     const error = formContainer.dataset.error;
@@ -38,7 +44,7 @@ document.addEventListener('DOMContentLoaded', function() {
         type: 'GET',
         dataType: 'json',
         data: {
-            limit: 10000 // Increase limit to load more citizens at once
+            limit: 10000
         },
         headers: {
             'Accept': 'application/json',
@@ -55,44 +61,52 @@ document.addEventListener('DOMContentLoaded', function() {
 
             allCitizens = citizens;
 
-            // Setup NIK inputs for both parents
-            setupParentNikInput('father', citizens);
-            setupParentNikInput('mother', citizens);
+            // Pre-process name options untuk Select2
+            nameOptions = citizens.map(citizen => ({
+                id: citizen.full_name,
+                text: citizen.full_name,
+                citizen: citizen
+            })).filter(option => option.id);
 
-            // Setup name selects with data
-            setupParentNameSelect('father', citizens);
-            setupParentNameSelect('mother', citizens);
-
-            // Add RF ID Tag event listeners for both parents
-            setupRfIdTagListener('father', citizens);
-            setupRfIdTagListener('mother', citizens);
+            // Setup all components
+            setupBirthCertificateInterface();
         },
         error: function(error) {
             console.error('Error loading citizens data:', error);
+            // Setup interface anyway with empty data
+            setupBirthCertificateInterface();
         }
     });
 
-    function setupParentNameSelect(parentType, citizens) {
-        // Create name options array
-        const nameOptions = [];
+    function setupBirthCertificateInterface() {
+        // Setup NIK inputs for both parents
+        setupParentNikInput('father');
+        setupParentNikInput('mother');
 
-        // Process citizen data for Select2
-        citizens.forEach(citizen => {
-            if (citizen.full_name) {
-                nameOptions.push({
-                    id: citizen.full_name,
-                    text: citizen.full_name,
-                    citizen: citizen
-                });
-            }
-        });
+        // Setup name selects with data
+        setupParentNameSelect('father');
+        setupParentNameSelect('mother');
 
-        // Initialize Full Name Select2 dengan minimum input length
-        $(`#${parentType}_full_name`).select2({
+        // Add RF ID Tag event listeners for both parents
+        setupRfIdTagListener('father');
+        setupRfIdTagListener('mother');
+    }
+
+    function setupParentNameSelect(parentType) {
+        const nameSelect = document.getElementById(`${parentType}_full_name`);
+        if (!nameSelect) return;
+
+        // Destroy existing Select2 if it exists
+        if ($(nameSelect).hasClass('select2-hidden-accessible')) {
+            $(nameSelect).select2('destroy');
+        }
+
+        // Initialize Full Name Select2 dengan data yang sudah di-cache
+        $(nameSelect).select2({
             placeholder: `Ketik nama ${parentType === 'father' ? 'Ayah' : 'Ibu'} untuk mencari...`,
             width: '100%',
-            data: nameOptions,
-            minimumInputLength: 3, // Minimal 3 karakter sebelum dropdown muncul
+            data: nameOptions, // Gunakan data yang sudah di-cache
+            minimumInputLength: 3,
             language: {
                 noResults: function() {
                     return 'Tidak ada data yang ditemukan';
@@ -104,21 +118,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     return 'Ketik minimal 3 karakter untuk mencari';
                 }
             },
-            // Tambahkan delay untuk mengurangi request berlebihan
             delay: 300,
-            // Fungsi untuk filter data berdasarkan input
             matcher: function(params, data) {
-                // Jika tidak ada input, jangan tampilkan hasil
                 if (!params.term) {
                     return null;
                 }
 
-                // Jika input kurang dari 3 karakter, jangan tampilkan hasil
                 if (params.term.length < 3) {
                     return null;
                 }
 
-                // Cari berdasarkan nama yang mengandung input
                 const term = params.term.toLowerCase();
                 const text = data.text.toLowerCase();
 
@@ -129,12 +138,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 return null;
             }
         }).on("select2:open", function() {
-            // This ensures all options are visible when dropdown opens
             $('.select2-results__options').css('max-height', '400px');
         });
 
         // When Full Name is selected, fill in other fields
-        $(`#${parentType}_full_name`).on('select2:select', function (e) {
+        $(nameSelect).on('select2:select', function (e) {
             if (isFatherUpdating && parentType === 'father') return;
             if (isMotherUpdating && parentType === 'mother') return;
 
@@ -163,16 +171,20 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Add RF ID Tag event listener for specific parent
-    function setupRfIdTagListener(parentType, citizens) {
+    function setupRfIdTagListener(parentType) {
         const rfIdInput = document.getElementById(`${parentType}_rf_id_tag`);
         if (!rfIdInput) return;
 
+        // Remove existing event listeners
+        const newRfIdInput = rfIdInput.cloneNode(true);
+        rfIdInput.parentNode.replaceChild(newRfIdInput, rfIdInput);
+
         // Tambahkan event untuk input dan paste
-        rfIdInput.addEventListener('input', function() {
+        newRfIdInput.addEventListener('input', function() {
             const rfIdValue = this.value.trim();
             if (rfIdValue.length > 0) {
                 // Cari data warga dengan RF ID Tag yang sama
-                const matchedCitizen = citizens.find(citizen => {
+                const matchedCitizen = allCitizens.find(citizen => {
                     // Jika citizen tidak memiliki rf_id_tag, lewati
                     if (citizen.rf_id_tag === undefined || citizen.rf_id_tag === null) {
                         return false;
@@ -199,10 +211,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
                     // Update dropdown NIK dan Nama dengan trigger yang benar
                     if ($(`#${parentType}_nik`).length) {
-                        $(`#${parentType}_nik`).val(matchedCitizen.nik).trigger('change.select2');
+                        $(`#${parentType}_nik`).val(matchedCitizen.nik).trigger('change');
                     }
                     if ($(`#${parentType}_full_name`).length) {
-                        $(`#${parentType}_full_name`).val(matchedCitizen.full_name).trigger('change.select2');
+                        $(`#${parentType}_full_name`).val(matchedCitizen.full_name).trigger('change');
                     }
 
                     // Set child address if it's empty
@@ -211,22 +223,22 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
 
                     // Feedback visual berhasil
-                    $(rfIdInput).addClass('border-green-500').removeClass('border-red-500 border-gray-300');
+                    $(newRfIdInput).addClass('border-green-500').removeClass('border-red-500 border-gray-300');
                     setTimeout(() => {
-                        $(rfIdInput).removeClass('border-green-500').addClass('border-gray-300');
+                        $(newRfIdInput).removeClass('border-green-500').addClass('border-gray-300');
                     }, 2000);
                 } else if (rfIdValue.length >= 5) {
                     // Feedback visual tidak ditemukan (hanya untuk input yang cukup panjang)
-                    $(rfIdInput).addClass('border-red-500').removeClass('border-green-500 border-gray-300');
+                    $(newRfIdInput).addClass('border-red-500').removeClass('border-green-500 border-gray-300');
                     setTimeout(() => {
-                        $(rfIdInput).removeClass('border-red-500').addClass('border-gray-300');
+                        $(newRfIdInput).removeClass('border-red-500').addClass('border-gray-300');
                     }, 2000);
                 }
             }
         });
 
         // Tambahkan event untuk paste
-        rfIdInput.addEventListener('paste', function() {
+        newRfIdInput.addEventListener('paste', function() {
             // Trigger input event after paste
             setTimeout(() => {
                 this.dispatchEvent(new Event('input'));
@@ -283,27 +295,22 @@ function showAlert(type, text) {
 }
 
 // Add this function to handle NIK input for both parents
-function setupParentNikInput(parentType, citizens) {
+function setupParentNikInput(parentType) {
     const nikInput = document.getElementById(`${parentType}_nik`);
     if (!nikInput) return;
 
-    // Remove Select2 if it exists
-    if ($(nikInput).hasClass('select2-hidden-accessible')) {
-        $(nikInput).select2('destroy');
-    }
-
-    // Convert to regular input
-    nikInput.type = 'text';
-    nikInput.placeholder = `Masukkan NIK ${parentType === 'father' ? 'Ayah' : 'Ibu'} (16 digit)`;
+    // Remove existing event listeners
+    const newNikInput = nikInput.cloneNode(true);
+    nikInput.parentNode.replaceChild(newNikInput, nikInput);
 
     // Add input event listener
-    nikInput.addEventListener('input', function() {
+    newNikInput.addEventListener('input', function() {
         const nikValue = this.value.trim();
 
         // Only process if NIK is exactly 16 digits
         if (nikValue.length === 16 && /^\d+$/.test(nikValue)) {
             // Find citizen with matching NIK
-            const matchedCitizen = citizens.find(citizen => {
+            const matchedCitizen = allCitizens.find(citizen => {
                 const citizenNik = citizen.nik ? citizen.nik.toString() : '';
                 return citizenNik === nikValue;
             });
@@ -321,9 +328,9 @@ function setupParentNikInput(parentType, citizens) {
                 }
 
                 // Visual feedback for success
-                $(nikInput).addClass('border-green-500').removeClass('border-red-500 border-gray-300');
+                $(newNikInput).addClass('border-green-500').removeClass('border-red-500 border-gray-300');
                 setTimeout(() => {
-                    $(nikInput).removeClass('border-green-500').addClass('border-gray-300');
+                    $(newNikInput).removeClass('border-green-500').addClass('border-gray-300');
                 }, 2000);
             } else {
                 // Show error alert for NIK not found
@@ -335,9 +342,9 @@ function setupParentNikInput(parentType, citizens) {
                 });
 
                 // Visual feedback for error
-                $(nikInput).addClass('border-red-500').removeClass('border-green-500 border-gray-300');
+                $(newNikInput).addClass('border-red-500').removeClass('border-green-500 border-gray-300');
                 setTimeout(() => {
-                    $(nikInput).removeClass('border-red-500').addClass('border-gray-300');
+                    $(newNikInput).removeClass('border-red-500').addClass('border-gray-300');
                 }, 2000);
             }
         }
