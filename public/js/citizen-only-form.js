@@ -9,13 +9,23 @@ function initializeCitizenSelect(routeUrl, onDataLoaded = null) {
     let isUpdating = false;
     let allCitizens = [];
 
+    // Get village_id from URL parameters or hidden input
+    const urlParams = new URLSearchParams(window.location.search);
+    const villageId = urlParams.get('village_id') || document.getElementById('village_id')?.value;
+
+    // Kurangi console.log untuk production
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        console.log('Initializing citizen select with village_id:', villageId);
+    }
+
     // Load all citizens first before initializing Select2
     $.ajax({
         url: routeUrl,
         type: 'GET',
         dataType: 'json',
         data: {
-            limit: 10000 // Increase limit to load more citizens at once
+            limit: 10000,
+            village_id: villageId
         },
         headers: {
             'Accept': 'application/json',
@@ -23,17 +33,40 @@ function initializeCitizenSelect(routeUrl, onDataLoaded = null) {
             'X-Requested-With': 'XMLHttpRequest'
         },
         success: function(data) {
+            // Kurangi console.log untuk production
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                console.log('Citizen data received:', data);
+            }
+
             // Transform the response to match what we expect
             let processedData = data;
             if (data && data.data && Array.isArray(data.data)) {
                 processedData = data.data;
             } else if (data && Array.isArray(data)) {
                 processedData = data;
+            } else if (data && data.data && typeof data.data === 'object' && !Array.isArray(data.data)) {
+                // Handle case where data.data is an object with numeric keys
+                processedData = Object.values(data.data);
             }
 
             // Make sure we have valid data
             if (!Array.isArray(processedData)) {
+                console.error('Invalid citizen data format:', processedData);
+                // Fallback: try to get data without village_id filter
+                if (villageId) {
+                    console.log('Retrying without village_id filter...');
+                    initializeCitizenSelect(routeUrl, onDataLoaded);
+                    return;
+                }
                 return;
+            }
+
+            // Kurangi console.log untuk production
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                console.log('Processed citizen data count:', processedData.length);
+                if (processedData.length > 0) {
+                    console.log('Sample citizen data:', processedData[0]);
+                }
             }
 
             allCitizens = processedData;
@@ -54,6 +87,72 @@ function initializeCitizenSelect(routeUrl, onDataLoaded = null) {
         },
         error: function(error) {
             console.error('Error loading citizens:', error);
+
+            // Fallback: try without village_id filter
+            if (villageId) {
+                console.log('Error occurred, retrying without village_id filter...');
+                // Remove village_id from the request
+                $.ajax({
+                    url: routeUrl,
+                    type: 'GET',
+                    dataType: 'json',
+                    data: {
+                        limit: 10000
+                    },
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    success: function(fallbackData) {
+                        // Kurangi console.log untuk production
+                        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                            console.log('Fallback data received:', fallbackData);
+                        }
+
+                        let processedData = fallbackData;
+                        if (fallbackData && fallbackData.data && Array.isArray(fallbackData.data)) {
+                            processedData = fallbackData.data;
+                        } else if (fallbackData && Array.isArray(fallbackData)) {
+                            processedData = fallbackData;
+                        } else if (fallbackData && fallbackData.data && typeof fallbackData.data === 'object' && !Array.isArray(fallbackData.data)) {
+                            processedData = Object.values(fallbackData.data);
+                        }
+
+                        if (Array.isArray(processedData)) {
+                            allCitizens = processedData;
+                            setupNikInputListener(allCitizens);
+                            setupNameSelect(allCitizens);
+                            setupRfIdTagListener(allCitizens);
+
+                            if (typeof onDataLoaded === 'function') {
+                                onDataLoaded(allCitizens);
+                            }
+                        }
+                    },
+                    error: function(fallbackError) {
+                        console.error('Fallback also failed:', fallbackError);
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                title: 'Error',
+                                text: 'Gagal memuat data warga. Silakan coba lagi.',
+                                icon: 'error',
+                                confirmButtonText: 'OK'
+                            });
+                        }
+                    }
+                });
+            } else {
+                // Show user-friendly error message
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Gagal memuat data warga. Silakan coba lagi.',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            }
         }
     });
 
@@ -93,12 +192,17 @@ function initializeCitizenSelect(routeUrl, onDataLoaded = null) {
                 if (matchedCitizen) {
                     populateCitizenData(matchedCitizen);
 
-                    // Update dropdown NIK dan Nama
+                    // Update dropdown NIK dan Nama dengan trigger yang benar
                     if ($('#nikSelect').length) {
-                        $('#nikSelect').val(matchedCitizen.nik).trigger('change');
+                        $('#nikSelect').val(matchedCitizen.nik).trigger('change.select2');
                     }
                     if ($('#fullNameSelect').length) {
-                        $('#fullNameSelect').val(matchedCitizen.full_name).trigger('change');
+                        $('#fullNameSelect').val(matchedCitizen.full_name).trigger('change.select2');
+                    }
+
+                    // Set domicile_address jika ada
+                    if (matchedCitizen.address && $('#domicile_address').length) {
+                        $('#domicile_address').val(matchedCitizen.address);
                     }
 
                     // Feedback visual berhasil
@@ -194,18 +298,46 @@ function initializeCitizenSelect(routeUrl, onDataLoaded = null) {
             }
         });
 
-        // Initialize Full Name Select2
+        // Initialize Full Name Select2 dengan minimum input length
         $('#fullNameSelect').select2({
-            placeholder: 'Pilih Nama Lengkap',
+            placeholder: 'Ketik nama untuk mencari...',
             width: '100%',
             data: nameOptions,
+            minimumInputLength: 3, // Minimal 3 karakter sebelum dropdown muncul
             language: {
                 noResults: function() {
                     return 'Tidak ada data yang ditemukan';
                 },
                 searching: function() {
                     return 'Mencari...';
+                },
+                inputTooShort: function() {
+                    return 'Ketik minimal 3 karakter untuk mencari';
                 }
+            },
+            // Tambahkan delay untuk mengurangi request berlebihan
+            delay: 300,
+            // Fungsi untuk filter data berdasarkan input
+            matcher: function(params, data) {
+                // Jika tidak ada input, jangan tampilkan hasil
+                if (!params.term) {
+                    return null;
+                }
+
+                // Jika input kurang dari 3 karakter, jangan tampilkan hasil
+                if (params.term.length < 3) {
+                    return null;
+                }
+
+                // Cari berdasarkan nama yang mengandung input
+                const term = params.term.toLowerCase();
+                const text = data.text.toLowerCase();
+
+                if (text.indexOf(term) > -1) {
+                    return data;
+                }
+
+                return null;
             }
         }).on("select2:open", function() {
             // This ensures all options are visible when dropdown opens

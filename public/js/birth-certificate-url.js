@@ -1,15 +1,22 @@
 /**
  * Birth Certificate Form Handler
- * Uses hidden location fields populated from URL parameters
+ * Optimized version without conflicts
  */
 
 document.addEventListener('DOMContentLoaded', function() {
     // Flag to prevent recursive updates
     let isFatherUpdating = false;
     let isMotherUpdating = false;
+    let allCitizens = [];
+    let nameOptions = []; // Cache untuk options Select2
 
     // Get form container and API route
     const formContainer = document.getElementById('birth-form-container');
+    if (!formContainer) {
+        console.error('Form container not found');
+        return;
+    }
+
     const citizenApiRoute = formContainer.dataset.citizenRoute;
     const success = formContainer.dataset.success;
     const error = formContainer.dataset.error;
@@ -31,318 +38,369 @@ document.addEventListener('DOMContentLoaded', function() {
     if (subDistrictId) document.getElementById('subdistrict_id').value = subDistrictId;
     if (villageId) document.getElementById('village_id').value = villageId;
 
-    // Load citizens data
-    $.ajax({
-        url: citizenApiRoute,
-        type: 'GET',
-        dataType: 'json',
-        success: function(data) {
+    // Load citizens data with village_id filter
+    loadCitizensData();
+
+    async function loadCitizensData() {
+        try {
+            console.log('Loading citizens with village_id:', villageId);
+
+            const response = await $.ajax({
+                url: citizenApiRoute,
+                type: 'GET',
+                dataType: 'json',
+                data: {
+                    limit: 10000,
+                    village_id: villageId // Tambahkan parameter village_id untuk filter di server
+                },
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            // Transform the response to match what we expect
             let citizens = [];
-            if (data && data.data && Array.isArray(data.data)) {
-                citizens = data.data;
-            } else if (Array.isArray(data)) {
-                citizens = data;
+            if (response && response.data && Array.isArray(response.data)) {
+                citizens = response.data;
+            } else if (Array.isArray(response)) {
+                citizens = response;
+            } else if (response && response.data && typeof response.data === 'object' && !Array.isArray(response.data)) {
+                // Handle case where data.data is an object with numeric keys
+                citizens = Object.values(response.data);
             }
 
-            // Setup NIK inputs for both parents
-            setupParentNikInput('father', citizens);
-            setupParentNikInput('mother', citizens);
-
-            // Initialize Father NIK Select2 with AJAX-only approach
-            $('#father_nik').select2({
-                placeholder: 'Ketik untuk mencari NIK Ayah',
-                width: '100%',
-                allowClear: true,
-                minimumInputLength: 1,
-                ajax: {
-                    url: citizenApiRoute,
-                    dataType: 'json',
-                    delay: 250,
-                    data: function(params) {
-                        return {
-                            search: params.term || '',
-                            page: params.page || 1
-                        };
-                    },
-                    processResults: function(data, params) {
-                        params.page = params.page || 1;
-
-                        let processedData = [];
-                        if (data && data.data && Array.isArray(data.data)) {
-                            processedData = data.data;
-                        } else if (Array.isArray(data)) {
-                            processedData = data;
-                        }
-
-                        return {
-                            results: processedData.map(citizen => ({
-                                id: citizen.nik?.toString() || '',
-                                text: citizen.nik?.toString() || '',
-                                citizen: citizen
-                            })).filter(item => item.id !== ''),
-                            pagination: {
-                                more: (params.page * 10) < (data.total || 1000)
-                            }
-                        };
-                    },
-                    cache: true
-                },
-                language: {
-                    inputTooShort: function() {
-                        return 'Ketik minimal 1 karakter untuk mencari NIK...';
-                    },
-                    noResults: function() {
-                        return 'Tidak ada data yang ditemukan';
-                    },
-                    searching: function() {
-                        return 'Mencari...';
-                    }
+            // Make sure we have valid data
+            if (!Array.isArray(citizens)) {
+                console.error('Invalid citizen data format:', citizens);
+                // Fallback: try to get data without village_id filter
+                if (villageId) {
+                    console.log('Retrying without village_id filter...');
+                    await loadCitizensDataWithoutFilter();
+                    return;
                 }
-            });
+                return;
+            }
 
-            // Initialize Father Full Name Select2 with AJAX-only approach
-            $('#father_full_name').select2({
-                placeholder: 'Ketik untuk mencari nama Ayah',
-                width: '100%',
-                allowClear: true,
-                minimumInputLength: 1,
-                ajax: {
-                    url: citizenApiRoute,
-                    dataType: 'json',
-                    delay: 250,
-                    data: function(params) {
-                        return {
-                            search: params.term || '',
-                            page: params.page || 1
-                        };
-                    },
-                    processResults: function(data, params) {
-                        params.page = params.page || 1;
+            console.log('Processed citizen data count:', citizens.length);
 
-                        let processedData = [];
-                        if (data && data.data && Array.isArray(data.data)) {
-                            processedData = data.data;
-                        } else if (Array.isArray(data)) {
-                            processedData = data;
-                        }
+            // Log first few citizens for debugging
+            if (citizens.length > 0) {
+                console.log('Sample citizen data:', citizens[0]);
 
-                        return {
-                            results: processedData.map(citizen => ({
-                                id: citizen.full_name || '',
-                                text: citizen.full_name || '',
-                                citizen: citizen
-                            })).filter(item => item.id !== ''),
-                            pagination: {
-                                more: (params.page * 10) < (data.total || 1000)
-                            }
-                        };
-                    },
-                    cache: true
-                },
-                language: {
-                    inputTooShort: function() {
-                        return 'Ketik minimal 1 karakter untuk mencari nama...';
-                    },
-                    noResults: function() {
-                        return 'Tidak ada data yang ditemukan';
-                    },
-                    searching: function() {
-                        return 'Mencari...';
-                    }
+                // Check if required fields are present
+                const sampleCitizen = citizens[0];
+                if (!sampleCitizen.nik || !sampleCitizen.full_name) {
+                    console.warn('Sample citizen missing required fields:', sampleCitizen);
                 }
-            });
+            }
 
-            // Similar AJAX configuration for mother_nik
-            $('#mother_nik').select2({
-                placeholder: 'Ketik untuk mencari NIK Ibu',
-                width: '100%',
-                allowClear: true,
-                minimumInputLength: 1,
-                ajax: {
-                    url: citizenApiRoute,
-                    dataType: 'json',
-                    delay: 250,
-                    data: function(params) {
-                        return {
-                            search: params.term || '',
-                            page: params.page || 1
-                        };
-                    },
-                    processResults: function(data, params) {
-                        params.page = params.page || 1;
+            allCitizens = citizens;
 
-                        let processedData = [];
-                        if (data && data.data && Array.isArray(data.data)) {
-                            processedData = data.data;
-                        } else if (Array.isArray(data)) {
-                            processedData = data;
-                        }
+            // Pre-process name options untuk Select2
+            nameOptions = citizens.map(citizen => ({
+                id: citizen.full_name,
+                text: citizen.full_name,
+                citizen: citizen
+            })).filter(option => option.id);
 
-                        return {
-                            results: processedData.map(citizen => ({
-                                id: citizen.nik?.toString() || '',
-                                text: citizen.nik?.toString() || '',
-                                citizen: citizen
-                            })).filter(item => item.id !== ''),
-                            pagination: {
-                                more: (params.page * 10) < (data.total || 1000)
-                            }
-                        };
-                    },
-                    cache: true
-                },
-                language: {
-                    inputTooShort: function() {
-                        return 'Ketik minimal 1 karakter untuk mencari NIK...';
-                    },
-                    noResults: function() {
-                        return 'Tidak ada data yang ditemukan';
-                    },
-                    searching: function() {
-                        return 'Mencari...';
-                    }
-                }
-            });
+            // Setup all components
+            setupBirthCertificateInterface();
+        } catch (error) {
+            console.error('Error loading citizens data:', error);
 
-            // Similar AJAX configuration for mother_full_name
-            $('#mother_full_name').select2({
-                placeholder: 'Ketik untuk mencari nama Ibu',
-                width: '100%',
-                allowClear: true,
-                minimumInputLength: 1,
-                ajax: {
-                    url: citizenApiRoute,
-                    dataType: 'json',
-                    delay: 250,
-                    data: function(params) {
-                        return {
-                            search: params.term || '',
-                            page: params.page || 1
-                        };
-                    },
-                    processResults: function(data, params) {
-                        params.page = params.page || 1;
-
-                        let processedData = [];
-                        if (data && data.data && Array.isArray(data.data)) {
-                            processedData = data.data;
-                        } else if (Array.isArray(data)) {
-                            processedData = data;
-                        }
-
-                        return {
-                            results: processedData.map(citizen => ({
-                                id: citizen.full_name || '',
-                                text: citizen.full_name || '',
-                                citizen: citizen
-                            })).filter(item => item.id !== ''),
-                            pagination: {
-                                more: (params.page * 10) < (data.total || 1000)
-                            }
-                        };
-                    },
-                    cache: true
-                },
-                language: {
-                    inputTooShort: function() {
-                        return 'Ketik minimal 1 karakter untuk mencari nama...';
-                    },
-                    noResults: function() {
-                        return 'Tidak ada data yang ditemukan';
-                    },
-                    searching: function() {
-                        return 'Mencari...';
-                    }
-                }
-            });
-
-            // When Father NIK is selected, fill in other fields
-            $('#father_nik').on('select2:select', function (e) {
-                if (isFatherUpdating) return;
-                isFatherUpdating = true;
-
-                const citizen = e.params.data.citizen;
-                if (citizen) {
-                    // Update father_full_name select
-                    $('#father_full_name').val(citizen.full_name).trigger('change.select2');
-
-                    // Fill other father fields
-                    populateParentFields(citizen, 'father');
-
-                    // Also set child address if it's empty
-                    if (!$('#child_address').val() && citizen.address) {
-                        $('#child_address').val(citizen.address);
-                    }
-                }
-
-                isFatherUpdating = false;
-            });
-
-            // Other event handlers for fields
-            $('#father_full_name').on('select2:select', function(e) {
-                if (isFatherUpdating) return;
-                isFatherUpdating = true;
-
-                const citizen = e.params.data.citizen;
-                if (citizen) {
-                    // Update father_nik select
-                    $('#father_nik').val(citizen.nik ? citizen.nik.toString() : '').trigger('change.select2');
-
-                    // Fill other father fields
-                    populateParentFields(citizen, 'father');
-
-                    // Also set child address if it's empty
-                    if (!$('#child_address').val() && citizen.address) {
-                        $('#child_address').val(citizen.address);
-                    }
-                }
-
-                isFatherUpdating = false;
-            });
-
-            $('#mother_nik').on('select2:select', function(e) {
-                if (isMotherUpdating) return;
-                isMotherUpdating = true;
-
-                const citizen = e.params.data.citizen;
-                if (citizen) {
-                    // Update mother_full_name select
-                    $('#mother_full_name').val(citizen.full_name).trigger('change.select2');
-
-                    // Fill other mother fields
-                    populateParentFields(citizen, 'mother');
-
-                    // Also set child address if it's empty
-                    if (!$('#child_address').val() && citizen.address) {
-                        $('#child_address').val(citizen.address);
-                    }
-                }
-
-                isMotherUpdating = false;
-            });
-
-            $('#mother_full_name').on('select2:select', function(e) {
-                if (isMotherUpdating) return;
-                isMotherUpdating = true;
-
-                const citizen = e.params.data.citizen;
-                if (citizen) {
-                    // Update mother_nik select
-                    $('#mother_nik').val(citizen.nik ? citizen.nik.toString() : '').trigger('change.select2');
-
-                    // Fill other mother fields
-                    populateParentFields(citizen, 'mother');
-
-                    // Also set child address if it's empty
-                    if (!$('#child_address').val() && citizen.address) {
-                        $('#child_address').val(citizen.address);
-                    }
-                }
-
-                isMotherUpdating = false;
-            });
+            // Fallback: try without village_id filter
+            if (villageId) {
+                console.log('Error occurred, retrying without village_id filter...');
+                await loadCitizensDataWithoutFilter();
+            } else {
+                // Setup interface anyway with empty data
+                setupBirthCertificateInterface();
+            }
         }
-    });
+    }
+
+    // Fallback function to load citizens without village_id filter
+    async function loadCitizensDataWithoutFilter() {
+        try {
+            const response = await $.ajax({
+                url: citizenApiRoute,
+                type: 'GET',
+                dataType: 'json',
+                data: {
+                    limit: 10000
+                },
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            let citizens = [];
+            if (response && response.data && Array.isArray(response.data)) {
+                citizens = response.data;
+            } else if (Array.isArray(response)) {
+                citizens = response;
+            } else if (response && response.data && typeof response.data === 'object' && !Array.isArray(response.data)) {
+                citizens = Object.values(response.data);
+            }
+
+            if (Array.isArray(citizens)) {
+                allCitizens = citizens;
+                nameOptions = citizens.map(citizen => ({
+                    id: citizen.full_name,
+                    text: citizen.full_name,
+                    citizen: citizen
+                })).filter(option => option.id);
+
+                setupBirthCertificateInterface();
+            }
+        } catch (error) {
+            console.error('Fallback also failed:', error);
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Gagal memuat data warga. Silakan coba lagi.',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+            }
+            // Setup interface anyway with empty data
+            setupBirthCertificateInterface();
+        }
+    }
+
+    function setupBirthCertificateInterface() {
+        // Setup NIK inputs for both parents
+        setupParentNikInput('father');
+        setupParentNikInput('mother');
+
+        // Setup name selects with data
+        setupParentNameSelect('father');
+        setupParentNameSelect('mother');
+
+        // Add RF ID Tag event listeners for both parents
+        setupRfIdTagListener('father');
+        setupRfIdTagListener('mother');
+    }
+
+    // Function to handle NIK input for both parents - FIXED VERSION
+    function setupParentNikInput(parentType) {
+        // Use the correct ID format for birth certificate form
+        const nikInput = document.getElementById(`${parentType}_nik`);
+        if (!nikInput) {
+            console.warn(`NIK input for ${parentType} not found`);
+            return;
+        }
+
+        console.log(`Setting up NIK input for ${parentType}:`, nikInput);
+
+        // Add input event listener directly without cloning
+        nikInput.addEventListener('input', function() {
+            const nikValue = this.value.trim();
+            console.log(`NIK input for ${parentType}:`, nikValue);
+
+            // Only process if NIK is exactly 16 digits
+            if (nikValue.length === 16 && /^\d+$/.test(nikValue)) {
+                console.log(`Processing NIK for ${parentType}:`, nikValue);
+
+                // Find citizen with matching NIK
+                const matchedCitizen = allCitizens.find(citizen => {
+                    const citizenNik = citizen.nik ? citizen.nik.toString() : '';
+                    return citizenNik === nikValue;
+                });
+
+                if (matchedCitizen) {
+                    console.log(`Found citizen for ${parentType}:`, matchedCitizen);
+
+                    // Fill parent fields
+                    populateParentFields(matchedCitizen, parentType);
+
+                    // Update full name select
+                    $(`#${parentType}_full_name`).val(matchedCitizen.full_name).trigger('change');
+
+                    // Also set child address if it's empty
+                    if (!$('#child_address').val() && matchedCitizen.address) {
+                        $('#child_address').val(matchedCitizen.address);
+                    }
+
+                    // Visual feedback for success
+                    $(nikInput).addClass('border-green-500').removeClass('border-red-500 border-gray-300');
+                    setTimeout(() => {
+                        $(nikInput).removeClass('border-green-500').addClass('border-gray-300');
+                    }, 2000);
+                } else {
+                    console.log(`No citizen found for NIK: ${nikValue}`);
+
+                    // Show error alert for NIK not found
+                    Swal.fire({
+                        title: 'Data Tidak Ditemukan',
+                        text: `NIK ${parentType === 'father' ? 'Ayah' : 'Ibu'} tidak terdaftar dalam sistem`,
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+
+                    // Visual feedback for error
+                    $(nikInput).addClass('border-red-500').removeClass('border-green-500 border-gray-300');
+                    setTimeout(() => {
+                        $(nikInput).removeClass('border-red-500').addClass('border-gray-300');
+                    }, 2000);
+                }
+            }
+        });
+    }
+
+    function setupParentNameSelect(parentType) {
+        const nameSelect = document.getElementById(`${parentType}_full_name`);
+        if (!nameSelect) return;
+
+        // Destroy existing Select2 if it exists
+        if ($(nameSelect).hasClass('select2-hidden-accessible')) {
+            $(nameSelect).select2('destroy');
+        }
+
+        // Initialize Full Name Select2 dengan data yang sudah di-cache
+        $(nameSelect).select2({
+            placeholder: `Ketik nama ${parentType === 'father' ? 'Ayah' : 'Ibu'} untuk mencari...`,
+            width: '100%',
+            data: nameOptions, // Gunakan data yang sudah di-cache
+            minimumInputLength: 3,
+            language: {
+                noResults: function() {
+                    return 'Tidak ada data yang ditemukan';
+                },
+                searching: function() {
+                    return 'Mencari...';
+                },
+                inputTooShort: function() {
+                    return 'Ketik minimal 3 karakter untuk mencari';
+                }
+            },
+            delay: 300,
+            matcher: function(params, data) {
+                if (!params.term) {
+                    return null;
+                }
+
+                if (params.term.length < 3) {
+                    return null;
+                }
+
+                const term = params.term.toLowerCase();
+                const text = data.text.toLowerCase();
+
+                if (text.indexOf(term) > -1) {
+                    return data;
+                }
+
+                return null;
+            }
+        }).on("select2:open", function() {
+            $('.select2-results__options').css('max-height', '400px');
+        });
+
+        // When Full Name is selected, fill in other fields
+        $(nameSelect).on('select2:select', function (e) {
+            if (isFatherUpdating && parentType === 'father') return;
+            if (isMotherUpdating && parentType === 'mother') return;
+
+            if (parentType === 'father') isFatherUpdating = true;
+            if (parentType === 'mother') isMotherUpdating = true;
+
+            const citizen = e.params.data.citizen;
+
+            if (citizen) {
+                // Set NIK in input
+                const nikValue = citizen.nik ? citizen.nik.toString() : '';
+                $(`#${parentType}_nik`).val(nikValue);
+
+                // Fill other form fields
+                populateParentFields(citizen, parentType);
+
+                // Also set child address if it's empty
+                if (!$('#child_address').val() && citizen.address) {
+                    $('#child_address').val(citizen.address);
+                }
+            }
+
+            if (parentType === 'father') isFatherUpdating = false;
+            if (parentType === 'mother') isMotherUpdating = false;
+        });
+    }
+
+    // Add RF ID Tag event listener for specific parent
+    function setupRfIdTagListener(parentType) {
+        const rfIdInput = document.getElementById(`${parentType}_rf_id_tag`);
+        if (!rfIdInput) return;
+
+        // Add event listener directly without cloning
+        rfIdInput.addEventListener('input', function() {
+            const rfIdValue = this.value.trim();
+            if (rfIdValue.length > 0) {
+                // Cari data warga dengan RF ID Tag yang sama
+                const matchedCitizen = allCitizens.find(citizen => {
+                    // Jika citizen tidak memiliki rf_id_tag, lewati
+                    if (citizen.rf_id_tag === undefined || citizen.rf_id_tag === null) {
+                        return false;
+                    }
+
+                    // Konversi ke string dan normalisasi
+                    const normalizedInput = rfIdValue.toString().replace(/^0+/, '').trim();
+                    const normalizedStored = citizen.rf_id_tag.toString().replace(/^0+/, '').trim();
+
+                    // Cek kecocokan persis
+                    const exactMatch = normalizedInput === normalizedStored;
+
+                    // Cek kecocokan sebagian (jika input adalah bagian dari rf_id_tag)
+                    const partialMatch = normalizedStored.includes(normalizedInput) && normalizedInput.length >= 5;
+
+                    // Kembalikan true jika ada kecocokan persis atau sebagian
+                    return exactMatch || partialMatch;
+                });
+
+                // Jika ditemukan, isi form
+                if (matchedCitizen) {
+                    // Fill parent fields
+                    populateParentFields(matchedCitizen, parentType);
+
+                    // Update dropdown NIK dan Nama dengan trigger yang benar
+                    if ($(`#${parentType}_nik`).length) {
+                        $(`#${parentType}_nik`).val(matchedCitizen.nik).trigger('change');
+                    }
+                    if ($(`#${parentType}_full_name`).length) {
+                        $(`#${parentType}_full_name`).val(matchedCitizen.full_name).trigger('change');
+                    }
+
+                    // Set child address if it's empty
+                    if (!$('#child_address').val() && matchedCitizen.address) {
+                        $('#child_address').val(matchedCitizen.address);
+                    }
+
+                    // Feedback visual berhasil
+                    $(rfIdInput).addClass('border-green-500').removeClass('border-red-500 border-gray-300');
+                    setTimeout(() => {
+                        $(rfIdInput).removeClass('border-green-500').addClass('border-gray-300');
+                    }, 2000);
+                } else if (rfIdValue.length >= 5) {
+                    // Feedback visual tidak ditemukan (hanya untuk input yang cukup panjang)
+                    $(rfIdInput).addClass('border-red-500').removeClass('border-green-500 border-gray-300');
+                    setTimeout(() => {
+                        $(rfIdInput).removeClass('border-red-500').addClass('border-gray-300');
+                    }, 2000);
+                }
+            }
+        });
+
+        // Tambahkan event untuk paste
+        rfIdInput.addEventListener('paste', function() {
+            // Trigger input event after paste
+            setTimeout(() => {
+                this.dispatchEvent(new Event('input'));
+            }, 10);
+        });
+    }
 
     function populateParentFields(citizen, parentType) {
         // Birth place
@@ -370,10 +428,10 @@ document.addEventListener('DOMContentLoaded', function() {
             };
             religion = religionMap[religion.toLowerCase()] || '';
         }
-        $(`#${parentType}_religion`).val(religion);
+        $(`#${parentType}_religion`).val(religion).trigger('change');
 
         // Job
-        $(`#${parentType}_job`).val(citizen.job_type_id || '');
+        $(`#${parentType}_job`).val(citizen.job_type_id || '').trigger('change');
     }
 });
 
@@ -390,61 +448,4 @@ function showAlert(type, text) {
     } else {
         alert(text);
     }
-}
-
-// Add this function to handle NIK input for both parents
-function setupParentNikInput(parentType, citizens) {
-    const nikInput = document.getElementById(`${parentType}_nik`);
-    if (!nikInput) return;
-
-    // Remove Select2 if it exists
-    if ($(nikInput).hasClass('select2-hidden-accessible')) {
-        $(nikInput).select2('destroy');
-    }
-
-    // Convert to regular input
-    nikInput.type = 'text';
-    nikInput.placeholder = `Masukkan NIK ${parentType === 'father' ? 'Ayah' : 'Ibu'} (16 digit)`;
-
-    // Add input event listener
-    nikInput.addEventListener('input', function() {
-        const nikValue = this.value.trim();
-
-        // Only process if NIK is exactly 16 digits
-        if (nikValue.length === 16 && /^\d+$/.test(nikValue)) {
-            // Find citizen with matching NIK
-            const matchedCitizen = citizens.find(citizen => {
-                const citizenNik = citizen.nik ? citizen.nik.toString() : '';
-                return citizenNik === nikValue;
-            });
-
-            if (matchedCitizen) {
-                // Fill parent fields
-                populateParentFields(matchedCitizen, parentType);
-
-                // Update full name select
-                $(`#${parentType}_full_name`).val(matchedCitizen.full_name).trigger('change');
-
-                // Visual feedback for success
-                $(nikInput).addClass('border-green-500').removeClass('border-red-500 border-gray-300');
-                setTimeout(() => {
-                    $(nikInput).removeClass('border-green-500').addClass('border-gray-300');
-                }, 2000);
-            } else {
-                // Show error alert for NIK not found
-                Swal.fire({
-                    title: 'Data Tidak Ditemukan',
-                    text: `NIK ${parentType === 'father' ? 'Ayah' : 'Ibu'} tidak terdaftar dalam sistem`,
-                    icon: 'error',
-                    confirmButtonText: 'OK'
-                });
-
-                // Visual feedback for error
-                $(nikInput).addClass('border-red-500').removeClass('border-green-500 border-gray-300');
-                setTimeout(() => {
-                    $(nikInput).removeClass('border-red-500').addClass('border-gray-300');
-                }, 2000);
-            }
-        }
-    });
 }

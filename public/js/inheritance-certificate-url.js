@@ -18,6 +18,7 @@ function showSweetAlert(type, title, text) {
 document.addEventListener('DOMContentLoaded', function() {
     // Store the loaded citizens for reuse
     let allCitizens = [];
+    let nameOptions = []; // Cache untuk options Select2
 
     // Get variables from data attributes
     const formContainer = document.getElementById('inheritance-form-container');
@@ -39,13 +40,18 @@ document.addEventListener('DOMContentLoaded', function() {
         showSweetAlert('error', 'Gagal!', error);
     }
 
-    // Load citizens data
+    // Get village_id from URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const villageId = urlParams.get('village_id');
+
+    // Load citizens data with village filter
     $.ajax({
         url: citizenApiRoute,
         type: 'GET',
         dataType: 'json',
         data: {
-            limit: 10000
+            limit: 10000,
+            village_id: villageId // Tambahkan filter village_id
         },
         headers: {
             'Accept': 'application/json',
@@ -69,6 +75,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
             allCitizens = processedData;
 
+            // Pre-process name options untuk Select2
+            nameOptions = allCitizens.map(citizen => ({
+                id: citizen.full_name,
+                text: citizen.full_name,
+                citizen: citizen
+            })).filter(option => option.id); // Filter out empty names
+
             // Setup the heirs interface
             setupHeirsInterface();
         },
@@ -88,7 +101,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Remove the first heir row template
         heirsContainer.innerHTML = '';
 
-        // Function to initialize a new heir row
+        // Function to initialize a new heir row (optimized)
         function initializeHeirRow(heirRow) {
             // Setup NIK input
             const nikInput = heirRow.querySelector('.nik-select');
@@ -135,44 +148,56 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             }
 
-            // Setup name select
+            // Setup RF ID Tag listener
+            setupHeirRfIdListener(heirRow);
+
+            // Setup name select (optimized)
             const nameSelect = heirRow.querySelector('.fullname-select');
             if (nameSelect) {
-                // Create name options array
-                const nameOptions = [];
-
-                // Process citizen data for Select2
-                allCitizens.forEach(citizen => {
-                if (citizen.full_name) {
-                    nameOptions.push({
-                        id: citizen.full_name,
-                        text: citizen.full_name,
-                        citizen: citizen
-                    });
-                }
-            });
-
-                // Initialize Select2
-            $(nameSelect).select2({
-                    placeholder: 'Pilih Nama Ahli Waris',
-                width: '100%',
-                data: nameOptions,
-                language: {
-                    noResults: function() {
-                        return 'Tidak ada data yang ditemukan';
+                // Initialize Select2 dengan data yang sudah di-cache
+                $(nameSelect).select2({
+                    placeholder: 'Ketik nama untuk mencari...',
+                    width: '100%',
+                    data: nameOptions, // Gunakan data yang sudah di-cache
+                    minimumInputLength: 3,
+                    language: {
+                        noResults: function() {
+                            return 'Tidak ada data yang ditemukan';
+                        },
+                        searching: function() {
+                            return 'Mencari...';
+                        },
+                        inputTooShort: function() {
+                            return 'Ketik minimal 3 karakter untuk mencari';
+                        }
                     },
-                    searching: function() {
-                        return 'Mencari...';
+                    delay: 300,
+                    matcher: function(params, data) {
+                        if (!params.term) {
+                            return null;
+                        }
+
+                        if (params.term.length < 3) {
+                            return null;
+                        }
+
+                        const term = params.term.toLowerCase();
+                        const text = data.text.toLowerCase();
+
+                        if (text.indexOf(term) > -1) {
+                            return data;
+                        }
+
+                        return null;
                     }
-                }
-            }).on("select2:open", function() {
-                $('.select2-results__options').css('max-height', '400px');
-            });
+                }).on("select2:open", function() {
+                    $('.select2-results__options').css('max-height', '400px');
+                });
 
                 // When name is selected, fill in other fields
                 $(nameSelect).on('select2:select', function (e) {
-                const citizen = e.params.data.citizen;
-                if (citizen) {
+                    const citizen = e.params.data.citizen;
+                    if (citizen) {
                         // Set NIK in input
                         const nikValue = citizen.nik ? citizen.nik.toString() : '';
                         $(heirRow).find('.nik-select').val(nikValue);
@@ -201,11 +226,81 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-        // Function to add a new heir row
+        // Function to setup RF ID Tag listener for heir row
+        function setupHeirRfIdListener(heirRow) {
+            const rfIdInput = heirRow.querySelector('.rf-id-tag');
+            if (!rfIdInput) return;
+
+            // Tambahkan event untuk input dan paste
+            rfIdInput.addEventListener('input', function() {
+                const rfIdValue = this.value.trim();
+                if (rfIdValue.length > 0) {
+                    // Cari data warga dengan RF ID Tag yang sama
+                    const matchedCitizen = allCitizens.find(citizen => {
+                        // Jika citizen tidak memiliki rf_id_tag, lewati
+                        if (citizen.rf_id_tag === undefined || citizen.rf_id_tag === null) {
+                            return false;
+                        }
+
+                        // Konversi ke string dan normalisasi
+                        const normalizedInput = rfIdValue.toString().replace(/^0+/, '').trim();
+                        const normalizedStored = citizen.rf_id_tag.toString().replace(/^0+/, '').trim();
+
+                        // Cek kecocokan persis
+                        const exactMatch = normalizedInput === normalizedStored;
+
+                        // Cek kecocokan sebagian (jika input adalah bagian dari rf_id_tag)
+                        const partialMatch = normalizedStored.includes(normalizedInput) && normalizedInput.length >= 5;
+
+                        // Kembalikan true jika ada kecocokan persis atau sebagian
+                        return exactMatch || partialMatch;
+                    });
+
+                    // Jika ditemukan, isi form
+                    if (matchedCitizen) {
+                        populateHeirFieldsFromCitizen(heirRow, matchedCitizen);
+
+                        // Update dropdown NIK dan Nama dengan trigger yang benar
+                        if ($(heirRow).find('.nik-select').length) {
+                            $(heirRow).find('.nik-select').val(matchedCitizen.nik).trigger('change');
+                        }
+                        if ($(heirRow).find('.fullname-select').length) {
+                            $(heirRow).find('.fullname-select').val(matchedCitizen.full_name).trigger('change');
+                        }
+
+                        // Feedback visual berhasil
+                        $(rfIdInput).addClass('border-green-500').removeClass('border-red-500 border-gray-300');
+                        setTimeout(() => {
+                            $(rfIdInput).removeClass('border-green-500').addClass('border-gray-300');
+                        }, 2000);
+                    } else if (rfIdValue.length >= 5) {
+                        // Feedback visual tidak ditemukan (hanya untuk input yang cukup panjang)
+                        $(rfIdInput).addClass('border-red-500').removeClass('border-green-500 border-gray-300');
+                        setTimeout(() => {
+                            $(rfIdInput).removeClass('border-red-500').addClass('border-gray-300');
+                        }, 2000);
+                    }
+                }
+            });
+
+            // Tambahkan event untuk paste
+            rfIdInput.addEventListener('paste', function() {
+                // Trigger input event after paste
+                setTimeout(() => {
+                    this.dispatchEvent(new Event('input'));
+                }, 10);
+            });
+        }
+
+        // Function to add a new heir row (optimized)
         function addHeirRow() {
             const heirRowClone = firstHeirRow.cloneNode(true);
             heirsContainer.appendChild(heirRowClone);
-            initializeHeirRow(heirRowClone);
+
+            // Gunakan setTimeout untuk memastikan DOM sudah siap
+            setTimeout(() => {
+                initializeHeirRow(heirRowClone);
+            }, 10);
         }
 
         // Add first heir row
@@ -213,15 +308,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Add heir button click handler
         addHeirButton.addEventListener('click', addHeirRow);
-        }
+    }
 
-        // Function to populate heir fields from citizen data
+    // Function to populate heir fields from citizen data
     function populateHeirFieldsFromCitizen(heirRow, citizen) {
         // Set birth place
         $(heirRow).find('.birth-place').val(citizen.birth_place || '');
 
         // Set birth date - handle different date formats
-            if (citizen.birth_date) {
+        if (citizen.birth_date) {
             let formattedDate = '';
             try {
                 // Handle date in format "DD/MM/YYYY"
@@ -247,44 +342,44 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // Set gender - handle conversion
-            let gender = citizen.gender;
-            if (typeof gender === 'string') {
-                if (gender.toLowerCase() === 'laki-laki') {
-                    gender = 1;
-                } else if (gender.toLowerCase() === 'perempuan') {
-                    gender = 2;
-                }
+        let gender = citizen.gender;
+        if (typeof gender === 'string') {
+            if (gender.toLowerCase() === 'laki-laki') {
+                gender = 1;
+            } else if (gender.toLowerCase() === 'perempuan') {
+                gender = 2;
             }
+        }
         $(heirRow).find('select[name="gender[]"]').val(gender).trigger('change');
 
         // Set religion - handle conversion
-            let religion = citizen.religion;
-            if (typeof religion === 'string') {
-                const religionMap = {
-                    'islam': 1,
-                    'kristen': 2,
-                    'katholik': 3,
-                    'hindu': 4,
-                    'buddha': 5,
-                    'kong hu cu': 6,
-                    'lainnya': 7
-                };
-                religion = religionMap[religion.toLowerCase()] || '';
-            }
+        let religion = citizen.religion;
+        if (typeof religion === 'string') {
+            const religionMap = {
+                'islam': 1,
+                'kristen': 2,
+                'katholik': 3,
+                'hindu': 4,
+                'buddha': 5,
+                'kong hu cu': 6,
+                'lainnya': 7
+            };
+            religion = religionMap[religion.toLowerCase()] || '';
+        }
         $(heirRow).find('select[name="religion[]"]').val(religion).trigger('change');
 
         // Set family status - handle conversion
         let familyStatus = citizen.family_status;
         if (typeof familyStatus === 'string') {
-                    const statusMap = {
-                        'anak': 1,
-                        'kepala keluarga': 2,
-                        'istri': 3,
-                        'orang tua': 4,
-                        'mertua': 5,
-                        'cucu': 6,
-                        'famili lain': 7
-                    };
+            const statusMap = {
+                'anak': 1,
+                'kepala keluarga': 2,
+                'istri': 3,
+                'orang tua': 4,
+                'mertua': 5,
+                'cucu': 6,
+                'famili lain': 7
+            };
             familyStatus = statusMap[familyStatus.toLowerCase()] || '';
         }
         $(heirRow).find('select[name="family_status[]"]').val(familyStatus).trigger('change');
@@ -297,23 +392,5 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Set RW field
         $(heirRow).find('input[name="rw[]"]').val(citizen.rw || '');
-
-        // Debug log
-        console.log('Populating fields for citizen:', citizen);
-        console.log('Gender value:', gender);
-        console.log('Religion value:', religion);
-        console.log('Family status value:', familyStatus);
-        console.log('Address value:', citizen.address);
-    }
-
-    // Function to show SweetAlert
-    function showSweetAlert(type, title, text) {
-        Swal.fire({
-            icon: type,
-            title: title,
-            text: text,
-            timer: 3000,
-            showConfirmButton: false
-        });
     }
 });

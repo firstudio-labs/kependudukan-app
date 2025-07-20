@@ -30,15 +30,8 @@ class CitizensImport implements ToCollection, WithHeadingRow, WithValidation
         Log::info('=== STARTING EXCEL IMPORT ===');
         Log::info('Total rows in Excel: ' . $rows->count());
 
-        // Log headers/columns
-        if ($rows->count() > 0) {
-            $firstRow = $rows->first();
-            Log::info('Excel columns found: ' . implode(', ', array_keys($firstRow->toArray())));
-        }
-
         foreach ($rows as $index => $row) {
             $this->processedRows++;
-            Log::info("Processing row " . ($index + 2) . ": " . json_encode($row->toArray()));
 
             try {
                 // Skip empty rows - check multiple possible column names
@@ -47,15 +40,13 @@ class CitizensImport implements ToCollection, WithHeadingRow, WithValidation
                 $fullName = $row['full_name'] ?? $row['nama_lgkp'] ?? $row['nama'] ?? $row['Nama'] ?? null;
 
                 if (empty($nik) || empty($kk) || empty($fullName)) {
-                    Log::warning("Row " . ($index + 2) . " skipped - missing required fields (nik: " . ($nik ?? 'empty') . ", kk: " . ($kk ?? 'empty') . ", full_name: " . ($fullName ?? 'empty') . ")");
-                    Log::warning("Available columns in row: " . implode(', ', array_keys($row->toArray())));
+                    Log::warning("Row " . ($index + 2) . " skipped - missing required fields");
                     $this->skippedRows++;
                     continue;
                 }
 
                 // Convert row data to appropriate format
                 $citizenData = $this->formatRowData($row, $nik, $kk, $fullName);
-                Log::info("Formatted data for row " . ($index + 2) . ": " . json_encode($citizenData));
 
                 // Skip if NIK is invalid
                 if (strlen((string)$citizenData['nik']) !== 16) {
@@ -65,16 +56,12 @@ class CitizensImport implements ToCollection, WithHeadingRow, WithValidation
                     continue;
                 }
 
-                // Log NIK validation
-                Log::info("NIK validation passed: " . $citizenData['nik'] . " (length: " . strlen((string)$citizenData['nik']) . ")");
-
                 // Validate required fields
                 $requiredFields = ['nik', 'kk', 'full_name', 'gender', 'birth_date', 'birth_place', 'address', 'province_id', 'district_id', 'sub_district_id', 'village_id', 'rt', 'rw'];
                 $missingFields = [];
                 foreach ($requiredFields as $field) {
                     if (empty($citizenData[$field]) && $citizenData[$field] !== 0) {
                         $missingFields[] = $field;
-                        Log::warning("Missing required field: {$field}");
                     }
                 }
 
@@ -85,36 +72,27 @@ class CitizensImport implements ToCollection, WithHeadingRow, WithValidation
                     continue;
                 }
 
-                Log::info("All required fields validation passed for row " . ($index + 2));
-
                 // Check if citizen already exists (to determine create or update)
                 $existingCitizen = $this->citizenService->getCitizenByNIK($citizenData['nik']);
-                Log::info("Checking existing citizen for NIK " . $citizenData['nik'] . ": " . (isset($existingCitizen['data']) ? 'EXISTS' : 'NOT FOUND'));
 
                 if (isset($existingCitizen['data']) && !empty($existingCitizen['data'])) {
                     // Update existing citizen
-                    Log::info("Updating existing citizen with NIK: " . $citizenData['nik']);
                     $response = $this->citizenService->updateCitizen($citizenData['nik'], $citizenData);
                 } else {
                     // Create new citizen
-                    Log::info("Creating new citizen with NIK: " . $citizenData['nik']);
                     $response = $this->citizenService->createCitizen($citizenData);
                 }
 
-                Log::info("API response for row " . ($index + 2) . ": " . json_encode($response));
-
                 if (isset($response['status']) && ($response['status'] === 'OK' || $response['status'] === 'CREATED')) {
                     $this->successCount++;
-                    Log::info("Row " . ($index + 2) . " processed successfully");
                 } else {
                     $errorMsg = "Baris " . ($index + 2) . ": " . ($response['message'] ?? 'Gagal menyimpan data');
-                    Log::error($errorMsg . " - Response: " . json_encode($response));
+                    Log::error($errorMsg);
                     $this->errors[] = $errorMsg;
                 }
             } catch (\Exception $e) {
                 $errorMsg = "Baris " . ($index + 2) . ": " . $e->getMessage();
                 Log::error('Import error for row ' . ($index + 2) . ': ' . $e->getMessage());
-                Log::error('Stack trace: ' . $e->getTraceAsString());
                 $this->errors[] = $errorMsg;
             }
         }
@@ -124,9 +102,6 @@ class CitizensImport implements ToCollection, WithHeadingRow, WithValidation
         Log::info('Successfully imported: ' . $this->successCount);
         Log::info('Skipped rows: ' . $this->skippedRows);
         Log::info('Errors: ' . count($this->errors));
-        if (count($this->errors) > 0) {
-            Log::error('Error details: ' . implode('; ', $this->errors));
-        }
         Log::info('=== ENDING EXCEL IMPORT ===');
     }
 
@@ -170,17 +145,16 @@ class CitizensImport implements ToCollection, WithHeadingRow, WithValidation
             'pekerjaan' => 'job_type_id',
             'nik_ayah' => 'nik_father',
             'nik_ibu' => 'nik_mother',
-            // tambahkan mapping lain jika perlu
         ];
+
         // Lakukan mapping dari kolom Excel ke field standar
         foreach ($map as $excelKey => $apiKey) {
             if (isset($row[$excelKey]) && !isset($row[$apiKey])) {
                 $row[$apiKey] = $row[$excelKey];
-                Log::info("Mapped {$excelKey} to {$apiKey}: " . $row[$excelKey]);
             }
         }
 
-        // Mapping nama ke angka untuk field tertentu (lengkap seperti normalizeSelectValues)
+        // Mapping nama ke angka untuk field tertentu
         $genderMap = [
             'Laki-Laki' => 1, 'Laki-laki' => 1, 'Perempuan' => 2,
             'laki-laki' => 1, 'laki-laki' => 1, 'perempuan' => 2,
@@ -232,14 +206,21 @@ class CitizensImport implements ToCollection, WithHeadingRow, WithValidation
             'FAMILI LAIN' => 7, 'Famili Lain' => 7, 'famili lain' => 7
         ];
         $disabilitiesMap = [
+            'Tidak Ada' => 0,
             'Fisik' => 1,
             'Netra/Buta' => 2,
             'Rungu/Wicara' => 3,
             'Mental/Jiwa' => 4,
             'Fisik dan Mental' => 5,
-            'Lainnya' => 6
+            'Lainnya' => 6,
+            'tidak ada' => 0,
+            'fisik' => 1,
+            'netra/buta' => 2,
+            'rungu/wicara' => 3,
+            'mental/jiwa' => 4,
+            'fisik dan mental' => 5,
+            'lainnya' => 6
         ];
-
 
         // Ambil mapping pekerjaan dari API (cache di static agar tidak bolak-balik request)
         static $jobNameToId = null;
@@ -261,13 +242,8 @@ class CitizensImport implements ToCollection, WithHeadingRow, WithValidation
         // Helper untuk mengambil nilai, jika tidak ada maka null/default
         $get = function($key, $default = null) use ($row) {
             $value = isset($row[$key]) ? $row[$key] : $default;
-            Log::info("Getting value for key '{$key}': " . (is_null($value) ? 'NULL' : $value));
             return $value;
         };
-
-        // Log semua key yang tersedia di row untuk debugging
-        Log::info("Available keys in row: " . implode(', ', array_keys($row->toArray())));
-        Log::info("Row data: " . json_encode($row->toArray()));
 
         $data = [
             'nik' => (int) ($nik ?? $get('nik', 0)),
@@ -283,7 +259,7 @@ class CitizensImport implements ToCollection, WithHeadingRow, WithValidation
             'divorce_certificate' => isset($certificateMap[$get('akta_cerai', '')]) ? $certificateMap[$get('akta_cerai', '')] : (int) $get('akta_cerai', 2),
             'family_status' => isset($familyStatusMap[$get('shdk', '')]) ? $familyStatusMap[$get('shdk', '')] : (int) $get('shdk', 2),
             'mental_disorders' => 2, // Otomatis 2 (Tidak Ada) jika tidak ada kolom
-            'disabilities' => isset($disabilitiesMap[$get('disabilities', '')]) ? $disabilitiesMap[$get('disabilities', '')] : (isset($row['disabilities']) ? (int) $row['disabilities'] : 0),
+            'disabilities' => isset($disabilitiesMap[$get('disabilities', '')]) ? $disabilitiesMap[$get('disabilities', '')] : (isset($row['disabilities']) ? (int) $row['disabilities'] : null),
             'education_status' => $this->mapEducationStatus($get('pendidikan', '')),
             'birth_date' => $this->formatDate($get('tanggal_lahir', '')),
             'birth_place' => $get('tempat_lahir', ''),
@@ -315,25 +291,9 @@ class CitizensImport implements ToCollection, WithHeadingRow, WithValidation
             'state' => $get('state', null),
             'country' => $get('country', null),
             'foreign_postal_code' => $get('foreign_postal_code', null),
-            'status' => $get('status', null),
+            'status' => 'Active', // Otomatis Active untuk semua data import
             'rf_id_tag' => $get('rf_id_tag', null),
         ];
-
-        // Log processed data untuk debugging
-        Log::info("Processed data: " . json_encode($data));
-
-        // Log mapping details untuk debugging
-        Log::info("Mapping details:");
-        Log::info("- Gender mapping: " . $get('jenis_kelamin', '') . " -> " . $data['gender']);
-        Log::info("- Birth certificate mapping: " . $get('akta_lahir', '') . " -> " . $data['birth_certificate']);
-        Log::info("- Blood type mapping: " . $get('golongan_darah', '') . " -> " . $data['blood_type']);
-        Log::info("- Religion mapping: " . $get('agama', '') . " -> " . $data['religion']);
-        Log::info("- Marital status mapping: " . $get('status_kawin', '') . " -> " . $data['marital_status']);
-        Log::info("- Marital certificate mapping: " . $get('akta_kawin', '') . " -> " . $data['marital_certificate']);
-        Log::info("- Divorce certificate mapping: " . $get('akta_cerai', '') . " -> " . $data['divorce_certificate']);
-        Log::info("- Family status mapping: " . $get('shdk', '') . " -> " . $data['family_status']);
-        Log::info("- Education status mapping: " . $get('pendidikan', '') . " -> " . $data['education_status']);
-        Log::info("- Blood type mapping: " . $get('golongan_darah', '') . " -> " . $data['blood_type']);
 
         // Mapping job_type_id: jika value di Excel berupa nama, konversi ke id
         $jobValue = $get('pekerjaan', null);
@@ -347,8 +307,6 @@ class CitizensImport implements ToCollection, WithHeadingRow, WithValidation
             $jobId = 0;
         }
         $data['job_type_id'] = $jobId;
-
-        Log::info("Job mapping - Original value: {$jobValue}, Mapped to ID: {$jobId}");
 
         return $data;
     }
@@ -391,13 +349,11 @@ class CitizensImport implements ToCollection, WithHeadingRow, WithValidation
 
         // Handle empty, null, or "-" values
         if (empty($value) || $value === '-' || $value === 'null' || $value === 'NULL') {
-            Log::info("Blood type empty/invalid, defaulting to 13 (Tidak Tahu)");
             return 13; // Tidak Tahu
         }
 
         // Check if value exists in mapping
         if (isset($bloodTypeMap[$value])) {
-            Log::info("Blood type mapping found: '{$value}' -> {$bloodTypeMap[$value]}");
             return $bloodTypeMap[$value];
         }
 
@@ -405,13 +361,9 @@ class CitizensImport implements ToCollection, WithHeadingRow, WithValidation
         if (is_numeric($value)) {
             $intValue = (int) $value;
             if ($intValue >= 1 && $intValue <= 13) {
-                Log::info("Blood type numeric value: '{$value}' -> {$intValue}");
                 return $intValue;
             }
         }
-
-        // Log unmapped value
-        Log::warning("Blood type unmapped value: '{$value}', defaulting to 13 (Tidak Tahu)");
 
         // Default to "Tidak Tahu" if value is invalid
         return 13;
@@ -475,13 +427,11 @@ class CitizensImport implements ToCollection, WithHeadingRow, WithValidation
 
         // Handle empty, null, or "-" values
         if (empty($value) || $value === '-' || $value === 'null' || $value === 'NULL') {
-            Log::info("Education status empty/invalid, defaulting to 1 (Tidak/Belum Sekolah)");
             return 1; // Tidak/Belum Sekolah
         }
 
         // Check if value exists in mapping
         if (isset($educationStatusMap[$value])) {
-            Log::info("Education status mapping found: '{$value}' -> {$educationStatusMap[$value]}");
             return $educationStatusMap[$value];
         }
 
@@ -489,13 +439,9 @@ class CitizensImport implements ToCollection, WithHeadingRow, WithValidation
         if (is_numeric($value)) {
             $intValue = (int) $value;
             if ($intValue >= 1 && $intValue <= 10) {
-                Log::info("Education status numeric value: '{$value}' -> {$intValue}");
                 return $intValue;
             }
         }
-
-        // Log unmapped value
-        Log::warning("Education status unmapped value: '{$value}', defaulting to 1 (Tidak/Belum Sekolah)");
 
         // Default to "Tidak/Belum Sekolah" if value is invalid
         return 1;
