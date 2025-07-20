@@ -72,13 +72,15 @@
                 </div>
 
                 <!-- Nama Lengkap -->
-                <div>
+                <div class="relative">
                     <label for="fullNameSelect" class="block text-sm font-medium text-gray-700">Nama Lengkap <span class="text-red-500">*</span></label>
-                    <select id="fullNameSelect" name="full_name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
-                        <option value="">Pilih Nama Lengkap</option>
-                    </select>
+                    <input type="text" id="fullNameSelect" name="full_name" 
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" 
+                           required 
+                           autocomplete="off">
+                    <p class="text-xs text-gray-500 mt-1">Ketik untuk mencari nama dengan fitur autocomplete</p>
                 </div>
-
+ 
                 <!-- Tempat Lahir -->
                 <div>
                     <label for="birth_place" class="block text-sm font-medium text-gray-700">Tempat Lahir <span class="text-red-500">*</span></label>
