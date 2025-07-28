@@ -13,7 +13,7 @@
 
         <div class="flex gap-3">
             <a href="{{ route('login') }}" class="bg-white/80 text-gray-800 border border-gray-200/60 px-5 py-2 rounded-full shadow hover:shadow-md hover:border-[#969BE7] transition-all duration-200">Login</a>
-            <a href="{{ route('register') }}" class="bg-[#969BE7] text-white px-5 py-2 rounded-full shadow-md hover:shadow-lg hover:bg-[#8286D9] transition-all duration-200">Daftar</a>
+            {{-- <a href="{{ route('register') }}" class="bg-[#969BE7] text-white px-5 py-2 rounded-full shadow-md hover:shadow-lg hover:bg-[#8286D9] transition-all duration-200">Daftar</a> --}}
         </div>
     </div>
 
@@ -45,7 +45,7 @@
     <!-- Mobile Auth Buttons -->
     <div class="flex flex-col gap-4 w-64">
         <a href="{{ route('login') }}" class="bg-white text-gray-800 border border-gray-200 py-3 rounded-full shadow hover:shadow-md hover:border-[#969BE7] text-center transition-all duration-200">Login</a>
-        <a href="{{ route('register') }}" class="bg-[#969BE7] text-white py-3 rounded-full shadow-md hover:shadow-lg hover:bg-[#8286D9] text-center transition-all duration-200">Daftar</a>
+        {{-- <a href="{{ route('register') }}" class="bg-[#969BE7] text-white py-3 rounded-full shadow-md hover:shadow-lg hover:bg-[#8286D9] text-center transition-all duration-200">Daftar</a> --}}
     </div>
 </div>
 
