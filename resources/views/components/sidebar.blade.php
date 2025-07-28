@@ -204,20 +204,20 @@
                                     <span>Surat Ahli Waris</span>
                                 </a>
                             </li>
-                            <li>
+                            {{-- <li>
                                 <a href="{{ route('superadmin.surat.kelahiran.index') }}"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
                                                                                                                                                     {{ request()->routeIs('superadmin.surat.kelahiran*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Surat Kelahiran</span>
                                 </a>
-                            </li>
-                            <li>
+                            </li> --}}
+                            {{-- <li>
                                 <a href="{{ route('superadmin.surat.kematian.index') }}"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
                                                                                                                                                     {{ request()->routeIs('superadmin.surat.kematian*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Surat Kematian</span>
                                 </a>
-                            </li>
+                            </li> --}}
                             <li>
                                 <a href="{{ route('superadmin.surat.keramaian.index') }}"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
@@ -232,13 +232,13 @@
                                     <span>Surat Rumah Sewa</span>
                                 </a>
                             </li>
-                            <li>
+                            {{-- <li>
                                 <a href="{{ route('superadmin.surat.pengantar-ktp.index') }}"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
                                                                                                                                                     {{ request()->routeIs('superadmin.surat.pengantar-ktp*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Pengantar KTP</span>
                                 </a>
-                            </li>
+                            </li> --}}
                         </ul>
                     </li>
 
@@ -475,20 +475,20 @@
                                     <span>Surat Ahli Waris</span>
                                 </a>
                             </li>
-                            <li>
+                            {{-- <li>
                                 <a href="{{ route('admin.desa.surat.kelahiran.index') }}"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
                                                                                                                                                                     {{ request()->routeIs('admin.desa.surat.kelahiran*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Surat Kelahiran</span>
                                 </a>
-                            </li>
-                            <li>
+                            </li> --}}
+                            {{-- <li>
                                 <a href="{{ route('admin.desa.surat.kematian.index') }}"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
                                                                                                                                                                     {{ request()->routeIs('admin.desa.surat.kematian*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Surat Kematian</span>
                                 </a>
-                            </li>
+                            </li> --}}
                             <li>
                                 <a href="{{ route('admin.desa.surat.keramaian.index') }}"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
@@ -503,13 +503,13 @@
                                     <span>Surat Rumah Sewa</span>
                                 </a>
                             </li>
-                            <li>
+                            {{-- <li>
                                 <a href="{{ route('admin.desa.surat.pengantar-ktp.index') }}"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
                                                                                                                                                                     {{ request()->routeIs('admin.desa.surat.pengantar-ktp*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Pengantar KTP</span>
                                 </a>
-                            </li>
+                            </li> --}}
                         </ul>
                     </li>
 

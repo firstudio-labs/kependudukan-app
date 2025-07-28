@@ -311,7 +311,7 @@
                         </a>
                     </div>
 
-                    <!-- Card 3: Orange -->
+                    {{-- <!-- Card 3: Orange - Surat Pengantar KTP -->
                     <div class="glass-card rounded-2xl p-3 text-center hover:shadow-lg transition duration-300 w-[150px] md:w-[170px]">
                         <div class="icon-circle orange w-16 h-16 md:w-20 md:h-20">
                             <i class="fa fa-id-card fa-xl text-orange-600"></i>
@@ -326,9 +326,9 @@
                                 Surat Pengantar KTP
                             </button>
                         </a>
-                    </div>
+                    </div> --}}
 
-                    <!-- Card 4: Pink -->
+                    {{-- <!-- Card 4: Pink - Surat Keterangan Kelahiran -->
                     <div class="glass-card rounded-2xl p-3 text-center hover:shadow-lg transition duration-300 w-[150px] md:w-[170px]">
                         <div class="icon-circle pink w-16 h-16 md:w-20 md:h-20">
                             <i class="fa fa-baby fa-xl text-pink-600"></i>
@@ -343,9 +343,9 @@
                                 Surat Keterangan Kelahiran
                             </button>
                         </a>
-                    </div>
+                    </div> --}}
 
-                    <!-- Card 5: Purple -->
+                    {{-- <!-- Card 5: Purple - Surat Keterangan Kematian -->
                     <div class="glass-card rounded-2xl p-3 text-center hover:shadow-lg transition duration-300 w-[150px] md:w-[170px]">
                         <div class="icon-circle purple w-16 h-16 md:w-20 md:h-20">
                             <i class="fa-solid fa-house-medical fa-xl text-purple-600"></i>
@@ -360,7 +360,7 @@
                                 Surat Keterangan Kematian
                             </button>
                         </a>
-                    </div>
+                    </div> --}}
 
                     <!-- Card 6: Yellow -->
                     <div class="glass-card rounded-2xl p-3 text-center hover:shadow-lg transition duration-300 w-[150px] md:w-[170px]">
