@@ -40,18 +40,13 @@ document.addEventListener('DOMContentLoaded', function() {
         showSweetAlert('error', 'Gagal!', error);
     }
 
-    // Get village_id from URL parameters
-    const urlParams = new URLSearchParams(window.location.search);
-    const villageId = urlParams.get('village_id');
-
-    // Load citizens data with village filter
+    // Load citizens data
     $.ajax({
         url: citizenApiRoute,
         type: 'GET',
         dataType: 'json',
         data: {
-            limit: 10000,
-            village_id: villageId // Tambahkan filter village_id
+            limit: 10000
         },
         headers: {
             'Accept': 'application/json',
@@ -121,8 +116,10 @@ document.addEventListener('DOMContentLoaded', function() {
                             // Fill form fields
                             populateHeirFieldsFromCitizen(heirRow, matchedCitizen);
 
-                            // Update full name select
-                            $(heirRow).find('.fullname-select').val(matchedCitizen.full_name).trigger('change');
+                            // Update full name input (now as text input, not dropdown)
+                            if ($(heirRow).find('.fullname-select').length) {
+                                $(heirRow).find('.fullname-select').val(matchedCitizen.full_name);
+                            }
 
                             // Visual feedback for success
                             $(nikInput).addClass('border-green-500').removeClass('border-red-500 border-gray-300');
@@ -151,9 +148,13 @@ document.addEventListener('DOMContentLoaded', function() {
             // Setup RF ID Tag listener
             setupHeirRfIdListener(heirRow);
 
-            // Setup name select (optimized)
+            // Setup name select (optimized) - KODE DROPDOWN DIKOMENTARI
             const nameSelect = heirRow.querySelector('.fullname-select');
             if (nameSelect) {
+                // --- KODE DROPDOWN NAMA LENGKAP DIKOMENTARI ---
+                // Jika sewaktu-waktu dibutuhkan, bisa diaktifkan kembali
+
+                /*
                 // Initialize Select2 dengan data yang sudah di-cache
                 $(nameSelect).select2({
                     placeholder: 'Ketik nama untuk mencari...',
@@ -206,6 +207,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         populateHeirFieldsFromCitizen(heirRow, citizen);
                     }
                 });
+                */
             }
 
             // Setup remove button
@@ -260,12 +262,24 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (matchedCitizen) {
                         populateHeirFieldsFromCitizen(heirRow, matchedCitizen);
 
+                        // --- KODE UPDATE DROPDOWN DIKOMENTARI ---
+                        // Jika sewaktu-waktu dibutuhkan, bisa diaktifkan kembali
+                        /*
                         // Update dropdown NIK dan Nama dengan trigger yang benar
                         if ($(heirRow).find('.nik-select').length) {
                             $(heirRow).find('.nik-select').val(matchedCitizen.nik).trigger('change');
                         }
                         if ($(heirRow).find('.fullname-select').length) {
                             $(heirRow).find('.fullname-select').val(matchedCitizen.full_name).trigger('change');
+                        }
+                        */
+
+                        // Set NIK dan nama lengkap secara manual (karena sekarang input text)
+                        if ($(heirRow).find('.nik-select').length) {
+                            $(heirRow).find('.nik-select').val(matchedCitizen.nik);
+                        }
+                        if ($(heirRow).find('.fullname-select').length) {
+                            $(heirRow).find('.fullname-select').val(matchedCitizen.full_name);
                         }
 
                         // Feedback visual berhasil
@@ -312,6 +326,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Function to populate heir fields from citizen data
     function populateHeirFieldsFromCitizen(heirRow, citizen) {
+        // Set NIK field
+        if (citizen.nik) {
+            const nikValue = citizen.nik.toString();
+            $(heirRow).find('.nik-select').val(nikValue);
+        }
+
+        // Set full name field (now as input text, not dropdown)
+        if (citizen.full_name) {
+            $(heirRow).find('.fullname-select').val(citizen.full_name);
+        }
+
         // Set birth place
         $(heirRow).find('.birth-place').val(citizen.birth_place || '');
 

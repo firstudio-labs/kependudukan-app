@@ -118,12 +118,24 @@ function setupRfIdTagListener(citizens) {
             if (matchedCitizen) {
                 populateCitizenData(matchedCitizen);
 
+                // --- KODE UPDATE DROPDOWN DIKOMENTARI ---
+                // Jika sewaktu-waktu dibutuhkan, bisa diaktifkan kembali
+                /*
                 // Update dropdown NIK dan Nama dengan trigger yang benar
                 if ($('#nikSelect').length) {
                     $('#nikSelect').val(matchedCitizen.nik).trigger('change');
                 }
                 if ($('#fullNameSelect').length) {
                     $('#fullNameSelect').val(matchedCitizen.full_name).trigger('change');
+                }
+                */
+
+                // Set NIK dan nama lengkap secara manual (karena sekarang input text)
+                if ($('#nikSelect').length) {
+                    $('#nikSelect').val(matchedCitizen.nik);
+                }
+                if ($('#fullNameSelect').length) {
+                    $('#fullNameSelect').val(matchedCitizen.full_name);
                 }
 
                 // Set address jika ada
@@ -186,8 +198,10 @@ function setupNikInput(citizens) {
                 // Fill form fields
                 populateCitizenData(matchedCitizen);
 
-                // Update full name select - FIXED: Use correct ID
-                $('#fullNameSelect').val(matchedCitizen.full_name).trigger('change');
+                // Update full name input (now as text input, not dropdown)
+                if ($('#fullNameSelect').length) {
+                    $('#fullNameSelect').val(matchedCitizen.full_name);
+                }
 
                 // Visual feedback for success
                 $(nikInput).addClass('border-green-500').removeClass('border-red-500 border-gray-300');
@@ -215,8 +229,12 @@ function setupNikInput(citizens) {
     });
 }
 
-// Function to setup name select - FIXED VERSION
+// Function to setup name select - KODE DROPDOWN DIKOMENTARI
 function setupNameSelect(citizens) {
+    // --- KODE DROPDOWN NAMA LENGKAP DIKOMENTARI ---
+    // Jika sewaktu-waktu dibutuhkan, bisa diaktifkan kembali
+
+    /*
     const nameSelect = document.getElementById('fullNameSelect'); // FIXED: Use correct ID
     if (!nameSelect) {
         console.warn('Name select element not found');
@@ -297,6 +315,7 @@ function setupNameSelect(citizens) {
             populateCitizenData(citizen);
         }
     });
+    */
 }
 
 // Function to setup responsible name select - LEAVE AS IS
@@ -379,6 +398,17 @@ function setupResponsibleNameSelect(citizens) {
 
 // Function to populate citizen data
 function populateCitizenData(citizen) {
+    // Set NIK field
+    if (citizen.nik) {
+        const nikValue = citizen.nik.toString();
+        $('#nikSelect').val(nikValue);
+    }
+
+    // Set full name field (now as input text, not dropdown)
+    if (citizen.full_name) {
+        $('#fullNameSelect').val(citizen.full_name);
+    }
+
     // Set address field
     $('#address').val(citizen.address || '');
 

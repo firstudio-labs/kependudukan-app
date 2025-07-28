@@ -192,12 +192,24 @@ function initializeCitizenSelect(routeUrl, onDataLoaded = null) {
                 if (matchedCitizen) {
                     populateCitizenData(matchedCitizen);
 
+                    // --- KODE UPDATE DROPDOWN DIKOMENTARI ---
+                    // Jika sewaktu-waktu dibutuhkan, bisa diaktifkan kembali
+                    /*
                     // Update dropdown NIK dan Nama dengan trigger yang benar
                     if ($('#nikSelect').length) {
                         $('#nikSelect').val(matchedCitizen.nik).trigger('change.select2');
                     }
                     if ($('#fullNameSelect').length) {
                         $('#fullNameSelect').val(matchedCitizen.full_name).trigger('change.select2');
+                    }
+                    */
+
+                    // Set NIK dan nama lengkap secara manual (karena sekarang input text)
+                    if ($('#nikSelect').length) {
+                        $('#nikSelect').val(matchedCitizen.nik);
+                    }
+                    if ($('#fullNameSelect').length) {
+                        $('#fullNameSelect').val(matchedCitizen.full_name);
                     }
 
                     // Set domicile_address jika ada
@@ -253,9 +265,9 @@ function initializeCitizenSelect(routeUrl, onDataLoaded = null) {
                         // Fill form with citizen data
                         populateCitizenData(matchedCitizen);
 
-                        // Update full name select if it exists
+                        // Update full name input (now as text input, not dropdown)
                         if ($('#fullNameSelect').length) {
-                            $('#fullNameSelect').val(matchedCitizen.full_name).trigger('change');
+                            $('#fullNameSelect').val(matchedCitizen.full_name);
                         }
 
                         // Visual feedback for success
@@ -284,6 +296,10 @@ function initializeCitizenSelect(routeUrl, onDataLoaded = null) {
     }
 
     function setupNameSelect(citizens) {
+        // --- KODE DROPDOWN NAMA LENGKAP DIKOMENTARI ---
+        // Jika sewaktu-waktu dibutuhkan, bisa diaktifkan kembali
+
+        /*
         // Create name options array
         const nameOptions = [];
 
@@ -298,49 +314,13 @@ function initializeCitizenSelect(routeUrl, onDataLoaded = null) {
             }
         });
 
-        // Initialize Full Name Select2 dengan minimum input length
+        // --- Nonaktifkan fitur search, hanya dropdown saja ---
         $('#fullNameSelect').select2({
-            placeholder: 'Ketik nama untuk mencari...',
+            placeholder: 'Pilih Nama Lengkap',
             width: '100%',
             data: nameOptions,
-            minimumInputLength: 3, // Minimal 3 karakter sebelum dropdown muncul
-            language: {
-                noResults: function() {
-                    return 'Tidak ada data yang ditemukan';
-                },
-                searching: function() {
-                    return 'Mencari...';
-                },
-                inputTooShort: function() {
-                    return 'Ketik minimal 3 karakter untuk mencari';
-                }
-            },
-            // Tambahkan delay untuk mengurangi request berlebihan
-            delay: 300,
-            // Fungsi untuk filter data berdasarkan input
-            matcher: function(params, data) {
-                // Jika tidak ada input, jangan tampilkan hasil
-                if (!params.term) {
-                    return null;
-                }
-
-                // Jika input kurang dari 3 karakter, jangan tampilkan hasil
-                if (params.term.length < 3) {
-                    return null;
-                }
-
-                // Cari berdasarkan nama yang mengandung input
-                const term = params.term.toLowerCase();
-                const text = data.text.toLowerCase();
-
-                if (text.indexOf(term) > -1) {
-                    return data;
-                }
-
-                return null;
-            }
+            minimumResultsForSearch: Infinity // Nonaktifkan search box
         }).on("select2:open", function() {
-            // This ensures all options are visible when dropdown opens
             $('.select2-results__options').css('max-height', '400px');
         });
 
@@ -362,11 +342,59 @@ function initializeCitizenSelect(routeUrl, onDataLoaded = null) {
 
             isUpdating = false;
         });
+        */
+
+        // --- KODE SEARCH SELECT2 DIKOMENTARI, BISA DIAKTIFKAN KEMBALI JIKA PERLU ---
+        /*
+        $('#fullNameSelect').select2({
+            placeholder: 'Ketik nama untuk mencari...',
+            width: '100%',
+            data: nameOptions,
+            minimumInputLength: 3,
+            language: {
+                noResults: function() {
+                    return 'Tidak ada data yang ditemukan';
+                },
+                searching: function() {
+                    return 'Mencari...';
+                },
+                inputTooShort: function() {
+                    return 'Ketik minimal 3 karakter untuk mencari';
+                }
+            },
+            delay: 300,
+            matcher: function(params, data) {
+                if (!params.term) {
+                    return null;
+                }
+                if (params.term.length < 3) {
+                    return null;
+                }
+                const term = params.term.toLowerCase();
+                const text = data.text.toLowerCase();
+                if (text.indexOf(term) > -1) {
+                    return data;
+                }
+                return null;
+            }
+        });
+        */
     }
 }
 
 // Fill citizen data into form fields
 function populateCitizenData(citizen) {
+    // Set NIK field
+    if (citizen.nik) {
+        const nikValue = citizen.nik.toString();
+        $('#nikSelect').val(nikValue);
+    }
+
+    // Set full name field (now as input text, not dropdown)
+    if (citizen.full_name) {
+        $('#fullNameSelect').val(citizen.full_name);
+    }
+
     // Fill other form fields - PERSONAL INFO
     $('#birth_place').val(citizen.birth_place || '');
 
@@ -437,6 +465,18 @@ function populateCitizenData(citizen) {
     if (citizen.address && document.querySelector('#domicile_address')) {
         document.querySelector('#domicile_address').value = citizen.address;
     }
+
+    // --- KODE UPDATE DROPDOWN NAMA LENGKAP DIKOMENTARI ---
+    // Jika sewaktu-waktu dibutuhkan, bisa diaktifkan kembali
+    /*
+    // Update dropdown NIK dan Nama dengan trigger yang benar
+    if ($('#nikSelect').length) {
+        $('#nikSelect').val(matchedCitizen.nik).trigger('change.select2');
+    }
+    if ($('#fullNameSelect').length) {
+        $('#fullNameSelect').val(matchedCitizen.full_name).trigger('change.select2');
+    }
+    */
 }
 
 // Form validation without checking location fields

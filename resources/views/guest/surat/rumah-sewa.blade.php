@@ -31,10 +31,8 @@
 
             <div>
                 <label for="fullNameSelect" class="block text-sm font-medium text-gray-700">Nama Penyelenggara <span class="text-red-500">*</span></label>
-                <select id="fullNameSelect" name="full_name" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
-                    <option value="">Ketik nama untuk mencari...</option>
-                </select>
-                <p class="text-xs text-gray-500 mt-1">Ketik minimal 3 karakter untuk mencari nama</p>
+                <input type="text" id="fullNameSelect" name="full_name" placeholder="Nama Penyelenggara" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                <p class="text-xs text-gray-500 mt-1">Masukkan nama penyelenggara secara manual</p>
             </div>
 
             <div>

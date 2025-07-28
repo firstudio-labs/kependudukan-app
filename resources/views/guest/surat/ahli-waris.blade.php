@@ -33,9 +33,7 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Nama Ahli Waris <span class="text-red-500">*</span></label>
-                            <select name="full_name[]" class="fullname-select mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
-                                <option value="">Pilih Nama</option>
-                            </select>
+                            <input type="text" name="full_name[]" class="fullname-select mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" placeholder="Nama Ahli Waris" required>
                         </div>
 
                         <div>
