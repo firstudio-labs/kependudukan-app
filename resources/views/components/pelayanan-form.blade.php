@@ -1,6 +1,6 @@
 <!-- Wrapper Flex -->
 <div class="flex flex-col md:flex-row gap-6">
-    <!-- Card Nomor Antrian -->
+    {{-- <!-- Card Nomor Antrian -->
     <div class="bg-white/10 backdrop-blur-xl rounded-2xl shadow-md border border-white/20 p-6 text-center w-full md:w-1/3 self-start">
         <button class="text-black font-semibold px-4 py-2 rounded-xl mb-4 bg-white/10 backdrop-blur-lg border border-white/20 shadow-sm">
             Antrian Layanan Desa
@@ -20,10 +20,10 @@
         </div>
 
         <p class="mt-4 text-sm italic text-black">Quod Enchiridion Epictetus stoici scripsit. Rodrigo Abela</p>
-    </div>
+    </div> --}}
 
     <!-- Form Langsung -->
-    <div class="w-full md:w-3/5 md:ml-10">
+    <div class="w-full md:w-full">
         <form action="{{ route('guest.pelayanan.store') }}" method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-4">
             @csrf
 
