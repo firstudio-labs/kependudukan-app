@@ -36,12 +36,12 @@
         </div>
 
         <div class="flex items-center mb-4">
-            <div class="w-24 h-24 mr-4 flex items-center justify-center">
+            <div class="w-32 h-32 mr-4 flex items-center justify-center">
                 @if(isset($district_logo) && !empty($district_logo))
-                    <img src="{{ asset('storage/' . $district_logo) }}" alt="Logo Kabupaten" class="max-w-[80px] max-h-[80px] object-contain">
+                    <img src="{{ asset('storage/' . $district_logo) }}" alt="Logo Kabupaten" class="max-w-[120px] max-h-[120px] object-contain">
                 @else
                     <!-- Fallback to default logo -->
-                    <img src="{{ asset('images/logo.png') }}" alt="Logo Default" class="max-w-[80px] max-h-[80px] object-contain">
+                    <img src="{{ asset('images/logo.png') }}" alt="Logo Default" class="max-w-[120px] max-h-[120px] object-contain">
                 @endif
             </div>
             <div class="flex-1 text-center">

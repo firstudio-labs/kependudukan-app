@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Cache;
 use App\Models\Penandatangan;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use App\Models\KepalaDesa;
 
 class AdministrasiController extends Controller
 {
@@ -584,6 +585,35 @@ class AdministrasiController extends Controller
                 }
             }
 
+            // Get kepala desa data based on matching village_id
+            $kepalaDesaName = null;
+            $kepalaDesaSignature = null;
+            if (!empty($administration->village_id)) {
+                // Find admin desa user for this village
+                $adminDesaUser = User::where('villages_id', $administration->village_id)
+                    ->where('role', 'admin desa')
+                    ->first();
+
+                if ($adminDesaUser) {
+                    // Get kepala desa data from the kepala_desa table
+                    $kepalaDesa = KepalaDesa::where('user_id', $adminDesaUser->id)->first();
+
+                    if ($kepalaDesa) {
+                        $kepalaDesaName = $kepalaDesa->nama;
+                        $kepalaDesaSignature = $kepalaDesa->tanda_tangan;
+                    }
+                }
+            }
+
+            // Log the kepala desa information for debugging
+            \Log::info('Kepala desa data for administration ID: ' . $id, [
+                'village_id' => $administration->village_id,
+                'kepala_desa_name_found' => !is_null($kepalaDesaName),
+                'kepala_desa_name' => $kepalaDesaName,
+                'signature_found' => !is_null($kepalaDesaSignature),
+                'signature_path' => $kepalaDesaSignature
+            ]);
+
             // Log the logo information for debugging
             \Log::info('District logo for administration ID: ' . $id, [
                 'district_id' => $administration->district_id,
@@ -607,7 +637,9 @@ class AdministrasiController extends Controller
                     'formatted_letter_date' => $letterDate,
                     'rt' => $rt,
                     'signing_name' => $signing_name, // Pass the signing name to the view
-                    'district_logo' => $districtLogo // Pass the district logo to the view
+                    'district_logo' => $districtLogo, // Pass the district logo to the view
+                    'kepala_desa_name' => $kepalaDesaName, // Pass the kepala desa name to the view
+                    'kepala_desa_signature' => $kepalaDesaSignature // Pass the kepala desa signature to the view
                 ]);
             }
 
@@ -626,7 +658,9 @@ class AdministrasiController extends Controller
                 'formatted_letter_date' => $letterDate,
                 'rt' => $rt,
                 'signing_name' => $signing_name, // Pass the signing name to the view
-                'district_logo' => $districtLogo // Pass the district logo to the view
+                'district_logo' => $districtLogo, // Pass the district logo to the view
+                'kepala_desa_name' => $kepalaDesaName, // Pass the kepala desa name to the view
+                'kepala_desa_signature' => $kepalaDesaSignature // Pass the kepala desa signature to the view
             ]);
 
         } catch (\Exception $e) {
