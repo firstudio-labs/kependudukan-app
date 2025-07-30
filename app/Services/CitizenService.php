@@ -331,6 +331,80 @@ class CitizenService
     }
 
     /**
+     * Get all citizens with local search filtering (for superadmin)
+     */
+    public function getAllCitizensWithSearch($page = 1, $limit = 10, $search = null)
+    {
+        try {
+            $response = Http::withHeaders([
+                'X-API-Key' => $this->apiKey,
+            ])->get("{$this->baseUrl}/api/all-citizens");
+
+            if ($response->successful()) {
+                $data = $response->json();
+
+                // Extract citizens array from response
+                $allCitizens = [];
+                if (isset($data['data']) && is_array($data['data'])) {
+                    $allCitizens = $data['data'];
+                } elseif (isset($data['citizens']) && is_array($data['citizens'])) {
+                    $allCitizens = $data['citizens'];
+                } elseif (is_array($data)) {
+                    $allCitizens = $data;
+                }
+
+                // Apply search filter if provided
+                if ($search) {
+                    $searchLower = strtolower($search);
+                    $allCitizens = collect($allCitizens)->filter(function ($citizen) use ($searchLower) {
+                        return str_contains(strtolower($citizen['full_name'] ?? ''), $searchLower) ||
+                               str_contains((string) ($citizen['nik'] ?? ''), $searchLower) ||
+                               str_contains((string) ($citizen['kk'] ?? ''), $searchLower);
+                    })->values()->all();
+                }
+
+                // Apply pagination
+                $totalItems = count($allCitizens);
+                $offset = ($page - 1) * $limit;
+                $paginatedCitizens = array_slice($allCitizens, $offset, $limit);
+
+                return [
+                    'status' => 'OK',
+                    'message' => 'Citizens retrieved' . ($search ? ' with search' : ''),
+                    'data' => [
+                        'citizens' => $paginatedCitizens,
+                        'pagination' => [
+                            'current_page' => $page,
+                            'items_per_page' => $limit,
+                            'total_items' => $totalItems,
+                            'total_page' => ceil($totalItems / $limit),
+                            'next_page' => ($page * $limit) < $totalItems ? $page + 1 : null,
+                            'prev_page' => $page > 1 ? $page - 1 : null,
+                        ],
+                    ]
+                ];
+            } else {
+                Log::error('API request failed for getAllCitizensWithSearch', [
+                    'status_code' => $response->status(),
+                    'response_body' => $response->body()
+                ]);
+                return [
+                    'status' => 'ERROR',
+                    'message' => 'Failed to fetch citizens',
+                    'data' => []
+                ];
+            }
+        } catch (\Exception $e) {
+            Log::error('Error in getAllCitizensWithSearch: ' . $e->getMessage());
+            return [
+                'status' => 'ERROR',
+                'message' => 'Error: ' . $e->getMessage(),
+                'data' => []
+            ];
+        }
+    }
+
+    /**
      * Get citizens by village ID
      *
      * @param int $villageId
@@ -354,7 +428,8 @@ class CitizenService
                     $searchLower = strtolower($search);
                     $filtered = $filtered->filter(function ($citizen) use ($searchLower) {
                         return str_contains(strtolower($citizen['full_name']), $searchLower) ||
-                               str_contains((string) $citizen['nik'], $searchLower);
+                               str_contains((string) $citizen['nik'], $searchLower) ||
+                               str_contains((string) $citizen['kk'], $searchLower); // Tambahkan search KK
                     });
                 }
 
@@ -384,14 +459,14 @@ class CitizenService
                     'status_code' => $response->status(),
                     'village_id' => $villageId
                 ]);
-                return $this->filterCitizensByVillageId($villageId);
+                return $this->filterCitizensByVillageId($villageId, $page, $limit, $search);
             }
         } catch (\Exception $e) {
             Log::error('Exception fetching citizens by village ID', [
                 'error' => $e->getMessage(),
                 'village_id' => $villageId
             ]);
-            return $this->filterCitizensByVillageId($villageId);
+            return $this->filterCitizensByVillageId($villageId, $page, $limit, $search);
         }
     }
 
@@ -401,7 +476,7 @@ class CitizenService
      * @param int $villageId
      * @return array
      */
-    private function filterCitizensByVillageId($villageId, $page = 1, $limit = 10)
+    private function filterCitizensByVillageId($villageId, $page = 1, $limit = 10, $search = null)
     {
         // Dapatkan semua warga terlebih dahulu
         $allCitizensData = $this->getAllCitizensWithHighLimit();
@@ -423,6 +498,16 @@ class CitizenService
                    (isset($citizen['village_id']) && $citizen['village_id'] == $villageId);
         });
 
+        // Tambahkan filter pencarian jika parameter search diisi
+        if ($search) {
+            $searchLower = strtolower($search);
+            $filteredCitizens = array_filter($filteredCitizens, function($citizen) use ($searchLower) {
+                return str_contains(strtolower($citizen['full_name'] ?? ''), $searchLower) ||
+                       str_contains((string) ($citizen['nik'] ?? ''), $searchLower) ||
+                       str_contains((string) ($citizen['kk'] ?? ''), $searchLower); // Tambahkan search KK
+            });
+        }
+
         $totalItems = count($filteredCitizens);
         $offset = ($page - 1) * $limit;
         $pagedCitizens = array_slice($filteredCitizens, $offset, $limit);
@@ -437,8 +522,9 @@ class CitizenService
                     'items_per_page' => $limit,
                     'total_items' => $totalItems,
                     'total_page' => ceil($totalItems / $limit),
-                    'has_more_pages' => ($page * $limit) < $totalItems
-                ]
+                    'next_page' => ($page * $limit) < $totalItems ? $page + 1 : null,
+                    'prev_page' => $page > 1 ? $page - 1 : null,
+                ],
             ]
         ];
     }

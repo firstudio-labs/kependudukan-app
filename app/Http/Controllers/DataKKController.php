@@ -60,30 +60,8 @@ class DataKKController extends Controller
         // Get data based on user role and search parameters
         if (Auth::user()->role === 'admin desa' && $villagesId) {
             if ($search) {
-                // First try searching with keyword
-                $kk = $this->citizenService->searchCitizens($search);
-
-                // If search fails, fallback to village-specific citizens
-                            // Filter hasil untuk desa admin saja
-            if ($kkData && isset($kkData['status']) && $kkData['status'] === 'OK' && isset($kkData['data'])) {
-                // Filter hasil pencarian untuk desa admin saja
-                $filteredKK = [];
-                if (isset($kkData['data']['citizens']) && is_array($kkData['data']['citizens'])) {
-                    foreach ($kkData['data']['citizens'] as $citizen) {
-                        if (isset($citizen['village_id']) && $citizen['village_id'] == $villagesId) {
-                            $filteredKK[] = $citizen;
-                        }
-                    }
-                    $kkData['data']['citizens'] = $filteredKK;
-                    $kkData['data']['count'] = count($filteredKK);
-                }
-                $kk = $kkData;
-            } else {
-                // If search fails, get all citizens from the village
-                $kk = $this->citizenService->getCitizensByVillageId($villagesId, $page);
-                session()->flash('warning', 'Pencarian gagal, menampilkan semua data KK desa');
-            }
-
+                // Use the service method that supports search with village filtering
+                $kk = $this->citizenService->getCitizensByVillageId($villagesId, $page, 10, $search);
             } else {
                 // Direct call to get citizens by village ID with pagination
                 $kk = $this->citizenService->getCitizensByVillageId($villagesId, $page);
@@ -97,28 +75,27 @@ class DataKKController extends Controller
                 ]);
             }
         } else {
-            // For superadmin or other roles, show all data
+            // For superadmin or other roles, show all data with consistent search
             if ($search) {
-                $kk = $this->citizenService->searchCitizens($search);
-                if (!$kk || isset($kk['status']) && $kk['status'] === 'ERROR') {
-                    $kk = $this->citizenService->getAllCitizens($page);
-                    session()->flash('warning', 'Search failed, showing all results instead');
-                }
+                // Gunakan method baru yang melakukan filtering lokal seperti admin desa
+                $kk = $this->citizenService->getAllCitizensWithSearch($page, 10, $search);
             } else {
-                $kk = $this->citizenService->getAllCitizens($page);
+                $kk = $this->citizenService->getAllCitizensWithSearch($page, 10);
             }
         }
-        // Prepare pagination data
-    $paginationData = [];
-    if (isset($kk['data']['pagination'])) {
-        $paginationData = [
-            'current_page' => $kk['data']['pagination']['current_page'],
-            'total_page' => $kk['data']['pagination']['total_page'],
-            'base_url' => route('admin.desa.datakk.index') . '?',
-            'search' => $search
-        ];
-    }
 
+        // Prepare pagination data
+        $paginationData = [];
+        if (isset($kk['data']['pagination'])) {
+            $paginationData = [
+                'current_page' => $kk['data']['pagination']['current_page'],
+                'total_page' => $kk['data']['pagination']['total_page'],
+                'base_url' => Auth::user()->role === 'admin desa'
+                    ? route('admin.desa.datakk.index') . '?'
+                    : route('superadmin.datakk.index') . '?',
+                'search' => $search
+            ];
+        }
 
         // Get family member counts for each KK
         if (isset($kk['data']['citizens']) && is_array($kk['data']['citizens'])) {

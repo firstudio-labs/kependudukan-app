@@ -65,19 +65,26 @@ class BiodataController extends Controller
 
             return view('admin.desa.biodata.index', compact('citizens', 'search', 'paginationData'));
         } else {
-            // Untuk superadmin tampilkan semua data
+            // Untuk superadmin tampilkan semua data dengan search yang konsisten
             if ($search) {
-                $citizens = $this->citizenService->searchCitizens($search);
-                // If search returns null or error, fallback to getting all citizens
-                if (!$citizens || isset($citizens['status']) && $citizens['status'] === 'ERROR') {
-                    $citizens = $this->citizenService->getAllCitizens($page);
-                    session()->flash('warning', 'Search failed, showing all results instead');
-                }
+                // Gunakan method baru yang melakukan filtering lokal seperti admin desa
+                $citizens = $this->citizenService->getAllCitizensWithSearch($page, $limit, $search);
             } else {
-                $citizens = $this->citizenService->getAllCitizens($page);
+                $citizens = $this->citizenService->getAllCitizensWithSearch($page, $limit);
             }
 
-            return view('superadmin.biodata.index', compact('citizens', 'search'));
+            // Siapkan data paginasi untuk view superadmin
+            $paginationData = [];
+            if (isset($citizens['data']['pagination'])) {
+                $paginationData = [
+                    'current_page' => $citizens['data']['pagination']['current_page'],
+                    'total_page' => $citizens['data']['pagination']['total_page'],
+                    'base_url' => route('superadmin.biodata.index') . '?',
+                    'search' => $search
+                ];
+            }
+
+            return view('superadmin.biodata.index', compact('citizens', 'search', 'paginationData'));
         }
     }
 
