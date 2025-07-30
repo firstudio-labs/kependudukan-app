@@ -36,6 +36,7 @@
                         <th class="px-6 py-3">Kode</th>
                         <th class="px-6 py-3">Jenis Aset</th>
                         <th class="px-6 py-3">Keterangan</th>
+                        <th class="px-6 py-3">Klasifikasi</th>
                         <th class="px-6 py-3">Aksi</th>
                     </tr>
                 </thead>
@@ -48,6 +49,7 @@
                             <td class="px-6 py-4">{{ $item->kode }}</td>
                             <td class="px-6 py-4">{{ $item->jenis_aset }}</td>
                             <td class="px-6 py-4">{{ $item->keterangan ?? '-' }}</td>
+                            <td class="px-6 py-4">{{ $item->klasifikasi ? $item->klasifikasi->jenis_klasifikasi : '-' }}</td>
                             <td class="flex items-center px-6 py-4 space-x-2">
                                 <a href="{{ route('superadmin.datamaster.jenis-aset.edit', $item->id) }}"
                                     class="text-yellow-600 hover:text-yellow-800" aria-label="Edit">
@@ -65,7 +67,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="text-center py-4">Tidak ada jenis aset</td>
+                            <td colspan="6" class="text-center py-4">Tidak ada jenis aset</td>
                         </tr>
                     @endforelse
                 </tbody>

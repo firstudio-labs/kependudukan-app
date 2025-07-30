@@ -15,5 +15,11 @@ class JenisAset extends Model
         'kode',
         'jenis_aset',
         'keterangan',
+        'klasifikasi_id', // tambahkan ini
     ];
+
+    public function klasifikasi()
+    {
+        return $this->belongsTo(Klasifikasi::class, 'klasifikasi_id');
+    }
 }

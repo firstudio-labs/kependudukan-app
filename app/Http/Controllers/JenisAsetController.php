@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\JenisAset;
+use App\Models\Klasifikasi;
 use Illuminate\Http\Request;
 
 class JenisAsetController extends Controller
@@ -19,14 +20,15 @@ class JenisAsetController extends Controller
                 ->orWhere('keterangan', 'LIKE', "%{$search}%");
         }
 
-        $jenisAset = $query->paginate(10);
+        $jenisAset = $query->with('klasifikasi')->paginate(10);
 
         return view('superadmin.datamaster.jenis-aset.index', compact('jenisAset'));
     }
 
     public function create()
     {
-        return view('superadmin.datamaster.jenis-aset.create');
+        $klasifikasis = Klasifikasi::all();
+        return view('superadmin.datamaster.jenis-aset.create', compact('klasifikasis'));
     }
 
     public function store(Request $request)
@@ -35,12 +37,14 @@ class JenisAsetController extends Controller
             'kode' => 'required|integer|unique:jenis_aset',
             'jenis_aset' => 'required|string|max:255',
             'keterangan' => 'nullable|string',
+            'klasifikasi_id' => 'required|exists:klasifikasi,id',
         ]);
 
         JenisAset::create([
             'kode' => $request->kode,
             'jenis_aset' => $request->jenis_aset,
             'keterangan' => $request->keterangan,
+            'klasifikasi_id' => $request->klasifikasi_id,
         ]);
 
         return redirect()->route('superadmin.datamaster.jenis-aset.index')
@@ -50,7 +54,8 @@ class JenisAsetController extends Controller
     public function edit($id)
     {
         $jenisAset = JenisAset::findOrFail($id);
-        return view('superadmin.datamaster.jenis-aset.edit', compact('jenisAset'));
+        $klasifikasis = Klasifikasi::all();
+        return view('superadmin.datamaster.jenis-aset.edit', compact('jenisAset', 'klasifikasis'));
     }
 
     public function update(Request $request, $id)
@@ -59,6 +64,7 @@ class JenisAsetController extends Controller
             'kode' => 'required|integer|unique:jenis_aset,kode,' . $id,
             'jenis_aset' => 'required|string|max:255',
             'keterangan' => 'nullable|string',
+            'klasifikasi_id' => 'required|exists:klasifikasi,id',
         ]);
 
         $jenisAset = JenisAset::findOrFail($id);
@@ -66,6 +72,7 @@ class JenisAsetController extends Controller
             'kode' => $request->kode,
             'jenis_aset' => $request->jenis_aset,
             'keterangan' => $request->keterangan,
+            'klasifikasi_id' => $request->klasifikasi_id,
         ]);
 
         return redirect()->route('superadmin.datamaster.jenis-aset.index')

@@ -40,6 +40,24 @@
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
                     </div>
+
+                    <div>
+                        <label for="klasifikasi_id" class="block text-sm font-medium text-gray-700">Klasifikasi <span class="text-red-500">*</span></label>
+                        <select id="klasifikasi_id" name="klasifikasi_id"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
+                            required>
+                            <option value="">-- Pilih Klasifikasi --</option>
+                            @foreach($klasifikasis as $klasifikasi)
+                                <option value="{{ $klasifikasi->id }}"
+                                    {{ old('klasifikasi_id') == $klasifikasi->id ? 'selected' : '' }}>
+                                    {{ $klasifikasi->jenis_klasifikasi }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('klasifikasi_id')
+                            <div class="text-danger">{{ $message }}</div>
+                        @enderror
+                    </div>
                 </div>
 
                 <div class="flex justify-end space-x-3">
