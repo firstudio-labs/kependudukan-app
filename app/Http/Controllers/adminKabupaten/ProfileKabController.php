@@ -45,6 +45,7 @@ class ProfileKabController extends Controller
         $user = Auth::user();
 
         $request->validate([
+            'nama' => 'required|string|max:255',
             'username' => 'required|string|max:255|unique:users,username,' . $user->id,
             'email' => 'required|email|max:255|unique:users,email,' . $user->id,
             'no_hp' => 'nullable|string|max:15',
@@ -52,8 +53,10 @@ class ProfileKabController extends Controller
             'current_password' => 'nullable|required_with:new_password',
             'new_password' => 'nullable|min:6|confirmed',
             'image' => 'nullable|image|max:2048',
+            'foto_pengguna' => 'nullable|image|max:2048',
         ]);
 
+        $user->nama = $request->nama;
         $user->username = $request->username;
         $user->email = $request->email;
         $user->no_hp = $request->no_hp;
@@ -68,18 +71,32 @@ class ProfileKabController extends Controller
             $user->password = Hash::make($request->new_password);
         }
 
-        // Handle profile photo upload
+        // Handle logo upload (image field)
         if ($request->hasFile('image')) {
-            // Delete old photo if exists
+            // Delete old logo if exists
             if ($user->image && Storage::disk('public')->exists($user->image)) {
                 Storage::disk('public')->delete($user->image);
             }
 
-            // Save new photo
-            $photo = $request->file('image');
-            $filename = 'user_' . $user->id . '_' . time() . '.' . $photo->getClientOriginalExtension();
-            $path = $photo->storeAs('images/users', $filename, 'public');
+            // Save new logo
+            $logo = $request->file('image');
+            $filename = 'user_' . $user->id . '_' . time() . '_logo.' . $logo->getClientOriginalExtension();
+            $path = $logo->storeAs('images/users', $filename, 'public');
             $user->image = $path;
+        }
+
+        // Handle foto pengguna upload
+        if ($request->hasFile('foto_pengguna')) {
+            // Delete old foto if exists
+            if ($user->foto_pengguna && Storage::disk('public')->exists($user->foto_pengguna)) {
+                Storage::disk('public')->delete($user->foto_pengguna);
+            }
+
+            // Save new foto pengguna
+            $fotoPengguna = $request->file('foto_pengguna');
+            $filename = 'user_' . $user->id . '_' . time() . '_foto.' . $fotoPengguna->getClientOriginalExtension();
+            $path = $fotoPengguna->storeAs('images/users', $filename, 'public');
+            $user->foto_pengguna = $path;
         }
 
         $user->save();

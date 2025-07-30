@@ -359,11 +359,11 @@
                     <a href="{{ route('admin.desa.profile.index') }}"
                         class="flex flex-col items-center p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-all duration-300">
                         <div class="w-16 h-16 rounded-full overflow-hidden mb-2 border-2 border-[#2D336B]">
-                            @if ($user->image)
-                                <img src="{{ asset('storage/' . $user->image) }}" alt="Profile photo"
+                            @if ($user->foto_pengguna)
+                                <img src="{{ asset('storage/' . $user->foto_pengguna) }}" alt="Foto Pengguna"
                                     class="w-full h-full object-cover">
                             @else
-                                <img src="https://flowbite.com/docs/images/people/profile-picture-5.jpg" alt="Profile photo"
+                                <img src="https://flowbite.com/docs/images/people/profile-picture-5.jpg" alt="Foto Pengguna"
                                     class="w-full h-full object-cover">
                             @endif
                         </div>
@@ -541,11 +541,11 @@
                         <a href="{{ route('admin.kabupaten.profile.index') }}"
                             class="flex flex-col items-center p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-all duration-300">
                             <div class="w-16 h-16 rounded-full overflow-hidden mb-2 border-2 border-[#2D336B]">
-                                @if ($user->image)
-                                    <img src="{{ asset('storage/' . $user->image) }}" alt="Profile photo"
+                                @if ($user->foto_pengguna)
+                                    <img src="{{ asset('storage/' . $user->foto_pengguna) }}" alt="Foto Pengguna"
                                         class="w-full h-full object-cover">
                                 @else
-                                    <img src="https://flowbite.com/docs/images/people/profile-picture-5.jpg" alt="Profile photo"
+                                    <img src="https://flowbite.com/docs/images/people/profile-picture-5.jpg" alt="Foto Pengguna"
                                         class="w-full h-full object-cover">
                                 @endif
                             </div>

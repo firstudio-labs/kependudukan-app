@@ -11,19 +11,38 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <!-- Profile Photo Section -->
                 <div class="md:col-span-1">
-                    <div class="flex flex-col items-center">
-                        <div class="w-40 h-40 rounded-full bg-gray-200 overflow-hidden mb-4">
-                            @if($user->image)
-                                <img src="{{ asset('storage/' . $user->image) }}" alt="Profile photo" class="w-full h-full object-cover" id="preview-image">
-                            @else
-                                <img src="https://flowbite.com/docs/images/people/profile-picture-5.jpg" alt="Profile photo" class="w-full h-full object-cover" id="preview-image">
-                            @endif
-                        </div>
+                    <div class="flex flex-col items-center space-y-6">
+                        <!-- Foto Pengguna -->
                         <div class="flex flex-col items-center">
-                            <label for="image" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition cursor-pointer">
-                                Ubah Foto
+                            <div class="w-40 h-40 rounded-full bg-gray-200 overflow-hidden mb-4">
+                                @if($user->foto_pengguna)
+                                    <img src="{{ asset('storage/' . $user->foto_pengguna) }}" alt="Foto Pengguna" class="w-full h-full object-cover" id="preview-foto-pengguna">
+                                @elseif($user->image)
+                                    <img src="{{ asset('storage/' . $user->image) }}" alt="Foto Pengguna" class="w-full h-full object-cover" id="preview-foto-pengguna">
+                                @else
+                                    <img src="https://flowbite.com/docs/images/people/profile-picture-5.jpg" alt="Foto Pengguna" class="w-full h-full object-cover" id="preview-foto-pengguna">
+                                @endif
+                            </div>
+                            <label for="foto_pengguna" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition cursor-pointer">
+                                Ubah Foto Pengguna
                             </label>
-                            <input type="file" id="image" name="image" class="hidden" accept="image/*" onchange="previewImage(this)">
+                            <input type="file" id="foto_pengguna" name="foto_pengguna" class="hidden" accept="image/*" onchange="previewFotoPengguna(this)">
+                            <p class="text-sm text-gray-500 mt-2">Format: JPG, PNG, GIF. Maks: 2MB</p>
+                        </div>
+
+                        <!-- Logo -->
+                        <div class="flex flex-col items-center">
+                            <div class="w-32 h-32 rounded bg-gray-100 overflow-hidden mb-4 border border-gray-300">
+                                @if($user->image)
+                                    <img src="{{ asset('storage/' . $user->image) }}" alt="Logo" class="w-full h-full object-contain p-2" id="preview-logo">
+                                @else
+                                    <span class="flex items-center justify-center w-full h-full text-gray-400" id="preview-logo-text">Tidak ada logo</span>
+                                @endif
+                            </div>
+                            <label for="image" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition cursor-pointer">
+                                Ubah Logo
+                            </label>
+                            <input type="file" id="image" name="image" class="hidden" accept="image/*" onchange="previewLogo(this)">
                             <p class="text-sm text-gray-500 mt-2">Format: JPG, PNG, GIF. Maks: 2MB</p>
                         </div>
                     </div>
@@ -35,6 +54,14 @@
                         <h2 class="text-xl font-semibold text-gray-700 mb-4">Informasi Pribadi</h2>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="nama" class="block text-gray-600 text-sm font-medium mb-1">Nama Lengkap <span class="text-red-500">*</span></label>
+                                <input type="text" id="nama" name="nama" value="{{ old('nama', $user->nama) }}" class="w-full p-2 border border-gray-300 rounded" required>
+                                @error('nama')
+                                    <span class="text-red-500 text-sm">{{ $message }}</span>
+                                @enderror
+                            </div>
+
                             <div>
                                 <label for="username" class="block text-gray-600 text-sm font-medium mb-1">Username</label>
                                 <input type="text" id="username" name="username" value="{{ old('username', $user->username) }}" class="w-full p-2 border border-gray-300 rounded">
@@ -114,12 +141,34 @@
     </div>
 
     <script>
-        function previewImage(input) {
+        function previewFotoPengguna(input) {
             if (input.files && input.files[0]) {
                 var reader = new FileReader();
 
                 reader.onload = function(e) {
-                    document.getElementById('preview-image').src = e.target.result;
+                    document.getElementById('preview-foto-pengguna').src = e.target.result;
+                }
+
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function previewLogo(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+
+                reader.onload = function(e) {
+                    const previewLogo = document.getElementById('preview-logo');
+                    const previewLogoText = document.getElementById('preview-logo-text');
+
+                    if (previewLogo) {
+                        previewLogo.src = e.target.result;
+                        previewLogo.style.display = 'block';
+                    }
+
+                    if (previewLogoText) {
+                        previewLogoText.style.display = 'none';
+                    }
                 }
 
                 reader.readAsDataURL(input.files[0]);
