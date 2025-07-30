@@ -73,12 +73,14 @@ class UsersController extends Controller
 
         $validated = $request->validate([
             'nik' => 'required|unique:users,nik',
+            'nama' => 'required|string|max:255',
             'username' => 'nullable|unique:users,username',
             'email' => 'nullable|email|unique:users,email',
             'password' => 'required|min:6',
             'no_hp' => 'nullable|string',
             'alamat' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'foto_pengguna' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'province_id' => 'nullable|numeric',
             'districts_id' => 'nullable|numeric',
             'sub_districts_id' => 'nullable|numeric',
@@ -89,12 +91,20 @@ class UsersController extends Controller
 
         $validated['password'] = Hash::make($validated['password']);
 
-        // Handle image upload
+        // Handle logo upload (image field)
         if ($request->hasFile('image')) {
             $image = $request->file('image');
-            $imageName = time() . '.' . $image->getClientOriginalExtension();
-            $image->storeAs('public/users', $imageName);
-            $validated['image'] = 'users/' . $imageName;
+            $imageName = time() . '_logo.' . $image->getClientOriginalExtension();
+            $path = $image->storeAs('users/logos', $imageName, 'public');
+            $validated['image'] = $path;
+        }
+
+        // Handle foto pengguna upload
+        if ($request->hasFile('foto_pengguna')) {
+            $fotoPengguna = $request->file('foto_pengguna');
+            $fotoName = time() . '_foto.' . $fotoPengguna->getClientOriginalExtension();
+            $path = $fotoPengguna->storeAs('users/fotos', $fotoName, 'public');
+            $validated['foto_pengguna'] = $path;
         }
 
         // Log the validated data before saving
@@ -213,11 +223,13 @@ class UsersController extends Controller
 
         $validated = $request->validate([
             'nik' => ['required', Rule::unique('users')->ignore($user->id)],
+            'nama' => 'required|string|max:255',
             'username' => ['nullable', Rule::unique('users')->ignore($user->id)],
             'email' => ['nullable', 'email', Rule::unique('users')->ignore($user->id)],
             'no_hp' => 'nullable|string',
             'alamat' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'foto_pengguna' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'province_id' => 'nullable|numeric',
             'districts_id' => 'nullable|numeric',
             'sub_districts_id' => 'nullable|numeric',
@@ -234,17 +246,30 @@ class UsersController extends Controller
             $validated['password'] = Hash::make($request->password);
         }
 
-        // Handle image upload
+        // Handle logo upload (image field)
         if ($request->hasFile('image')) {
-            // Delete old image if exists
-            if ($user->image) {
-                Storage::delete('public/' . $user->image);
+            // Delete old logo if exists
+            if ($user->image && Storage::disk('public')->exists($user->image)) {
+                Storage::disk('public')->delete($user->image);
             }
 
             $image = $request->file('image');
-            $imageName = time() . '.' . $image->getClientOriginalExtension();
-            $image->storeAs('public/users', $imageName);
-            $validated['image'] = 'users/' . $imageName;
+            $imageName = time() . '_logo.' . $image->getClientOriginalExtension();
+            $path = $image->storeAs('users/logos', $imageName, 'public');
+            $validated['image'] = $path;
+        }
+
+        // Handle foto pengguna upload
+        if ($request->hasFile('foto_pengguna')) {
+            // Delete old foto if exists
+            if ($user->foto_pengguna && Storage::disk('public')->exists($user->foto_pengguna)) {
+                Storage::disk('public')->delete($user->foto_pengguna);
+            }
+
+            $fotoPengguna = $request->file('foto_pengguna');
+            $fotoName = time() . '_foto.' . $fotoPengguna->getClientOriginalExtension();
+            $path = $fotoPengguna->storeAs('users/fotos', $fotoName, 'public');
+            $validated['foto_pengguna'] = $path;
         }
 
         // Log the validated data before saving
@@ -283,9 +308,14 @@ class UsersController extends Controller
      */
     public function destroy(User $user)
     {
-        // Delete user image if exists
-        if ($user->image) {
-            Storage::delete('public/' . $user->image);
+        // Delete user logo if exists
+        if ($user->image && Storage::disk('public')->exists($user->image)) {
+            Storage::disk('public')->delete($user->image);
+        }
+
+        // Delete user foto if exists
+        if ($user->foto_pengguna && Storage::disk('public')->exists($user->foto_pengguna)) {
+            Storage::disk('public')->delete($user->foto_pengguna);
         }
 
         $user->delete();

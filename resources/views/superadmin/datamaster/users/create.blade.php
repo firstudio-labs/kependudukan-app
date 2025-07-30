@@ -7,90 +7,6 @@
         <form action="{{ route('superadmin.datamaster.user.store') }}" method="POST" class="bg-white p-6 rounded-lg shadow-md" enctype="multipart/form-data">
             @csrf
 
-            <!-- BIODATA -->
-            <div class="mb-6">
-                <h2 class="text-lg font-semibold pb-2 border-b border-gray-300 mb-4 text-gray-700">Biodata</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <!-- NIK -->
-                    <div>
-                        <label for="nik" class="block text-sm font-medium text-gray-700">NIK</label>
-                        <input type="text" id="nik" name="nik" placeholder="Masukkan NIK" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
-                        @error('nik')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
-                    </div>
-
-                    <!-- Username -->
-                    <div>
-                        <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
-                        <input type="text" id="username" name="username" placeholder="Masukkan Username" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
-                        @error('username')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
-                    </div>
-
-                    <!-- Email -->
-                    <div>
-                        <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
-                        <input type="email" id="email" name="email" placeholder="Masukkan Email" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
-                        @error('email')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
-                    </div>
-
-                    <!-- No HP -->
-                    <div>
-                        <label for="no_hp" class="block text-sm font-medium text-gray-700">No. HP</label>
-                        <input type="text" id="no_hp" name="no_hp" placeholder="Masukkan Nomor HP" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
-                        @error('no_hp')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
-                    </div>
-
-                    <!-- Password -->
-                    <div>
-                        <label for="password" class="block text-sm font-medium text-gray-700">Kata Sandi</label>
-                        <input type="password" id="password" name="password" placeholder="Minimal 6 karakter" minlength="6" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
-                        @error('password')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
-                    </div>
-
-                    <!-- Status -->
-                    <div>
-                        <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
-                        <select id="status" name="status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
-                        </select>
-                        @error('status')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
-                    </div>
-
-                    <!-- Role -->
-                    <div>
-                        <label for="role" class="block text-sm font-medium text-gray-700">Role</label>
-                        <select id="role" name="role" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
-                            <option value="">Pilih Role</option>
-                            <option value="superadmin">Super Admin</option>
-                            <option value="admin desa">Admin Desa</option>
-                            <option value="admin kabupaten">Admin Kabupaten</option>
-                            <option value="operator">Operator</option>
-                        </select>
-                        @error('role')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
-                    </div>
-
-                    <!-- Image/Logo Upload -->
-                    <div>
-                        <label for="image" class="block text-sm font-medium text-gray-700">Foto/Logo (Opsional)</label>
-                        <input type="file" id="image" name="image" accept="image/*" class="mt-1 block w-full text-sm text-gray-500
-                        file:mr-4 file:py-2 file:px-4
-                        file:rounded-md file:border-0
-                        file:text-sm file:font-semibold
-                        file:bg-blue-50 file:text-blue-700
-                        hover:file:bg-blue-100">
-                        <p class="mt-1 text-sm text-gray-500">Format: JPG, PNG, GIF. Maks: 2MB</p>
-                        @error('image')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
-                    </div>
-
-                    <!-- Alamat -->
-                    <div class="md:col-span-2">
-                        <label for="alamat" class="block text-sm font-medium text-gray-700">Alamat</label>
-                        <textarea id="alamat" name="alamat" rows="3" placeholder="Masukkan Alamat" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"></textarea>
-                        @error('alamat')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
-                    </div>
-                </div>
-            </div>
-
             <!-- TEMPAT WILAYAH NAUNGAN -->
             <div class="mb-6">
                 <h2 class="text-lg font-semibold pb-2 border-b border-gray-300 mb-4 text-gray-700">Tempat Wilayah Naungan</h2>
@@ -137,6 +53,111 @@
                         <!-- Hidden input to store the actual ID for database storage -->
                         <input type="hidden" id="village_id" name="villages_id" value="">
                     </div>
+                </div>
+            </div>
+
+            <!-- BIODATA -->
+            <div class="mb-6">
+                <h2 class="text-lg font-semibold pb-2 border-b border-gray-300 mb-4 text-gray-700">Biodata</h2>
+                <div class="grid grid-cols-1 gap-4">
+                    <!-- NIK -->
+                    <div>
+                        <label for="nik" class="block text-sm font-medium text-gray-700">NIK</label>
+                        <input type="text" id="nik" name="nik" placeholder="Masukkan NIK" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                        @error('nik')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
+                    </div>
+
+                    <!-- Nama -->
+                    <div>
+                        <label for="nama" class="block text-sm font-medium text-gray-700">Nama Lengkap <span class="text-red-500">*</span></label>
+                        <input type="text" id="nama" name="nama" placeholder="Masukkan Nama Lengkap" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                        @error('nama')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
+                    </div>
+
+                    <!-- Username -->
+                    <div>
+                        <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
+                        <input type="text" id="username" name="username" placeholder="Masukkan Username" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                        @error('username')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
+                    </div>
+
+                    <!-- Password -->
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-700">Kata Sandi</label>
+                        <input type="password" id="password" name="password" placeholder="Minimal 6 karakter" minlength="6" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                        @error('password')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
+                    </div>
+
+                    <!-- Email -->
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                        <input type="email" id="email" name="email" placeholder="Masukkan Email" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                        @error('email')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
+                    </div>
+
+                    <!-- No HP -->
+                    <div>
+                        <label for="no_hp" class="block text-sm font-medium text-gray-700">No. HP</label>
+                        <input type="text" id="no_hp" name="no_hp" placeholder="Masukkan Nomor HP" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                        @error('no_hp')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
+                    </div>
+
+                    <!-- Status -->
+                    <div>
+                        <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
+                        <select id="status" name="status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                        @error('status')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
+                    </div>
+
+                    <!-- Role -->
+                    <div>
+                        <label for="role" class="block text-sm font-medium text-gray-700">Role</label>
+                        <select id="role" name="role" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                            <option value="">Pilih Role</option>
+                            <option value="superadmin">Super Admin</option>
+                            <option value="admin desa">Admin Desa</option>
+                            <option value="admin kabupaten">Admin Kabupaten</option>
+                            <option value="operator">Operator</option>
+                        </select>
+                        @error('role')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
+                    </div>
+
+                    <!-- Image/Logo Upload -->
+                    <div>
+                        <label for="image" class="block text-sm font-medium text-gray-700">Logo (Opsional)</label>
+                        <input type="file" id="image" name="image" accept="image/*" class="mt-1 block w-full text-sm text-gray-500
+                        file:mr-4 file:py-2 file:px-4
+                        file:rounded-md file:border-0
+                        file:text-sm file:font-semibold
+                        file:bg-blue-50 file:text-blue-700
+                        hover:file:bg-blue-100">
+                        <p class="mt-1 text-sm text-gray-500">Format: JPG, PNG, GIF. Maks: 2MB</p>
+                        @error('image')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
+                    </div>
+
+                    <!-- Foto Pengguna Upload -->
+                    <div>
+                        <label for="foto_pengguna" class="block text-sm font-medium text-gray-700">Foto Pengguna (Opsional)</label>
+                        <input type="file" id="foto_pengguna" name="foto_pengguna" accept="image/*" class="mt-1 block w-full text-sm text-gray-500
+                        file:mr-4 file:py-2 file:px-4
+                        file:rounded-md file:border-0
+                        file:text-sm file:font-semibold
+                        file:bg-blue-50 file:text-blue-700
+                        hover:file:bg-blue-100">
+                        <p class="mt-1 text-sm text-gray-500">Format: JPG, PNG, GIF. Maks: 2MB</p>
+                        @error('foto_pengguna')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
+                    </div>
+
+                    <!-- Alamat -->
+                    <div>
+                        <label for="alamat" class="block text-sm font-medium text-gray-700">Alamat</label>
+                        <textarea id="alamat" name="alamat" rows="3" placeholder="Masukkan Alamat" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"></textarea>
+                        @error('alamat')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
+                    </div>
+                </div>
             </div>
 
             <div class="mt-6 flex justify-between">

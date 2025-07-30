@@ -44,24 +44,35 @@
                 <thead class="text-xs text-gray-700 uppercase bg-[#e6e8ed]">
                     <tr>
                         <th scope="col" class="px-6 py-3">No</th>
+                        <th scope="col" class="px-6 py-3">Foto</th>
                         <th scope="col" class="px-6 py-3">NIK</th>
+                        <th scope="col" class="px-6 py-3">Nama</th>
                         <th scope="col" class="px-6 py-3">Username</th>
                         <th scope="col" class="px-6 py-3">Email</th>
                         <th scope="col" class="px-6 py-3">No HP</th>
                         <th scope="col" class="px-6 py-3">Role</th>
                         <th scope="col" class="px-6 py-3">Status</th>
                         <th scope="col" class="px-6 py-3">Aksi</th>
-
-
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($users as $index => $user)
-
                         @if (!empty($user) && isset($user->id))
                             <tr class="bg-white border-gray-300 border-b hover:bg-gray-50">
                                 <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{{ $user->id }}</th>
+                                <td class="px-6 py-4">
+                                    @if($user->foto_pengguna)
+                                        <img src="{{ asset('storage/' . $user->foto_pengguna) }}" alt="User Photo" class="w-10 h-10 rounded-full object-cover">
+                                    @else
+                                        <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                                            <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
+                                            </svg>
+                                        </div>
+                                    @endif
+                                </td>
                                 <td class="px-6 py-4">{{ $user->nik }}</td>
+                                <td class="px-6 py-4">{{ $user->nama ?? '-' }}</td>
                                 <td class="px-6 py-4">{{ $user->username }}</td>
                                 <td class="px-6 py-4">{{ $user->email }}</td>
                                 <td class="px-6 py-4">{{ $user->no_hp }}</td>
@@ -100,12 +111,12 @@
                             </tr>
                         @else
                             <tr>
-                                <td colspan="8" class="text-center py-4 text-gray-500">Data tidak valid.</td>
+                                <td colspan="10" class="text-center py-4 text-gray-500">Data tidak valid.</td>
                             </tr>
                         @endif
                     @empty
                         <tr>
-                            <td colspan="8" class="text-center py-4">Tidak ada data.</td>
+                            <td colspan="10" class="text-center py-4">Tidak ada data.</td>
                         </tr>
                     @endforelse
                 </tbody>
