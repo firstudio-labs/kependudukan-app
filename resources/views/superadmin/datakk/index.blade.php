@@ -314,6 +314,7 @@
                                                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
                                                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
                                                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status Keluarga</th>
+                                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dokumen</th>
                                             </tr>
                                         </thead>
                                         <tbody id="familyMembersTable" class="bg-white divide-y divide-gray-200">
@@ -324,12 +325,127 @@
                             </div>
                         </div>
 
+                        <!-- Foto KK Section -->
+                        <div class="col-span-1 md:col-span-2 bg-gray-50 p-4 rounded-lg mt-4">
+                            <h4 class="text-lg font-semibold mb-4 text-[#7886C7]">Foto Kartu Keluarga</h4>
+                            <div id="fotoKkStatus" class="text-sm text-gray-600 mb-4">
+                                <div class="flex items-center">
+                                    <svg class="w-5 h-5 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <span>Memuat...</span>
+                                </div>
+                            </div>
+                            <div id="fotoKkPreview" class="hidden mb-4">
+                                <a href="#" id="viewFotoKk" target="_blank" class="block relative">
+                                    <img src="" alt="Kartu Keluarga" class="max-h-60 max-w-full rounded-lg border border-gray-200">
+                                </a>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 
                 <!-- Modal Footer -->
                 <div class="flex items-center justify-end p-4 md:p-5 border-t border-gray-200 rounded-b">
                     <button onclick="closeDetailModal()" type="button" class="text-white bg-gray-500 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg text-sm px-5 py-2.5 text-center">
+                        Tutup
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Document -->
+    <div id="documentModal" class="fixed inset-0 z-50 flex overflow-y-auto hidden">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="fixed inset-0 bg-black opacity-50"></div>
+            <div class="relative w-full max-w-2xl bg-white rounded-lg shadow-xl">
+                <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t">
+                    <h3 class="text-xl font-semibold text-gray-900">Kelola Dokumen - <span id="documentFullName"></span></h3>
+                    <button onclick="closeDocumentModal()" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 inline-flex justify-center items-center">
+                        <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="p-4 md:p-5 space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Foto Diri -->
+                        <div class="border rounded-lg p-4">
+                            <h4 class="text-md font-semibold mb-2">Foto Diri</h4>
+                            <div id="fotoDiriStatus" class="text-sm text-gray-600 mb-2">
+                                <div class="flex items-center">
+                                    <svg class="w-5 h-5 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <span>Memuat...</span>
+                                </div>
+                            </div>
+                            <div id="fotoDiriPreview" class="hidden mb-3">
+                                <a href="#" id="viewFotoDiri" target="_blank" class="block relative">
+                                    <img src="" alt="Foto Diri" class="max-h-40 max-w-full rounded-lg border border-gray-200">
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Foto KTP -->
+                        <div class="border rounded-lg p-4">
+                            <h4 class="text-md font-semibold mb-2">Foto KTP</h4>
+                            <div id="fotoKtpStatus" class="text-sm text-gray-600 mb-2">
+                                <div class="flex items-center">
+                                    <svg class="w-5 h-5 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <span>Memuat...</span>
+                                </div>
+                            </div>
+                            <div id="fotoKtpPreview" class="hidden mb-3">
+                                <a href="#" id="viewFotoKtp" target="_blank" class="block relative">
+                                    <img src="" alt="Foto KTP" class="max-h-40 max-w-full rounded-lg border border-gray-200">
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Akta Kelahiran -->
+                        <div class="border rounded-lg p-4">
+                            <h4 class="text-md font-semibold mb-2">Akta Kelahiran</h4>
+                            <div id="fotoAktaStatus" class="text-sm text-gray-600 mb-2">
+                                <div class="flex items-center">
+                                    <svg class="w-5 h-5 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <span>Memuat...</span>
+                                </div>
+                            </div>
+                            <div id="fotoAktaPreview" class="hidden mb-3">
+                                <a href="#" id="viewFotoAkta" target="_blank" class="block relative">
+                                    <img src="" alt="Akta Kelahiran" class="max-h-40 max-w-full rounded-lg border border-gray-200">
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Ijazah -->
+                        <div class="border rounded-lg p-4">
+                            <h4 class="text-md font-semibold mb-2">Ijazah</h4>
+                            <div id="ijazahStatus" class="text-sm text-gray-600 mb-2">
+                                <div class="flex items-center">
+                                    <svg class="w-5 h-5 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <span>Memuat...</span>
+                                </div>
+                            </div>
+                            <div id="ijazahPreview" class="hidden mb-3">
+                                <a href="#" id="viewIjazah" target="_blank" class="block relative">
+                                    <img src="" alt="Ijazah" class="max-h-40 max-w-full rounded-lg border border-gray-200">
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center justify-end p-4 md:p-5 border-t border-gray-200 rounded-b">
+                    <button onclick="closeDocumentModal()" type="button" class="text-gray-700 bg-gray-200 hover:bg-gray-300 focus:ring-4 focus:outline-none focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 text-center">
                         Tutup
                     </button>
                 </div>
@@ -705,6 +821,7 @@
             // Fetch family members directly using the KK number instead of ID
             if (data.kk) {
                 fetchFamilyMembers(data.kk);
+                fetchKKPhoto(data.kk);
             } else {
                 document.getElementById('familyMembersLoading').classList.add('hidden');
                 document.getElementById('familyMembersEmpty').classList.remove('hidden');
@@ -786,6 +903,12 @@
                             <td class="px-4 py-2 whitespace-nowrap">${index + 1}</td>
                             <td class="px-4 py-2 whitespace-nowrap">${member.full_name || '-'}</td>
                             <td class="px-4 py-2 whitespace-nowrap">${member.family_status || '-'}</td>
+                            <td class="px-4 py-2 whitespace-nowrap">
+                                <button onclick="openDocumentModal('${member.nik}', '${member.full_name || 'Anggota Keluarga'}')"
+                                        class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                    Kelola Dokumen
+                                </button>
+                            </td>
                         `;
                         tableBody.appendChild(row);
                     });
@@ -806,6 +929,252 @@
                 document.getElementById('familyMembersLoading').classList.add('hidden');
                 document.getElementById('familyMembersError').classList.remove('hidden');
             });
+        }
+
+        // Function to fetch KK photo
+        function fetchKKPhoto(kkNumber) {
+            if (!kkNumber) {
+                document.getElementById('fotoKkStatus').innerHTML = `
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span>Nomor KK tidak tersedia</span>
+                    </div>
+                `;
+                return;
+            }
+
+            // Fetch KK photo from the API
+            fetch(`/api/kk-photo/${kkNumber}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.photo) {
+                        document.getElementById('fotoKkStatus').innerHTML = `
+                            <div class="flex items-center">
+                                <svg class="w-5 h-5 mr-1 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span class="text-green-600">Foto KK tersedia</span>
+                            </div>
+                        `;
+
+                        const imgElement = document.querySelector('#fotoKkPreview img');
+                        imgElement.src = data.photo.preview_url || data.photo.url;
+                        document.getElementById('viewFotoKk').href = data.photo.url;
+                        document.getElementById('fotoKkPreview').classList.remove('hidden');
+                    } else {
+                        document.getElementById('fotoKkStatus').innerHTML = `
+                            <div class="flex items-center">
+                                <svg class="w-5 h-5 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <span>Foto KK belum diunggah</span>
+                            </div>
+                        `;
+                        document.getElementById('fotoKkPreview').classList.add('hidden');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching KK photo:', error);
+                    document.getElementById('fotoKkStatus').innerHTML = `
+                        <div class="flex items-center text-red-500">
+                            <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <span>Gagal memuat foto KK</span>
+                        </div>
+                    `;
+                });
+        }
+
+        // Function to open document modal
+        function openDocumentModal(nik, fullName) {
+            // Create a new modal for documents
+            const documentModal = document.createElement('div');
+            documentModal.id = 'documentModal';
+            documentModal.className = 'fixed inset-0 z-50 flex overflow-y-auto';
+            documentModal.innerHTML = `
+                <div class="flex items-center justify-center min-h-screen p-4">
+                    <div class="fixed inset-0 bg-black opacity-50"></div>
+                    <div class="relative w-full max-w-2xl bg-white rounded-lg shadow-xl">
+                        <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t">
+                            <h3 class="text-xl font-semibold text-gray-900">Kelola Dokumen - ${fullName}</h3>
+                            <button onclick="closeDocumentModal()" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 inline-flex justify-center items-center">
+                                <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="p-4 md:p-5 space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- Foto Diri -->
+                                <div class="border rounded-lg p-4">
+                                    <h4 class="text-md font-semibold mb-2">Foto Diri</h4>
+                                    <div id="fotoDiriStatus" class="text-sm text-gray-600 mb-2">
+                                        <div class="flex items-center">
+                                            <svg class="w-5 h-5 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                            <span>Memuat...</span>
+                                        </div>
+                                    </div>
+                                    <div id="fotoDiriPreview" class="hidden mb-3">
+                                        <a href="#" id="viewFotoDiri" target="_blank" class="block relative">
+                                            <img src="" alt="Foto Diri" class="max-h-40 max-w-full rounded-lg border border-gray-200">
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <!-- Foto KTP -->
+                                <div class="border rounded-lg p-4">
+                                    <h4 class="text-md font-semibold mb-2">Foto KTP</h4>
+                                    <div id="fotoKtpStatus" class="text-sm text-gray-600 mb-2">
+                                        <div class="flex items-center">
+                                            <svg class="w-5 h-5 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                            <span>Memuat...</span>
+                                        </div>
+                                    </div>
+                                    <div id="fotoKtpPreview" class="hidden mb-3">
+                                        <a href="#" id="viewFotoKtp" target="_blank" class="block relative">
+                                            <img src="" alt="Foto KTP" class="max-h-40 max-w-full rounded-lg border border-gray-200">
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <!-- Akta Kelahiran -->
+                                <div class="border rounded-lg p-4">
+                                    <h4 class="text-md font-semibold mb-2">Akta Kelahiran</h4>
+                                    <div id="fotoAktaStatus" class="text-sm text-gray-600 mb-2">
+                                        <div class="flex items-center">
+                                            <svg class="w-5 h-5 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                            <span>Memuat...</span>
+                                        </div>
+                                    </div>
+                                    <div id="fotoAktaPreview" class="hidden mb-3">
+                                        <a href="#" id="viewFotoAkta" target="_blank" class="block relative">
+                                            <img src="" alt="Akta Kelahiran" class="max-h-40 max-w-full rounded-lg border border-gray-200">
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <!-- Ijazah -->
+                                <div class="border rounded-lg p-4">
+                                    <h4 class="text-md font-semibold mb-2">Ijazah</h4>
+                                    <div id="ijazahStatus" class="text-sm text-gray-600 mb-2">
+                                        <div class="flex items-center">
+                                            <svg class="w-5 h-5 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                            <span>Memuat...</span>
+                                        </div>
+                                    </div>
+                                    <div id="ijazahPreview" class="hidden mb-3">
+                                        <a href="#" id="viewIjazah" target="_blank" class="block relative">
+                                            <img src="" alt="Ijazah" class="max-h-40 max-w-full rounded-lg border border-gray-200">
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-end p-4 md:p-5 border-t border-gray-200 rounded-b">
+                            <button onclick="closeDocumentModal()" type="button" class="text-gray-700 bg-gray-200 hover:bg-gray-300 focus:ring-4 focus:outline-none focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 text-center">
+                                Tutup
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(documentModal);
+
+            // Fetch document status for this NIK
+            fetchDocumentStatus(nik);
+        }
+
+        function closeDocumentModal() {
+            const modal = document.getElementById('documentModal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        function fetchDocumentStatus(nik) {
+            fetch(`/api/family-member/${nik}/documents`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        updateDocumentStatus('fotoDiri', data.documents?.foto_diri || null);
+                        updateDocumentStatus('fotoKtp', data.documents?.foto_ktp || null);
+                        updateDocumentStatus('fotoAkta', data.documents?.foto_akta || null);
+                        updateDocumentStatus('ijazah', data.documents?.ijazah || null);
+                    } else {
+                        console.error('Error retrieving document data');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching document status:', error);
+                });
+        }
+
+        function updateDocumentStatus(docType, docInfo) {
+            const statusElem = document.getElementById(`${docType}Status`);
+            const previewElem = document.getElementById(`${docType}Preview`);
+            const viewLinkElem = document.getElementById(`view${docType.charAt(0).toUpperCase() + docType.slice(1)}`);
+            const docTypeKey = docType.replace(/([A-Z])/g, '_$1').toLowerCase();
+
+            if (!statusElem) return;
+
+            if (docInfo && docInfo.exists) {
+                statusElem.innerHTML = `
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 mr-1 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <span class="text-green-600">Dokumen tersedia</span>
+                    </div>
+                `;
+
+                if (docInfo.preview_url && previewElem) {
+                    const imgElem = previewElem.querySelector('img');
+                    if (imgElem) {
+                        imgElem.src = docInfo.preview_url;
+                        previewElem.classList.remove('hidden');
+                    }
+
+                    if (viewLinkElem) {
+                        viewLinkElem.href = docInfo.url || '#';
+                    }
+                } else if (docInfo.extension && ['pdf'].includes(docInfo.extension.toLowerCase()) && previewElem) {
+                    previewElem.innerHTML = `
+                        <a href="${docInfo.url || '#'}" target="_blank" class="block relative">
+                            <div class="p-4 bg-gray-100 rounded-lg text-center">
+                                <svg class="w-10 h-10 mx-auto text-red-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                    <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"></path>
+                                </svg>
+                                <p class="mt-2 text-sm font-medium">PDF Document</p>
+                            </div>
+                        </a>
+                    `;
+                    previewElem.classList.remove('hidden');
+                }
+            } else {
+                statusElem.innerHTML = `
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span>Belum diunggah</span>
+                    </div>
+                `;
+                if (previewElem) {
+                    previewElem.classList.add('hidden');
+                }
+            }
         }
     </script>
 </x-layout>

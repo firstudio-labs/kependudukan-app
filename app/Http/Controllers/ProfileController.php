@@ -234,7 +234,7 @@ class ProfileController extends Controller
                     'foto_ktp' => $documents['foto_ktp'] ?? null,
                     'foto_akta' => $documents['foto_akta'] ?? null,
                     'ijazah' => $documents['ijazah'] ?? null,
-                    'foto_kk' => $documents['foto_kk'] ?? null, 
+                    'foto_kk' => $documents['foto_kk'] ?? null,
                     'foto_rumah' => $documents['foto_rumah'] ?? null,
                 ],
                 'tag_lokasi' => $tagLokasi,
@@ -325,10 +325,10 @@ class ProfileController extends Controller
 
             $tagLokasi = $request->tag_lokasi;
 
-            
+
             if (!empty($tagLokasi)) {
                 try {
-                  
+
                     $data = [
                         'coordinate' => $tagLokasi
                     ];
@@ -349,7 +349,7 @@ class ProfileController extends Controller
                         'nik' => $nik,
                         'coordinate' => $tagLokasi
                     ]);
-                    
+
                 }
             }
 
@@ -483,7 +483,7 @@ class ProfileController extends Controller
             $userData->tag_lokasi = $request->tag_lokasi;
             $userData->save();
 
-          
+
             if (Auth::guard('penduduk')->check() && !empty($userData->nik)) {
                 try {
                     $response = $this->citizenService->updateCitizen((int) $userData->nik, [

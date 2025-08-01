@@ -873,6 +873,8 @@ Route::middleware(['auth:penduduk'])->group(function () {
     Route::get('/user/berita-desa/{id}', [UserBeritaDesaController::class, 'show'])
         ->name('user.berita-desa.show');
 
+    Route::get('/profile/family-member/{nik}/document/{type}', [ProfileController::class, 'viewFamilyMemberDocument'])
+        ->middleware(['auth:admin_desa']); // atau middleware yang sesuai
 });
 
 // User management routes
@@ -997,3 +999,11 @@ Route::get('/test/data-structure/{village_id}', function($villageId) {
         ]
     ]);
 })->name('test.data.structure');
+
+// Route untuk mengakses dokumen keluarga (bisa diakses oleh admin dan superadmin)
+Route::middleware(['auth:web'])->group(function () {
+    Route::get('/admin/family-member/{nik}/documents', [ProfileController::class, 'getFamilyMemberDocuments'])
+        ->name('admin.family-member.documents');
+    Route::get('/admin/family-member/{nik}/document/{documentType}/view', [ProfileController::class, 'viewFamilyMemberDocument'])
+        ->name('admin.family-member.view-document');
+});
