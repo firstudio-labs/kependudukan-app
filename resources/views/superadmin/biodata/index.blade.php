@@ -49,9 +49,12 @@
                 <thead class="text-xs text-gray-700 uppercase bg-[#e6e8ed]">
                     <tr>
                         <th class="px-6 py-3">No</th>
+                        <th class="px-6 py-3">Foto</th>
                         <th class="px-6 py-3">NIK</th>
                         <th class="px-6 py-3">Nama Lengkap</th>
                         <th class="px-6 py-3">Alamat</th>
+                        <th class="px-6 py-3">RT</th>
+                        <th class="px-6 py-3">RW</th>
                         <th class="px-6 py-3">SHDK</th>
                         <th class="px-6 py-3">Status</th>
                         <th class="px-6 py-3">Aksi</th>
@@ -74,9 +77,18 @@
                     @forelse($citizens['data']['citizens'] ?? [] as $index => $citizen)
                     <tr class="bg-white border-gray-300 border-b hover:bg-gray-50">
                         <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{{ $startNumber + $index }}</th>
+                        <td class="px-6 py-4">
+                            <div id="photo-{{ $citizen['nik'] }}" class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                                <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
+                                </svg>
+                            </div>
+                        </td>
                         <td class="px-6 py-4">{{ $citizen['nik'] }}</td>
                         <td class="px-6 py-4">{{ $citizen['full_name'] }}</td>
                         <td class="px-6 py-4">{{ $citizen['address'] }}</td>
+                        <td class="px-6 py-4">{{ $citizen['rt'] ?? '-' }}</td>
+                        <td class="px-6 py-4">{{ $citizen['rw'] ?? '-' }}</td>
                         <td class="px-6 py-4">{{ $citizen['family_status'] }}</td>
                         <td class="px-6 py-4">
                             <span class="px-2 py-1 rounded-full text-xs font-medium
@@ -107,7 +119,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="text-center py-4">Tidak ada data.</td>
+                        <td colspan="10" class="text-center py-4">Tidak ada data.</td>
                     </tr>
                     @endforelse
                 </tbody>
@@ -157,6 +169,18 @@
 
                 <!-- Modal Body -->
                 <div class="p-4 md:p-5 overflow-y-auto max-h-[70vh]">
+                    <!-- Foto Diri Section -->
+                    <div class="mb-6 flex justify-center">
+                        <div class="text-center">
+                            <div id="detailPhoto" class="w-32 h-32 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-2">
+                                <svg class="w-16 h-16 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
+                                </svg>
+                            </div>
+                            <div id="photoStatus" class="text-sm text-gray-500">Memuat foto...</div>
+                        </div>
+                    </div>
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <!-- Informasi Pribadi -->
                         <div class="bg-gray-50 p-4 rounded-lg">
@@ -891,10 +915,92 @@
                 document.getElementById('detailSubDistrictId').innerText = biodata.sub_district_id || '-';
                 document.getElementById('detailVillageId').innerText = biodata.village_id || '-';
             }
+
+            // Load photo data
+            if (biodata.nik) {
+                const photoDiv = document.getElementById('photo-' + biodata.nik);
+                if (photoDiv) {
+                    photoDiv.innerHTML = `<img src="/admin/family-member/${biodata.nik}/documents/foto_diri/preview" alt="Foto Diri" class="w-full h-full object-cover rounded-full">`;
+                    document.getElementById('photoStatus').textContent = 'Memuat foto...';
+                    fetch('/admin/family-member/' + biodata.nik + '/documents')
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success && data.documents && data.documents.foto_diri && data.documents.foto_diri.preview_url) {
+                                photoDiv.innerHTML = `<img src="${data.documents.foto_diri.preview_url}" alt="Foto Diri" class="w-full h-full object-cover rounded-full">`;
+                                document.getElementById('photoStatus').textContent = '';
+                            } else {
+                                document.getElementById('photoStatus').textContent = 'Foto belum diunggah';
+                            }
+                        })
+                        .catch(() => {
+                            document.getElementById('photoStatus').textContent = 'Gagal memuat foto';
+                        });
+                }
+            }
         }
 
         function closeDetailModal() {
             document.getElementById('detailModal').classList.add('hidden');
         }
+    </script>
+
+    <!-- Script untuk memuat foto -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Load foto untuk setiap baris di tabel
+            @foreach($citizens['data']['citizens'] ?? [] as $citizen)
+                @if(isset($citizen['nik']))
+                    loadPhoto('{{ $citizen['nik'] }}');
+                @endif
+            @endforeach
+        });
+
+        function loadPhoto(nik) {
+            fetch(`/admin/family-member/${nik}/documents`)
+                .then(response => response.json())
+                .then(data => {
+                    const photoDiv = document.getElementById(`photo-${nik}`);
+                    if (photoDiv && data.success && data.documents && data.documents.foto_diri && data.documents.foto_diri.preview_url) {
+                        photoDiv.innerHTML = `<img src="${data.documents.foto_diri.preview_url}" alt="Foto Diri" class="w-10 h-10 rounded-full object-cover">`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading photo for NIK:', nik, error);
+                });
+        }
+
+        // Override showDetailModal function untuk memuat foto di modal
+        const originalShowDetailModal = window.showDetailModal;
+        window.showDetailModal = function(biodata) {
+            // Reset photo display
+            document.getElementById('detailPhoto').innerHTML = `<svg class="w-16 h-16 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>`;
+            document.getElementById('photoStatus').textContent = 'Memuat foto...';
+
+            // Show modal first
+            document.getElementById('detailModal').classList.remove('hidden');
+
+            // Load photo for modal
+            if (biodata.nik) {
+                fetch(`/admin/family-member/${biodata.nik}/documents`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success && data.documents && data.documents.foto_diri && data.documents.foto_diri.preview_url) {
+                            document.getElementById('detailPhoto').innerHTML = `<img src="${data.documents.foto_diri.preview_url}" alt="Foto Diri" class="w-32 h-32 rounded-full object-cover">`;
+                            document.getElementById('photoStatus').textContent = '';
+                        } else {
+                            document.getElementById('photoStatus').textContent = 'Foto belum diunggah';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error loading photo:', error);
+                        document.getElementById('photoStatus').textContent = 'Gagal memuat foto';
+                    });
+            }
+
+            // Call original function
+            if (originalShowDetailModal) {
+                originalShowDetailModal(biodata);
+            }
+        };
     </script>
 </x-layout>

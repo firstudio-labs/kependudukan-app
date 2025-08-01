@@ -58,7 +58,7 @@ function populateSelect(select, data, defaultText, selectedCode = null, hiddenIn
 
         select.innerHTML = '';
         select.appendChild(fragment);
-        select.disabled = false;
+        select.disabled = true; // Keep disabled for region fields
 
         // If we're using a fixed ID but didn't find a match, make sure to set the hidden input
         if (!foundSelected && fixedId && hiddenInput) {
@@ -112,7 +112,7 @@ function loadDistricts(provinceCode, elements, fixedDistrictId) {
                         elements.districtIdInput,
                         fixedDistrictId
                     );
-                    elements.districtSelect.disabled = false;
+                    elements.districtSelect.disabled = true; // Keep disabled
                     resolve(foundSelected);
                 } else {
                     resetSelect(elements.districtSelect, 'No data available', elements.districtIdInput);
@@ -157,7 +157,7 @@ function loadSubDistricts(districtCode, elements, fixedSubDistrictId) {
                         elements.subDistrictIdInput,
                         fixedSubDistrictId
                     );
-                    elements.subDistrictSelect.disabled = false;
+                    elements.subDistrictSelect.disabled = true; // Keep disabled
                     resolve(foundSelected);
                 } else {
                     resetSelect(elements.subDistrictSelect, 'No data available', elements.subDistrictIdInput);
@@ -202,7 +202,7 @@ function loadVillages(subDistrictCode, elements, fixedVillageId) {
                         elements.villageIdInput,
                         fixedVillageId
                     );
-                    elements.villageSelect.disabled = false;
+                    elements.villageSelect.disabled = true; // Keep disabled
                     resolve(foundSelected);
                 } else {
                     resetSelect(elements.villageSelect, 'No data available', elements.villageIdInput);
@@ -352,53 +352,10 @@ async function initializeLocations(elements, fixedIds) {
     }
 }
 
-// Set up location dropdown event listeners
+// Set up location dropdown event listeners - DISABLED for region fields
 function setupLocationListeners(elements, fixedIds) {
-    // Province change handler
-    elements.provinceSelect.addEventListener('change', async function() {
-        const provinceCode = this.value;
-
-        // Update the hidden input with the ID
-        updateHiddenInput(this, elements.provinceIdInput);
-
-        // Reset and load new districts
-        await loadDistricts(provinceCode, elements, null);
-
-        // Reset sub-district and village
-        resetSelect(elements.subDistrictSelect, 'Pilih Kecamatan', elements.subDistrictIdInput);
-        resetSelect(elements.villageSelect, 'Pilih Desa', elements.villageIdInput);
-    });
-
-    // District change handler
-    elements.districtSelect.addEventListener('change', async function() {
-        const districtCode = this.value;
-
-        // Update hidden input with ID
-        updateHiddenInput(this, elements.districtIdInput);
-
-        // Reset and load new sub-districts
-        await loadSubDistricts(districtCode, elements, null);
-
-        // Reset village
-        resetSelect(elements.villageSelect, 'Pilih Desa', elements.villageIdInput);
-    });
-
-    // Sub-district change handler
-    elements.subDistrictSelect.addEventListener('change', async function() {
-        const subDistrictCode = this.value;
-
-        // Update hidden input with ID
-        updateHiddenInput(this, elements.subDistrictIdInput);
-
-        // Reset and load new villages
-        await loadVillages(subDistrictCode, elements, null);
-    });
-
-    // Village change handler
-    elements.villageSelect.addEventListener('change', function() {
-        // Update hidden input with ID
-        updateHiddenInput(this, elements.villageIdInput);
-    });
+    // Region fields are disabled, so no event listeners needed
+    // All region selects will remain disabled and readonly
 }
 
 // Initialize the update page
@@ -426,7 +383,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize locations
     initializeLocations(elements, fixedIds);
 
-    // Set up location dropdown listeners
+    // Set up location dropdown listeners (disabled for region fields)
     setupLocationListeners(elements, fixedIds);
 
     // Apply date formatting and force select values
