@@ -20,7 +20,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Get variables from data attributes
     const formContainer = document.getElementById('rental-house-form-container');
     if (!formContainer) {
-        console.error('Form container not found');
         return;
     }
 
@@ -66,7 +65,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Make sure we have valid data
             if (!Array.isArray(processedData)) {
-                console.error('Invalid citizen data format');
                 return;
             }
 
@@ -79,7 +77,7 @@ document.addEventListener('DOMContentLoaded', function() {
             setupRfIdTagListener(processedData);
         },
         error: function(error) {
-            console.error('Failed to load citizen data:', error);
+            // Error handling removed for cleaner code
         }
     });
 });
@@ -89,103 +87,139 @@ function setupRfIdTagListener(citizens) {
     const rfIdInput = document.getElementById('rf_id_tag');
     if (!rfIdInput) return;
 
-    // Tambahkan event untuk input dan paste
-    rfIdInput.addEventListener('input', function() {
-        const rfIdValue = this.value.trim();
-        if (rfIdValue.length > 0) {
-            // Cari data warga dengan RF ID Tag yang sama
-            const matchedCitizen = citizens.find(citizen => {
-                // Jika citizen tidak memiliki rf_id_tag, lewati
-                if (citizen.rf_id_tag === undefined || citizen.rf_id_tag === null) {
-                    return false;
-                }
+    // Remove any existing event listeners by cloning the element
+    const newRfIdInput = rfIdInput.cloneNode(true);
+    rfIdInput.parentNode.replaceChild(newRfIdInput, rfIdInput);
 
-                // Konversi ke string dan normalisasi
-                const normalizedInput = rfIdValue.toString().replace(/^0+/, '').trim();
-                const normalizedStored = citizen.rf_id_tag.toString().replace(/^0+/, '').trim();
-
-                // Cek kecocokan persis
-                const exactMatch = normalizedInput === normalizedStored;
-
-                // Cek kecocokan sebagian (jika input adalah bagian dari rf_id_tag)
-                const partialMatch = normalizedStored.includes(normalizedInput) && normalizedInput.length >= 5;
-
-                // Kembalikan true jika ada kecocokan persis atau sebagian
-                return exactMatch || partialMatch;
-            });
-
-            // Jika ditemukan, isi form
-            if (matchedCitizen) {
-                populateCitizenData(matchedCitizen);
-
-                // --- KODE UPDATE DROPDOWN DIKOMENTARI ---
-                // Jika sewaktu-waktu dibutuhkan, bisa diaktifkan kembali
-                /*
-                // Update dropdown NIK dan Nama dengan trigger yang benar
-                if ($('#nikSelect').length) {
-                    $('#nikSelect').val(matchedCitizen.nik).trigger('change');
-                }
-                if ($('#fullNameSelect').length) {
-                    $('#fullNameSelect').val(matchedCitizen.full_name).trigger('change');
-                }
-                */
-
-                // Set NIK dan nama lengkap secara manual (karena sekarang input text)
-                if ($('#nikSelect').length) {
-                    $('#nikSelect').val(matchedCitizen.nik);
-                }
-                if ($('#fullNameSelect').length) {
-                    $('#fullNameSelect').val(matchedCitizen.full_name);
-                }
-
-                // Set address jika ada
-                if (matchedCitizen.address && $('#address').length) {
-                    $('#address').val(matchedCitizen.address);
-                }
-
-                // Feedback visual berhasil
-                $(rfIdInput).addClass('border-green-500').removeClass('border-red-500 border-gray-300');
-                setTimeout(() => {
-                    $(rfIdInput).removeClass('border-green-500').addClass('border-gray-300');
-                }, 2000);
-            } else if (rfIdValue.length >= 5) {
-                // Feedback visual tidak ditemukan (hanya untuk input yang cukup panjang)
-                $(rfIdInput).addClass('border-red-500').removeClass('border-green-500 border-gray-300');
-                setTimeout(() => {
-                    $(rfIdInput).removeClass('border-red-500').addClass('border-gray-300');
-                }, 2000);
-            }
+    // Prevent form submission when Enter is pressed on RF ID input
+    newRfIdInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
         }
     });
 
-    // Tambahkan event untuk paste
-    rfIdInput.addEventListener('paste', function() {
-        // Trigger input event after paste
-        setTimeout(() => {
-            this.dispatchEvent(new Event('input'));
-        }, 10);
+    // Add input event listener with debouncing
+    let inputTimeout;
+    newRfIdInput.addEventListener('input', function() {
+        const rfIdValue = this.value.trim();
+
+        // Clear previous timeout
+        clearTimeout(inputTimeout);
+
+        if (rfIdValue.length > 0) {
+            // Set a timeout to process the RF ID after a short delay
+            inputTimeout = setTimeout(() => {
+                processRfIdValue(rfIdValue, citizens, newRfIdInput);
+            }, 300); // 300ms delay to prevent immediate processing
+        }
     });
+
+    // Handle paste events
+    newRfIdInput.addEventListener('paste', function(e) {
+        e.preventDefault();
+        const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+        this.value = pastedText;
+
+        // Process after paste
+        setTimeout(() => {
+            const rfIdValue = this.value.trim();
+            if (rfIdValue.length > 0) {
+                processRfIdValue(rfIdValue, citizens, newRfIdInput);
+            }
+        }, 100);
+    });
+
+    // Handle keyup events for RF ID scanner
+    newRfIdInput.addEventListener('keyup', function(e) {
+        // Prevent form submission on Enter
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+
+        const rfIdValue = this.value.trim();
+        if (rfIdValue.length > 0) {
+            // Clear previous timeout
+            clearTimeout(inputTimeout);
+
+            // Set a timeout to process the RF ID
+            inputTimeout = setTimeout(() => {
+                processRfIdValue(rfIdValue, citizens, newRfIdInput);
+            }, 200); // 200ms delay for keyup events
+        }
+    });
+
+    // Function to process RF ID value
+    function processRfIdValue(rfIdValue, citizens, inputElement) {
+        // Cari data warga dengan RF ID Tag yang sama
+        const matchedCitizen = citizens.find(citizen => {
+            // Jika citizen tidak memiliki rf_id_tag, lewati
+            if (citizen.rf_id_tag === undefined || citizen.rf_id_tag === null) {
+                return false;
+            }
+
+            // Konversi ke string dan normalisasi
+            const normalizedInput = rfIdValue.toString().replace(/^0+/, '').trim();
+            const normalizedStored = citizen.rf_id_tag.toString().replace(/^0+/, '').trim();
+
+            // Cek kecocokan persis
+            const exactMatch = normalizedInput === normalizedStored;
+
+            // Cek kecocokan sebagian (jika input adalah bagian dari rf_id_tag)
+            const partialMatch = normalizedStored.includes(normalizedInput) && normalizedInput.length >= 5;
+
+            // Kembalikan true jika ada kecocokan persis atau sebagian
+            return exactMatch || partialMatch;
+        });
+
+        // Jika ditemukan, isi form
+        if (matchedCitizen) {
+            populateCitizenData(matchedCitizen);
+
+            // Set NIK dan nama lengkap secara manual (karena sekarang input text)
+            if ($('#nikSelect').length) {
+                $('#nikSelect').val(matchedCitizen.nik);
+            }
+            if ($('#fullNameSelect').length) {
+                $('#fullNameSelect').val(matchedCitizen.full_name);
+            }
+
+            // Set address jika ada
+            if (matchedCitizen.address && $('#address').length) {
+                $('#address').val(matchedCitizen.address);
+            }
+
+            // Feedback visual berhasil
+            $(inputElement).addClass('border-green-500').removeClass('border-red-500 border-gray-300');
+            setTimeout(() => {
+                $(inputElement).removeClass('border-green-500').addClass('border-gray-300');
+            }, 2000);
+        } else if (rfIdValue.length >= 5) {
+            // Feedback visual tidak ditemukan (hanya untuk input yang cukup panjang)
+            $(inputElement).addClass('border-red-500').removeClass('border-green-500 border-gray-300');
+            setTimeout(() => {
+                $(inputElement).removeClass('border-red-500').addClass('border-gray-300');
+            }, 2000);
+        }
+    }
 }
 
 // Function to setup NIK input - FIXED VERSION
 function setupNikInput(citizens) {
     const nikInput = document.getElementById('nikSelect'); // FIXED: Use correct ID
     if (!nikInput) {
-        console.warn('NIK input element not found');
         return;
     }
-
-    console.log('Setting up NIK input:', nikInput);
 
     // Add input event listener
     nikInput.addEventListener('input', function() {
         const nikValue = this.value.trim();
-        console.log('NIK input value:', nikValue);
 
         // Only process if NIK is exactly 16 digits
         if (nikValue.length === 16 && /^\d+$/.test(nikValue)) {
-            console.log('Processing NIK:', nikValue);
-
             // Find citizen with matching NIK
             const matchedCitizen = citizens.find(citizen => {
                 const citizenNik = citizen.nik ? citizen.nik.toString() : '';
@@ -193,8 +227,6 @@ function setupNikInput(citizens) {
             });
 
             if (matchedCitizen) {
-                console.log('Found citizen:', matchedCitizen);
-
                 // Fill form fields
                 populateCitizenData(matchedCitizen);
 
@@ -209,8 +241,6 @@ function setupNikInput(citizens) {
                     $(nikInput).removeClass('border-green-500').addClass('border-gray-300');
                 }, 2000);
             } else {
-                console.log('No citizen found for NIK:', nikValue);
-
                 // Show error alert for NIK not found
                 Swal.fire({
                     title: 'Data Tidak Ditemukan',
@@ -237,11 +267,8 @@ function setupNameSelect(citizens) {
     /*
     const nameSelect = document.getElementById('fullNameSelect'); // FIXED: Use correct ID
     if (!nameSelect) {
-        console.warn('Name select element not found');
         return;
     }
-
-    console.log('Setting up name select:', nameSelect);
 
     // Create name options array
     const nameOptions = [];
@@ -322,7 +349,6 @@ function setupNameSelect(citizens) {
 function setupResponsibleNameSelect(citizens) {
     const responsibleNameSelect = document.getElementById('responsibleNameSelect');
     if (!responsibleNameSelect) {
-        console.warn('Responsible name select element not found');
         return;
     }
 

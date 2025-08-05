@@ -160,7 +160,8 @@
                 <!-- Kode POS -->
                 <div>
                     <label for="postal_code" class="block text-sm font-medium text-gray-700">Kode Pos</label>
-                    <input type="text" id="postal_code" name="postal_code" pattern="\d{5}" maxlength="5" value="{{ $citizen['data']['postal_code'] ?? '' }}"
+                    <input type="text" id="postal_code" name="postal_code" pattern="\d{5}" maxlength="5"
+                        value="{{ ($citizen['data']['postal_code'] && $citizen['data']['postal_code'] != '0' && $citizen['data']['postal_code'] != 0) ? $citizen['data']['postal_code'] : '' }}"
                         autocomplete="off"
                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
                 </div>

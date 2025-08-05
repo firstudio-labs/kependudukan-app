@@ -23,7 +23,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Get variables from data attributes
     const formContainer = document.getElementById('inheritance-form-container');
     if (!formContainer) {
-        console.error('Form container not found');
         return;
     }
 
@@ -64,7 +63,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Make sure we have valid data
             if (!Array.isArray(processedData)) {
-                console.error('Invalid citizen data format');
                 return;
             }
 
@@ -81,7 +79,6 @@ document.addEventListener('DOMContentLoaded', function() {
             setupHeirsInterface();
         },
         error: function(error) {
-            console.error('Failed to load citizen data:', error);
             // Setup the heirs interface anyway with empty data
             setupHeirsInterface();
         }
@@ -233,77 +230,119 @@ document.addEventListener('DOMContentLoaded', function() {
             const rfIdInput = heirRow.querySelector('.rf-id-tag');
             if (!rfIdInput) return;
 
-            // Tambahkan event untuk input dan paste
-            rfIdInput.addEventListener('input', function() {
-                const rfIdValue = this.value.trim();
-                if (rfIdValue.length > 0) {
-                    // Cari data warga dengan RF ID Tag yang sama
-                    const matchedCitizen = allCitizens.find(citizen => {
-                        // Jika citizen tidak memiliki rf_id_tag, lewati
-                        if (citizen.rf_id_tag === undefined || citizen.rf_id_tag === null) {
-                            return false;
-                        }
+            // Remove any existing event listeners by cloning the element
+            const newRfIdInput = rfIdInput.cloneNode(true);
+            rfIdInput.parentNode.replaceChild(newRfIdInput, rfIdInput);
 
-                        // Konversi ke string dan normalisasi
-                        const normalizedInput = rfIdValue.toString().replace(/^0+/, '').trim();
-                        const normalizedStored = citizen.rf_id_tag.toString().replace(/^0+/, '').trim();
-
-                        // Cek kecocokan persis
-                        const exactMatch = normalizedInput === normalizedStored;
-
-                        // Cek kecocokan sebagian (jika input adalah bagian dari rf_id_tag)
-                        const partialMatch = normalizedStored.includes(normalizedInput) && normalizedInput.length >= 5;
-
-                        // Kembalikan true jika ada kecocokan persis atau sebagian
-                        return exactMatch || partialMatch;
-                    });
-
-                    // Jika ditemukan, isi form
-                    if (matchedCitizen) {
-                        populateHeirFieldsFromCitizen(heirRow, matchedCitizen);
-
-                        // --- KODE UPDATE DROPDOWN DIKOMENTARI ---
-                        // Jika sewaktu-waktu dibutuhkan, bisa diaktifkan kembali
-                        /*
-                        // Update dropdown NIK dan Nama dengan trigger yang benar
-                        if ($(heirRow).find('.nik-select').length) {
-                            $(heirRow).find('.nik-select').val(matchedCitizen.nik).trigger('change');
-                        }
-                        if ($(heirRow).find('.fullname-select').length) {
-                            $(heirRow).find('.fullname-select').val(matchedCitizen.full_name).trigger('change');
-                        }
-                        */
-
-                        // Set NIK dan nama lengkap secara manual (karena sekarang input text)
-                        if ($(heirRow).find('.nik-select').length) {
-                            $(heirRow).find('.nik-select').val(matchedCitizen.nik);
-                        }
-                        if ($(heirRow).find('.fullname-select').length) {
-                            $(heirRow).find('.fullname-select').val(matchedCitizen.full_name);
-                        }
-
-                        // Feedback visual berhasil
-                        $(rfIdInput).addClass('border-green-500').removeClass('border-red-500 border-gray-300');
-                        setTimeout(() => {
-                            $(rfIdInput).removeClass('border-green-500').addClass('border-gray-300');
-                        }, 2000);
-                    } else if (rfIdValue.length >= 5) {
-                        // Feedback visual tidak ditemukan (hanya untuk input yang cukup panjang)
-                        $(rfIdInput).addClass('border-red-500').removeClass('border-green-500 border-gray-300');
-                        setTimeout(() => {
-                            $(rfIdInput).removeClass('border-red-500').addClass('border-gray-300');
-                        }, 2000);
-                    }
+            // Prevent form submission when Enter is pressed on RF ID input
+            newRfIdInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
                 }
             });
 
-            // Tambahkan event untuk paste
-            rfIdInput.addEventListener('paste', function() {
-                // Trigger input event after paste
-                setTimeout(() => {
-                    this.dispatchEvent(new Event('input'));
-                }, 10);
+            // Add input event listener with debouncing
+            let inputTimeout;
+            newRfIdInput.addEventListener('input', function() {
+                const rfIdValue = this.value.trim();
+
+                // Clear previous timeout
+                clearTimeout(inputTimeout);
+
+                if (rfIdValue.length > 0) {
+                    // Set a timeout to process the RF ID after a short delay
+                    inputTimeout = setTimeout(() => {
+                        processHeirRfIdValue(rfIdValue, allCitizens, newRfIdInput, heirRow);
+                    }, 300); // 300ms delay to prevent immediate processing
+                }
             });
+
+            // Handle paste events
+            newRfIdInput.addEventListener('paste', function(e) {
+                e.preventDefault();
+                const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+                this.value = pastedText;
+
+                // Process after paste
+                setTimeout(() => {
+                    const rfIdValue = this.value.trim();
+                    if (rfIdValue.length > 0) {
+                        processHeirRfIdValue(rfIdValue, allCitizens, newRfIdInput, heirRow);
+                    }
+                }, 100);
+            });
+
+            // Handle keyup events for RF ID scanner
+            newRfIdInput.addEventListener('keyup', function(e) {
+                // Prevent form submission on Enter
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }
+
+                const rfIdValue = this.value.trim();
+                if (rfIdValue.length > 0) {
+                    // Clear previous timeout
+                    clearTimeout(inputTimeout);
+
+                    // Set a timeout to process the RF ID
+                    inputTimeout = setTimeout(() => {
+                        processHeirRfIdValue(rfIdValue, allCitizens, newRfIdInput, heirRow);
+                    }, 200); // 200ms delay for keyup events
+                }
+            });
+
+            // Function to process RF ID value for heir
+            function processHeirRfIdValue(rfIdValue, citizens, inputElement, heirRow) {
+                // Cari data warga dengan RF ID Tag yang sama
+                const matchedCitizen = citizens.find(citizen => {
+                    // Jika citizen tidak memiliki rf_id_tag, lewati
+                    if (citizen.rf_id_tag === undefined || citizen.rf_id_tag === null) {
+                        return false;
+                    }
+
+                    // Konversi ke string dan normalisasi
+                    const normalizedInput = rfIdValue.toString().replace(/^0+/, '').trim();
+                    const normalizedStored = citizen.rf_id_tag.toString().replace(/^0+/, '').trim();
+
+                    // Cek kecocokan persis
+                    const exactMatch = normalizedInput === normalizedStored;
+
+                    // Cek kecocokan sebagian (jika input adalah bagian dari rf_id_tag)
+                    const partialMatch = normalizedStored.includes(normalizedInput) && normalizedInput.length >= 5;
+
+                    // Kembalikan true jika ada kecocokan persis atau sebagian
+                    return exactMatch || partialMatch;
+                });
+
+                // Jika ditemukan, isi form
+                if (matchedCitizen) {
+                    populateHeirFieldsFromCitizen(heirRow, matchedCitizen);
+
+                    // Set NIK dan nama lengkap secara manual (karena sekarang input text)
+                    if ($(heirRow).find('.nik-select').length) {
+                        $(heirRow).find('.nik-select').val(matchedCitizen.nik);
+                    }
+                    if ($(heirRow).find('.fullname-select').length) {
+                        $(heirRow).find('.fullname-select').val(matchedCitizen.full_name);
+                    }
+
+                    // Feedback visual berhasil
+                    $(inputElement).addClass('border-green-500').removeClass('border-red-500 border-gray-300');
+                    setTimeout(() => {
+                        $(inputElement).removeClass('border-green-500').addClass('border-gray-300');
+                    }, 2000);
+                } else if (rfIdValue.length >= 5) {
+                    // Feedback visual tidak ditemukan (hanya untuk input yang cukup panjang)
+                    $(inputElement).addClass('border-red-500').removeClass('border-green-500 border-gray-300');
+                    setTimeout(() => {
+                        $(inputElement).removeClass('border-red-500').addClass('border-gray-300');
+                    }, 2000);
+                }
+            }
         }
 
         // Function to add a new heir row (optimized)
@@ -361,7 +400,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
             } catch (error) {
-                console.warn('Error formatting birth date:', error);
+                // Error handling removed for cleaner code
             }
             $(heirRow).find('.birth-date').val(formattedDate);
         }

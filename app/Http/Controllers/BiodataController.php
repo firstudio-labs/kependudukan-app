@@ -814,7 +814,7 @@ class BiodataController extends Controller
 
     private function processNullableFields(&$data)
     {
-        $nullableIntegerFields = ['marital_status', 'marital_certificate', 'divorce_certificate', 'postal_code'];
+        $nullableIntegerFields = ['marital_status', 'marital_certificate', 'divorce_certificate'];
         foreach ($nullableIntegerFields as $field) {
             $data[$field] = empty($data[$field]) ? 0 : (int) $data[$field];
         }
@@ -846,14 +846,15 @@ class BiodataController extends Controller
             'country',
             'foreign_postal_code',
             'status',
+            'postal_code', // Tambahkan postal_code ke string fields
         ];
         foreach ($nullableStringFields as $field) {
-            $data[$field] = empty($data[$field]) ? " " : $data[$field];
+            $data[$field] = empty($data[$field]) ? null : $data[$field];
         }
 
         $nullableDateFields = ['marriage_date', 'divorce_certificate_date'];
         foreach ($nullableDateFields as $field) {
-            $data[$field] = empty($data[$field]) ? " " : date('Y-m-d', strtotime($data[$field]));
+            $data[$field] = empty($data[$field]) ? null : date('Y-m-d', strtotime($data[$field]));
         }
 
         $integerFields = [
@@ -871,7 +872,6 @@ class BiodataController extends Controller
             'mental_disorders',
             'education_status',
             'job_type_id',
-
         ];
         foreach ($integerFields as $field) {
             if (isset($data[$field])) {
