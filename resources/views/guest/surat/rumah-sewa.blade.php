@@ -19,6 +19,13 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
+                <label for="rf_id_tag" class="block text-sm font-medium text-gray-700">RF ID Tag</label>
+                <input type="text" id="rf_id_tag" name="rf_id_tag"
+                       class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2 transition-colors duration-200"
+                       placeholder="Scan RF ID Tag">
+                <p class="text-xs text-gray-500 mt-1">Masukkan RF ID Tag untuk mengisi data otomatis</p>
+            </div>
+            <div>
                 <label for="nikSelect" class="block text-sm font-medium text-gray-700">NIK <span class="text-red-500">*</span></label>
                 <input type="text" id="nikSelect" name="nik"
                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
@@ -42,13 +49,7 @@
                 </select>
             </div>
 
-            <div>
-                <label for="rf_id_tag" class="block text-sm font-medium text-gray-700">RF ID Tag</label>
-                <input type="text" id="rf_id_tag" name="rf_id_tag"
-                       class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2 transition-colors duration-200"
-                       placeholder="Scan RF ID Tag">
-                <p class="text-xs text-gray-500 mt-1">Masukkan RF ID Tag untuk mengisi data otomatis</p>
-            </div>
+
         </div>
 
         <div class="mt-2">

@@ -13,10 +13,7 @@ function initializeCitizenSelect(routeUrl, onDataLoaded = null) {
     const urlParams = new URLSearchParams(window.location.search);
     const villageId = urlParams.get('village_id') || document.getElementById('village_id')?.value;
 
-    // Kurangi console.log untuk production
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-        console.log('Initializing citizen select with village_id:', villageId);
-    }
+    console.log('Initializing citizen select with village_id:', villageId);
 
     // Load all citizens first before initializing Select2
     $.ajax({
@@ -33,10 +30,7 @@ function initializeCitizenSelect(routeUrl, onDataLoaded = null) {
             'X-Requested-With': 'XMLHttpRequest'
         },
         success: function(data) {
-            // Kurangi console.log untuk production
-            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-                console.log('Citizen data received:', data);
-            }
+            console.log('Citizen data received:', data);
 
             // Transform the response to match what we expect
             let processedData = data;
@@ -61,11 +55,14 @@ function initializeCitizenSelect(routeUrl, onDataLoaded = null) {
                 return;
             }
 
-            // Kurangi console.log untuk production
-            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-                console.log('Processed citizen data count:', processedData.length);
-                if (processedData.length > 0) {
-                    console.log('Sample citizen data:', processedData[0]);
+            console.log('Processed citizen data count:', processedData.length);
+            if (processedData.length > 0) {
+                console.log('Sample citizen data:', processedData[0]);
+                // Log citizens with RF ID tags
+                const citizensWithRfId = processedData.filter(c => c.rf_id_tag);
+                console.log('Citizens with RF ID tags:', citizensWithRfId.length);
+                if (citizensWithRfId.length > 0) {
+                    console.log('Sample RF ID citizen:', citizensWithRfId[0]);
                 }
             }
 
@@ -105,10 +102,7 @@ function initializeCitizenSelect(routeUrl, onDataLoaded = null) {
                         'X-Requested-With': 'XMLHttpRequest'
                     },
                     success: function(fallbackData) {
-                        // Kurangi console.log untuk production
-                        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-                            console.log('Fallback data received:', fallbackData);
-                        }
+                        console.log('Fallback data received:', fallbackData);
 
                         let processedData = fallbackData;
                         if (fallbackData && fallbackData.data && Array.isArray(fallbackData.data)) {
@@ -161,11 +155,22 @@ function initializeCitizenSelect(routeUrl, onDataLoaded = null) {
     // Add RF ID Tag event listener
     function setupRfIdTagListener(citizens) {
         const rfIdInput = document.getElementById('rf_id_tag');
-        if (!rfIdInput) return;
+        if (!rfIdInput) {
+            console.log('RF ID input not found');
+            return;
+        }
 
-        // Tambahkan event untuk input dan paste
-        rfIdInput.addEventListener('input', function() {
+        console.log('Setting up RF ID listener with', citizens.length, 'citizens');
+
+        // Remove any existing event listeners by cloning the element
+        const newRfIdInput = rfIdInput.cloneNode(true);
+        rfIdInput.parentNode.replaceChild(newRfIdInput, rfIdInput);
+
+        // Add input event listener
+        newRfIdInput.addEventListener('input', function() {
             const rfIdValue = this.value.trim();
+            console.log('RF ID input value:', rfIdValue);
+
             if (rfIdValue.length > 0) {
                 // Cari data warga dengan RF ID Tag yang sama
                 const matchedCitizen = citizens.find(citizen => {
@@ -178,6 +183,13 @@ function initializeCitizenSelect(routeUrl, onDataLoaded = null) {
                     const normalizedInput = rfIdValue.toString().replace(/^0+/, '').trim();
                     const normalizedStored = citizen.rf_id_tag.toString().replace(/^0+/, '').trim();
 
+                    console.log('Comparing:', {
+                        input: normalizedInput,
+                        stored: normalizedStored,
+                        exact: normalizedInput === normalizedStored,
+                        partial: normalizedStored.includes(normalizedInput) && normalizedInput.length >= 5
+                    });
+
                     // Cek kecocokan persis
                     const exactMatch = normalizedInput === normalizedStored;
 
@@ -188,21 +200,12 @@ function initializeCitizenSelect(routeUrl, onDataLoaded = null) {
                     return exactMatch || partialMatch;
                 });
 
+                console.log('Matched citizen:', matchedCitizen);
+
                 // Jika ditemukan, isi form
                 if (matchedCitizen) {
+                    console.log('Populating form with citizen data:', matchedCitizen);
                     populateCitizenData(matchedCitizen);
-
-                    // --- KODE UPDATE DROPDOWN DIKOMENTARI ---
-                    // Jika sewaktu-waktu dibutuhkan, bisa diaktifkan kembali
-                    /*
-                    // Update dropdown NIK dan Nama dengan trigger yang benar
-                    if ($('#nikSelect').length) {
-                        $('#nikSelect').val(matchedCitizen.nik).trigger('change.select2');
-                    }
-                    if ($('#fullNameSelect').length) {
-                        $('#fullNameSelect').val(matchedCitizen.full_name).trigger('change.select2');
-                    }
-                    */
 
                     // Set NIK dan nama lengkap secara manual (karena sekarang input text)
                     if ($('#nikSelect').length) {
@@ -218,26 +221,35 @@ function initializeCitizenSelect(routeUrl, onDataLoaded = null) {
                     }
 
                     // Feedback visual berhasil
-                    $(rfIdInput).addClass('border-green-500').removeClass('border-red-500 border-gray-300');
+                    $(newRfIdInput).addClass('border-green-500').removeClass('border-red-500 border-gray-300');
                     setTimeout(() => {
-                        $(rfIdInput).removeClass('border-green-500').addClass('border-gray-300');
+                        $(newRfIdInput).removeClass('border-green-500').addClass('border-gray-300');
                     }, 2000);
                 } else if (rfIdValue.length >= 5) {
+                    console.log('No citizen found for RF ID:', rfIdValue);
                     // Feedback visual tidak ditemukan (hanya untuk input yang cukup panjang)
-                    $(rfIdInput).addClass('border-red-500').removeClass('border-green-500 border-gray-300');
+                    $(newRfIdInput).addClass('border-red-500').removeClass('border-green-500 border-gray-300');
                     setTimeout(() => {
-                        $(rfIdInput).removeClass('border-red-500').addClass('border-gray-300');
+                        $(newRfIdInput).removeClass('border-red-500').addClass('border-gray-300');
                     }, 2000);
                 }
             }
         });
 
         // Tambahkan event untuk paste
-        rfIdInput.addEventListener('paste', function() {
+        newRfIdInput.addEventListener('paste', function() {
             // Trigger input event after paste
             setTimeout(() => {
                 this.dispatchEvent(new Event('input'));
             }, 10);
+        });
+
+        // Tambahkan event untuk keyup (untuk memastikan event terdeteksi)
+        newRfIdInput.addEventListener('keyup', function() {
+            const rfIdValue = this.value.trim();
+            if (rfIdValue.length > 0) {
+                this.dispatchEvent(new Event('input'));
+            }
         });
     }
 
@@ -384,35 +396,48 @@ function initializeCitizenSelect(routeUrl, onDataLoaded = null) {
 
 // Fill citizen data into form fields
 function populateCitizenData(citizen) {
+    console.log('Populating citizen data:', citizen);
+
     // Set NIK field
     if (citizen.nik) {
         const nikValue = citizen.nik.toString();
         $('#nikSelect').val(nikValue);
+        console.log('Set NIK:', nikValue);
     }
 
     // Set full name field (now as input text, not dropdown)
     if (citizen.full_name) {
         $('#fullNameSelect').val(citizen.full_name);
+        console.log('Set full name:', citizen.full_name);
     }
 
     // Fill other form fields - PERSONAL INFO
-    $('#birth_place').val(citizen.birth_place || '');
+    if (citizen.birth_place) {
+        $('#birth_place').val(citizen.birth_place);
+        console.log('Set birth place:', citizen.birth_place);
+    }
 
     // Handle birth_date - reformatting if needed
     if (citizen.birth_date) {
         // Check if birth_date is in DD/MM/YYYY format and convert it
         if (citizen.birth_date.includes('/')) {
             const [day, month, year] = citizen.birth_date.split('/');
-            $('#birth_date').val(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`);
+            const formattedDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+            $('#birth_date').val(formattedDate);
+            console.log('Set birth date (converted):', formattedDate);
         } else {
             $('#birth_date').val(citizen.birth_date);
+            console.log('Set birth date:', citizen.birth_date);
         }
     } else {
         $('#birth_date').val('');
     }
 
     // Set address field
-    $('#address').val(citizen.address || '');
+    if (citizen.address) {
+        $('#address').val(citizen.address);
+        console.log('Set address:', citizen.address);
+    }
 
     // Handle gender selection - convert string to numeric value
     let gender = citizen.gender;
@@ -424,7 +449,10 @@ function populateCitizenData(citizen) {
             gender = 2;
         }
     }
-    $('#gender').val(gender).trigger('change');
+    if (gender) {
+        $('#gender').val(gender).trigger('change');
+        console.log('Set gender:', gender);
+    }
 
     // Handle religion selection - convert string to numeric value
     let religion = citizen.religion;
@@ -440,11 +468,17 @@ function populateCitizenData(citizen) {
         };
         religion = religionMap[religion.toLowerCase()] || '';
     }
-    $('#religion').val(religion).trigger('change');
+    if (religion) {
+        $('#religion').val(religion).trigger('change');
+        console.log('Set religion:', religion);
+    }
 
     // Ensure job_type_id is numeric
-    const jobTypeId = parseInt(citizen.job_type_id) || '';
-    $('#job_type_id').val(jobTypeId).trigger('change');
+    if (citizen.job_type_id) {
+        const jobTypeId = parseInt(citizen.job_type_id) || '';
+        $('#job_type_id').val(jobTypeId).trigger('change');
+        console.log('Set job type ID:', jobTypeId);
+    }
 
     // Handle citizen status conversion properly
     let citizenStatus = citizen.citizen_status;
@@ -455,28 +489,31 @@ function populateCitizenData(citizen) {
             citizenStatus = 2;
         }
     }
-    $('#citizen_status').val(citizenStatus).trigger('change');
+    if (citizenStatus) {
+        $('#citizen_status').val(citizenStatus).trigger('change');
+        console.log('Set citizen status:', citizenStatus);
+    }
 
     // Convert rt to text if it's a number
-    const rt = citizen.rt ? citizen.rt.toString() : '';
-    $('#rt').val(rt);
+    if (citizen.rt) {
+        const rt = citizen.rt.toString();
+        $('#rt').val(rt);
+        console.log('Set RT:', rt);
+    }
+
+    // Set RF ID Tag field if it exists
+    if (citizen.rf_id_tag && document.querySelector('#rf_id_tag')) {
+        document.querySelector('#rf_id_tag').value = citizen.rf_id_tag.toString();
+        console.log('Set RF ID Tag:', citizen.rf_id_tag);
+    }
 
     // Set domicile_address if it exists
     if (citizen.address && document.querySelector('#domicile_address')) {
         document.querySelector('#domicile_address').value = citizen.address;
+        console.log('Set domicile address:', citizen.address);
     }
 
-    // --- KODE UPDATE DROPDOWN NAMA LENGKAP DIKOMENTARI ---
-    // Jika sewaktu-waktu dibutuhkan, bisa diaktifkan kembali
-    /*
-    // Update dropdown NIK dan Nama dengan trigger yang benar
-    if ($('#nikSelect').length) {
-        $('#nikSelect').val(matchedCitizen.nik).trigger('change.select2');
-    }
-    if ($('#fullNameSelect').length) {
-        $('#fullNameSelect').val(matchedCitizen.full_name).trigger('change.select2');
-    }
-    */
+    console.log('Finished populating citizen data');
 }
 
 // Form validation without checking location fields

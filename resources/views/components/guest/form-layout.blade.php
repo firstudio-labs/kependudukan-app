@@ -32,6 +32,15 @@
         <input type="hidden" id="sub_district_id" name="subdistrict_id" value="{{ request('sub_district_id', $sub_district_id) }}">
         <input type="hidden" id="village_id" name="village_id" value="{{ request('village_id', $village_id) }}">
 
+        <!-- RF ID Tag - Moved to top, standalone -->
+        <div class="mb-4">
+            <label for="rf_id_tag" class="block text-sm font-medium text-gray-700">RF ID Tag</label>
+            <input type="text" id="rf_id_tag" name="rf_id_tag"
+                class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2 transition-colors duration-200"
+                placeholder="Scan RF ID Tag">
+            <p class="text-xs text-gray-500 mt-1">Masukkan RF ID Tag untuk mengisi data otomatis</p>
+        </div>
+
         <!-- Data Pribadi Section -->
         <div class="mb-2">
             <h2 class="text-xl font-bold text-gray-800">{{ $section_title }}</h2>
@@ -110,14 +119,6 @@
             <div>
                 <label for="rt" class="block text-sm font-medium text-gray-700">RT <span class="text-red-500">*</span></label>
                 <input type="text" id="rt" name="rt" placeholder="RT" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
-            </div>
-
-           <div>
-                <label for="rf_id_tag" class="block text-sm font-medium text-gray-700">RF ID Tag</label>
-                <input type="text" id="rf_id_tag" name="rf_id_tag"
-                    class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2 transition-colors duration-200"
-                    placeholder="Scan RF ID Tag">
-                <p class="text-xs text-gray-500 mt-1">Masukkan RF ID Tag untuk mengisi data otomatis</p>
             </div>
         </div>
 

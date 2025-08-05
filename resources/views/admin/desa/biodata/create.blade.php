@@ -4,6 +4,14 @@
 
         <form method="POST" action="{{ route('admin.desa.biodata.store') }}" class="bg-white p-6 rounded-lg shadow-md">
             @csrf
+
+            <!-- RF ID Tag - Moved to top, standalone -->
+            <div class="mb-4">
+                <label for="rf_id_tag" class="block text-sm font-medium text-gray-700">RF ID Tag</label>
+                <input type="number" id="rf_id_tag" name="rf_id_tag" value="{{ old('rf_id_tag') }}"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+            </div>
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <!-- NIK -->
                 <div>

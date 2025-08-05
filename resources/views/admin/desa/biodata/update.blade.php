@@ -6,6 +6,12 @@
             @csrf
             @method('PUT')
             <input type="hidden" name="current_page" value="{{ request('page', 1) }}">
+             <!-- RF ID Tag - Moved to top, standalone -->
+             <div class="mb-4">
+                <label for="rf_id_tag" class="block text-sm font-medium text-gray-700">RF ID Tag</label>
+                <input type="number" id="rf_id_tag" name="rf_id_tag" value="{{ $citizen['data']['rf_id_tag'] ?? '' }}"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+            </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <!-- NIK -->
                 <div>
@@ -153,7 +159,7 @@
                 <!-- Kode POS -->
                 <div>
                     <label for="postal_code" class="block text-sm font-medium text-gray-700">Kode Pos</label>
-                    <input type="text" id="postal_code" name="postal_code" pattern="\d{5}" maxlength="5" value="{{ $citizen['data']['postal_code'] }}"
+                    <input type="text" id="postal_code" name="postal_code" pattern="\d{5}" maxlength="5" value="{{ $citizen['data']['postal_code'] ?? '' }}"
                         autocomplete="off"
                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
                 </div>
@@ -466,12 +472,12 @@
                     </select>
                 </div>
 
-                <!-- RF ID Tag -->
+                {{-- <!-- RF ID Tag -->
                 <div>
                     <label for="rf_id_tag" class="block text-sm font-medium text-gray-700">RF ID Tag</label>
                     <input type="number" id="rf_id_tag" name="rf_id_tag" value="{{ $citizen['data']['rf_id_tag'] ?? '' }}"
                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
-                </div>
+                </div> --}}
             </div>
 
             <div class="mt-6 flex justify-end space-x-4">
