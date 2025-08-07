@@ -320,18 +320,21 @@ class AdministrasiController extends Controller
         // Get search parameters
         $search = $request->input('search');
         $villageId = $request->input('village_id');
+        $forceRefresh = $request->input('force_refresh', false);
 
-        // Log minimal untuk debugging
-        \Log::info('fetchAllCitizens called', [
-            'search' => $search,
-            'village_id' => $villageId
-        ]);
+        // Validate village_id if provided
+        if ($villageId && !empty($villageId)) {
+            // Check if village_id is numeric and reasonable
+            if (!is_numeric($villageId) || $villageId <= 0) {
+                $villageId = null; // Reset to null to use all citizens
+            }
+        }
 
         // Use cache for non-search queries to improve performance
         $cacheKey = "admin_citizens_all" . ($villageId ? "_village_{$villageId}" : "");
 
-        // Only use cache for non-search queries
-        if (!$search && Cache::has($cacheKey)) {
+        // Only use cache for non-search queries and if not forcing refresh
+        if (!$search && !$forceRefresh && Cache::has($cacheKey)) {
             return response()->json(Cache::get($cacheKey));
         }
 
@@ -370,25 +373,14 @@ class AdministrasiController extends Controller
 
             // Fallback jika tidak ada data yang cocok
             if (empty($filteredCitizens)) {
-                \Log::warning('No citizens found for village_id, using all citizens as fallback', [
-                    'village_id' => $villageId,
-                    'total_citizens' => $originalCount
-                ]);
                 $filteredCitizens = $citizens;
-            } else {
-                \Log::info('Filtered citizens by village_id', [
-                    'villageId' => $villageId,
-                    'originalCount' => $originalCount,
-                    'filteredCount' => count($filteredCitizens)
-                ]);
             }
 
             $citizens = $filteredCitizens;
         }
 
-        // Optimized processing - hanya log sample untuk debugging
+        // Optimized processing
         $processedCitizens = [];
-        $sampleLogged = false;
 
         foreach ($citizens as $citizen) {
             $processedCitizen = [
@@ -413,15 +405,6 @@ class AdministrasiController extends Controller
                 'rf_id_tag' => $citizen['rf_id_tag'] ?? null,
             ];
 
-            // Log sample citizen hanya sekali untuk debugging
-            if (!$sampleLogged && (empty($processedCitizen['nik']) || empty($processedCitizen['full_name']))) {
-                \Log::warning('Sample citizen with missing required fields', [
-                    'original_citizen' => $citizen,
-                    'processed_citizen' => $processedCitizen
-                ]);
-                $sampleLogged = true;
-            }
-
             $processedCitizens[] = $processedCitizen;
         }
 
@@ -429,7 +412,7 @@ class AdministrasiController extends Controller
         $responseData = [
             'status' => $status,
             'count' => count($processedCitizens),
-            'data' => array_values($processedCitizens), // Pastikan array
+            'data' => array_values($processedCitizens),
             'debug' => [
                 'village_id_requested' => $villageId,
                 'total_citizens' => count($processedCitizens),
@@ -437,12 +420,42 @@ class AdministrasiController extends Controller
             ]
         ];
 
-        // Cache non-search results for 15 minutes
+        // Cache non-search results for 2 minutes
         if (!$search) {
-            Cache::put($cacheKey, $responseData, now()->addMinutes(15));
+            Cache::put($cacheKey, $responseData, now()->addMinutes(2));
         }
 
         return response()->json($responseData);
+    }
+
+    /**
+     * Clear all citizen caches
+     */
+    public function clearCitizenCaches()
+    {
+        try {
+            $cacheKeys = [
+                'admin_citizens_all',
+                'admin_citizens_all_village_*',
+                'citizens_all_*',
+                'citizens_search_*',
+                'citizens_all_1_100',
+                'citizens_all_1_1000',
+                'citizens_all_1_10000',
+                'citizens_all_1_100_village_*',
+                'citizens_all_1_1000_village_*',
+                'citizens_all_1_10000_village_*'
+            ];
+
+            foreach ($cacheKeys as $key) {
+                Cache::forget($key);
+            }
+
+            \Log::info('All citizen caches cleared from AdministrasiController');
+
+        } catch (\Exception $e) {
+            \Log::error('Error clearing citizen caches: ' . $e->getMessage());
+        }
     }
 
     /**

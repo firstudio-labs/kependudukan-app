@@ -124,6 +124,43 @@
             border-radius: 10px;
             background-color: rgba(255, 255, 255, 0.8);
         }
+
+        .file-upload {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .file-upload input[type=file] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-upload-label {
+            display: block;
+            padding: 12px;
+            border: 2px dashed #969BE7;
+            border-radius: 8px;
+            text-align: center;
+            background-color: rgba(255, 255, 255, 0.8);
+            transition: all 0.3s ease;
+        }
+
+        .file-upload-label:hover {
+            background-color: rgba(150, 155, 231, 0.1);
+            border-color: #8084d9;
+        }
+
+        .preview-image {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body class="relative h-screen overflow-hidden bg-gradient-to-br from-white to-[#fcf8fb]">
@@ -157,7 +194,7 @@
             <!-- Form Container with internal scroll -->
             <div class="flex-grow overflow-auto pb-1 custom-scrollbar pt-3">
                 <div class="glass-form">
-                    <form action="{{ route('guest.buku-tamu.store') }}" method="POST" class="space-y-6">
+                    <form action="{{ route('guest.buku-tamu.store') }}" method="POST" class="space-y-6" enctype="multipart/form-data">
                         @csrf
                         <input type="hidden" name="province_id" value="{{ $province_id }}">
                         <input type="hidden" name="district_id" value="{{ $district_id }}">
@@ -186,7 +223,7 @@
 
                             <!-- Keperluan -->
                             <div class="space-y-2">
-                                <label for="keperluan" class="block text-sm font-medium text-gray-700">Keperluan <span class="text-red-500">*</span></label>
+                                <label for="keperluan" class="block text-sm font-medium text-gray-700">Keperluan (Instansi/Dinas/Perusahaan) <span class="text-red-500">*</span></label>
                                 <input type="text" name="keperluan" id="keperluan" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-custom-purple focus:border-custom-purple" required>
                             </div>
 
@@ -198,8 +235,23 @@
 
                             <!-- Pesan - full width -->
                             <div class="space-y-2 md:col-span-2">
-                                <label for="pesan" class="block text-sm font-medium text-gray-700">Pesan/Kesan</label>
+                                <label for="pesan" class="block text-sm font-medium text-gray-700">Keperluan/Tujuan</label>
                                 <textarea name="pesan" id="pesan" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-custom-purple focus:border-custom-purple"></textarea>
+                            </div>
+
+                            <!-- Foto - full width -->
+                            <div class="space-y-2 md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700">Foto</label>
+                                <div class="file-upload">
+                                    <input type="file" name="foto" id="foto" accept="image/*" onchange="previewImage(this)">
+                                    <label for="foto" class="file-upload-label">
+                                        <i class="fa fa-camera mr-2"></i>
+                                        <span id="file-label">Pilih Foto</span>
+                                    </label>
+                                </div>
+                                <div id="image-preview" class="hidden">
+                                    <img id="preview-img" class="preview-image" alt="Preview">
+                                </div>
                             </div>
 
                             <!-- Tanda Tangan - full width -->
@@ -304,6 +356,27 @@
                 showErrorAlert("{{ session('error') }}");
             @endif
         });
+
+        // Image preview function
+        function previewImage(input) {
+            const file = input.files[0];
+            const preview = document.getElementById('image-preview');
+            const previewImg = document.getElementById('preview-img');
+            const fileLabel = document.getElementById('file-label');
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImg.src = e.target.result;
+                    preview.classList.remove('hidden');
+                    fileLabel.textContent = file.name;
+                }
+                reader.readAsDataURL(file);
+            } else {
+                preview.classList.add('hidden');
+                fileLabel.textContent = 'Pilih Foto';
+            }
+        }
     </script>
 </body>
-</html> 
+</html>

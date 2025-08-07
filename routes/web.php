@@ -1007,3 +1007,36 @@ Route::middleware(['auth:web'])->group(function () {
     Route::get('/admin/family-member/{nik}/document/{documentType}/view', [ProfileController::class, 'viewFamilyMemberDocument'])
         ->name('admin.family-member.view-document');
 });
+
+// Route untuk clear cache (hanya untuk development/testing)
+Route::get('/clear-cache', function() {
+    Cache::flush();
+    return redirect()->back()->with('success', 'Cache berhasil dibersihkan!');
+})->name('clear.cache')->middleware('auth');
+
+// Route untuk force refresh cache (untuk testing)
+Route::get('/force-refresh-cache', function() {
+    Cache::flush();
+    return redirect()->back()->with('success', 'Cache berhasil dibersihkan!');
+})->name('force.refresh.cache')->middleware('auth');
+
+// Route untuk clear specific citizen cache
+Route::get('/clear-citizen-cache/{nik}', function($nik) {
+    $cacheKeys = [
+        'admin_citizens_all',
+        'citizens_all_*',
+        'citizens_search_*'
+    ];
+
+    foreach ($cacheKeys as $key) {
+        Cache::forget($key);
+    }
+
+    return response()->json(['success' => true, 'message' => 'Cache cleared for NIK: ' . $nik]);
+})->name('clear.citizen.cache');
+
+// Modifikasi route edit untuk menggunakan nomor KK
+Route::get('/admin/desa/datakk/{kk}/edit', [DataKKController::class, 'editByKK'])
+    ->name('admin.desa.datakk.edit');
+Route::put('/admin/desa/datakk/{kk}', [DataKKController::class, 'updateByKK'])
+    ->name('admin.desa.datakk.update');

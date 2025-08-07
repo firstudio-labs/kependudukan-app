@@ -110,6 +110,17 @@
                         </ul>
                     </li>
 
+                    <!-- Tambah Data KK (menu terpisah) -->
+                    <li class="-ml-5">
+                        <a href="{{ route('superadmin.datakk.create') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                                                                                                                                {{ request()->routeIs('superadmin.datakk.create*')
+                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                            <i class="fa-solid fa-plus text-lg transition-all duration-300"></i>
+                            <span>Tambah Data KK</span>
+                        </a>
+                    </li>
+
                     <!-- Kelola Aset dropdown -->
                     <li class="-ml-5">
                         <button type="button"
@@ -410,6 +421,17 @@
                                 </a>
                             </li>
                         </ul>
+                    </li>
+
+                    <!-- Tambah Data KK (menu terpisah) -->
+                    <li class="-ml-5">
+                        <a href="{{ route('admin.desa.datakk.create') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                                                                                                {{ request()->routeIs('admin.desa.datakk.create*')
+                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                            <i class="fa-solid fa-plus text-lg transition-all duration-300"></i>
+                            <span>Tambah Data KK</span>
+                        </a>
                     </li>
 
                     <!-- Master Lapor Desa -->

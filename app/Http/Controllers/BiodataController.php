@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Response;
 use Maatwebsite\Excel\Facades\Excel; // You'll need to install Laravel Excel package
 use App\Imports\CitizensImport; // We'll create this import class
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache; // Added for cache invalidation
 
 class BiodataController extends Controller
 {
@@ -328,6 +329,8 @@ class BiodataController extends Controller
             $response = $this->citizenService->updateCitizen($nik, $validatedData);
 
             if ($response['status'] === 'OK') {
+                // Clear additional caches that might be used in guest forms
+                $this->clearGuestFormCaches();
 
                 if (Auth::user()->role == 'admin desa') {
                     return redirect()
@@ -814,7 +817,7 @@ class BiodataController extends Controller
 
     private function processNullableFields(&$data)
     {
-        $nullableIntegerFields = ['marital_status', 'marital_certificate', 'divorce_certificate'];
+        $nullableIntegerFields = ['marital_status', 'marital_certificate', 'divorce_certificate', 'postal_code'];
         foreach ($nullableIntegerFields as $field) {
             $data[$field] = empty($data[$field]) ? 0 : (int) $data[$field];
         }
@@ -846,15 +849,14 @@ class BiodataController extends Controller
             'country',
             'foreign_postal_code',
             'status',
-            'postal_code', // Tambahkan postal_code ke string fields
         ];
         foreach ($nullableStringFields as $field) {
-            $data[$field] = empty($data[$field]) ? null : $data[$field];
+            $data[$field] = empty($data[$field]) ? " " : $data[$field];
         }
 
         $nullableDateFields = ['marriage_date', 'divorce_certificate_date'];
         foreach ($nullableDateFields as $field) {
-            $data[$field] = empty($data[$field]) ? null : date('Y-m-d', strtotime($data[$field]));
+            $data[$field] = empty($data[$field]) ? " " : date('Y-m-d', strtotime($data[$field]));
         }
 
         $integerFields = [
@@ -884,6 +886,41 @@ class BiodataController extends Controller
             if (!empty($data[$field])) {
                 $data[$field] = date('Y-m-d', strtotime($data[$field]));
             }
+        }
+    }
+
+    /**
+     * Clear caches used by guest forms
+     */
+    private function clearGuestFormCaches()
+    {
+        try {
+            // Clear all cache keys that might be used by guest forms
+            $cacheKeys = [
+                'admin_citizens_all',
+                'admin_citizens_all_village_*',
+                'citizens_all_1_100',
+                'citizens_all_1_1000',
+                'citizens_all_1_10000',
+                'citizens_all_1_100_village_*',
+                'citizens_all_1_1000_village_*',
+                'citizens_all_1_10000_village_*',
+                'citizens_search_*',
+                'family_members_kk_*'
+            ];
+
+            foreach ($cacheKeys as $key) {
+                Cache::forget($key);
+            }
+
+            // Also clear any cache that might contain citizen data
+            Cache::forget('admin_citizens_all');
+            Cache::forget('citizens_all_1_100');
+            Cache::forget('citizens_all_1_1000');
+            Cache::forget('citizens_all_1_10000');
+
+        } catch (\Exception $e) {
+            Log::error('Error clearing guest form caches: ' . $e->getMessage());
         }
     }
 }

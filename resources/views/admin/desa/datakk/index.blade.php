@@ -23,9 +23,6 @@
             </form>
 
             <div class="flex space-x-2">
-
-
-
                 <!-- Tombol Export -->
                 <form method="GET" action="{{ route('admin.desa.datakk.index') }}">
                     @csrf
@@ -39,18 +36,6 @@
                         <span>Export Excel</span>
                     </button>
                 </form>
-
-                <button type="button" onclick="window.location.href='{{ route('admin.desa.datakk.create') }}'"
-                    class="text-white bg-[#7886C7] hover:bg-[#2D336B] focus:ring-4 focus:ring-[#5C69A7] font-medium rounded-lg text-sm px-5 py-2.5 flex items-center space-x-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                        class="w-4 h-4">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                    </svg>
-                    <span>Tambah Data KK</span>
-                </button>
-
-
-
             </div>
         </div>
 
@@ -91,6 +76,9 @@
                             <button onclick="showDetailModal({{ json_encode($k) }})" class="text-blue-600 hover:text-blue-800" aria-label="Detail">
                                 <i class="fa-solid fa-eye"></i>
                             </button>
+                            <a href="{{ route('admin.desa.datakk.edit', $k['kk']) }}" class="text-yellow-600 hover:text-yellow-800" aria-label="Edit">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </a>
                             {{-- <a href="{{ route('admin.desa.datakk.update', $k['id'] ?? $k['kk']) }}" class="text-yellow-600 hover:text-yellow-800" aria-label="Edit">
                                 <i class="fa-solid fa-pen-to-square"></i>
                             </a>

@@ -1095,4 +1095,130 @@ class DataKKController extends Controller
         ];
         return $statuses[$status] ?? $status;
     }
+
+    public function editByKK($kk)
+    {
+        // Cari KK berdasarkan nomor KK dari API
+        $citizenData = $this->citizenService->getCitizenByKK($kk);
+        
+        if (!$citizenData || !isset($citizenData['data'])) {
+            return redirect()->route('admin.desa.datakk.index')
+                ->with('error', 'Data KK tidak ditemukan');
+        }
+
+        $kkData = $citizenData['data'];
+
+        // Get provinces data with caching
+        $provinces = Cache::remember('provinces', 3600, function () {
+            return $this->wilayahService->getProvinces();
+        });
+
+        // Get location data for pre-selecting dropdowns
+        $districts = $this->wilayahService->getKabupaten($kkData['province_id'] ?? null);
+        $subDistricts = $this->wilayahService->getKecamatan($kkData['district_id'] ?? null);
+        $villages = $this->wilayahService->getDesa($kkData['sub_district_id'] ?? null);
+
+        // Get jobs data
+        $jobs = $this->jobService->getAllJobs();
+
+        if (Auth::user()->role === 'admin desa') {
+            return view('admin.desa.datakk.update', compact(
+                'kkData',
+                'provinces',
+                'districts',
+                'subDistricts',
+                'villages',
+                'jobs'
+            ));
+        }
+
+        return view('superadmin.datakk.update', compact(
+            'kkData',
+            'provinces',
+            'districts',
+            'subDistricts',
+            'villages',
+            'jobs'
+        ));
+    }
+
+    public function updateByKK(Request $request, $kk)
+    {
+        // Validasi input
+        $validatedData = $request->validate([
+            'kk' => 'required|size:16',
+            'full_name' => 'required|string|max:255',
+            'gender' => 'required|integer|in:1,2',
+            'birth_date' => 'required|date',
+            'age' => 'required|integer',
+            'birth_place' => 'required|string|max:255',
+            'address' => 'required|string',
+            'province_id' => 'required|integer',
+            'district_id' => 'required|integer',
+            'sub_district_id' => 'required|integer',
+            'village_id' => 'required|integer',
+            'rt' => 'required|string|max:3',
+            'rw' => 'required|string|max:3',
+            'postal_code' => 'nullable|digits:5',
+            'citizen_status' => 'required|integer|in:1,2',
+            'birth_certificate' => 'integer|in:1,2',
+            'birth_certificate_no' => 'nullable|string',
+            'blood_type' => 'required|integer|in:1,2,3,4,5,6,7,8,9,10,11,12,13',
+            'religion' => 'required|integer|in:1,2,3,4,5,6,7',
+            'marital_status' => 'nullable|integer|in:1,2,3,4,5,6',
+            'marital_certificate' => 'required|in:1,2',
+            'marital_certificate_no' => 'nullable|string',
+            'marriage_date' => 'nullable|date',
+            'divorce_certificate' => 'nullable|integer|in:1,2',
+            'divorce_certificate_no' => 'nullable|string',
+            'divorce_certificate_date' => 'nullable|date',
+            'family_status' => 'required|integer|in:1,2,3,4,5,6,7',
+            'mental_disorders' => 'required|integer|in:1,2',
+            'disabilities' => 'nullable|integer|in:0,1,2,3,4,5,6',
+            'education_status' => 'required|integer|in:1,2,3,4,5,6,7,8,9,10',
+            'job_type_id' => 'required|integer',
+            'nik_mother' => 'nullable|string|size:16',
+            'mother' => 'nullable|string|max:255',
+            'nik_father' => 'nullable|string|size:16',
+            'father' => 'nullable|string|max:255',
+            'coordinate' => 'nullable|string|max:255',
+            'telephone' => 'nullable|string|max:20',
+            'email' => 'nullable|email|max:255',
+            'hamlet' => 'nullable|string|max:100',
+            'foreign_address' => 'nullable|string',
+            'city' => 'nullable|string|max:100',
+            'state' => 'nullable|string|max:100',
+            'country' => 'nullable|string|max:100',
+            'foreign_postal_code' => 'nullable|string|max:20',
+            'status' => 'nullable|string|in:Active,Inactive,Deceased,Moved',
+            'rf_id_tag' => 'nullable|string',
+        ]);
+
+        try {
+            // Update data melalui API
+            $response = Http::withHeaders([
+                'X-API-Key' => config('services.kependudukan.key'),
+            ])->put(config('services.kependudukan.url') . "/api/citizens/{$kk}", $validatedData);
+
+            if ($response->successful()) {
+                if (Auth::user()->role === 'admin desa') {
+                    return redirect()->route('admin.desa.datakk.index')
+                        ->with('success', 'Data KK berhasil diperbarui!');
+                }
+                return redirect()->route('superadmin.datakk.index')
+                    ->with('success', 'Data KK berhasil diperbarui!');
+            } else {
+                throw new \Exception('Gagal memperbarui data: ' . $response->body());
+            }
+        } catch (\Exception $e) {
+            Log::error('Error updating KK data: ' . $e->getMessage());
+            
+            if (Auth::user()->role === 'admin desa') {
+                return redirect()->route('admin.desa.datakk.index')
+                    ->with('error', 'Gagal memperbarui data: ' . $e->getMessage());
+            }
+            return redirect()->route('superadmin.datakk.index')
+                ->with('error', 'Gagal memperbarui data: ' . $e->getMessage());
+        }
+    }
 }

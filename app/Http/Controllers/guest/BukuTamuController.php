@@ -5,6 +5,7 @@ namespace App\Http\Controllers\guest;
 use App\Http\Controllers\Controller;
 use App\Models\BukuTamu;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class BukuTamuController extends Controller
 {
@@ -41,13 +42,20 @@ class BukuTamuController extends Controller
             'no_telepon' => 'required|string|max:15',
             'email' => 'nullable|email|max:255',
             'keperluan' => 'required|string|max:255',
-            'pesan' => 'nullable|string',
+            'pesan' => 'nullable|string', // Tetap menggunakan 'pesan' sesuai database
             'tanda_tangan' => 'nullable|string',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Menambahkan validasi foto
             'province_id' => 'required|string|max:255',
             'district_id' => 'required|string|max:255',
             'sub_district_id' => 'required|string|max:255',
             'village_id' => 'required|string|max:255',
         ]);
+
+        // Handle foto upload
+        if ($request->hasFile('foto')) {
+            $fotoPath = $request->file('foto')->store('buku-tamu', 'public');
+            $validated['foto'] = $fotoPath;
+        }
 
         BukuTamu::create($validated);
 

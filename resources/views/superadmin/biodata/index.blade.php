@@ -310,6 +310,66 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Dokumen Penduduk -->
+                        <div class="bg-gray-50 p-4 rounded-lg col-span-2">
+                            <h4 class="text-lg font-semibold mb-4 text-[#7886C7]">Dokumen Penduduk</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <!-- Foto Diri -->
+                                <div class="border rounded-lg p-3">
+                                    <h5 class="text-sm font-medium text-gray-700 mb-2">Foto Diri</h5>
+                                    <div id="detailFotoDiri" class="text-center">
+                                        <div class="animate-pulse bg-gray-200 rounded-lg h-24 w-full mb-2"></div>
+                                        <span class="text-xs text-gray-500">Memuat...</span>
+                                    </div>
+                                </div>
+
+                                <!-- Foto KTP -->
+                                <div class="border rounded-lg p-3">
+                                    <h5 class="text-sm font-medium text-gray-700 mb-2">Foto KTP</h5>
+                                    <div id="detailFotoKtp" class="text-center">
+                                        <div class="animate-pulse bg-gray-200 rounded-lg h-24 w-full mb-2"></div>
+                                        <span class="text-xs text-gray-500">Memuat...</span>
+                                    </div>
+                                </div>
+
+                                <!-- Akta Kelahiran -->
+                                <div class="border rounded-lg p-3">
+                                    <h5 class="text-sm font-medium text-gray-700 mb-2">Akta Kelahiran</h5>
+                                    <div id="detailFotoAkta" class="text-center">
+                                        <div class="animate-pulse bg-gray-200 rounded-lg h-24 w-full mb-2"></div>
+                                        <span class="text-xs text-gray-500">Memuat...</span>
+                                    </div>
+                                </div>
+
+                                <!-- Ijazah -->
+                                <div class="border rounded-lg p-3">
+                                    <h5 class="text-sm font-medium text-gray-700 mb-2">Ijazah</h5>
+                                    <div id="detailIjazah" class="text-center">
+                                        <div class="animate-pulse bg-gray-200 rounded-lg h-24 w-full mb-2"></div>
+                                        <span class="text-xs text-gray-500">Memuat...</span>
+                                    </div>
+                                </div>
+
+                                <!-- Foto KK -->
+                                <div class="border rounded-lg p-3">
+                                    <h5 class="text-sm font-medium text-gray-700 mb-2">Foto KK</h5>
+                                    <div id="detailFotoKk" class="text-center">
+                                        <div class="animate-pulse bg-gray-200 rounded-lg h-24 w-full mb-2"></div>
+                                        <span class="text-xs text-gray-500">Memuat...</span>
+                                    </div>
+                                </div>
+
+                                <!-- Foto Rumah -->
+                                <div class="border rounded-lg p-3">
+                                    <h5 class="text-sm font-medium text-gray-700 mb-2">Foto Rumah</h5>
+                                    <div id="detailFotoRumah" class="text-center">
+                                        <div class="animate-pulse bg-gray-200 rounded-lg h-24 w-full mb-2"></div>
+                                        <span class="text-xs text-gray-500">Memuat...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -735,213 +795,284 @@
             return false; // Menghentikan pengiriman form
         }
 
-        // Updated showDetailModal function
+        // Optimasi showDetailModal
         async function showDetailModal(biodata) {
-            // Konversi data sebelum ditampilkan
+            document.getElementById('detailModal').classList.remove('hidden');
+            const modalBody = document.querySelector('#detailModal .p-4.md\\:p-5.overflow-y-auto');
+            const originalContent = modalBody.innerHTML;
+
+            modalBody.innerHTML = `
+                <div class="flex justify-center items-center py-10">
+                    <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-[#7886C7]"></div>
+                </div>
+                <div class="text-center text-gray-500 mt-3">Memuat data detail...</div>
+            `;
+
+            // Mapping data
             const genderMap = { '1': 'Laki-laki', '2': 'Perempuan' };
             const citizenStatusMap = { '1': 'WNI', '2': 'WNA' };
             const bloodTypeMap = {
                 '1': 'A', '2': 'B', '3': 'AB', '4': 'O',
                 '5': 'A+', '6': 'A-', '7': 'B+', '8': 'B-',
-                '9': 'AB+', '10': 'AB-', '11': 'O+', '12': 'O-',
-                '13': 'Tidak Tahu'
+                '9': 'AB+', '10': 'AB-', '11': 'O+', '12': 'O-', '13': 'Tidak Tahu'
             };
             const religionMap = {
-                '1': 'Islam', '2': 'Kristen', '3': 'Katolik',
-                '4': 'Hindu', '5': 'Buddha', '6': 'Konghucu',
-                '7': 'Kepercayaan Terhadap Tuhan YME'
+                '1': 'Islam', '2': 'Kristen', '3': 'Katolik', '4': 'Hindu',
+                '5': 'Buddha', '6': 'Konghucu', '7': 'Kepercayaan Terhadap Tuhan YME'
             };
             const educationStatusMap = {
                 '1': 'Tidak/Belum Sekolah', '2': 'Belum Tamat SD/Sederajat',
                 '3': 'Tamat SD/Sederajat', '4': 'SLTP/Sederajat',
                 '5': 'SLTA/Sederajat', '6': 'Diploma I/II',
-                '7': 'Akademi/Diploma III/S. Muda',
-                '8': 'Diploma IV/Strata I', '9': 'Strata II',
-                '10': 'Strata III'
+                '7': 'Akademi/Diploma III/S. Muda', '8': 'Diploma IV/Strata I',
+                '9': 'Strata II', '10': 'Strata III'
             };
             const familyStatusMap = {
-                '1': 'Kepala Keluarga', '2': 'Istri',
-                '3': 'Anak', '4': 'Menantu', '5': 'Cucu',
-                '6': 'Orangtua', '7': 'Mertua', '8': 'Famili Lain'
+                '1': 'Kepala Keluarga', '2': 'Istri', '3': 'Anak', '4': 'Menantu',
+                '5': 'Cucu', '6': 'Orangtua', '7': 'Mertua', '8': 'Famili Lain'
             };
 
-            // Set values dengan konversi
-            document.getElementById('detailGender').innerText = genderMap[biodata.gender] || biodata.gender;
-            document.getElementById('detailCitizenStatus').innerText = citizenStatusMap[biodata.citizen_status] || biodata.citizen_status;
-            document.getElementById('detailBloodType').innerText = bloodTypeMap[biodata.blood_type] || biodata.blood_type;
-            document.getElementById('detailReligion').innerText = religionMap[biodata.religion] || biodata.religion;
-            document.getElementById('detailEducationStatus').innerText = educationStatusMap[biodata.education_status] || biodata.education_status;
-            document.getElementById('detailFamilyStatus').innerText = familyStatusMap[biodata.family_status] || biodata.family_status;
+            try {
+                // OPTIMASI: Parallel + timeout
+                const timeout = 5000;
+                const promises = [
+                    biodata.province_id
+                        ? Promise.race([
+                            fetchLocationData('province', biodata.province_id),
+                            new Promise(resolve => setTimeout(() => resolve(null), timeout))
+                        ])
+                        : Promise.resolve(null),
+                    biodata.district_id
+                        ? Promise.race([
+                            fetchLocationData('district', biodata.district_id),
+                            new Promise(resolve => setTimeout(() => resolve(null), timeout))
+                        ])
+                        : Promise.resolve(null),
+                    biodata.sub_district_id
+                        ? Promise.race([
+                            fetchLocationData('subdistrict', biodata.sub_district_id, biodata.district_id),
+                            new Promise(resolve => setTimeout(() => resolve(null), timeout))
+                        ])
+                        : Promise.resolve(null),
+                    biodata.village_id
+                        ? Promise.race([
+                            fetchLocationData('village', biodata.village_id, biodata.sub_district_id, biodata.district_id),
+                            new Promise(resolve => setTimeout(() => resolve(null), timeout))
+                        ])
+                        : Promise.resolve(null),
+                    // Dokumen
+                    biodata.nik
+                        ? Promise.race([
+                            fetch(`/admin/family-member/${biodata.nik}/documents`).then(r => r.json()).catch(() => ({success:false,documents:null})),
+                            new Promise(resolve => setTimeout(() => resolve({success:false,documents:null}), timeout))
+                        ])
+                        : Promise.resolve({success:false,documents:null}),
+                ];
 
-            // Improved format date function that handles more date formats
-            const formatDate = (dateStr) => {
-                if (!dateStr || dateStr === " " || dateStr === "null") return '-';
+                const [provinceData, districtData, subdistrictData, villageData, documentsData] = await Promise.all(promises);
 
-                // Try to detect the format and parse the date correctly
-                try {
-                    let date;
+                // Tampilkan konten asli modal
+                modalBody.innerHTML = originalContent;
 
-                    // Check if dateStr is in dd/MM/yyyy format
-                    if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
-                        const parts = dateStr.split('/');
-                        // Create date with format: year, month (0-based), day
-                        date = new Date(
-                            parseInt(parts[2]),
-                            parseInt(parts[1]) - 1,
-                            parseInt(parts[0])
-                        );
-                    }
-                    // Check if dateStr is in yyyy-MM-dd format
-                    else if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-                        const parts = dateStr.split('-');
-                        date = new Date(
-                            parseInt(parts[0]),
-                            parseInt(parts[1]) - 1,
-                            parseInt(parts[2])
-                        );
-                    }
-                    // Otherwise try standard date parsing
-                    else {
-                        date = new Date(dateStr);
-                    }
+                // Set data dasar
+                document.getElementById('detailGender').innerText = genderMap[biodata.gender] || biodata.gender || '-';
+                document.getElementById('detailCitizenStatus').innerText = citizenStatusMap[biodata.citizen_status] || biodata.citizen_status || '-';
+                document.getElementById('detailBloodType').innerText = bloodTypeMap[biodata.blood_type] || biodata.blood_type || '-';
+                document.getElementById('detailReligion').innerText = religionMap[biodata.religion] || biodata.religion || '-';
+                document.getElementById('detailEducationStatus').innerText = educationStatusMap[biodata.education_status] || biodata.education_status || '-';
+                document.getElementById('detailFamilyStatus').innerText = familyStatusMap[biodata.family_status] || biodata.family_status || '-';
 
-                    // Verify that the date is valid
-                    if (isNaN(date.getTime())) {
-                        console.error('Invalid date after parsing:', dateStr);
+                // Format tanggal
+                const formatDate = (dateStr) => {
+                    if (!dateStr || dateStr === " " || dateStr === "null") return '-';
+                    try {
+                        let date;
+                        if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
+                            const parts = dateStr.split('/');
+                            date = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+                        } else if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+                            const parts = dateStr.split('-');
+                            date = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+                        } else {
+                            date = new Date(dateStr);
+                        }
+                        if (isNaN(date.getTime())) return '-';
+                        return date.toLocaleDateString('id-ID', {
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric'
+                        });
+                    } catch (error) {
                         return '-';
                     }
+                };
 
-                    // Format the date in Indonesian locale
-                    return date.toLocaleDateString('id-ID', {
-                        day: 'numeric',
-                        month: 'long',
-                        year: 'numeric'
-                    });
-                } catch (error) {
-                    console.error('Error formatting date:', error, dateStr);
-                    return '-';
-                }
-            };
+                document.getElementById('detailNIK').innerText = biodata.nik || '-';
+                document.getElementById('detailKK').innerText = biodata.kk || '-';
+                document.getElementById('detailFullName').innerText = biodata.full_name || '-';
+                document.getElementById('detailBirthDate').innerText = formatDate(biodata.birth_date);
+                document.getElementById('detailAge').innerText = biodata.age ? `${biodata.age} Tahun` : '-';
+                document.getElementById('detailBirthPlace').innerText = biodata.birth_place || '-';
+                document.getElementById('detailAddress').innerText = biodata.address || '-';
+                document.getElementById('detailRT').innerText = biodata.rt || '-';
+                document.getElementById('detailRW').innerText = biodata.rw || '-';
+                document.getElementById('detailPostalCode').innerText = biodata.postal_code || '-';
+                document.getElementById('detailFather').innerText = biodata.father || '-';
+                document.getElementById('detailNikFather').innerText = biodata.nik_father || '-';
+                document.getElementById('detailMother').innerText = biodata.mother || '-';
+                document.getElementById('detailNikMother').innerText = biodata.nik_mother || '-';
 
-            // Set nilai-nilai lainnya
-            document.getElementById('detailNIK').innerText = biodata.nik || '-';
-            document.getElementById('detailKK').innerText = biodata.kk || '-';
-            document.getElementById('detailFullName').innerText = biodata.full_name || '-';
-            document.getElementById('detailBirthDate').innerText = formatDate(biodata.birth_date);
-            document.getElementById('detailAge').innerText = biodata.age ? `${biodata.age} Tahun` : '-';
-            document.getElementById('detailBirthPlace').innerText = biodata.birth_place || '-';
+                // Set lokasi
+                document.getElementById('detailProvinceId').innerText = provinceData ? provinceData.name : (biodata.province_id || '-');
+                document.getElementById('detailDistrictId').innerText = districtData ? districtData.name : (biodata.district_id || '-');
+                document.getElementById('detailSubDistrictId').innerText = subdistrictData ? subdistrictData.name : (biodata.sub_district_id || '-');
+                document.getElementById('detailVillageId').innerText = villageData ? villageData.name : (biodata.village_id || '-');
 
-            // Set basic address data
-            document.getElementById('detailAddress').innerText = biodata.address || '-';
-            document.getElementById('detailRT').innerText = biodata.rt || '-';
-            document.getElementById('detailRW').innerText = biodata.rw || '-';
-            document.getElementById('detailPostalCode').innerText = biodata.postal_code || '-';
-
-            // Set data orangtua
-            document.getElementById('detailFather').innerText = biodata.father || '-';
-            document.getElementById('detailNikFather').innerText = biodata.nik_father || '-';
-            document.getElementById('detailMother').innerText = biodata.mother || '-';
-            document.getElementById('detailNikMother').innerText = biodata.nik_mother || '-';
-
-            // Show the modal immediately
-            document.getElementById('detailModal').classList.remove('hidden');
-            document.getElementById('detailModal').classList.remove('hidden');
-
-    // Fetch job data based on job_type_id
-    if (biodata.job_type_id) {
-        try {
-            const response = await axios.get(`${baseUrl}/jobs`, {
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'X-API-Key': apiKey
-                }
-            });
-
-            if (response.data && response.data.data) {
-                const job = response.data.data.find(j => String(j.id) === String(biodata.job_type_id));
-                if (job) {
-                    document.getElementById('detailJobName').innerText = job.name || biodata.job_type_id;
+                // Set dokumen
+                if (documentsData.success && documentsData.documents) {
+                    loadDocument('detailFotoDiri', documentsData.documents.foto_diri, 'Foto Diri');
+                    loadDocument('detailFotoKtp', documentsData.documents.foto_ktp, 'Foto KTP');
+                    loadDocument('detailFotoAkta', documentsData.documents.foto_akta, 'Akta Kelahiran');
+                    loadDocument('detailIjazah', documentsData.documents.ijazah, 'Ijazah');
+                    loadDocument('detailFotoKk', documentsData.documents.foto_kk, 'Foto KK');
+                    loadDocument('detailFotoRumah', documentsData.documents.foto_rumah, 'Foto Rumah');
                 } else {
-                    document.getElementById('detailJobName').innerText = biodata.job_type_id || '-';
+                    setDocumentNotAvailable('detailFotoDiri');
+                    setDocumentNotAvailable('detailFotoKtp');
+                    setDocumentNotAvailable('detailFotoAkta');
+                    setDocumentNotAvailable('detailIjazah');
+                    setDocumentNotAvailable('detailFotoKk');
+                    setDocumentNotAvailable('detailFotoRumah');
+                }
+
+                // Foto utama (foto diri di atas)
+                if (biodata.nik) {
+                    const photoDiv = document.getElementById('detailPhoto');
+                    const photoStatus = document.getElementById('photoStatus');
+                    photoStatus.textContent = 'Memuat foto...';
+                    photoDiv.innerHTML = `<div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-[#7886C7]"></div>`;
+                    if (documentsData.success && documentsData.documents && documentsData.documents.foto_diri && documentsData.documents.foto_diri.preview_url) {
+                        photoDiv.innerHTML = `<img src="${documentsData.documents.foto_diri.preview_url}" alt="Foto Diri" class="w-32 h-32 rounded-full object-cover">`;
+                        photoStatus.textContent = '';
+                    } else {
+                        photoDiv.innerHTML = `<svg class="w-16 h-16 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>`;
+                        photoStatus.textContent = 'Foto belum diunggah';
+                    }
+                }
+
+            } catch (error) {
+                modalBody.innerHTML = originalContent;
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal Memuat Data',
+                    text: 'Terjadi kesalahan saat memuat detail. Silahkan coba lagi.',
+                    timer: 3000,
+                    timerProgressBar: true,
+                    toast: true,
+                    position: 'top-end',
+                });
+            }
+        }
+
+        // Pastikan closeDetailModal global
+        window.closeDetailModal = function() {
+            document.getElementById('detailModal').classList.add('hidden');
+        };
+
+        // Function untuk memuat dokumen
+        function loadDocument(elementId, docInfo, docType) {
+            const element = document.getElementById(elementId);
+
+            if (docInfo && docInfo.exists) {
+                if (docInfo.preview_url) {
+                    // Jika ada preview URL (gambar)
+                    element.innerHTML = `
+                        <a href="/admin/family-member/${currentNIK}/document/${docType.toLowerCase().replace(/\s+/g, '_')}/view"
+                           target="_blank" class="block">
+                            <img src="${docInfo.preview_url}"
+                                 alt="${docType}"
+                                 class="h-24 w-full object-cover rounded-lg border border-gray-200 hover:opacity-75 transition-opacity">
+                        </a>
+                        <span class="text-xs text-green-600 mt-1 block">✓ Tersedia</span>
+                        <span class="text-xs text-gray-500">${new Date(docInfo.updated_at).toLocaleDateString('id-ID')}</span>
+                    `;
+                } else if (docInfo.extension && ['pdf'].includes(docInfo.extension.toLowerCase())) {
+                    // Jika PDF
+                    element.innerHTML = `
+                        <a href="/admin/family-member/${currentNIK}/document/${docType.toLowerCase().replace(/\s+/g, '_')}/view"
+                           target="_blank" class="block">
+                            <div class="h-24 w-full bg-red-100 rounded-lg border border-red-200 flex items-center justify-center hover:bg-red-200 transition-colors">
+                                <div class="text-center">
+                                    <svg class="w-8 h-8 mx-auto text-red-500 mb-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span class="text-xs text-red-600 font-medium">PDF</span>
+                                </div>
+                            </div>
+                        </a>
+                        <span class="text-xs text-green-600 mt-1 block">✓ Tersedia</span>
+                        <span class="text-xs text-gray-500">${new Date(docInfo.updated_at).toLocaleDateString('id-ID')}</span>
+                    `;
                 }
             } else {
-                document.getElementById('detailJobName').innerText = biodata.job_type_id || '-';
+                setDocumentNotAvailable(elementId);
             }
-        } catch (error) {
-            document.getElementById('detailJobName').innerText = biodata.job_type_id || '-';
         }
-    } else {
-        document.getElementById('detailJobName').innerText = '-';
-    }
 
-            // Fetch location data based on IDs
-            try {
-                // Fetch province data
-                const provinceData = await fetchLocationData('province', biodata.province_id);
-                if (provinceData) {
-                    document.getElementById('detailProvinceId').innerText = provinceData.name || biodata.province_id;
-                } else {
-                    document.getElementById('detailProvinceId').innerText = biodata.province_id || '-';
-                }
+        // Function untuk menandai dokumen tidak tersedia
+        function setDocumentNotAvailable(elementId) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `
+                <div class="h-24 w-full bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center">
+                    <div class="text-center">
+                        <svg class="w-8 h-8 mx-auto text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        <span class="text-xs text-gray-500">Belum diunggah</span>
+                    </div>
+                </div>
+                <span class="text-xs text-gray-400 mt-1 block">-</span>
+            `;
+        }
 
-                // Fetch district data
-                const districtData = await fetchLocationData('district', biodata.district_id);
-                if (districtData) {
-                    document.getElementById('detailDistrictId').innerText = districtData.name || biodata.district_id;
-                } else {
-                    document.getElementById('detailDistrictId').innerText = biodata.district_id || '-';
-                }
+        // Variable untuk menyimpan NIK saat ini
+        let currentNIK = '';
 
-                // Fetch subdistrict data using district as parent for optimization
-                const subdistrictData = await fetchLocationData('subdistrict', biodata.sub_district_id, biodata.district_id);
-                if (subdistrictData) {
-                    document.getElementById('detailSubDistrictId').innerText = subdistrictData.name || biodata.sub_district_id;
-                } else {
-                    document.getElementById('detailSubDistrictId').innerText = biodata.sub_district_id || '-';
-                }
+        // Update fungsi showDetailModal untuk menyimpan NIK
+        const originalShowDetailModal = window.showDetailModal;
+        window.showDetailModal = function(biodata) {
+            currentNIK = biodata.nik || '';
 
-                // Fetch village data using subdistrict and district as parents for optimization
-                const villageData = await fetchLocationData('village', biodata.village_id, biodata.sub_district_id, biodata.district_id);
-                if (villageData) {
-                    document.getElementById('detailVillageId').innerText = villageData.name || biodata.village_id;
-                } else {
-                    document.getElementById('detailVillageId').innerText = biodata.village_id || '-';
-                }
-            } catch (error) {
-                // If API calls fail, fall back to IDs
-                document.getElementById('detailProvinceId').innerText = biodata.province_id || '-';
-                document.getElementById('detailDistrictId').innerText = biodata.district_id || '-';
-                document.getElementById('detailSubDistrictId').innerText = biodata.sub_district_id || '-';
-                document.getElementById('detailVillageId').innerText = biodata.village_id || '-';
-            }
+            // Reset photo display
+            document.getElementById('detailPhoto').innerHTML = `<svg class="w-16 h-16 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>`;
+            document.getElementById('photoStatus').textContent = 'Memuat foto...';
 
-            // Load photo data
+            // Show modal first
+            document.getElementById('detailModal').classList.remove('hidden');
+
+            // Load photo for modal
             if (biodata.nik) {
-                const photoDiv = document.getElementById('photo-' + biodata.nik);
-                if (photoDiv) {
-                    photoDiv.innerHTML = `<img src="/admin/family-member/${biodata.nik}/documents/foto_diri/preview" alt="Foto Diri" class="w-full h-full object-cover rounded-full">`;
-                    document.getElementById('photoStatus').textContent = 'Memuat foto...';
-                    fetch('/admin/family-member/' + biodata.nik + '/documents')
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success && data.documents && data.documents.foto_diri && data.documents.foto_diri.preview_url) {
-                                photoDiv.innerHTML = `<img src="${data.documents.foto_diri.preview_url}" alt="Foto Diri" class="w-full h-full object-cover rounded-full">`;
-                                document.getElementById('photoStatus').textContent = '';
-                            } else {
-                                document.getElementById('photoStatus').textContent = 'Foto belum diunggah';
-                            }
-                        })
-                        .catch(() => {
-                            document.getElementById('photoStatus').textContent = 'Gagal memuat foto';
-                        });
-                }
+                fetch(`/admin/family-member/${biodata.nik}/documents`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success && data.documents && data.documents.foto_diri && data.documents.foto_diri.preview_url) {
+                            document.getElementById('detailPhoto').innerHTML = `<img src="${data.documents.foto_diri.preview_url}" alt="Foto Diri" class="w-32 h-32 rounded-full object-cover">`;
+                            document.getElementById('photoStatus').textContent = '';
+                        } else {
+                            document.getElementById('photoStatus').textContent = 'Foto belum diunggah';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error loading photo:', error);
+                        document.getElementById('photoStatus').textContent = 'Gagal memuat foto';
+                    });
             }
-        }
 
-        function closeDetailModal() {
-            document.getElementById('detailModal').classList.add('hidden');
-        }
+            // Call original function
+            if (originalShowDetailModal) {
+                originalShowDetailModal(biodata);
+            }
+        };
     </script>
 
     <!-- Script untuk memuat foto -->

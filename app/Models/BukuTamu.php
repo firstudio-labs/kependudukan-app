@@ -27,8 +27,9 @@ class BukuTamu extends Model
         'no_telepon',
         'email',
         'keperluan',
-        'pesan',
+        'pesan', // Tetap menggunakan 'pesan' sesuai database
         'tanda_tangan',
+        'foto', // Menambahkan kolom foto
         'province_id',
         'district_id',
         'sub_district_id',

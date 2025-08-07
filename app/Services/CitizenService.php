@@ -179,6 +179,9 @@ class CitizenService
             ])->put("{$this->baseUrl}/api/citizens/{$nik}", $data);
 
             if ($response->successful()) {
+                // Clear related caches after successful update
+                $this->clearCitizenCaches($nik, $data);
+
                 return $response->json();
             } else {
                 Log::error('API request failed: ' . $response->status());
@@ -616,6 +619,91 @@ class CitizenService
             'status' => 'OK',
             'data' => ['citizens' => array_values($filteredCitizens)]
         ];
+    }
+
+    /**
+     * Clear all related caches when citizen data is updated
+     */
+    private function clearCitizenCaches($nik, $data)
+    {
+        try {
+            // Clear family members cache if KK is updated
+            if (isset($data['kk'])) {
+                Cache::forget("family_members_kk_{$data['kk']}");
+            }
+
+            // Clear all citizens cache patterns
+            $cachePatterns = [
+                'admin_citizens_all',
+                'admin_citizens_all_village_*',
+                'citizens_all_1_100',
+                'citizens_all_1_1000',
+                'citizens_all_1_10000',
+                'citizens_all_1_100_village_*',
+                'citizens_all_1_1000_village_*',
+                'citizens_all_1_10000_village_*',
+                'citizens_search_*',
+                '*_village_*',
+                'family_members_kk_*'
+            ];
+
+            foreach ($cachePatterns as $pattern) {
+                $this->clearCacheByPattern($pattern);
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Error clearing citizen caches: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Clear cache by pattern using Redis or file cache
+     */
+    private function clearCacheByPattern($pattern)
+    {
+        try {
+            // For file cache, we need to clear all related keys
+            $keys = [
+                $pattern,
+                $pattern . '_village_*',
+                $pattern . '_search_*'
+            ];
+
+            foreach ($keys as $key) {
+                Cache::forget($key);
+            }
+
+            // Also clear any cached data that might contain this citizen
+            Cache::forget('admin_citizens_all');
+            Cache::forget('citizens_all_1_100');
+            Cache::forget('citizens_all_1_1000');
+            Cache::forget('citizens_all_1_10000');
+
+        } catch (\Exception $e) {
+            Log::error('Error clearing cache pattern: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Clear cache specifically for a citizen by NIK
+     */
+    private function clearCacheByNIK($nik)
+    {
+        try {
+            // Clear any cache that might contain this specific citizen
+            $cacheKeys = [
+                "citizen_{$nik}",
+                "citizen_data_{$nik}",
+                "citizen_by_nik_{$nik}"
+            ];
+
+            foreach ($cacheKeys as $key) {
+                Cache::forget($key);
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Error clearing cache by NIK: ' . $e->getMessage());
+        }
     }
 }
 
