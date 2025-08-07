@@ -452,26 +452,31 @@ function populateCitizenData(citizen) {
  */
 function normalizeRfId(rfId) {
     if (!rfId) return '';
-    
+
     // Convert to string
     let normalized = rfId.toString();
-    
+
     // Remove leading zeros
     normalized = normalized.replace(/^0+/, '');
-    
+
     // Remove any non-digit characters (spaces, dashes, etc.)
     normalized = normalized.replace(/[^0-9]/g, '');
-    
+
     // Trim whitespace
     normalized = normalized.trim();
-    
+
     return normalized;
 }
 
-// Test pencarian RF ID
-function testRfIdSearch(rfId) {
+// Test pencarian RF ID - perbaiki agar menerima parameter citizens
+function testRfIdSearch(rfId, citizens) {
+    if (!citizens || !Array.isArray(citizens)) {
+        console.warn('Data citizens tidak tersedia');
+        return null;
+    }
+
     // Cari di data yang sudah ter-load
-    const matched = allCitizens.find(citizen => {
+    const matched = citizens.find(citizen => {
         if (!citizen.rf_id_tag) return false;
 
         const normalizedInput = normalizeRfId(rfId);
@@ -485,5 +490,37 @@ function testRfIdSearch(rfId) {
     });
 
     return matched;
+}
+
+// Proses RF ID: cari dan isi data jika ditemukan - perbaiki parameter
+function processRfIdValue(rfIdValue, citizens, inputElement) {
+    if (!citizens || !Array.isArray(citizens)) {
+        console.warn('Data citizens tidak tersedia untuk pencarian RF ID');
+        return;
+    }
+
+    const matchedCitizen = testRfIdSearch(rfIdValue, citizens);
+    if (matchedCitizen) {
+        populateCitizenData(matchedCitizen);
+        // Feedback visual sukses
+        $(inputElement).addClass('border-green-500').removeClass('border-red-500 border-gray-300');
+        setTimeout(() => {
+            $(inputElement).removeClass('border-green-500').addClass('border-gray-300');
+        }, 2000);
+    } else {
+        // Feedback error jika tidak ditemukan
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: 'Data Tidak Ditemukan',
+                text: 'RF ID yang dimasukkan tidak terdaftar dalam sistem',
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
+        }
+        $(inputElement).addClass('border-red-500').removeClass('border-green-500 border-gray-300');
+        setTimeout(() => {
+            $(inputElement).removeClass('border-red-500').addClass('border-gray-300');
+        }, 2000);
+    }
 }
 

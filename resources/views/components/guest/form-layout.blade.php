@@ -185,7 +185,7 @@
         document.getElementById('village_id').value = villageId;
 
         // Setup form validation
-        setupFormValidation();
+        // setupFormValidation();
 
         const rfIdInput = document.getElementById('rf_id_tag');
         if (rfIdInput) {
