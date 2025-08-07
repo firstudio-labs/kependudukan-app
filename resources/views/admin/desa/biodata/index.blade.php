@@ -413,61 +413,40 @@
                 });
             }
 
-            // Kode SweetAlert yang lebih bagus dan lengkap
-            @if (session('success'))
+            // Kode SweetAlert dan fungsi lainnya
+            @if(session('success'))
                 Swal.fire({
                     icon: 'success',
                     title: 'Sukses!',
                     text: "{{ session('success') }}",
+                    confirmButtonColor: '#2D336B',
                     timer: 3000,
                     timerProgressBar: true,
-                    showConfirmButton: false,
-                    toast: true,
-                    position: 'top-end',
-                    iconColor: '#28a745',
-                    customClass: {
-                        popup: 'colored-toast'
-                    }
+                    showConfirmButton: false
                 });
             @endif
 
-            @if (session('error'))
+            @if(session('error'))
                 Swal.fire({
                     icon: 'error',
                     title: 'Gagal!',
                     text: "{{ session('error') }}",
-                    timer: 3000,
-                    timerProgressBar: true,
-                    showConfirmButton: true,
                     confirmButtonColor: '#2D336B',
-                    position: 'center',
-                    iconColor: '#dc3545',
-                });
-            @endif
-
-            @if (session('warning'))
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Perhatian!',
-                    text: "{{ session('warning') }}",
-                    timer: 3000,
+                    timer: 5000,
                     timerProgressBar: true,
-                    showConfirmButton: false,
-                    toast: true,
-                    position: 'top-end',
-                    iconColor: '#ffc107',
-                    customClass: {
-                        popup: 'colored-toast'
-                    }
+                    showConfirmButton: false
                 });
             @endif
 
-            @if (session('import_errors'))
+            @if(session('import_errors'))
                 Swal.fire({
                     icon: 'error',
                     title: 'Import Error',
                     html: "{!! session('import_errors') !!}",
                     confirmButtonColor: '#2D336B',
+                    timer: 8000,
+                    timerProgressBar: true,
+                    showConfirmButton: false
                 });
             @endif
         });
@@ -490,7 +469,7 @@
             }
 
             try {
-                switch (type) {
+                switch(type) {
                     case 'province':
                         // For provinces, directly fetch all provinces and find by ID
                         const provResponse = await axios.get(`${baseUrl}/provinces`, {
@@ -504,7 +483,7 @@
                         if (provResponse.data && provResponse.data.data) {
                             const province = provResponse.data.data.find(p => String(p.id) === String(id));
                             if (province) {
-                                locationCache[cacheKey] = province; // Cache the entire province object
+                                locationCache[cacheKey] = province;
                                 return province;
                             }
                         }
@@ -534,13 +513,12 @@
                                     if (distResponse.data && distResponse.data.data) {
                                         const district = distResponse.data.data.find(d => String(d.id) === String(id));
                                         if (district) {
-                                            district.province = province; // Add parent province reference
+                                            district.province = province;
                                             locationCache[cacheKey] = district;
                                             return district;
                                         }
                                     }
                                 } catch (e) {
-                                    // Continue to next province
                                     continue;
                                 }
                             }
@@ -548,42 +526,36 @@
                         break;
 
                     case 'subdistrict':
-                        // For subdistricts, first need to find the district
-                        // If we have the parent district_id, use it to narrow down search
                         let parentDistrictData = null;
-                        const parentDistrictId = arguments[2]; // Optional parent district ID
+                        const parentDistrictId = arguments[2];
 
                         if (parentDistrictId) {
                             parentDistrictData = await fetchLocationData('district', parentDistrictId);
                         }
 
                         if (parentDistrictData) {
-                            // If we found the parent district, search within it
                             try {
-                                const subdistResponse = await axios.get(
-                                    `${baseUrl}/sub-districts/${parentDistrictData.code}`, {
-                                        headers: {
-                                            'Accept': 'application/json',
-                                            'Content-Type': 'application/json',
-                                            'X-API-Key': apiKey
-                                        }
-                                    });
+                                const subdistResponse = await axios.get(`${baseUrl}/sub-districts/${parentDistrictData.code}`, {
+                                    headers: {
+                                        'Accept': 'application/json',
+                                        'Content-Type': 'application/json',
+                                        'X-API-Key': apiKey
+                                    }
+                                });
 
                                 if (subdistResponse.data && subdistResponse.data.data) {
-                                    const subdistrict = subdistResponse.data.data.find(sd => String(sd.id) === String(
-                                        id));
+                                    const subdistrict = subdistResponse.data.data.find(sd => String(sd.id) === String(id));
                                     if (subdistrict) {
-                                        subdistrict.district = parentDistrictData; // Add parent district reference
+                                        subdistrict.district = parentDistrictData;
                                         locationCache[cacheKey] = subdistrict;
                                         return subdistrict;
                                     }
                                 }
                             } catch (e) {
-                                // If error, continue to full search
+                                // Continue to full search
                             }
                         }
 
-                        // If no parent district or not found within parent, search all provinces and districts
                         const allProvincesForSubdist = await axios.get(`${baseUrl}/provinces`, {
                             headers: {
                                 'Accept': 'application/json',
@@ -595,30 +567,27 @@
                         if (allProvincesForSubdist.data && allProvincesForSubdist.data.data) {
                             for (const province of allProvincesForSubdist.data.data) {
                                 try {
-                                    const districtsInProvince = await axios.get(
-                                        `${baseUrl}/districts/${province.code}`, {
-                                            headers: {
-                                                'Accept': 'application/json',
-                                                'Content-Type': 'application/json',
-                                                'X-API-Key': apiKey
-                                            }
-                                        });
+                                    const districtsInProvince = await axios.get(`${baseUrl}/districts/${province.code}`, {
+                                        headers: {
+                                            'Accept': 'application/json',
+                                            'Content-Type': 'application/json',
+                                            'X-API-Key': apiKey
+                                        }
+                                    });
 
                                     if (districtsInProvince.data && districtsInProvince.data.data) {
                                         for (const district of districtsInProvince.data.data) {
                                             try {
-                                                const subdistrictsInDistrict = await axios.get(
-                                                    `${baseUrl}/sub-districts/${district.code}`, {
-                                                        headers: {
-                                                            'Accept': 'application/json',
-                                                            'Content-Type': 'application/json',
-                                                            'X-API-Key': apiKey
-                                                        }
-                                                    });
+                                                const subdistrictsInDistrict = await axios.get(`${baseUrl}/sub-districts/${district.code}`, {
+                                                    headers: {
+                                                        'Accept': 'application/json',
+                                                        'Content-Type': 'application/json',
+                                                        'X-API-Key': apiKey
+                                                    }
+                                                });
 
                                                 if (subdistrictsInDistrict.data && subdistrictsInDistrict.data.data) {
-                                                    const subdistrict = subdistrictsInDistrict.data.data.find(sd =>
-                                                        String(sd.id) === String(id));
+                                                    const subdistrict = subdistrictsInDistrict.data.data.find(sd => String(sd.id) === String(id));
                                                     if (subdistrict) {
                                                         district.province = province;
                                                         subdistrict.district = district;
@@ -627,13 +596,11 @@
                                                     }
                                                 }
                                             } catch (e) {
-                                                // Continue to next district
                                                 continue;
                                             }
                                         }
                                     }
                                 } catch (e) {
-                                    // Continue to next province
                                     continue;
                                 }
                             }
@@ -641,42 +608,37 @@
                         break;
 
                     case 'village':
-                        // For villages, first try with parent subdistrict if available
-                        const parentSubdistrictId = arguments[2]; // Optional parent subdistrict ID
+                        const parentSubdistrictId = arguments[2];
                         let parentSubdistrictData = null;
 
                         if (parentSubdistrictId) {
-                            const parentDistrictId = arguments[3]; // Optional parent district ID
-                            parentSubdistrictData = await fetchLocationData('subdistrict', parentSubdistrictId,
-                                parentDistrictId);
+                            const parentDistrictId = arguments[3];
+                            parentSubdistrictData = await fetchLocationData('subdistrict', parentSubdistrictId, parentDistrictId);
                         }
 
                         if (parentSubdistrictData) {
-                            // If we found the parent subdistrict, search within it
                             try {
-                                const villageResponse = await axios.get(
-                                    `${baseUrl}/villages/${parentSubdistrictData.code}`, {
-                                        headers: {
-                                            'Accept': 'application/json',
-                                            'Content-Type': 'application/json',
-                                            'X-API-Key': apiKey
-                                        }
-                                    });
+                                const villageResponse = await axios.get(`${baseUrl}/villages/${parentSubdistrictData.code}`, {
+                                    headers: {
+                                        'Accept': 'application/json',
+                                        'Content-Type': 'application/json',
+                                        'X-API-Key': apiKey
+                                    }
+                                });
 
                                 if (villageResponse.data && villageResponse.data.data) {
                                     const village = villageResponse.data.data.find(v => String(v.id) === String(id));
                                     if (village) {
-                                        village.subdistrict = parentSubdistrictData; // Add parent subdistrict reference
+                                        village.subdistrict = parentSubdistrictData;
                                         locationCache[cacheKey] = village;
                                         return village;
                                     }
                                 }
                             } catch (e) {
-                                // If error, continue to full search
+                                // Continue to full search
                             }
                         }
 
-                        // If no parent subdistrict or not found within parent, search all locations
                         const allProvincesForVillage = await axios.get(`${baseUrl}/provinces`, {
                             headers: {
                                 'Accept': 'application/json',
@@ -688,43 +650,38 @@
                         if (allProvincesForVillage.data && allProvincesForVillage.data.data) {
                             for (const province of allProvincesForVillage.data.data) {
                                 try {
-                                    const districtsInProvince = await axios.get(
-                                        `${baseUrl}/districts/${province.code}`, {
-                                            headers: {
-                                                'Accept': 'application/json',
-                                                'Content-Type': 'application/json',
-                                                'X-API-Key': apiKey
-                                            }
-                                        });
+                                    const districtsInProvince = await axios.get(`${baseUrl}/districts/${province.code}`, {
+                                        headers: {
+                                            'Accept': 'application/json',
+                                            'Content-Type': 'application/json',
+                                            'X-API-Key': apiKey
+                                        }
+                                    });
 
                                     if (districtsInProvince.data && districtsInProvince.data.data) {
                                         for (const district of districtsInProvince.data.data) {
                                             try {
-                                                const subdistrictsInDistrict = await axios.get(
-                                                    `${baseUrl}/sub-districts/${district.code}`, {
-                                                        headers: {
-                                                            'Accept': 'application/json',
-                                                            'Content-Type': 'application/json',
-                                                            'X-API-Key': apiKey
-                                                        }
-                                                    });
+                                                const subdistrictsInDistrict = await axios.get(`${baseUrl}/sub-districts/${district.code}`, {
+                                                    headers: {
+                                                        'Accept': 'application/json',
+                                                        'Content-Type': 'application/json',
+                                                        'X-API-Key': apiKey
+                                                    }
+                                                });
 
                                                 if (subdistrictsInDistrict.data && subdistrictsInDistrict.data.data) {
                                                     for (const subdistrict of subdistrictsInDistrict.data.data) {
                                                         try {
-                                                            const villagesInSubdistrict = await axios.get(
-                                                                `${baseUrl}/villages/${subdistrict.code}`, {
-                                                                    headers: {
-                                                                        'Accept': 'application/json',
-                                                                        'Content-Type': 'application/json',
-                                                                        'X-API-Key': apiKey
-                                                                    }
-                                                                });
+                                                            const villagesInSubdistrict = await axios.get(`${baseUrl}/villages/${subdistrict.code}`, {
+                                                                headers: {
+                                                                    'Accept': 'application/json',
+                                                                    'Content-Type': 'application/json',
+                                                                    'X-API-Key': apiKey
+                                                                }
+                                                            });
 
-                                                            if (villagesInSubdistrict.data && villagesInSubdistrict.data
-                                                                .data) {
-                                                                const village = villagesInSubdistrict.data.data.find(
-                                                                    v => String(v.id) === String(id));
+                                                            if (villagesInSubdistrict.data && villagesInSubdistrict.data.data) {
+                                                                const village = villagesInSubdistrict.data.data.find(v => String(v.id) === String(id));
                                                                 if (village) {
                                                                     district.province = province;
                                                                     subdistrict.district = district;
@@ -734,19 +691,16 @@
                                                                 }
                                                             }
                                                         } catch (e) {
-                                                            // Continue to next subdistrict
                                                             continue;
                                                         }
                                                     }
                                                 }
                                             } catch (e) {
-                                                // Continue to next district
                                                 continue;
                                             }
                                         }
                                     }
                                 } catch (e) {
-                                    // Continue to next province
                                     continue;
                                 }
                             }
@@ -761,10 +715,10 @@
             }
         }
 
-        // Delete confirmation function dengan SweetAlert yang lebih baik
+        // Delete confirmation function
         function confirmDelete(event) {
-            event.preventDefault(); // Menghentikan pengiriman form default
-            const form = event.target; // Form yang akan di-submit
+            event.preventDefault();
+            const form = event.target;
 
             Swal.fire({
                 title: 'Konfirmasi Hapus Data',
@@ -786,7 +740,6 @@
                 focusConfirm: false
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Tampilkan loading state saat menghapus
                     Swal.fire({
                         title: 'Menghapus Data...',
                         html: 'Mohon tunggu sebentar',
@@ -796,20 +749,21 @@
                         }
                     });
 
-                    // Submit form
                     form.submit();
                 }
             });
 
-            return false; // Menghentikan pengiriman form
+            return false;
         }
+
+        // Variable untuk menyimpan NIK saat ini
+        let currentNIK = '';
 
         // Updated showDetailModal function dengan optimasi
         async function showDetailModal(biodata) {
-            // Tampilkan modal dengan loading state
-            document.getElementById('detailModal').classList.remove('hidden');
+            currentNIK = biodata.nik || '';
 
-            // Tampilkan loading pada modal
+            document.getElementById('detailModal').classList.remove('hidden');
             const modalBody = document.querySelector('#detailModal .p-4.md\\:p-5.overflow-y-auto');
             const originalContent = modalBody.innerHTML;
 
@@ -853,7 +807,7 @@
             try {
                 // OPTIMASI: Load data secara parallel dengan timeout
                 const promises = [];
-                const timeout = 5000; // 5 detik timeout
+                const timeout = 5000;
 
                 // 1. Load location data dengan timeout
                 if (biodata.province_id) {
@@ -1000,25 +954,16 @@
                 document.getElementById('detailMother').innerText = biodata.mother || '-';
                 document.getElementById('detailNikMother').innerText = biodata.nik_mother || '-';
 
-                // Set job data
-                document.getElementById('detailJobName').innerText = jobData ? jobData.name : (biodata.job_type_id || '-');
-
                 // Set location data
                 document.getElementById('detailProvinceId').innerText = provinceData ? provinceData.name : (biodata.province_id || '-');
                 document.getElementById('detailDistrictId').innerText = districtData ? districtData.name : (biodata.district_id || '-');
                 document.getElementById('detailSubDistrictId').innerText = subdistrictData ? subdistrictData.name : (biodata.sub_district_id || '-');
                 document.getElementById('detailVillageId').innerText = villageData ? villageData.name : (biodata.village_id || '-');
 
-                // OPTIMASI: Load photo dan documents secara parallel
-                const photoAndDocumentsPromises = [];
+                // Set job data
+                document.getElementById('detailJobName').innerText = jobData ? jobData.name : (biodata.job_name || '-');
 
-                // Load photo
-                if (biodata.nik) {
-                    const photoPromise = loadPhotoAsync(biodata.nik);
-                    photoAndDocumentsPromises.push(photoPromise);
-                }
-
-                // Load documents
+                // Set dokumen
                 if (documentsData.success && documentsData.documents) {
                     loadDocument('detailFotoDiri', documentsData.documents.foto_diri, 'Foto Diri');
                     loadDocument('detailFotoKtp', documentsData.documents.foto_ktp, 'Foto KTP');
@@ -1035,21 +980,23 @@
                     setDocumentNotAvailable('detailFotoRumah');
                 }
 
-                // Wait for photo loading to complete
-                if (photoAndDocumentsPromises.length > 0) {
-                    await Promise.all(photoAndDocumentsPromises);
+                // Foto utama (foto diri di atas)
+                if (biodata.nik) {
+                    const photoDiv = document.getElementById('detailPhoto');
+                    const photoStatus = document.getElementById('photoStatus');
+                    photoStatus.textContent = 'Memuat foto...';
+                    photoDiv.innerHTML = `<div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-[#7886C7]"></div>`;
+                    if (documentsData.success && documentsData.documents && documentsData.documents.foto_diri && documentsData.documents.foto_diri.preview_url) {
+                        photoDiv.innerHTML = `<img src="${documentsData.documents.foto_diri.preview_url}" alt="Foto Diri" class="w-32 h-32 rounded-full object-cover">`;
+                        photoStatus.textContent = '';
+                    } else {
+                        photoDiv.innerHTML = `<svg class="w-16 h-16 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>`;
+                        photoStatus.textContent = 'Foto belum diunggah';
+                    }
                 }
 
             } catch (error) {
-                console.error("Error displaying detail modal:", error);
                 modalBody.innerHTML = originalContent;
-
-                // Set basic values in case of error
-                document.getElementById('detailNIK').innerText = biodata.nik || '-';
-                document.getElementById('detailKK').innerText = biodata.kk || '-';
-                document.getElementById('detailFullName').innerText = biodata.full_name || '-';
-                document.getElementById('detailAddress').innerText = biodata.address || '-';
-
                 Swal.fire({
                     icon: 'error',
                     title: 'Gagal Memuat Data',
@@ -1062,56 +1009,10 @@
             }
         }
 
-        // Function untuk load photo secara async
-        async function loadPhotoAsync(nik) {
-            const photoElement = document.getElementById('detailPhoto');
-            const photoStatusElement = document.getElementById('photoStatus');
-
-            photoStatusElement.textContent = 'Memuat foto...';
-            photoElement.innerHTML = `
-                <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-[#7886C7]"></div>
-            `;
-
-            try {
-                // Coba load dari local documents first (lebih cepat)
-                const localResponse = await fetch(`/admin/family-member/${nik}/documents`);
-                const localData = await localResponse.json();
-
-                if (localData.success && localData.documents && localData.documents.foto_diri && localData.documents.foto_diri.preview_url) {
-                    photoElement.innerHTML = `<img src="${localData.documents.foto_diri.preview_url}" alt="Foto Diri" class="w-32 h-32 rounded-full object-cover">`;
-                    photoStatusElement.textContent = '';
-                    return;
-                }
-
-                // Jika tidak ada di local, coba dari API external (dengan timeout)
-                const photoResponse = await Promise.race([
-                    axios.get(`${baseUrl}/citizens/${nik}/photo`, {
-                        headers: {
-                            'Accept': 'image/jpeg',
-                            'X-API-Key': apiKey
-                        },
-                        responseType: 'arraybuffer'
-                    }),
-                    new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))
-                ]);
-
-                if (photoResponse.data) {
-                    const blob = new Blob([photoResponse.data], { type: 'image/jpeg' });
-                    const photoUrl = URL.createObjectURL(blob);
-                    photoElement.style.backgroundImage = `url(${photoUrl})`;
-                    photoElement.style.backgroundSize = 'cover';
-                    photoElement.style.backgroundPosition = 'center';
-                    photoElement.style.backgroundRepeat = 'no-repeat';
-                    photoStatusElement.textContent = 'Foto tersedia';
-                } else {
-                    throw new Error('No photo data');
-                }
-            } catch (error) {
-                console.error("Error fetching photo:", error);
-                photoElement.innerHTML = `<svg class="w-16 h-16 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>`;
-                photoStatusElement.textContent = 'Foto tidak tersedia';
-            }
-        }
+        // Pastikan closeDetailModal global
+        window.closeDetailModal = function() {
+            document.getElementById('detailModal').classList.add('hidden');
+        };
 
         // Function untuk memuat dokumen
         function loadDocument(elementId, docInfo, docType) {
@@ -1168,48 +1069,9 @@
                 <span class="text-xs text-gray-400 mt-1 block">-</span>
             `;
         }
-
-        // Variable untuk menyimpan NIK saat ini
-        let currentNIK = '';
-
-        // Update fungsi showDetailModal untuk menyimpan NIK
-        const originalShowDetailModal = window.showDetailModal;
-        window.showDetailModal = function(biodata) {
-            currentNIK = biodata.nik || '';
-
-            // Reset photo display
-            document.getElementById('detailPhoto').innerHTML = `<svg class="w-16 h-16 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>`;
-            document.getElementById('photoStatus').textContent = 'Memuat foto...';
-
-            // Show modal first
-            document.getElementById('detailModal').classList.remove('hidden');
-
-            // Load photo for modal
-            if (biodata.nik) {
-                fetch(`/admin/family-member/${biodata.nik}/documents`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success && data.documents && data.documents.foto_diri && data.documents.foto_diri.preview_url) {
-                            document.getElementById('detailPhoto').innerHTML = `<img src="${data.documents.foto_diri.preview_url}" alt="Foto Diri" class="w-32 h-32 rounded-full object-cover">`;
-                            document.getElementById('photoStatus').textContent = '';
-                        } else {
-                            document.getElementById('photoStatus').textContent = 'Foto belum diunggah';
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error loading photo:', error);
-                        document.getElementById('photoStatus').textContent = 'Gagal memuat foto';
-                    });
-            }
-
-            // Call original function
-            if (originalShowDetailModal) {
-                originalShowDetailModal(biodata);
-            }
-        };
     </script>
 
-    <!-- Script untuk memuat foto -->
+    <!-- Script untuk memuat foto di tabel -->
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             // Load foto untuk setiap baris di tabel
@@ -1233,40 +1095,6 @@
                     console.error('Error loading photo for NIK:', nik, error);
                 });
         }
-
-        // Override showDetailModal function untuk memuat foto di modal
-        const originalShowDetailModal = window.showDetailModal;
-        window.showDetailModal = function(biodata) {
-            // Reset photo display
-            document.getElementById('detailPhoto').innerHTML = `<svg class="w-16 h-16 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>`;
-            document.getElementById('photoStatus').textContent = 'Memuat foto...';
-
-            // Show modal first
-            document.getElementById('detailModal').classList.remove('hidden');
-
-            // Load photo for modal
-            if (biodata.nik) {
-                fetch(`/admin/family-member/${biodata.nik}/documents`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success && data.documents && data.documents.foto_diri && data.documents.foto_diri.preview_url) {
-                            document.getElementById('detailPhoto').innerHTML = `<img src="${data.documents.foto_diri.preview_url}" alt="Foto Diri" class="w-32 h-32 rounded-full object-cover">`;
-                            document.getElementById('photoStatus').textContent = '';
-                        } else {
-                            document.getElementById('photoStatus').textContent = 'Foto belum diunggah';
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error loading photo:', error);
-                        document.getElementById('photoStatus').textContent = 'Gagal memuat foto';
-                    });
-            }
-
-            // Call original function
-            if (originalShowDetailModal) {
-                originalShowDetailModal(biodata);
-            }
-        };
     </script>
 
     <style>

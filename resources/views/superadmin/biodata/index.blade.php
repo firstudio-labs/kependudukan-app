@@ -795,8 +795,13 @@
             return false; // Menghentikan pengiriman form
         }
 
+        // Variable untuk menyimpan NIK saat ini
+        let currentNIK = '';
+
         // Optimasi showDetailModal
         async function showDetailModal(biodata) {
+            currentNIK = biodata.nik || '';
+
             document.getElementById('detailModal').classList.remove('hidden');
             const modalBody = document.querySelector('#detailModal .p-4.md\\:p-5.overflow-y-auto');
             const originalContent = modalBody.innerHTML;
@@ -1034,48 +1039,9 @@
                 <span class="text-xs text-gray-400 mt-1 block">-</span>
             `;
         }
-
-        // Variable untuk menyimpan NIK saat ini
-        let currentNIK = '';
-
-        // Update fungsi showDetailModal untuk menyimpan NIK
-        const originalShowDetailModal = window.showDetailModal;
-        window.showDetailModal = function(biodata) {
-            currentNIK = biodata.nik || '';
-
-            // Reset photo display
-            document.getElementById('detailPhoto').innerHTML = `<svg class="w-16 h-16 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>`;
-            document.getElementById('photoStatus').textContent = 'Memuat foto...';
-
-            // Show modal first
-            document.getElementById('detailModal').classList.remove('hidden');
-
-            // Load photo for modal
-            if (biodata.nik) {
-                fetch(`/admin/family-member/${biodata.nik}/documents`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success && data.documents && data.documents.foto_diri && data.documents.foto_diri.preview_url) {
-                            document.getElementById('detailPhoto').innerHTML = `<img src="${data.documents.foto_diri.preview_url}" alt="Foto Diri" class="w-32 h-32 rounded-full object-cover">`;
-                            document.getElementById('photoStatus').textContent = '';
-                        } else {
-                            document.getElementById('photoStatus').textContent = 'Foto belum diunggah';
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error loading photo:', error);
-                        document.getElementById('photoStatus').textContent = 'Gagal memuat foto';
-                    });
-            }
-
-            // Call original function
-            if (originalShowDetailModal) {
-                originalShowDetailModal(biodata);
-            }
-        };
     </script>
 
-    <!-- Script untuk memuat foto -->
+    <!-- Script untuk memuat foto di tabel -->
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             // Load foto untuk setiap baris di tabel
@@ -1099,39 +1065,5 @@
                     console.error('Error loading photo for NIK:', nik, error);
                 });
         }
-
-        // Override showDetailModal function untuk memuat foto di modal
-        const originalShowDetailModal = window.showDetailModal;
-        window.showDetailModal = function(biodata) {
-            // Reset photo display
-            document.getElementById('detailPhoto').innerHTML = `<svg class="w-16 h-16 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>`;
-            document.getElementById('photoStatus').textContent = 'Memuat foto...';
-
-            // Show modal first
-            document.getElementById('detailModal').classList.remove('hidden');
-
-            // Load photo for modal
-            if (biodata.nik) {
-                fetch(`/admin/family-member/${biodata.nik}/documents`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success && data.documents && data.documents.foto_diri && data.documents.foto_diri.preview_url) {
-                            document.getElementById('detailPhoto').innerHTML = `<img src="${data.documents.foto_diri.preview_url}" alt="Foto Diri" class="w-32 h-32 rounded-full object-cover">`;
-                            document.getElementById('photoStatus').textContent = '';
-                        } else {
-                            document.getElementById('photoStatus').textContent = 'Foto belum diunggah';
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error loading photo:', error);
-                        document.getElementById('photoStatus').textContent = 'Gagal memuat foto';
-                    });
-            }
-
-            // Call original function
-            if (originalShowDetailModal) {
-                originalShowDetailModal(biodata);
-            }
-        };
     </script>
 </x-layout>
