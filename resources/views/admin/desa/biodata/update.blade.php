@@ -6,7 +6,7 @@
             @csrf
             @method('PUT')
             <input type="hidden" name="current_page" value="{{ request('page', 1) }}">
-            
+
             <!-- RF ID Tag -->
             <div class="mb-4">
                 <label for="rf_id_tag" class="block text-sm font-medium text-gray-700">RF ID Tag <span class="text-red-500">*</span></label>
@@ -51,22 +51,6 @@
                     </select>
                 </div>
 
-                <!-- Tanggal Lahir -->
-                <div>
-                    <label for="birth_date" class="block text-sm font-medium text-gray-700">Tanggal Lahir <span class="text-red-500">*</span></label>
-                    <input type="date" id="birth_date" name="birth_date" value="{{ $citizen['data']['birth_date'] }}"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
-                        required>
-                </div>
-
-                <!-- Umur -->
-                <div>
-                    <label for="age" class="block text-sm font-medium text-gray-700">Umur <span class="text-red-500">*</span></label>
-                    <input type="number" id="age" name="age" value="{{ $citizen['data']['age'] }}"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
-                        required>
-                </div>
-
                 <!-- Tempat Lahir -->
                 <div>
                     <label for="birth_place" class="block text-sm font-medium text-gray-700">Tempat Lahir <span class="text-red-500">*</span></label>
@@ -75,8 +59,80 @@
                         required>
                 </div>
 
-                <!-- Alamat -->
+                <!-- Tanggal Lahir -->
                 <div>
+                    <label for="birth_date" class="block text-sm font-medium text-gray-700">Tanggal Lahir <span class="text-red-500">*</span></label>
+                    <input type="date" id="birth_date" name="birth_date" value="{{ $citizen['data']['birth_date'] }}"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
+                        required>
+                </div>
+
+                <!-- Agama -->
+                <div>
+                    <label for="religion" class="block text-sm font-medium text-gray-700">Agama <span class="text-red-500">*</span></label>
+                    <select id="religion" name="religion"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
+                        required>
+                        <option value="1" {{ $citizen['data']['religion'] == '1' ? 'selected' : '' }}>Islam</option>
+                        <option value="2" {{ $citizen['data']['religion'] == '2' ? 'selected' : '' }}>Kristen</option>
+                        <option value="3" {{ $citizen['data']['religion'] == '3' ? 'selected' : '' }}>Katholik</option>
+                        <option value="4" {{ $citizen['data']['religion'] == '4' ? 'selected' : '' }}>Hindu</option>
+                        <option value="5" {{ $citizen['data']['religion'] == '5' ? 'selected' : '' }}>Buddha</option>
+                        <option value="6" {{ $citizen['data']['religion'] == '6' ? 'selected' : '' }}>Kong Hu Cu</option>
+                        <option value="7" {{ $citizen['data']['religion'] == '7' ? 'selected' : '' }}>Lainnya</option>
+                    </select>
+                </div>
+
+                <!-- Status Perkawinan -->
+                <div>
+                    <label for="marital_status" class="block text-sm font-medium text-gray-700">Status Perkawinan <span class="text-red-500">*</span></label>
+                    <select id="marital_status" name="marital_status"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
+                        required>
+                        <option value="1" {{ $citizen['data']['marital_status'] == '1' ? 'selected' : '' }}>Belum Kawin</option>
+                        <option value="2" {{ $citizen['data']['marital_status'] == '2' ? 'selected' : '' }}>Kawin Tercatat</option>
+                        <option value="3" {{ $citizen['data']['marital_status'] == '3' ? 'selected' : '' }}>Kawin Belum Tercatat</option>
+                        <option value="4" {{ $citizen['data']['marital_status'] == '4' ? 'selected' : '' }}>Cerai Hidup Tercatat</option>
+                        <option value="5" {{ $citizen['data']['marital_status'] == '5' ? 'selected' : '' }}>Cerai Hidup Belum Tercatat</option>
+                        <option value="6" {{ $citizen['data']['marital_status'] == '6' ? 'selected' : '' }}>Cerai Mati</option>
+                    </select>
+                </div>
+
+                <!-- Golongan Darah -->
+                <div>
+                    <label for="blood_type" class="block text-sm font-medium text-gray-700">Golongan Darah <span class="text-red-500">*</span></label>
+                    <select id="blood_type" name="blood_type"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
+                        required>
+                        <option value="1" {{ $citizen['data']['blood_type'] == '1' ? 'selected' : '' }}>A</option>
+                        <option value="2" {{ $citizen['data']['blood_type'] == '2' ? 'selected' : '' }}>B</option>
+                        <option value="3" {{ $citizen['data']['blood_type'] == '3' ? 'selected' : '' }}>AB</option>
+                        <option value="4" {{ $citizen['data']['blood_type'] == '4' ? 'selected' : '' }}>O</option>
+                        <option value="5" {{ $citizen['data']['blood_type'] == '5' ? 'selected' : '' }}>A+</option>
+                        <option value="6" {{ $citizen['data']['blood_type'] == '6' ? 'selected' : '' }}>A-</option>
+                        <option value="7" {{ $citizen['data']['blood_type'] == '7' ? 'selected' : '' }}>B+</option>
+                        <option value="8" {{ $citizen['data']['blood_type'] == '8' ? 'selected' : '' }}>B-</option>
+                        <option value="9" {{ $citizen['data']['blood_type'] == '9' ? 'selected' : '' }}>AB+</option>
+                        <option value="10" {{ $citizen['data']['blood_type'] == '10' ? 'selected' : '' }}>AB-</option>
+                        <option value="11" {{ $citizen['data']['blood_type'] == '11' ? 'selected' : '' }}>O+</option>
+                        <option value="12" {{ $citizen['data']['blood_type'] == '12' ? 'selected' : '' }}>O-</option>
+                        <option value="13" {{ $citizen['data']['blood_type'] == '13' ? 'selected' : '' }}>Tidak Tahu</option>
+                    </select>
+                </div>
+
+                <!-- Kewarganegaraan -->
+                <div>
+                    <label for="citizen_status" class="block text-sm font-medium text-gray-700">Kewarganegaraan <span class="text-red-500">*</span></label>
+                    <select id="citizen_status" name="citizen_status"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
+                        required>
+                        <option value="1" {{ $citizen['data']['citizen_status'] == '1' ? 'selected' : '' }}>WNA</option>
+                        <option value="2" {{ $citizen['data']['citizen_status'] == '2' ? 'selected' : '' }}>WNI</option>
+                    </select>
+                </div>
+
+                <!-- Alamat -->
+                <div class="md:col-span-2">
                     <label for="address" class="block text-sm font-medium text-gray-700">Alamat <span class="text-red-500">*</span></label>
                     <textarea id="address" name="address" autocomplete="off"
                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
@@ -159,138 +215,30 @@
                         required>
                 </div>
 
-                <!-- Kewarganegaraan -->
+                <!-- Kode Pos -->
                 <div>
-                    <label for="citizen_status" class="block text-sm font-medium text-gray-700">Kewarganegaraan <span class="text-red-500">*</span></label>
-                    <select id="citizen_status" name="citizen_status"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
-                        required>
-                        <option value="1" {{ $citizen['data']['citizen_status'] == '1' ? 'selected' : '' }}>WNA</option>
-                        <option value="2" {{ $citizen['data']['citizen_status'] == '2' ? 'selected' : '' }}>WNI</option>
-                    </select>
-                </div>
-
-                <!-- Golongan Darah -->
-                <div>
-                    <label for="blood_type" class="block text-sm font-medium text-gray-700">Golongan Darah <span class="text-red-500">*</span></label>
-                    <select id="blood_type" name="blood_type"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
-                        required>
-                        <option value="1" {{ $citizen['data']['blood_type'] == '1' ? 'selected' : '' }}>A</option>
-                        <option value="2" {{ $citizen['data']['blood_type'] == '2' ? 'selected' : '' }}>B</option>
-                        <option value="3" {{ $citizen['data']['blood_type'] == '3' ? 'selected' : '' }}>AB</option>
-                        <option value="4" {{ $citizen['data']['blood_type'] == '4' ? 'selected' : '' }}>O</option>
-                        <option value="5" {{ $citizen['data']['blood_type'] == '5' ? 'selected' : '' }}>A+</option>
-                        <option value="6" {{ $citizen['data']['blood_type'] == '6' ? 'selected' : '' }}>A-</option>
-                        <option value="7" {{ $citizen['data']['blood_type'] == '7' ? 'selected' : '' }}>B+</option>
-                        <option value="8" {{ $citizen['data']['blood_type'] == '8' ? 'selected' : '' }}>B-</option>
-                        <option value="9" {{ $citizen['data']['blood_type'] == '9' ? 'selected' : '' }}>AB+</option>
-                        <option value="10" {{ $citizen['data']['blood_type'] == '10' ? 'selected' : '' }}>AB-</option>
-                        <option value="11" {{ $citizen['data']['blood_type'] == '11' ? 'selected' : '' }}>O+</option>
-                        <option value="12" {{ $citizen['data']['blood_type'] == '12' ? 'selected' : '' }}>O-</option>
-                        <option value="13" {{ $citizen['data']['blood_type'] == '13' ? 'selected' : '' }}>Tidak Tahu</option>
-                    </select>
-                </div>
-
-                <!-- Agama -->
-                <div>
-                    <label for="religion" class="block text-sm font-medium text-gray-700">Agama <span class="text-red-500">*</span></label>
-                    <select id="religion" name="religion"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
-                        required>
-                        <option value="1" {{ $citizen['data']['religion'] == '1' ? 'selected' : '' }}>Islam</option>
-                        <option value="2" {{ $citizen['data']['religion'] == '2' ? 'selected' : '' }}>Kristen</option>
-                        <option value="3" {{ $citizen['data']['religion'] == '3' ? 'selected' : '' }}>Katholik</option>
-                        <option value="4" {{ $citizen['data']['religion'] == '4' ? 'selected' : '' }}>Hindu</option>
-                        <option value="5" {{ $citizen['data']['religion'] == '5' ? 'selected' : '' }}>Buddha</option>
-                        <option value="6" {{ $citizen['data']['religion'] == '6' ? 'selected' : '' }}>Kong Hu Cu</option>
-                        <option value="7" {{ $citizen['data']['religion'] == '7' ? 'selected' : '' }}>Lainnya</option>
-                    </select>
-                </div>
-
-                <!-- Akta Perkawinan -->
-                <div>
-                    <label for="marital_certificate" class="block text-sm font-medium text-gray-700">Akta Perkawinan <span class="text-red-500">*</span></label>
-                    <select id="marital_certificate" name="marital_certificate"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
-                        required>
-                        <option value="1" {{ $citizen['data']['marital_certificate'] == '1' ? 'selected' : '' }}>Ada</option>
-                        <option value="2" {{ $citizen['data']['marital_certificate'] == '2' ? 'selected' : '' }}>Tidak Ada</option>
-                    </select>
-                </div>
-
-                <!-- Status Hubungan Dalam Keluarga -->
-                <div>
-                    <label for="family_status" class="block text-sm font-medium text-gray-700">Status Hubungan Dalam Keluarga <span class="text-red-500">*</span></label>
-                    <select id="family_status" name="family_status"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
-                        required>
-                        <option value="1" {{ $citizen['data']['family_status'] == '1' ? 'selected' : '' }}>ANAK</option>
-                        <option value="2" {{ $citizen['data']['family_status'] == '2' ? 'selected' : '' }}>KEPALA KELUARGA</option>
-                        <option value="3" {{ $citizen['data']['family_status'] == '3' ? 'selected' : '' }}>ISTRI</option>
-                        <option value="4" {{ $citizen['data']['family_status'] == '4' ? 'selected' : '' }}>ORANG TUA</option>
-                        <option value="5" {{ $citizen['data']['family_status'] == '5' ? 'selected' : '' }}>MERTUA</option>
-                        <option value="6" {{ $citizen['data']['family_status'] == '6' ? 'selected' : '' }}>CUCU</option>
-                        <option value="7" {{ $citizen['data']['family_status'] == '7' ? 'selected' : '' }}>FAMILI LAIN</option>
-                    </select>
-                </div>
-
-                <!-- Kelainan Fisik dan Mental -->
-                <div>
-                    <label for="mental_disorders" class="block text-sm font-medium text-gray-700">Kelainan Fisik dan Mental <span class="text-red-500">*</span></label>
-                    <select id="mental_disorders" name="mental_disorders"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
-                        required>
-                        <option value="1" {{ $citizen['data']['mental_disorders'] == '1' ? 'selected' : '' }}>Ada</option>
-                        <option value="2" {{ $citizen['data']['mental_disorders'] == '2' ? 'selected' : '' }}>Tidak Ada</option>
-                    </select>
-                </div>
-
-                <!-- Pendidikan Terakhir -->
-                <div>
-                    <label for="education_status" class="block text-sm font-medium text-gray-700">Pendidikan Terakhir <span class="text-red-500">*</span></label>
-                    <select id="education_status" name="education_status"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
-                        required>
-                        <option value="1" {{ $citizen['data']['education_status'] == '1' ? 'selected' : '' }}>Tidak/Belum Sekolah</option>
-                        <option value="2" {{ $citizen['data']['education_status'] == '2' ? 'selected' : '' }}>Belum tamat SD/Sederajat</option>
-                        <option value="3" {{ $citizen['data']['education_status'] == '3' ? 'selected' : '' }}>Tamat SD</option>
-                        <option value="4" {{ $citizen['data']['education_status'] == '4' ? 'selected' : '' }}>SLTP/SMP/Sederajat</option>
-                        <option value="5" {{ $citizen['data']['education_status'] == '5' ? 'selected' : '' }}>SLTA/SMA/Sederajat</option>
-                        <option value="6" {{ $citizen['data']['education_status'] == '6' ? 'selected' : '' }}>Diploma I/II</option>
-                        <option value="7" {{ $citizen['data']['education_status'] == '7' ? 'selected' : '' }}>Akademi/Diploma III/ Sarjana Muda</option>
-                        <option value="8" {{ $citizen['data']['education_status'] == '8' ? 'selected' : '' }}>Diploma IV/ Strata I/ Strata II</option>
-                        <option value="9" {{ $citizen['data']['education_status'] == '9' ? 'selected' : '' }}>Strata III</option>
-                        <option value="10" {{ $citizen['data']['education_status'] == '10' ? 'selected' : '' }}>Lainnya</option>
-                    </select>
-                </div>
-
-                <!-- Jenis Pekerjaan -->
-                <div>
-                    <label for="job_type_id" class="block text-sm font-medium text-gray-700">Jenis Pekerjaan <span class="text-red-500">*</span></label>
-                    <select id="job_type_id" name="job_type_id"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
-                        required>
-                        <option value="">Pilih Jenis Pekerjaan</option>
-                        @foreach($jobs as $job)
-                            <option value="{{ $job['id'] }}" {{ $citizen['data']['job_type_id'] == $job['id'] ? 'selected' : '' }}>
-                                {{ $job['name'] }}
-                            </option>
-                        @endforeach
-                    </select>
+                    <label for="postal_code" class="block text-sm font-medium text-gray-700">Kode Pos</label>
+                    <input type="text" id="postal_code" name="postal_code" pattern="\d{5}" maxlength="5"
+                        value="{{ empty($citizen['data']['postal_code']) || $citizen['data']['postal_code'] == 0 ? '' : $citizen['data']['postal_code'] }}"
+                        autocomplete="off"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
                 </div>
 
                 <!-- Hidden fields untuk data yang tidak ditampilkan tapi tetap dikirim -->
-                <input type="hidden" name="postal_code" value="{{ $citizen['data']['postal_code'] ?? '' }}">
+                <input type="hidden" name="age" value="{{ $citizen['data']['age'] ?? '' }}">
                 <input type="hidden" name="birth_certificate" value="{{ $citizen['data']['birth_certificate'] ?? '' }}">
                 <input type="hidden" name="birth_certificate_no" value="{{ $citizen['data']['birth_certificate_no'] ?? '' }}">
-                <input type="hidden" name="marital_status" value="{{ $citizen['data']['marital_status'] ?? '' }}">
+                <input type="hidden" name="marital_certificate" value="{{ $citizen['data']['marital_certificate'] ?? '' }}">
                 <input type="hidden" name="marital_certificate_no" value="{{ $citizen['data']['marital_certificate_no'] ?? '' }}">
                 <input type="hidden" name="marriage_date" value="{{ $citizen['data']['marriage_date'] ?? '' }}">
                 <input type="hidden" name="divorce_certificate" value="{{ $citizen['data']['divorce_certificate'] ?? '' }}">
                 <input type="hidden" name="divorce_certificate_no" value="{{ $citizen['data']['divorce_certificate_no'] ?? '' }}">
                 <input type="hidden" name="divorce_certificate_date" value="{{ $citizen['data']['divorce_certificate_date'] ?? '' }}">
+                <input type="hidden" name="family_status" value="{{ $citizen['data']['family_status'] ?? '' }}">
+                <input type="hidden" name="mental_disorders" value="{{ $citizen['data']['mental_disorders'] ?? '' }}">
                 <input type="hidden" name="disabilities" value="{{ $citizen['data']['disabilities'] ?? '' }}">
+                <input type="hidden" name="education_status" value="{{ $citizen['data']['education_status'] ?? '' }}">
+                <input type="hidden" name="job_type_id" value="{{ $citizen['data']['job_type_id'] ?? '' }}">
                 <input type="hidden" name="nik_mother" value="{{ $citizen['data']['nik_mother'] ?? '' }}">
                 <input type="hidden" name="mother" value="{{ $citizen['data']['mother'] ?? '' }}">
                 <input type="hidden" name="nik_father" value="{{ $citizen['data']['nik_father'] ?? '' }}">
