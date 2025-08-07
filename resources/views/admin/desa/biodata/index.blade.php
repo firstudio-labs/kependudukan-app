@@ -1207,15 +1207,11 @@
                 originalShowDetailModal(biodata);
             }
         };
+    </script>
 
-        // Pastikan fungsi closeDetailModal tersedia di global scope
-        window.closeDetailModal = function() {
-            document.getElementById('detailModal').classList.add('hidden');
-        };
-
-        // Script untuk memuat foto di tabel index - PASTIKAN INI ADA
+    <!-- Script untuk memuat foto -->
+    <script>
         document.addEventListener('DOMContentLoaded', function () {
-            console.log('Loading photos for table...');
             // Load foto untuk setiap baris di tabel
             @foreach($citizens['data']['citizens'] ?? [] as $citizen)
                 @if(isset($citizen['nik']))
@@ -1225,10 +1221,7 @@
         });
 
         function loadPhoto(nik) {
-            console.log('Loading photo for NIK:', nik);
             fetch(`/admin/family-member/${nik}/documents`)
-                .then(response => {
-                    if (!response.ok) {
                 .then(response => response.json())
                 .then(data => {
                     const photoDiv = document.getElementById(`photo-${nik}`);
