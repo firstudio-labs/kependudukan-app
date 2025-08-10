@@ -36,9 +36,18 @@ document.addEventListener('DOMContentLoaded', function() {
         showSweetAlert('error', 'Gagal!', error);
     }
 
-    // Get village_id from URL parameters
+    // Get location IDs from URL query parameters and set hidden inputs
     const urlParams = new URLSearchParams(window.location.search);
+    const provinceId = urlParams.get('province_id');
+    const districtId = urlParams.get('district_id');
+    const subDistrictId = urlParams.get('sub_district_id');
     const villageId = urlParams.get('village_id');
+
+    // Set hidden input values
+    if (provinceId) document.getElementById('province_id').value = provinceId;
+    if (districtId) document.getElementById('district_id').value = districtId;
+    if (subDistrictId) document.getElementById('subdistrict_id').value = subDistrictId;
+    if (villageId) document.getElementById('village_id').value = villageId;
 
     // Load citizens data with village filter
     $.ajax({
@@ -441,8 +450,10 @@ function populateCitizenData(citizen) {
     // Set RT field
     $('#rt').val(citizen.rt || '');
 
-    // Set RW field
-    $('#rw').val(citizen.rw || '');
+    // Set RFID field - Auto-fill RFID when NIK is entered
+    if (citizen.rf_id_tag && document.querySelector('#rf_id_tag')) {
+        document.querySelector('#rf_id_tag').value = citizen.rf_id_tag.toString();
+    }
 
     // Set location IDs if they exist
     if (citizen.province_id) $('#province_id').val(citizen.province_id);

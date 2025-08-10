@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use App\Models\Pelayanan;
+use App\Models\Penandatangan;
 
 class KeramaianSuratController extends Controller
 {
@@ -46,7 +47,7 @@ class KeramaianSuratController extends Controller
         $districts = [];
         $subDistricts = [];
         $villages = [];
-        $signers = \App\Models\Penandatangan::all(); // Fetch signers
+        $signers = Penandatangan::all(); // Fetch signers
 
         // Get queue number from session if it exists
         $queueNumber = session('no_antrian');

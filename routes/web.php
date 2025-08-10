@@ -47,6 +47,7 @@ use App\Http\Controllers\adminDesa\LaporanDesaController as AdminDesaLaporanDesa
 use App\Http\Controllers\guest\BukuTamuController;
 use App\Http\Controllers\superadmin\BeritaDesaController as SuperadminBeritaDesaController;
 use App\Http\Controllers\User\BeritaDesaController as UserBeritaDesaController;
+use App\Http\Controllers\UsersController;
 
 
 // Homepage route should use our new method to force logout
@@ -88,7 +89,7 @@ Route::prefix('pelayanan')->name('guest.')->group(function () {
 
     // Add Keramaian routes
     Route::get('/keramaian', [KeramaianSuratController::class, 'index'])->name('surat.keramaian');
-    Route::post('/keramaian', [App\Http\Controllers\guest\KeramaianSuratController::class, 'store'])->name('surat.keramaian.store');
+    Route::post('/keramaian', [KeramaianSuratController::class, 'store'])->name('surat.keramaian.store');
 
     // Add KTP routes
     Route::get('/ktp', [KTPSuratController::class, 'index'])->name('surat.ktp');
@@ -290,7 +291,7 @@ Route::middleware(['auth:web', 'role:superadmin'])->group(function () {
         ->name('superadmin.surat.kematian.update');
     Route::delete('/superadmin/surat/kematian/{id}', [KematianController::class, 'destroy'])
         ->name('superadmin.surat.kematian.delete');
-    Route::get('/superadmin/surat/kematian/{id}/export-pdf', [KematianController::class, 'exportPDF'])->name('superadmin.surat.kematian.export-pdf');
+    Route::get('/superadmin/surat/kematian/{id}/pdf', [KematianController::class, 'exportPDF'])->name('superadmin.surat.kematian.pdf');
 
     // Entertainment Permit (Izin Keramaian) routes
     Route::get('/superadmin/surat/keramaian', [IzinKeramaianController::class, 'index'])
@@ -308,8 +309,8 @@ Route::middleware(['auth:web', 'role:superadmin'])->group(function () {
     Route::delete('/superadmin/surat/keramaian/{id}', [IzinKeramaianController::class, 'destroy'])
         ->name('superadmin.surat.keramaian.delete');
     // Add new route for PDF export
-    Route::get('/superadmin/surat/keramaian/{id}/export-pdf', [IzinKeramaianController::class, 'exportPDF'])
-        ->name('superadmin.surat.keramaian.export-pdf');
+    Route::get('/superadmin/surat/keramaian/{id}/pdf', [IzinKeramaianController::class, 'exportPDF'])
+        ->name('superadmin.surat.keramaian.pdf');
 
     // Rental House Permit (Izin Rumah Sewa) routes
     Route::get('/superadmin/surat/rumah-sewa', [RumahSewaController::class, 'index'])
@@ -327,8 +328,8 @@ Route::middleware(['auth:web', 'role:superadmin'])->group(function () {
     Route::delete('/superadmin/surat/rumah-sewa/{id}', [RumahSewaController::class, 'destroy'])
         ->name('superadmin.surat.rumah-sewa.delete');
     // Add new route for PDF export
-    Route::get('/superadmin/surat/rumah-sewa/{id}/export-pdf', [RumahSewaController::class, 'exportPDF'])
-        ->name('superadmin.surat.rumah-sewa.export-pdf');
+    Route::get('/superadmin/surat/rumah-sewa/{id}/pdf', [RumahSewaController::class, 'exportPDF'])
+        ->name('superadmin.surat.rumah-sewa.pdf');
 
     // Pengantar KTP routes
     Route::get('/superadmin/surat/pengantar-ktp', [PengantarKtpController::class, 'index'])
@@ -345,7 +346,7 @@ Route::middleware(['auth:web', 'role:superadmin'])->group(function () {
         ->name('superadmin.surat.pengantar-ktp.update');
     Route::delete('/superadmin/surat/pengantar-ktp/{id}', [PengantarKtpController::class, 'destroy'])
         ->name('superadmin.surat.pengantar-ktp.delete');
-    Route::get('/surat/pengantar-ktp/{id}/export-pdf', [PengantarKtpController::class, 'exportPDF'])->name('superadmin.surat.pengantar-ktp.export-pdf');
+    Route::get('/surat/pengantar-ktp/{id}/pdf', [PengantarKtpController::class, 'exportPDF'])->name('superadmin.surat.pengantar-ktp.pdf');
     Route::get('/superadmin/surat/pengantar-ktp/{id}/pdf', [PengantarKtpController::class, 'exportPDF'])->name('superadmin.surat.pengantar-ktp.pdf');
 
     // Routes for Excel import
@@ -675,8 +676,8 @@ Route::middleware(['auth:web', 'role:admin desa'])->group(function () {
         ->name('admin.desa.surat.kematian.update');
     Route::delete('/admin/desa/surat/kematian/{id}', [KematianController::class, 'destroy'])
         ->name('admin.desa.surat.kematian.delete');
-    Route::get('/admin/desa/surat/kematian/{id}/export-pdf', [KematianController::class, 'exportPDF'])
-        ->name('admin.desa.surat.kematian.export-pdf');
+    Route::get('/admin/desa/surat/kematian/{id}/pdf', [KematianController::class, 'exportPDF'])
+        ->name('admin.desa.surat.kematian.pdf');
 
     // Entertainment Permit (Izin Keramaian) routes
     Route::get('/admin/desa/surat/keramaian/index', [IzinKeramaianController::class, 'index'])
@@ -694,8 +695,8 @@ Route::middleware(['auth:web', 'role:admin desa'])->group(function () {
     Route::delete('/admin/desa/surat/keramaian/{id}', [IzinKeramaianController::class, 'destroy'])
         ->name('admin.desa.surat.keramaian.delete');
     // Add new route for PDF export
-    Route::get('/admin/desa/surat/keramaian/{id}/export-pdf', [IzinKeramaianController::class, 'exportPDF'])
-        ->name('admin.desa.surat.keramaian.export-pdf');
+    Route::get('/admin/desa/surat/keramaian/{id}/pdf', [IzinKeramaianController::class, 'exportPDF'])
+        ->name('admin.desa.surat.keramaian.pdf');
 
     // Rental House Permit (Izin Rumah Sewa) routes
     Route::get('/admin/desa/surat/rumah-sewa/index', [RumahSewaController::class, 'index'])
@@ -713,8 +714,8 @@ Route::middleware(['auth:web', 'role:admin desa'])->group(function () {
     Route::delete('/admin/desa/surat/rumah-sewa/{id}', [RumahSewaController::class, 'destroy'])
         ->name('admin.desa.surat.rumah-sewa.delete');
     // Add new route for PDF export
-    Route::get('/admin/desa/surat/rumah-sewa/{id}/export-pdf', [RumahSewaController::class, 'exportPDF'])
-        ->name('admin.desa.surat.rumah-sewa.export-pdf');
+    Route::get('/admin/desa/surat/rumah-sewa/{id}/pdf', [RumahSewaController::class, 'exportPDF'])
+        ->name('admin.desa.surat.rumah-sewa.pdf');
 
     // Pengantar KTP routes
     Route::get('/admin/desa/surat/pengantar-ktp/index', [PengantarKtpController::class, 'index'])
@@ -731,8 +732,8 @@ Route::middleware(['auth:web', 'role:admin desa'])->group(function () {
         ->name('admin.desa.surat.pengantar-ktp.update');
     Route::delete('/admin/desa/surat/pengantar-ktp/{id}', [PengantarKtpController::class, 'destroy'])
         ->name('admin.desa.surat.pengantar-ktp.delete');
-    Route::get('/admin/desa/surat/pengantar-ktp/{id}/export-pdf', [PengantarKtpController::class, 'exportPDF'])
-        ->name('admin.desa.surat.pengantar-ktp.export-pdf');
+    Route::get('/admin/desa/surat/pengantar-ktp/{id}/pdf', [PengantarKtpController::class, 'exportPDF'])
+        ->name('admin.desa.surat.pengantar-ktp.pdf');
 
     //Berita Desa
     Route::get('/admin/desa/berita-desa', [BeritaDesaController::class, 'index'])
@@ -881,7 +882,7 @@ Route::middleware(['auth:penduduk'])->group(function () {
 Route::middleware(['auth'])->group(function () {
     // User CRUD routes for superadmin
     Route::middleware(['role:superadmin'])->prefix('superadmin/datamaster')->group(function () {
-        Route::resource('user', \App\Http\Controllers\UsersController::class, ['as' => 'superadmin.datamaster']);
+        Route::resource('user', UsersController::class, ['as' => 'superadmin.datamaster']);
     });
 });
 

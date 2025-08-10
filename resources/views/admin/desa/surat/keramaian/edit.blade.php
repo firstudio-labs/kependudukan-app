@@ -43,13 +43,13 @@
                         <!-- Waktu -->
                         <div>
                             <label for="time" class="block text-sm font-medium text-gray-700">Waktu <span class="text-red-500">*</span></label>
-                            <input type="time" id="time" name="time" value="{{ \Carbon\Carbon::parse($keramaian->time)->format('H:i') }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                            <input type="time" id="time" name="time" value="{{ $keramaian->time ? \Carbon\Carbon::parse($keramaian->time)->format('H:i') : '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                         </div>
 
                         <!-- Tanggal Acara -->
                         <div>
                             <label for="event_date" class="block text-sm font-medium text-gray-700">Tanggal Acara <span class="text-red-500">*</span></label>
-                            <input type="date" id="event_date" name="event_date" value="{{ $keramaian->event_date->format('Y-m-d') }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                            <input type="date" id="event_date" name="event_date" value="{{ $keramaian->event_date ? $keramaian->event_date->format('Y-m-d') : '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                         </div>
 
                         <!-- Tempat Kegiatan -->

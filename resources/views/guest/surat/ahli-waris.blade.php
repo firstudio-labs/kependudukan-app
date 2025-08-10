@@ -12,11 +12,12 @@
 
         <form method="POST" action="{{ route('guest.surat.ahli-waris.store') }}">
             @csrf
-            <!-- Hidden inputs for location data -->
-            <input type="hidden" name="province_id" id="province_id" value="">
-            <input type="hidden" name="district_id" id="district_id" value="">
-            <input type="hidden" name="subdistrict_id" id="subdistrict_id" value="">
-            <input type="hidden" name="village_id" id="village_id" value="">
+
+            <!-- Hidden Location Fields -->
+            <input type="hidden" id="province_id" name="province_id" value="{{ request('province_id') }}">
+            <input type="hidden" id="district_id" name="district_id" value="{{ request('district_id') }}">
+            <input type="hidden" id="subdistrict_id" name="subdistrict_id" value="{{ request('sub_district_id') }}">
+            <input type="hidden" id="village_id" name="village_id" value="{{ request('village_id') }}">
 
             <!-- Daftar Ahli Waris Section -->
             <div class="mb-2 mt-6">
@@ -177,8 +178,91 @@
             </div>
         </form>
     </div>
+
+    <!-- Alert untuk error dan success -->
+    @if(session('error'))
+        <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" id="errorModal">
+            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                <div class="mt-3 text-center">
+                    <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                        <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-medium text-gray-900 mt-4">Gagal!</h3>
+                    <div class="mt-2 px-7 py-3">
+                        <p class="text-sm text-gray-500">{{ session('error') }}</p>
+                    </div>
+                    <div class="items-center px-4 py-3">
+                        <button id="closeErrorModal" class="px-4 py-2 bg-red-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300">
+                            Tutup
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    @if(session('success'))
+        <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" id="successModal">
+            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                <div class="mt-3 text-center">
+                    <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
+                        <svg class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-medium text-gray-900 mt-4">Berhasil!</h3>
+                    <div class="mt-2 px-7 py-3">
+                        <p class="text-sm text-gray-500">{{ session('success') }}</p>
+                    </div>
+                    <div class="items-center px-4 py-3">
+                        <button id="closeSuccessModal" class="px-4 py-2 bg-green-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300">
+                            Tutup
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <script src="{{ asset('js/sweet-alert-utils.js') }}"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css">
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js"></script>
-<script src="{{ asset('js/inheritance-certificate-url.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js"></script>
+    <script src="{{ asset('js/inheritance-certificate-url.js') }}"></script>
+
+    <script>
+        // Script untuk menutup modal
+        document.addEventListener('DOMContentLoaded', function() {
+            const closeErrorModal = document.getElementById('closeErrorModal');
+            const closeSuccessModal = document.getElementById('closeSuccessModal');
+            const errorModal = document.getElementById('errorModal');
+            const successModal = document.getElementById('successModal');
+
+            if (closeErrorModal) {
+                closeErrorModal.addEventListener('click', function() {
+                    errorModal.style.display = 'none';
+                });
+            }
+
+            if (closeSuccessModal) {
+                closeSuccessModal.addEventListener('click', function() {
+                    successModal.style.display = 'none';
+                });
+            }
+
+            // Auto close modal after 5 seconds
+            if (errorModal) {
+                setTimeout(() => {
+                    errorModal.style.display = 'none';
+                }, 5000);
+            }
+
+            if (successModal) {
+                setTimeout(() => {
+                    successModal.style.display = 'none';
+                }, 5000);
+            }
+        });
+    </script>
 </x-guest.surat-layout>

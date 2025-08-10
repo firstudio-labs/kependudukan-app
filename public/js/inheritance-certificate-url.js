@@ -118,6 +118,11 @@ document.addEventListener('DOMContentLoaded', function() {
                                 $(heirRow).find('.fullname-select').val(matchedCitizen.full_name);
                             }
 
+                            // Auto-fill RFID field when NIK is entered
+                            if (matchedCitizen.rf_id_tag && $(heirRow).find('.rf-id-tag').length) {
+                                $(heirRow).find('.rf-id-tag').val(matchedCitizen.rf_id_tag.toString());
+                            }
+
                             // Visual feedback for success
                             $(nikInput).addClass('border-green-500').removeClass('border-red-500 border-gray-300');
                             setTimeout(() => {
@@ -376,6 +381,11 @@ document.addEventListener('DOMContentLoaded', function() {
             $(heirRow).find('.fullname-select').val(citizen.full_name);
         }
 
+        // Set RFID field - NEW: Auto-fill RFID when NIK is entered
+        if (citizen.rf_id_tag && $(heirRow).find('.rf-id-tag').length) {
+            $(heirRow).find('.rf-id-tag').val(citizen.rf_id_tag.toString());
+        }
+
         // Set birth place
         $(heirRow).find('.birth-place').val(citizen.birth_place || '');
 
@@ -397,13 +407,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     const date = new Date(citizen.birth_date);
                     if (!isNaN(date.getTime())) {
                         formattedDate = date.toISOString().split('T')[0];
+                        }
                     }
+                } catch (error) {
+                    // Error handling removed for cleaner code
                 }
-            } catch (error) {
-                // Error handling removed for cleaner code
+                $(heirRow).find('.birth-date').val(formattedDate);
             }
-            $(heirRow).find('.birth-date').val(formattedDate);
-        }
 
         // Set gender - handle conversion
         let gender = citizen.gender;
