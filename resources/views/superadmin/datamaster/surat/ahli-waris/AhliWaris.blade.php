@@ -209,8 +209,19 @@
         <div class="text-center mt-16">
             <div class="mb-4">
                 {{ $village_name ?? $villageName ?? 'Desa/Kelurahan' }},
-                {{ \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM Y') }}
+                @if(isset($formatted_letter_date) && !empty($formatted_letter_date))
+                    {{ \Carbon\Carbon::parse($formatted_letter_date)->locale('id')->isoFormat('D MMMM Y') }}
+                @else
+                    {{ \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM Y') }}
+                @endif
             </div>
+
+            <!-- Signing Name -->
+            @if(isset($signing_name) && !empty($signing_name))
+                <div class="mb-4">
+                    <p>{{ strtoupper($signing_name) }}</p>
+                </div>
+            @endif
 
             <!-- Tanda tangan kepala desa -->
             @if(isset($kepala_desa_signature) && !empty($kepala_desa_signature))
@@ -220,7 +231,7 @@
             @endif
 
             <!-- Nama kepala desa -->
-            <p>{{ strtoupper($kepala_desa_name ?? $signing_name ?? 'NAMA KEPALA DESA') }}</p>
+            <p>{{ strtoupper($kepala_desa_name ?? 'NAMA KEPALA DESA') }}</p>
             {{-- <div class="mt-20">
                 <div class="border-b border-black inline-block w-48"></div>
             </div> --}}
