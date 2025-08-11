@@ -7,9 +7,11 @@ use Illuminate\Http\Request;
 use App\Models\RumahSewa;
 use App\Models\Penandatangan;
 use App\Models\User;
+use App\Models\KepalaDesa;
 use App\Services\JobService;
 use App\Services\WilayahService;
 use App\Services\CitizenService;
+
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Exception;
@@ -175,39 +177,174 @@ class RumahSewaController extends Controller
         try {
             $rumahSewa = RumahSewa::findOrFail($id);
 
+            // Ensure RT is displayed exactly as stored in the database
+            $rtValue = $rumahSewa->rt;
+
             // Get location names using wilayah service
+            $provinceName = '';
+            $districtName = '';
+            $subdistrictName = '';
+            $villageName = '';
+            $villageCode = '';
+
+            // Get province data
             if (!empty($rumahSewa->province_id)) {
-                $province = $this->wilayahService->getProvinceById($rumahSewa->province_id);
-                if ($province) {
-                    $rumahSewa->province_name = $province['name'];
+                $provinces = $this->wilayahService->getProvinces();
+                foreach ($provinces as $province) {
+                    if ($province['id'] == $rumahSewa->province_id) {
+                        $provinceName = $province['name'];
+                        break;
+                    }
                 }
             }
 
+            // Get district/kabupaten data
+            if (!empty($rumahSewa->district_id) && !empty($provinceName)) {
+                $provinceCode = null;
+                foreach ($this->wilayahService->getProvinces() as $province) {
+                    if ($province['id'] == $rumahSewa->province_id) {
+                        $provinceCode = $province['code'];
+                        break;
+                    }
+                }
+
+                if ($provinceCode) {
+                    $districts = $this->wilayahService->getKabupaten($provinceCode);
+                    foreach ($districts as $district) {
+                        if ($district['id'] == $rumahSewa->district_id) {
+                            $districtName = $district['name'];
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Get subdistrict/kecamatan data
+            if (!empty($rumahSewa->subdistrict_id) && !empty($districtName)) {
+                $districtCode = null;
+                if (!empty($provinceCode)) {
+                    $districts = $this->wilayahService->getKabupaten($provinceCode);
+                    foreach ($districts as $district) {
+                        if ($district['id'] == $rumahSewa->district_id) {
+                            $districtCode = $district['code'];
+                            break;
+                        }
+                    }
+                }
+
+                if ($districtCode) {
+                    $subdistricts = $this->wilayahService->getKecamatan($districtCode);
+                    foreach ($subdistricts as $subdistrict) {
+                        if ($subdistrict['id'] == $rumahSewa->subdistrict_id) {
+                            $subdistrictName = $subdistrict['name'];
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Get village/desa data
+            if (!empty($rumahSewa->village_id) && !empty($subdistrictName)) {
+                $subdistrictCode = null;
+                if (!empty($districtCode)) {
+                    $subdistricts = $this->wilayahService->getKecamatan($districtCode);
+                    foreach ($subdistricts as $subdistrict) {
+                        if ($subdistrict['id'] == $rumahSewa->subdistrict_id) {
+                            $subdistrictCode = $subdistrict['code'];
+                            break;
+                        }
+                    }
+                }
+
+                if ($subdistrictCode) {
+                    $villages = $this->wilayahService->getDesa($subdistrictCode);
+                    foreach ($villages as $village) {
+                        if ($village['id'] == $rumahSewa->village_id) {
+                            $villageName = $village['name'];
+                            $villageCode = $village['code'];
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Get user image based on matching district_id
+            $districtLogo = null;
             if (!empty($rumahSewa->district_id)) {
-                $district = $this->wilayahService->getDistrictById($rumahSewa->district_id);
-                if ($district) {
-                    $rumahSewa->district_name = $district['name'];
+                $userWithLogo = User::where('districts_id', $rumahSewa->district_id)
+                    ->whereNotNull('image')
+                    ->first();
+
+                if ($userWithLogo && $userWithLogo->image) {
+                    $districtLogo = $userWithLogo->image;
                 }
             }
 
-            if (!empty($rumahSewa->subdistrict_id)) {
-                $subdistrict = $this->wilayahService->getSubDistrictById($rumahSewa->subdistrict_id);
-                if ($subdistrict) {
-                    $rumahSewa->subdistrict_name = $subdistrict['name'];
-                }
-            }
-
+            // Get kepala desa data based on matching village_id
+            $kepalaDesaName = null;
+            $kepalaDesaSignature = null;
             if (!empty($rumahSewa->village_id)) {
-                $village = $this->wilayahService->getVillageById($rumahSewa->village_id);
-                if ($village) {
-                    $rumahSewa->village_name_admin = $village['name'];
+                // Find admin desa user for this village
+                $adminDesaUser = User::where('villages_id', $rumahSewa->village_id)
+                    ->where('role', 'admin desa')
+                    ->first();
+
+                if ($adminDesaUser) {
+                    // Get kepala desa data from the kepala_desa table
+                    $kepalaDesa = KepalaDesa::where('user_id', $adminDesaUser->id)->first();
+
+                    if ($kepalaDesa) {
+                        $kepalaDesaName = $kepalaDesa->nama;
+                        $kepalaDesaSignature = $kepalaDesa->tanda_tangan;
+                    }
                 }
             }
 
-            return response()->json([
-                'success' => true,
-                'rumahSewa' => $rumahSewa
-            ]);
+            // Format date
+            $validUntilDate = $rumahSewa->valid_until ? \Carbon\Carbon::parse($rumahSewa->valid_until)->locale('id')->isoFormat('D MMMM Y') : '-';
+
+            // Get the signing name (keterangan) from Penandatangan model
+            $signing_name = null;
+            if (!empty($rumahSewa->signing)) {
+                $penandatangan = Penandatangan::find($rumahSewa->signing);
+                if ($penandatangan) {
+                    $signing_name = $penandatangan->keterangan;
+                }
+            }
+
+            // Return view directly instead of generating PDF
+            if (Auth::user()->role === 'admin desa') {
+                return view('admin.desa.surat.rumah-sewa.IjinRumahSewa', compact(
+                    'rumahSewa',
+                    'provinceName',
+                    'districtName',
+                    'subdistrictName',
+                    'villageName',
+                    'validUntilDate',
+                    'rtValue',
+                    'signing_name',
+                    'villageCode',
+                    'districtLogo',
+                    'kepalaDesaName',
+                    'kepalaDesaSignature'
+                ));
+            }
+
+            return view('superadmin.datamaster.surat.rumah-sewa.IjinRumahSewa', compact(
+                'rumahSewa',
+                'provinceName',
+                'districtName',
+                'subdistrictName',
+                'villageName',
+                'validUntilDate',
+                'rtValue',
+                'signing_name',
+                'villageCode',
+                'districtLogo',
+                'kepalaDesaName',
+                'kepalaDesaSignature'
+            ));
+
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -345,12 +482,201 @@ class RumahSewaController extends Controller
             // Ensure RT is displayed exactly as stored in the database
             $rtValue = $rumahSewa->rt;
 
-            // Get location names using wilayah service
+            // Get location names using wilayah service - Improved location data retrieval
             $provinceName = '';
             $districtName = '';
             $subdistrictName = '';
             $villageName = '';
-            $villageCode = '';
+            $villageCode = null; // Initialize village code variable
+
+            // Get province data
+            if (!empty($rumahSewa->province_id)) {
+                $provinces = $this->wilayahService->getProvinces();
+                foreach ($provinces as $province) {
+                    if ($province['id'] == $rumahSewa->province_id) {
+                        $provinceName = $province['name'];
+
+                        // Get province code for further queries
+                        $provinceCode = $province['code'];
+
+                        // Now get district data using province code
+                        if (!empty($rumahSewa->district_id) && !empty($provinceCode)) {
+                            $districts = $this->wilayahService->getKabupaten($provinceCode);
+                            foreach ($districts as $district) {
+                                if ($district['id'] == $rumahSewa->district_id) {
+                                    $districtName = $district['name'];
+
+                                    // Get district code for further queries
+                                    $districtCode = $district['code'];
+
+                                    // Now get subdistrict data using district code
+                                    if (!empty($rumahSewa->subdistrict_id) && !empty($districtCode)) {
+                                        $subdistricts = $this->wilayahService->getKecamatan($districtCode);
+                                        foreach ($subdistricts as $subdistrict) {
+                                            if ($subdistrict['id'] == $rumahSewa->subdistrict_id) {
+                                                $subdistrictName = $subdistrict['name'];
+
+                                                // Get subdistrict code for further queries
+                                                $subdistrictCode = $subdistrict['code'];
+
+                                                // Finally get village data using subdistrict code
+                                                if (!empty($rumahSewa->village_id) && !empty($subdistrictCode)) {
+                                                    $villages = $this->wilayahService->getDesa($subdistrictCode);
+                                                    foreach ($villages as $village) {
+                                                        if ($village['id'] == $rumahSewa->village_id) {
+                                                            $villageName = $village['name'];
+                                                            $villageCode = $village['code']; // Store the complete village code
+                                                            break;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+
+            // Get user image based on matching district_id
+            $districtLogo = null;
+            if (!empty($rumahSewa->district_id)) {
+                $userWithLogo = User::where('districts_id', $rumahSewa->district_id)
+                    ->whereNotNull('image')
+                    ->first();
+
+                if ($userWithLogo && $userWithLogo->image) {
+                    $districtLogo = $userWithLogo->image;
+                }
+            }
+
+            // Get kepala desa data based on matching village_id
+            $kepalaDesaName = null;
+            $kepalaDesaSignature = null;
+            if (!empty($rumahSewa->village_id)) {
+                // Find admin desa user for this village
+                $adminDesaUser = User::where('villages_id', $rumahSewa->village_id)
+                    ->where('role', 'admin desa')
+                    ->first();
+
+                if ($adminDesaUser) {
+                    // Get kepala desa data from the kepala_desa table
+                    $kepalaDesa = KepalaDesa::where('user_id', $adminDesaUser->id)->first();
+
+                    if ($kepalaDesa) {
+                        $kepalaDesaName = $kepalaDesa->nama;
+                        $kepalaDesaSignature = $kepalaDesa->tanda_tangan;
+                    }
+                }
+            }
+
+            // Format date
+            $validUntilDate = $rumahSewa->valid_until ? \Carbon\Carbon::parse($rumahSewa->valid_until)->locale('id')->isoFormat('D MMMM Y') : '-';
+
+            // Get the signing name (keterangan) from Penandatangan model - Perbaiki untuk mencari berdasarkan judul
+            $signing_name = null;
+            if (!empty($rumahSewa->signing)) {
+                // Cari berdasarkan judul, bukan ID
+                $penandatangan = Penandatangan::where('judul', $rumahSewa->signing)->first();
+                if ($penandatangan) {
+                    $signing_name = $penandatangan->keterangan;
+
+                    // Log untuk debugging
+                    Log::info('Signing name found for RumahSewa ID: ' . $id, [
+                        'signing_value' => $rumahSewa->signing,
+                        'penandatangan_judul' => $penandatangan->judul,
+                        'keterangan' => $penandatangan->keterangan,
+                        'signing_name' => $signing_name
+                    ]);
+                } else {
+                    Log::warning('Penandatangan not found for RumahSewa ID: ' . $id, [
+                        'signing_value' => $rumahSewa->signing
+                    ]);
+                }
+            } else {
+                Log::info('No signing value for RumahSewa ID: ' . $id, [
+                    'signing' => $rumahSewa->signing
+                ]);
+            }
+
+            // Return view directly instead of generating PDF
+            if (Auth::user()->role === 'admin desa') {
+                return view('admin.desa.surat.rumah-sewa.IjinRumahSewa', [
+                    'rumahSewa' => $rumahSewa,
+                    'provinceName' => $provinceName,
+                    'districtName' => $districtName,
+                    'subdistrictName' => $subdistrictName,
+                    'villageName' => $villageName,
+                    'villageCode' => $villageCode,
+                    'validUntilDate' => $validUntilDate,
+                    'rtValue' => $rtValue,
+                    'signing_name' => $signing_name,
+                    'districtLogo' => $districtLogo,
+                    'kepalaDesaName' => $kepalaDesaName,
+                    'kepalaDesaSignature' => $kepalaDesaSignature
+                ]);
+            }
+
+            return view('superadmin.datamaster.surat.rumah-sewa.IjinRumahSewa', [
+                'rumahSewa' => $rumahSewa,
+                'provinceName' => $provinceName,
+                'districtName' => $districtName,
+                'subdistrictName' => $subdistrictName,
+                'villageName' => $villageName,
+                'villageCode' => $villageCode,
+                'validUntilDate' => $validUntilDate,
+                'rtValue' => $rtValue,
+                'signing_name' => $signing_name,
+                'districtLogo' => $districtLogo,
+                'kepalaDesaName' => $kepalaDesaName,
+                'kepalaDesaSignature' => $kepalaDesaSignature
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error generating PDF: ' . $e->getMessage(), [
+                'id' => $id,
+                'trace' => $e->getTraceAsString()
+            ]);
+            return back()->with('error', 'Gagal mengunduh surat izin rumah sewa: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Generate rental house permit PDF
+     *
+     * @param int $id
+     * @return \Illuminate\Http\Response
+     */
+    public function generatePDF($id)
+    {
+        try {
+            $rumahSewa = RumahSewa::findOrFail($id);
+
+            // Ensure address is properly converted to string if it's an array
+            if (is_array($rumahSewa->address)) {
+                $addressString = implode(', ', $rumahSewa->address);
+            } else {
+                $addressString = $rumahSewa->address ?? '-';
+            }
+
+            // Ensure rental address is properly converted to string if it's an array
+            if (is_array($rumahSewa->rental_address)) {
+                $rentalAddressString = implode(', ', $rumahSewa->rental_address);
+            } else {
+                $rentalAddressString = $rumahSewa->rental_address ?? '-';
+            }
+
+            // Get location names using wilayah service - Improved location data retrieval
+            $provinceName = '';
+            $districtName = '';
+            $subdistrictName = '';
+            $villageName = '';
+            $villageCode = null; // Initialize village code variable
 
             // Get province data
             if (!empty($rumahSewa->province_id)) {
@@ -387,17 +713,7 @@ class RumahSewaController extends Controller
             // Get subdistrict/kecamatan data
             if (!empty($rumahSewa->subdistrict_id) && !empty($districtName)) {
                 $districtCode = null;
-                if (!empty($provinceCode)) {
-                    $districts = $this->wilayahService->getKabupaten($provinceCode);
-                    foreach ($districts as $district) {
-                        if ($district['id'] == $rumahSewa->district_id) {
-                            $districtCode = $district['code'];
-                            break;
-                        }
-                    }
-                }
-
-                if ($districtCode) {
+                if (!empty($districtCode)) {
                     $subdistricts = $this->wilayahService->getKecamatan($districtCode);
                     foreach ($subdistricts as $subdistrict) {
                         if ($subdistrict['id'] == $rumahSewa->subdistrict_id) {
@@ -445,145 +761,22 @@ class RumahSewaController extends Controller
                 }
             }
 
-            // Log the logo information for debugging
-            \Log::info('District logo for RumahSewa ID: ' . $id, [
-                'district_id' => $rumahSewa->district_id,
-                'logo_found' => !is_null($districtLogo),
-                'logo_path' => $districtLogo
-            ]);
+            // Get kepala desa data based on matching village_id
+            $kepalaDesaName = null;
+            $kepalaDesaSignature = null;
+            if (!empty($rumahSewa->village_id)) {
+                // Find admin desa user for this village
+                $adminDesaUser = User::where('villages_id', $rumahSewa->village_id)
+                    ->where('role', 'admin desa')
+                    ->first();
 
-            // Format date
-            $validUntilDate = $rumahSewa->valid_until ? \Carbon\Carbon::parse($rumahSewa->valid_until)->locale('id')->isoFormat('D MMMM Y') : '-';
+                if ($adminDesaUser) {
+                    // Get kepala desa data from the kepala_desa table
+                    $kepalaDesa = KepalaDesa::where('user_id', $adminDesaUser->id)->first();
 
-            // Get the signing name (keterangan) from Penandatangan model
-            $signing_name = null;
-            if (!empty($rumahSewa->signing)) {
-                $penandatangan = Penandatangan::find($rumahSewa->signing);
-                if ($penandatangan) {
-                    $signing_name = $penandatangan->keterangan;
-                }
-            }
-
-            // Return view directly instead of generating PDF
-            if (Auth::user()->role === 'admin desa') {
-                return view('admin.desa.surat.rumah-sewa.IjinRumahSewa', compact(
-                    'rumahSewa',
-                    'provinceName',
-                    'districtName',
-                    'subdistrictName',
-                    'villageName',
-                    'validUntilDate',
-                    'rtValue',
-                    'signing_name',
-                    'villageCode',
-                    'districtLogo'
-                ));
-            }
-
-            return view('superadmin.datamaster.surat.rumah-sewa.IjinRumahSewa', compact(
-                'rumahSewa',
-                'provinceName',
-                'districtName',
-                'subdistrictName',
-                'villageName',
-                'validUntilDate',
-                'rtValue',
-                'signing_name',
-                'villageCode',
-                'districtLogo'
-            ));
-
-        } catch (\Exception $e) {
-            Log::error('Error generating PDF: ' . $e->getMessage(), [
-                'id' => $id,
-                'trace' => $e->getTraceAsString()
-            ]);
-            return back()->with('error', 'Gagal mengunduh surat izin rumah sewa: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Generate rental house permit PDF
-     *
-     * @param int $id
-     * @return \Illuminate\Http\Response
-     */
-    public function generatePDF($id)
-    {
-        try {
-            $rumahSewa = RumahSewa::findOrFail($id);
-
-            // Ensure address is properly converted to string if it's an array
-            if (is_array($rumahSewa->address)) {
-                $addressString = implode(', ', $rumahSewa->address);
-            } else {
-                $addressString = $rumahSewa->address ?? '-';
-            }
-
-            // Ensure rental address is properly converted to string if it's an array
-            if (is_array($rumahSewa->rental_address)) {
-                $rentalAddressString = implode(', ', $rumahSewa->rental_address);
-            } else {
-                $rentalAddressString = $rumahSewa->rental_address ?? '-';
-            }
-
-            // Get location names using wilayah service
-            $provinceName = '';
-            $districtName = '';
-            $subdistrictName = '';
-            $villageName = '';
-            $villageCode = ''; // Initialize village code
-
-            // Get province data
-            if (!empty($rumahSewa->province_id)) {
-                $provinces = $this->wilayahService->getProvinces();
-                foreach ($provinces as $province) {
-                    if ($province['id'] == $rumahSewa->province_id) {
-                        $provinceName = $province['name'];
-
-                        // Get province code for further queries
-                        $provinceCode = $province['code'];
-
-                        // Now get district data using province code
-                        if (!empty($rumahSewa->district_id) && !empty($provinceCode)) {
-                            $districts = $this->wilayahService->getKabupaten($provinceCode);
-                            foreach ($districts as $district) {
-                                if ($district['id'] == $rumahSewa->district_id) {
-                                    $districtName = $district['name'];
-
-                                    // Get district code for further queries
-                                    $districtCode = $district['code'];
-
-                                    // Now get subdistrict data using district code
-                                    if (!empty($rumahSewa->subdistrict_id) && !empty($districtCode)) {
-                                        $subdistricts = $this->wilayahService->getKecamatan($districtCode);
-                                        foreach ($subdistricts as $subdistrict) {
-                                            if ($subdistrict['id'] == $rumahSewa->subdistrict_id) {
-                                                $subdistrictName = $subdistrict['name'];
-
-                                                // Get subdistrict code for further queries
-                                                $subdistrictCode = $subdistrict['code'];
-
-                                                // Finally get village data using subdistrict code
-                                                if (!empty($rumahSewa->village_id) && !empty($subdistrictCode)) {
-                                                    $villages = $this->wilayahService->getDesa($subdistrictCode);
-                                                    foreach ($villages as $village) {
-                                                        if ($village['id'] == $rumahSewa->village_id) {
-                                                            $villageName = $village['name'];
-                                                            $villageCode = $village['code']; // Store the village code
-                                                            break;
-                                                        }
-                                                    }
-                                                }
-                                                break;
-                                            }
-                                        }
-                                    }
-                                    break;
-                                }
-                            }
-                        }
-                        break;
+                    if ($kepalaDesa) {
+                        $kepalaDesaName = $kepalaDesa->nama;
+                        $kepalaDesaSignature = $kepalaDesa->tanda_tangan;
                     }
                 }
             }
@@ -609,16 +802,33 @@ class RumahSewaController extends Controller
                 }
             }
 
-            // Get the signing name (keterangan) from Penandatangan model
+            // Get the signing name (keterangan) from Penandatangan model - Perbaiki untuk mencari berdasarkan judul
             $signing_name = null;
             if (!empty($rumahSewa->signing)) {
-                $penandatangan = Penandatangan::find($rumahSewa->signing);
+                // Cari berdasarkan judul, bukan ID
+                $penandatangan = Penandatangan::where('judul', $rumahSewa->signing)->first();
                 if ($penandatangan) {
                     $signing_name = $penandatangan->keterangan;
+
+                    // Log untuk debugging
+                    Log::info('Signing name found for RumahSewa ID: ' . $id, [
+                        'signing_value' => $rumahSewa->signing,
+                        'penandatangan_judul' => $penandatangan->judul,
+                        'keterangan' => $penandatangan->keterangan,
+                        'signing_name' => $signing_name
+                    ]);
+                } else {
+                    Log::warning('Penandatangan not found for RumahSewa ID: ' . $id, [
+                        'signing_value' => $rumahSewa->signing
+                    ]);
                 }
+            } else {
+                Log::info('No signing value for RumahSewa ID: ' . $id, [
+                    'signing' => $rumahSewa->signing
+                ]);
             }
 
-            // Return view with properly processed data, including the village code
+            // Return view with properly processed data
             if (Auth::user()->role === 'admin desa') {
                 return view('admin.desa.surat.rumah-sewa.IjinRumahSewa', [
                     'rumahSewa' => $rumahSewa,
@@ -632,7 +842,10 @@ class RumahSewaController extends Controller
                     'formatted_letter_date' => $letterDate,
                     'validUntilDate' => $validUntilDate,
                     'signing_name' => $signing_name,
-                    'rtValue' => $rumahSewa->rt
+                    'rtValue' => $rumahSewa->rt,
+                    'districtLogo' => $districtLogo,
+                    'kepalaDesaName' => $kepalaDesaName,
+                    'kepalaDesaSignature' => $kepalaDesaSignature
                 ]);
             }
 
@@ -648,7 +861,10 @@ class RumahSewaController extends Controller
                 'formatted_letter_date' => $letterDate,
                 'validUntilDate' => $validUntilDate,
                 'signing_name' => $signing_name,
-                'rtValue' => $rumahSewa->rt
+                'rtValue' => $rumahSewa->rt,
+                'districtLogo' => $districtLogo,
+                'kepalaDesaName' => $kepalaDesaName,
+                'kepalaDesaSignature' => $kepalaDesaSignature
             ]);
 
         } catch (\Exception $e) {

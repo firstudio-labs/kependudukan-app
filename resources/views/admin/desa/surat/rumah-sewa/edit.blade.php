@@ -182,7 +182,7 @@
                             <select id="signing" name="signing" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
                                 <option value="">Pilih Pejabat</option>
                                 @foreach($signers as $signer)
-                                    <option value="{{ $signer->judul }}" {{ $rumahSewa->signing == $signer->judul ? 'selected' : '' }}>
+                                    <option value="{{ $signer->id }}" {{ $rumahSewa->signing == $signer->id ? 'selected' : '' }}>
                                         {{ $signer->judul }} - {{ $signer->keterangan }}
                                     </option>
                                 @endforeach

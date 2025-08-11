@@ -44,6 +44,7 @@
                     <img src="{{ asset('images/logo.png') }}" alt="Logo Default" class="max-w-[120px] max-h-[120px] object-contain">
                 @endif
             </div>
+            <!-- Perbaiki bagian alamat header agar konsisten -->
             <div class="flex-1 text-center">
                 <p class="text-lg font-bold">PEMERINTAH {{ strtoupper($district_name ?? $districtName ?? 'KABUPATEN') }}</p>
                 <p class="text-lg font-bold">KECAMATAN {{ strtoupper($subdistrict_name ?? $subdistrictName ?? 'KECAMATAN') }}</p>
@@ -57,7 +58,7 @@
                     @endif
                     {{ strtoupper($village_name ?? $villageName ?? 'XXXX') }}
                 </p>
-                <p class="text-sm">Alamat: </p>
+                <p class="text-sm">Alamat: {{ $village_name ?? $villageName ?? 'XXXX' }}, {{ $subdistrict_name ?? $subdistrictName ?? 'XXXX' }}, {{ $district_name ?? $districtName ?? 'XXXX' }}</p>
             </div>
             <div class="w-24">
             </div>
@@ -206,9 +207,10 @@
 
 
         <!-- Signature -->
+        <!-- Perbaiki bagian signature agar sama seperti AdministrasiUmum -->
         <div class="text-center mt-16">
             <div class="mb-4">
-                {{ $village_name ?? $villageName ?? 'Desa/Kelurahan' }},
+                {{ $village_name ?? $villageName ?? 'XXXX' }},
                 @if(isset($formatted_letter_date) && !empty($formatted_letter_date))
                     {{ \Carbon\Carbon::parse($formatted_letter_date)->locale('id')->isoFormat('D MMMM Y') }}
                 @else
@@ -232,9 +234,6 @@
 
             <!-- Nama kepala desa -->
             <p>{{ strtoupper($kepala_desa_name ?? 'NAMA KEPALA DESA') }}</p>
-            {{-- <div class="mt-20">
-                <div class="border-b border-black inline-block w-48"></div>
-            </div> --}}
         </div>
     </div>
 

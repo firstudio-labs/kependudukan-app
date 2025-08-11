@@ -13,6 +13,7 @@ use App\Services\CitizenService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use App\Models\KepalaDesa;
 
 class AhliWarisController extends Controller
 {
@@ -513,33 +514,55 @@ class AhliWarisController extends Controller
                 'logo_path' => $districtLogo
             ]);
 
-            // Return view with properly processed data
-            if (Auth::user()->role === 'admin desa') {
-                return view('admin.desa.surat.ahli-waris.AhliWaris', [
-                    'ahliWaris' => $ahliWaris,
-                    'heirs' => $heirs,
-                    'addressString' => $addressString,
-                    'normalized_nik' => $nik,
-                    'province_name' => $provinceName,
-                    'district_name' => $districtName,
-                    'subdistrict_name' => $subdistrictName,
-                    'village_name' => $villageName,
-                    'provinceName' => $provinceName,
-                    'districtName' => $districtName,
-                    'subdistrictName' => $subdistrictName,
-                    'villageName' => $villageName,
-                    'villageCode' => $villageCode,
-                    'formatted_birth_date' => $birthDate,
-                    'formatted_death_date' => $deathDate,
-                    'formatted_letter_date' => $letterDate,
-                    'gender' => $gender,
-                    'religion' => $religion,
-                    'signing_name' => $signing_name,
-                    'district_logo' => $districtLogo
+            // Get kepala desa data based on matching village_id
+            $kepalaDesaName = null;
+            $kepalaDesaSignature = null;
+
+            \Log::info('Debugging AhliWaris generatePDF - village_id: ' . ($ahliWaris->village_id ?? 'NULL'));
+
+            if (!empty($ahliWaris->village_id)) {
+                // Find admin desa user for this village
+                $adminDesaUser = User::where('villages_id', $ahliWaris->village_id)
+                    ->where('role', 'admin desa')
+                    ->first();
+
+                \Log::info('Admin desa user found: ' . ($adminDesaUser ? 'YES' : 'NO'), [
+                    'village_id' => $ahliWaris->village_id,
+                    'admin_user_id' => $adminDesaUser ? $adminDesaUser->id : null
                 ]);
+
+                if ($adminDesaUser) {
+                    // Get kepala desa data from the kepala_desa table
+                    $kepalaDesa = KepalaDesa::where('user_id', $adminDesaUser->id)->first();
+
+                    \Log::info('Kepala desa record found: ' . ($kepalaDesa ? 'YES' : 'NO'), [
+                        'admin_user_id' => $adminDesaUser->id,
+                        'kepala_desa_id' => $kepalaDesa ? $kepalaDesa->id : null
+                    ]);
+
+                    if ($kepalaDesa) {
+                        $kepalaDesaName = $kepalaDesa->nama;
+                        $kepalaDesaSignature = $kepalaDesa->tanda_tangan;
+
+                        \Log::info('Kepala desa data extracted', [
+                            'nama' => $kepalaDesaName,
+                            'tanda_tangan' => $kepalaDesaSignature
+                        ]);
+                    }
+                }
             }
 
-            return view('superadmin.datamaster.surat.ahli-waris.AhliWaris', [
+            // Log the kepala desa information for debugging
+            \Log::info('Final kepala desa data for AhliWaris ID: ' . $id, [
+                'village_id' => $ahliWaris->village_id,
+                'kepala_desa_name_found' => !is_null($kepalaDesaName),
+                'kepala_desa_name' => $kepalaDesaName,
+                'signature_found' => !is_null($kepalaDesaSignature),
+                'signature_path' => $kepalaDesaSignature
+            ]);
+
+            // Log all variables being sent to view
+            $viewData = [
                 'ahliWaris' => $ahliWaris,
                 'heirs' => $heirs,
                 'addressString' => $addressString,
@@ -559,8 +582,19 @@ class AhliWarisController extends Controller
                 'gender' => $gender,
                 'religion' => $religion,
                 'signing_name' => $signing_name,
-                'district_logo' => $districtLogo
-            ]);
+                'district_logo' => $districtLogo,
+                'kepala_desa_name' => $kepalaDesaName,
+                'kepala_desa_signature' => $kepalaDesaSignature
+            ];
+
+            \Log::info('All view data being sent', $viewData);
+
+            // Return view with properly processed data
+            if (Auth::user()->role === 'admin desa') {
+                return view('admin.desa.surat.ahli-waris.AhliWaris', $viewData);
+            }
+
+            return view('superadmin.datamaster.surat.ahli-waris.AhliWaris', $viewData);
 
         } catch (\Exception $e) {
             \Log::error('Error generating PDF: ' . $e->getMessage(), [

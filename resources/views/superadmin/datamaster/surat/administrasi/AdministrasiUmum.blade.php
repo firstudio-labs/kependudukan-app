@@ -57,7 +57,9 @@
                     @endif
                     {{ strtoupper($village_name ?? 'XXXX') }}
                 </p>
-                <p class="text-sm">Alamat: </p>
+                <p class="text-sm">
+                    Alamat: {{ $village_name ?? 'XXXX' }}, {{ $subdistrict_name ?? 'XXXX' }}, {{ $district_name ?? 'XXXX' }}
+                </p>
             </div>
             <div class="w-24">
             </div>
@@ -184,7 +186,7 @@
                 @endif
             </div>
 
-            <!-- Signing Name -->
+            <!-- Signing name (jika ada) -->
             @if(isset($signing_name) && !empty($signing_name))
                 <div class="mb-4">
                     <p>{{ strtoupper($signing_name) }}</p>

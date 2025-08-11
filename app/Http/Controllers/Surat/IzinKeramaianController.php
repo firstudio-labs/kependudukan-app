@@ -349,11 +349,11 @@ class IzinKeramaianController extends Controller
             }
 
             // Get location names using wilayah service
-            $provinceName = '';
-            $districtName = '';
-            $subdistrictName = '';
-            $villageName = '';
-            $villageCode = '';
+            $province_name = '';
+            $district_name = '';
+            $subdistrict_name = '';
+            $village_name = '';
+            $village_code = '';
 
             // Get province data
             if (!empty($keramaian->province_id)) {
@@ -361,14 +361,14 @@ class IzinKeramaianController extends Controller
                 $provinces = $this->wilayahService->getProvinces();
                 foreach ($provinces as $province) {
                     if ($province['id'] == $keramaian->province_id) {
-                        $provinceName = $province['name'];
+                        $province_name = $province['name'];
                         break;
                     }
                 }
             }
 
             // Get district/kabupaten data
-            if (!empty($keramaian->district_id) && !empty($provinceName)) {
+            if (!empty($keramaian->district_id) && !empty($province_name)) {
                 // First try with province code if available
                 $provinceCode = null;
                 foreach ($this->wilayahService->getProvinces() as $province) {
@@ -382,7 +382,7 @@ class IzinKeramaianController extends Controller
                     $districts = $this->wilayahService->getKabupaten($provinceCode);
                     foreach ($districts as $district) {
                         if ($district['id'] == $keramaian->district_id) {
-                            $districtName = $district['name'];
+                            $district_name = $district['name'];
                             break;
                         }
                     }
@@ -390,7 +390,7 @@ class IzinKeramaianController extends Controller
             }
 
             // Get subdistrict/kecamatan data
-            if (!empty($keramaian->subdistrict_id) && !empty($districtName)) {
+            if (!empty($keramaian->subdistrict_id) && !empty($district_name)) {
                 // Get district code first
                 $districtCode = null;
                 if (!empty($provinceCode)) {
@@ -407,7 +407,7 @@ class IzinKeramaianController extends Controller
                     $subdistricts = $this->wilayahService->getKecamatan($districtCode);
                     foreach ($subdistricts as $subdistrict) {
                         if ($subdistrict['id'] == $keramaian->subdistrict_id) {
-                            $subdistrictName = $subdistrict['name'];
+                            $subdistrict_name = $subdistrict['name'];
                             break;
                         }
                     }
@@ -415,7 +415,7 @@ class IzinKeramaianController extends Controller
             }
 
             // Get village/desa data
-            if (!empty($keramaian->village_id) && !empty($subdistrictName)) {
+            if (!empty($keramaian->village_id) && !empty($subdistrict_name)) {
                 // Get subdistrict code first
                 $subdistrictCode = null;
                 if (!empty($districtCode)) {
@@ -432,8 +432,8 @@ class IzinKeramaianController extends Controller
                     $villages = $this->wilayahService->getDesa($subdistrictCode);
                     foreach ($villages as $village) {
                         if ($village['id'] == $keramaian->village_id) {
-                            $villageName = $village['name'];
-                            $villageCode = $village['code']; // Store the complete village code
+                            $village_name = $village['name'];
+                            $village_code = $village['code']; // Store the complete village code
                             break;
                         }
                     }
@@ -473,40 +473,84 @@ class IzinKeramaianController extends Controller
             // Get the signing name (keterangan) from Penandatangan model
             $signing_name = null;
             if (!empty($keramaian->signing)) {
-                $penandatangan = Penandatangan::find($keramaian->signing);
+                // Cari berdasarkan keterangan atau judul, bukan ID
+                $penandatangan = Penandatangan::where('keterangan', $keramaian->signing)
+                    ->orWhere('judul', $keramaian->signing)
+                    ->first();
+
                 if ($penandatangan) {
                     $signing_name = $penandatangan->keterangan;
+                } else {
+                    // Fallback: gunakan langsung nilai dari field signing
+                    $signing_name = $keramaian->signing;
                 }
             }
 
+            // Debug: Log signing information
+            \Log::info('Signing data for Keramaian ID: ' . $id, [
+                'keramaian_signing' => $keramaian->signing,
+                'signing_name_found' => !is_null($signing_name),
+                'signing_name' => $signing_name,
+                'penandatangan_search_result' => $keramaian->signing ? Penandatangan::where('keterangan', $keramaian->signing)->orWhere('judul', $keramaian->signing)->first() : null
+            ]);
+
             // Get user image based on matching district_id
-            $districtLogo = null;
+            $district_logo = null;
             if (!empty($keramaian->district_id)) {
                 $userWithLogo = User::where('districts_id', $keramaian->district_id)
                     ->whereNotNull('image')
                     ->first();
 
                 if ($userWithLogo && $userWithLogo->image) {
-                    $districtLogo = $userWithLogo->image;
+                    $district_logo = $userWithLogo->image;
                 }
             }
+
+            // Get kepala desa data based on matching village_id
+            $kepala_desa_name = null;
+            $kepala_desa_signature = null;
+            if (!empty($keramaian->village_id)) {
+                // Find admin desa user for this village
+                $adminDesaUser = User::where('villages_id', $keramaian->village_id)
+                    ->where('role', 'admin desa')
+                    ->first();
+
+                if ($adminDesaUser) {
+                    // Get kepala desa data from the kepala_desa table
+                    $kepalaDesa = \App\Models\KepalaDesa::where('user_id', $adminDesaUser->id)->first();
+
+                    if ($kepalaDesa) {
+                        $kepala_desa_name = $kepalaDesa->nama;
+                        $kepala_desa_signature = $kepalaDesa->tanda_tangan;
+                    }
+                }
+            }
+
+            // Log the kepala desa information for debugging
+            \Log::info('Kepala desa data for Keramaian ID: ' . $id, [
+                'village_id' => $keramaian->village_id,
+                'kepala_desa_name_found' => !is_null($kepala_desa_name),
+                'kepala_desa_name' => $kepala_desa_name,
+                'signature_found' => !is_null($kepala_desa_signature),
+                'signature_path' => $kepala_desa_signature
+            ]);
 
             // Log the logo information for debugging
             \Log::info('District logo for Keramaian ID: ' . $id, [
                 'district_id' => $keramaian->district_id,
-                'logo_found' => !is_null($districtLogo),
-                'logo_path' => $districtLogo
+                'logo_found' => !is_null($district_logo),
+                'logo_path' => $district_logo
             ]);
 
             // Return view directly instead of generating PDF
             if (Auth::user()->role === 'admin desa') {
                 return view('admin.desa.surat.keramaian.IjinKeramaian', compact(
                     'keramaian',
-                    'provinceName',
-                    'districtName',
-                    'subdistrictName',
-                    'villageName',
-                    'villageCode', // Add the village code
+                    'province_name',
+                    'district_name',
+                    'subdistrict_name',
+                    'village_name',
+                    'village_code',
                     'jobName',
                     'religionName',
                     'genderName',
@@ -514,17 +558,19 @@ class IzinKeramaianController extends Controller
                     'birthDate',
                     'eventDate',
                     'signing_name',
-                    'districtLogo' // Add this line
+                    'district_logo',
+                    'kepala_desa_name',
+                    'kepala_desa_signature'
                 ));
             }
 
             return view('superadmin.datamaster.surat.keramaian.IjinKeramaian', compact(
                 'keramaian',
-                'provinceName',
-                'districtName',
-                'subdistrictName',
-                'villageName',
-                'villageCode', // Add the village code
+                'province_name',
+                'district_name',
+                'subdistrict_name',
+                'village_name',
+                'village_code',
                 'jobName',
                 'religionName',
                 'genderName',
@@ -532,7 +578,9 @@ class IzinKeramaianController extends Controller
                 'birthDate',
                 'eventDate',
                 'signing_name',
-                'districtLogo' // Add this line
+                'district_logo',
+                'kepala_desa_name',
+                'kepala_desa_signature'
             ));
 
         } catch (\Exception $e) {

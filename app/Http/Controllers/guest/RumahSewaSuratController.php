@@ -136,11 +136,11 @@ class RumahSewaSuratController extends Controller
             'room_count' => 'required|integer',
             'rental_type' => 'required|string|max:255',
             'valid_until' => 'nullable|date',
-            
+
             // Administrative fields
             'letter_number' => 'nullable|string|max:255',
             'signing' => 'nullable|string|max:255',
-            
+
             // Optional fields
             'rf_id_tag' => 'nullable|string',
         ]);

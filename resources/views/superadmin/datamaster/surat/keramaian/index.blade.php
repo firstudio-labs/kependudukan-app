@@ -64,7 +64,7 @@
                             @if($keramaian->is_accepted)
                                 <span class="text-green-600 font-semibold">Acceptance</span>
                             @endif
-                            <a href="{{ route('superadmin.surat.keramaian.export-pdf', $keramaian->id) }}" class="text-blue-600 hover:text-blue-800" aria-label="Export PDF" target="_blank">
+                            <a href="{{ route('superadmin.surat.keramaian.pdf', $keramaian->id) }}" class="text-blue-600 hover:text-blue-800" aria-label="Export PDF" target="_blank">
                                 <i class="fa-solid fa-file-pdf"></i>
                             </a>
                             @if(!$keramaian->is_accepted)

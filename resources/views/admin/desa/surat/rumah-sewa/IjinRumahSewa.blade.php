@@ -38,8 +38,8 @@
         <!-- Header Section -->
         <div class="flex items-center mb-4">
             <div class="w-32 h-32 mr-4 flex items-center justify-center">
-                @if(isset($district_logo) && !empty($district_logo))
-                    <img src="{{ asset('storage/' . $district_logo) }}" alt="Logo Kabupaten" class="max-w-[120px] max-h-[120px] object-contain">
+                @if(isset($districtLogo) && !empty($districtLogo))
+                    <img src="{{ asset('storage/' . $districtLogo) }}" alt="Logo Kabupaten" class="max-w-[120px] max-h-[120px] object-contain">
                 @else
                     <!-- Fallback to default logo -->
                     <img src="{{ asset('images/logo.png') }}" alt="Logo Default" class="max-w-[120px] max-h-[120px] object-contain">
@@ -59,7 +59,7 @@
                     @endif
                     {{ strtoupper($villageName ?? 'XXXX') }}
                 </p>
-                <p class="text-sm">Alamat: </p>
+                <p class="text-sm">Alamat: {{ $villageName ?? 'XXXX' }}, {{ $subdistrictName ?? 'XXXX' }}, {{ $districtName ?? 'XXXX' }}</p>
             </div>
             <div class="w-24"></div>
         </div>
@@ -181,14 +181,14 @@
             @endif
 
             <!-- Tanda tangan kepala desa -->
-            @if(isset($kepala_desa_signature) && !empty($kepala_desa_signature))
+            @if(isset($kepalaDesaSignature) && !empty($kepalaDesaSignature))
                 <div class="mb-4">
-                    <img src="{{ asset('storage/' . $kepala_desa_signature) }}" alt="Tanda Tangan Kepala Desa" class="max-w-[200px] max-h-[100px] object-contain mx-auto">
+                    <img src="{{ asset('storage/' . $kepalaDesaSignature) }}" alt="Tanda Tangan Kepala Desa" class="max-w-[200px] max-h-[100px] object-contain mx-auto">
                 </div>
             @endif
 
             <!-- Nama kepala desa -->
-            <p>{{ strtoupper($kepala_desa_name ?? 'NAMA KEPALA DESA') }}</p>
+            <p>{{ strtoupper($kepalaDesaName ?? 'NAMA KEPALA DESA') }}</p>
             {{-- <div class="mt-20">
                 <div class="border-b border-black inline-block w-48"></div>
             </div> --}}

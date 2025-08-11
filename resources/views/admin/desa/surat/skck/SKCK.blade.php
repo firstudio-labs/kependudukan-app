@@ -77,7 +77,7 @@
                     @endif
                     {{ strtoupper($village_name ?? 'KELURAHAN') }}
                 </p>
-                <p class="text-sm">Alamat: </p>
+                <p class="text-sm">Alamat: {{ $village_name ?? 'XXXX' }}, {{ $subdistrict_name ?? 'XXXX' }}, {{ $district_name ?? 'XXXX' }}</p>
             </div>
             <div class="w-24">
             </div>
@@ -189,10 +189,10 @@
         <div class="text-center mt-16">
             <div class="mb-4">
                 {{ $village_name ?? 'Desa/Kelurahan' }},
-                @if(isset($formatted_letter_date) && strpos($formatted_letter_date, '-') !== false)
-                    {{ \Carbon\Carbon::createFromFormat('d-m-Y', $formatted_letter_date)->locale('id')->isoFormat('D MMMM Y') }}
+                @if(isset($formatted_letter_date) && !empty($formatted_letter_date))
+                    {{ \Carbon\Carbon::parse($formatted_letter_date)->locale('id')->isoFormat('D MMMM Y') }}
                 @else
-                    {{ $formatted_letter_date ?? \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM Y') }}
+                    {{ \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM Y') }}
                 @endif
             </div>
 
@@ -212,9 +212,6 @@
 
             <!-- Nama kepala desa -->
             <p>{{ strtoupper($kepala_desa_name ?? 'NAMA KEPALA DESA') }}</p>
-            {{-- <div class="mt-20">
-                <div class="border-b border-black inline-block w-48"></div>
-            </div> --}}
         </div>
     </div>
 

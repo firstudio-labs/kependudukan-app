@@ -45,19 +45,19 @@
                 @endif
             </div>
             <div class="flex-1 text-center">
-                <p class="text-lg font-bold">PEMERINTAH {{ strtoupper($districtName) }}</p>
-                <p class="text-lg font-bold">KECAMATAN {{ strtoupper($subdistrictName) }}</p>
+                <p class="text-lg font-bold">PEMERINTAH {{ strtoupper($district_name ?? 'XXXX') }}</p>
+                <p class="text-lg font-bold">KECAMATAN {{ strtoupper($subdistrict_name ?? 'XXXX') }}</p>
                 <p class="text-2xl font-bold">
-                    @if(isset($villageCode) && strlen($villageCode) >= 7 && substr($villageCode, 6, 1) === '1')
+                    @if(isset($village_code) && strlen($village_code) >= 7 && substr($village_code, 6, 1) === '1')
                         KELURAHAN
-                    @elseif(isset($villageCode) && strlen($villageCode) >= 7 && substr($villageCode, 6, 1) === '2')
+                    @elseif(isset($village_code) && strlen($village_code) >= 7 && substr($village_code, 6, 1) === '2')
                         DESA
                     @else
                         {{ isset($administrationData) && isset($administrationData['village_type']) ? strtoupper($administrationData['village_type']) : 'DESA/KELURAHAN' }}
                     @endif
-                    {{ strtoupper($villageName ?? 'XXXX') }}
+                    {{ strtoupper($village_name ?? 'XXXX') }}
                 </p>
-                <p class="text-sm">Alamat: </p>
+                <p class="text-sm">Alamat: {{ $village_name ?? 'XXXX' }}, {{ $subdistrict_name ?? 'XXXX' }}, {{ $district_name ?? 'XXXX' }}</p>
             </div>
             <div class="w-24">
             </div>
@@ -75,14 +75,14 @@
         <!-- Introduction -->
         <div class="mb-6">
             <p class="mb-4">
-                @if(isset($villageCode) && strlen($villageCode) >= 7 && substr($villageCode, 6, 1) === '1')
+                @if(isset($village_code) && strlen($village_code) >= 7 && substr($village_code, 6, 1) === '1')
                     Lurah
-                @elseif(isset($villageCode) && strlen($villageCode) >= 7 && substr($villageCode, 6, 1) === '2')
+                @elseif(isset($village_code) && strlen($village_code) >= 7 && substr($village_code, 6, 1) === '2')
                     Kepala Desa
                 @else
                     {{ isset($administrationData) && isset($administrationData['village_head_title']) ? $administrationData['village_head_title'] : 'Kepala Desa/Lurah' }}
                 @endif
-                {{ $villageName }} Kecamatan {{ $subdistrictName }} dengan ini menerangkan bahwa :
+                {{ $village_name ?? 'XXXX' }} Kecamatan {{ $subdistrict_name ?? 'XXXX' }} dengan ini menerangkan bahwa :
             </p>
         </div>
 
@@ -136,10 +136,10 @@
                         <td>
                             {{ $keramaian->address ?? '-' }}
                             ,
-                            {{ !empty($villageName) ? $villageName : 'Desa/Kelurahan' }},
-                            {{ !empty($subdistrictName) ? $subdistrictName : 'Kecamatan' }},
-                            {{ !empty($districtName) ? $districtName : 'Kabupaten' }},
-                            {{ !empty($provinceName) ? $provinceName : 'Provinsi' }}
+                            {{ !empty($village_name) ? $village_name : 'Desa/Kelurahan' }},
+                            {{ !empty($subdistrict_name) ? $subdistrict_name : 'Kecamatan' }},
+                            {{ !empty($district_name) ? $district_name : 'Kabupaten' }},
+                            {{ !empty($province_name) ? $province_name : 'Provinsi' }}
                         </td>
                     </tr>
                 </tbody>
@@ -200,7 +200,7 @@
         <!-- Signature -->
         <div class="text-center mt-16">
             <div class="mb-4">
-                {{ $villageName ?? 'XXXX' }},
+                {{ $village_name ?? 'XXXX' }},
                 @if(isset($formatted_letter_date) && !empty($formatted_letter_date))
                     {{ \Carbon\Carbon::parse($formatted_letter_date)->locale('id')->isoFormat('D MMMM Y') }}
                 @else

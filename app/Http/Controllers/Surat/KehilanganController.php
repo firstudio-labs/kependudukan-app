@@ -286,11 +286,11 @@ class KehilanganController extends Controller
             }
 
             // Get location names using wilayah service
-            $provinceName = '';
-            $districtName = '';
-            $subdistrictName = '';
-            $villageName = '';
-            $villageCode = null; // Initialize village code variable
+            $province_name = '';
+            $district_name = '';
+            $subdistrict_name = '';
+            $village_name = '';
+            $village_code = null; // Initialize village code variable
 
             // Get province data
             if (!empty($kehilangan->province_id)) {
@@ -298,14 +298,14 @@ class KehilanganController extends Controller
                 $provinces = $this->wilayahService->getProvinces();
                 foreach ($provinces as $province) {
                     if ($province['id'] == $kehilangan->province_id) {
-                        $provinceName = $province['name'];
+                        $province_name = $province['name'];
                         break;
                     }
                 }
             }
 
             // Get district/kabupaten data
-            if (!empty($kehilangan->district_id) && !empty($provinceName)) {
+            if (!empty($kehilangan->district_id) && !empty($province_name)) {
                 // First try with province code if available
                 $provinceCode = null;
                 foreach ($this->wilayahService->getProvinces() as $province) {
@@ -319,7 +319,7 @@ class KehilanganController extends Controller
                     $districts = $this->wilayahService->getKabupaten($provinceCode);
                     foreach ($districts as $district) {
                         if ($district['id'] == $kehilangan->district_id) {
-                            $districtName = $district['name'];
+                            $district_name = $district['name'];
                             break;
                         }
                     }
@@ -327,7 +327,7 @@ class KehilanganController extends Controller
             }
 
             // Get subdistrict/kecamatan data
-            if (!empty($kehilangan->subdistrict_id) && !empty($districtName)) {
+            if (!empty($kehilangan->subdistrict_id) && !empty($district_name)) {
                 // Get district code first
                 $districtCode = null;
                 if (!empty($provinceCode)) {
@@ -344,7 +344,7 @@ class KehilanganController extends Controller
                     $subdistricts = $this->wilayahService->getKecamatan($districtCode);
                     foreach ($subdistricts as $subdistrict) {
                         if ($subdistrict['id'] == $kehilangan->subdistrict_id) {
-                            $subdistrictName = $subdistrict['name'];
+                            $subdistrict_name = $subdistrict['name'];
                             break;
                         }
                     }
@@ -352,7 +352,7 @@ class KehilanganController extends Controller
             }
 
             // Get village/desa data
-            if (!empty($kehilangan->village_id) && !empty($subdistrictName)) {
+            if (!empty($kehilangan->village_id) && !empty($subdistrict_name)) {
                 // Get subdistrict code first
                 $subdistrictCode = null;
                 if (!empty($districtCode)) {
@@ -369,8 +369,8 @@ class KehilanganController extends Controller
                     $villages = $this->wilayahService->getDesa($subdistrictCode);
                     foreach ($villages as $village) {
                         if ($village['id'] == $kehilangan->village_id) {
-                            $villageName = $village['name'];
-                            $villageCode = $village['code']; // Store the complete village code
+                            $village_name = $village['name'];
+                            $village_code = $village['code']; // Store the complete village code
                             break;
                         }
                     }
@@ -383,29 +383,59 @@ class KehilanganController extends Controller
                 'district_id' => $kehilangan->district_id,
                 'subdistrict_id' => $kehilangan->subdistrict_id,
                 'village_id' => $kehilangan->village_id,
-                'province_name' => $provinceName,
-                'district_name' => $districtName,
-                'subdistrict_name' => $subdistrictName,
-                'village_name' => $villageName
+                'province_name' => $province_name,
+                'district_name' => $district_name,
+                'subdistrict_name' => $subdistrict_name,
+                'village_name' => $village_name,
+                'village_code' => $village_code
             ]);
 
             // Get user image based on matching district_id
-            $districtLogo = null;
+            $district_logo = null;
             if (!empty($kehilangan->district_id)) {
                 $userWithLogo = User::where('districts_id', $kehilangan->district_id)
                     ->whereNotNull('image')
                     ->first();
 
                 if ($userWithLogo && $userWithLogo->image) {
-                    $districtLogo = $userWithLogo->image;
+                    $district_logo = $userWithLogo->image;
                 }
             }
 
+            // Get kepala desa data based on matching village_id
+            $kepala_desa_name = null;
+            $kepala_desa_signature = null;
+            if (!empty($kehilangan->village_id)) {
+                // Find admin desa user for this village
+                $adminDesaUser = User::where('villages_id', $kehilangan->village_id)
+                    ->where('role', 'admin desa')
+                    ->first();
+
+                if ($adminDesaUser) {
+                    // Get kepala desa data from the kepala_desa table
+                    $kepalaDesa = \App\Models\KepalaDesa::where('user_id', $adminDesaUser->id)->first();
+
+                    if ($kepalaDesa) {
+                        $kepala_desa_name = $kepalaDesa->nama;
+                        $kepala_desa_signature = $kepalaDesa->tanda_tangan;
+                    }
+                }
+            }
+
+            // Log the kepala desa information for debugging
+            \Log::info('Kepala desa data for Kehilangan ID: ' . $id, [
+                'village_id' => $kehilangan->village_id,
+                'kepala_desa_name_found' => !is_null($kepala_desa_name),
+                'kepala_desa_name' => $kepala_desa_name,
+                'signature_found' => !is_null($kepala_desa_signature),
+                'signature_path' => $kepala_desa_signature
+            ]);
+
             // Log the logo information for debugging
-            \Log::info('District logo for kehilangan ID: ' . $id, [
+            \Log::info('District logo for Kehilangan ID: ' . $id, [
                 'district_id' => $kehilangan->district_id,
-                'logo_found' => !is_null($districtLogo),
-                'logo_path' => $districtLogo
+                'logo_found' => !is_null($district_logo),
+                'logo_path' => $district_logo
             ]);
 
             // Convert gender numeric to text
@@ -428,7 +458,7 @@ class KehilanganController extends Controller
 
             // Format date
             $birthDate = \Carbon\Carbon::parse($kehilangan->birth_date)->format('d-m-Y');
-            $letterDate = \Carbon\Carbon::parse($kehilangan->letter_date)->format('d-m-Y');
+            $formatted_letter_date = \Carbon\Carbon::parse($kehilangan->letter_date)->format('d-m-Y');
 
             // Get the signing name (keterangan) from Penandatangan model
             $signing_name = null;
@@ -439,41 +469,54 @@ class KehilanganController extends Controller
                 }
             }
 
+            // Debug: Log signing information
+            \Log::info('Signing data for Kehilangan ID: ' . $id, [
+                'kehilangan_signing' => $kehilangan->signing,
+                'signing_name_found' => !is_null($signing_name),
+                'signing_name' => $signing_name,
+                'penandatangan_by_id' => $kehilangan->signing ? Penandatangan::find($kehilangan->signing) : null,
+                'penandatangan_by_name' => $kehilangan->signing ? Penandatangan::where('keterangan', $kehilangan->signing)->orWhere('judul', $kehilangan->signing)->first() : null
+            ]);
+
             if (Auth::user()->role === 'admin desa') {
-                return view('admin.desa.surat.kehilangan.kehilangan', [
+                return view('admin.desa.surat.kehilangan.Kehilangan', [
                     'kehilangan' => $kehilangan,
-                    'provinceName' => $provinceName,
-                    'districtName' => $districtName,
-                    'subdistrictName' => $subdistrictName,
-                    'villageName' => $villageName,
-                    'villageCode' => $villageCode, // Add the village code
+                    'province_name' => $province_name,
+                    'district_name' => $district_name,
+                    'subdistrict_name' => $subdistrict_name,
+                    'village_name' => $village_name,
+                    'village_code' => $village_code,
                     'jobName' => $jobName,
                     'gender' => $gender,
                     'religion' => $religion,
                     'citizenship' => $citizenship,
                     'birthDate' => $birthDate,
-                    'letterDate' => $letterDate,
-                    'signing_name' => $signing_name, // Pass the signing name to the view
-                    'district_logo' => $districtLogo // Add this line
+                    'formatted_letter_date' => $formatted_letter_date,
+                    'signing_name' => $signing_name,
+                    'district_logo' => $district_logo,
+                    'kepala_desa_name' => $kepala_desa_name,
+                    'kepala_desa_signature' => $kepala_desa_signature
                 ]);
             }
 
             return view('superadmin.datamaster.surat.kehilangan.Kehilangan', [
                 'kehilangan' => $kehilangan,
-                'provinceName' => $provinceName,
-                'districtName' => $districtName,
-                'subdistrictName' => $subdistrictName,
-                'villageName' => $villageName,
-                'villageCode' => $villageCode, // Add the village code
+                'province_name' => $province_name,
+                'district_name' => $district_name,
+                'subdistrict_name' => $subdistrict_name,
+                'village_name' => $village_name,
+                'village_code' => $village_code,
                 'jobName' => $jobName,
                 'gender' => $gender,
                 'religion' => $religion,
                 'citizenship' => $citizenship,
                 'birthDate' => $birthDate,
-                'letterDate' => $letterDate,
-                'signing_name' => $signing_name, // Pass the signing name to the view
-                'district_logo' => $districtLogo // Add this line
-            ]);
+                'formatted_letter_date' => $formatted_letter_date,
+                    'signing_name' => $signing_name,
+                    'district_logo' => $district_logo,
+                    'kepala_desa_name' => $kepala_desa_name,
+                    'kepala_desa_signature' => $kepala_desa_signature
+                ]);
         } catch (\Exception $e) {
             \Log::error('Error generating PDF: ' . $e->getMessage(), [
                 'id' => $id,

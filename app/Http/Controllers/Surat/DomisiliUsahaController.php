@@ -531,22 +531,51 @@ class DomisiliUsahaController extends Controller
             }
 
             // Get user image based on matching district_id
-            $districtLogo = null;
+            $district_logo = null;
             if (!empty($domisiliUsaha->district_id)) {
                 $userWithLogo = User::where('districts_id', $domisiliUsaha->district_id)
                     ->whereNotNull('image')
                     ->first();
 
                 if ($userWithLogo && $userWithLogo->image) {
-                    $districtLogo = $userWithLogo->image;
+                    $district_logo = $userWithLogo->image;
                 }
             }
+
+            // Get kepala desa data based on matching village_id
+            $kepala_desa_name = null;
+            $kepala_desa_signature = null;
+            if (!empty($domisiliUsaha->village_id)) {
+                // Find admin desa user for this village
+                $adminDesaUser = User::where('villages_id', $domisiliUsaha->village_id)
+                    ->where('role', 'admin desa')
+                    ->first();
+
+                if ($adminDesaUser) {
+                    // Get kepala desa data from the kepala_desa table
+                    $kepalaDesa = \App\Models\KepalaDesa::where('user_id', $adminDesaUser->id)->first();
+
+                    if ($kepalaDesa) {
+                        $kepala_desa_name = $kepalaDesa->nama;
+                        $kepala_desa_signature = $kepalaDesa->tanda_tangan;
+                    }
+                }
+            }
+
+            // Log the kepala desa information for debugging
+            \Log::info('Kepala desa data for DomisiliUsaha ID: ' . $id, [
+                'village_id' => $domisiliUsaha->village_id,
+                'kepala_desa_name_found' => !is_null($kepala_desa_name),
+                'kepala_desa_name' => $kepala_desa_name,
+                'signature_found' => !is_null($kepala_desa_signature),
+                'signature_path' => $kepala_desa_signature
+            ]);
 
             // Log the logo information for debugging
             \Log::info('District logo for DomisiliUsaha ID: ' . $id, [
                 'district_id' => $domisiliUsaha->district_id,
-                'logo_found' => !is_null($districtLogo),
-                'logo_path' => $districtLogo
+                'logo_found' => !is_null($district_logo),
+                'logo_path' => $district_logo
             ]);
 
             if (Auth::user()->role === 'admin desa') {
@@ -557,14 +586,16 @@ class DomisiliUsahaController extends Controller
                     'district_name' => $districtName,
                     'subdistrict_name' => $subdistrictName,
                     'village_name' => $villageName,
-                    'villageCode' => $villageCode, // Add the village code
+                    'villageCode' => $villageCode,
                     'gender' => $gender,
                     'religion' => $religion,
                     'citizenship' => $citizenship,
                     'formatted_birth_date' => $birthDate,
                     'formatted_letter_date' => $letterDate,
                     'signing_name' => $signing_name,
-                    'district_logo' => $districtLogo // Add this line
+                    'district_logo' => $district_logo,
+                    'kepala_desa_name' => $kepala_desa_name,
+                    'kepala_desa_signature' => $kepala_desa_signature
                 ]);
             }
 
@@ -575,15 +606,17 @@ class DomisiliUsahaController extends Controller
                 'district_name' => $districtName,
                 'subdistrict_name' => $subdistrictName,
                 'village_name' => $villageName,
-                'villageCode' => $villageCode, // Add the village code
+                'villageCode' => $villageCode,
                 'gender' => $gender,
                 'religion' => $religion,
                 'citizenship' => $citizenship,
                 'formatted_birth_date' => $birthDate,
                 'formatted_letter_date' => $letterDate,
-                'signing_name' => $signing_name,
-                'district_logo' => $districtLogo // Add this line
-            ]);
+                    'signing_name' => $signing_name,
+                    'district_logo' => $district_logo,
+                    'kepala_desa_name' => $kepala_desa_name,
+                    'kepala_desa_signature' => $kepala_desa_signature
+                ]);
 
         } catch (\Exception $e) {
             \Log::error('Error generating PDF: ' . $e->getMessage(), [

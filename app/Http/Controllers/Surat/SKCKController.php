@@ -486,29 +486,73 @@ class SKCKController extends Controller
             // Get the signing name (keterangan) from Penandatangan model
             $signing_name = null;
             if (!empty($skck->signing)) {
-                $penandatangan = Penandatangan::find($skck->signing);
+                // Cari berdasarkan keterangan atau judul, bukan ID
+                $penandatangan = Penandatangan::where('keterangan', $skck->signing)
+                    ->orWhere('judul', $skck->signing)
+                    ->first();
+
                 if ($penandatangan) {
                     $signing_name = $penandatangan->keterangan;
+                } else {
+                    // Fallback: gunakan langsung nilai dari field signing
+                    $signing_name = $skck->signing;
                 }
             }
 
+            // Debug: Log signing information
+            \Log::info('Signing data for SKCK ID: ' . $id, [
+                'skck_signing' => $skck->signing,
+                'signing_name_found' => !is_null($signing_name),
+                'signing_name' => $signing_name,
+                'penandatangan_search_result' => $skck->signing ? Penandatangan::where('keterangan', $skck->signing)->orWhere('judul', $skck->signing)->first() : null
+            ]);
+
             // Get user image based on matching district_id
-            $districtLogo = null;
+            $district_logo = null;
             if (!empty($skck->district_id)) {
                 $userWithLogo = User::where('districts_id', $skck->district_id)
                     ->whereNotNull('image')
                     ->first();
 
                 if ($userWithLogo && $userWithLogo->image) {
-                    $districtLogo = $userWithLogo->image;
+                    $district_logo = $userWithLogo->image;
                 }
             }
+
+            // Get kepala desa data based on matching village_id
+            $kepala_desa_name = null;
+            $kepala_desa_signature = null;
+            if (!empty($skck->village_id)) {
+                // Find admin desa user for this village
+                $adminDesaUser = User::where('villages_id', $skck->village_id)
+                    ->where('role', 'admin desa')
+                    ->first();
+
+                if ($adminDesaUser) {
+                    // Get kepala desa data from the kepala_desa table
+                    $kepalaDesa = \App\Models\KepalaDesa::where('user_id', $adminDesaUser->id)->first();
+
+                    if ($kepalaDesa) {
+                        $kepala_desa_name = $kepalaDesa->nama;
+                        $kepala_desa_signature = $kepalaDesa->tanda_tangan;
+                    }
+                }
+            }
+
+            // Log the kepala desa information for debugging
+            \Log::info('Kepala desa data for SKCK ID: ' . $id, [
+                'village_id' => $skck->village_id,
+                'kepala_desa_name_found' => !is_null($kepala_desa_name),
+                'kepala_desa_name' => $kepala_desa_name,
+                'signature_found' => !is_null($kepala_desa_signature),
+                'signature_path' => $kepala_desa_signature
+            ]);
 
             // Log the logo information for debugging
             \Log::info('District logo for SKCK ID: ' . $id, [
                 'district_id' => $skck->district_id,
-                'logo_found' => !is_null($districtLogo),
-                'logo_path' => $districtLogo
+                'logo_found' => !is_null($district_logo),
+                'logo_path' => $district_logo
             ]);
 
             if (Auth::user()->role === 'admin desa') {
@@ -519,14 +563,16 @@ class SKCKController extends Controller
                     'district_name' => $districtName,
                     'subdistrict_name' => $subdistrictName,
                     'village_name' => $villageName,
-                    'villageCode' => $villageCode, // Add the village code
+                    'villageCode' => $villageCode,
                     'gender' => $gender,
                     'religion' => $religion,
                     'citizenship' => $citizenship,
                     'formatted_birth_date' => $birthDate,
                     'formatted_letter_date' => $letterDate,
                     'signing_name' => $signing_name,
-                    'district_logo' => $districtLogo // Add this line
+                    'district_logo' => $district_logo,
+                    'kepala_desa_name' => $kepala_desa_name,
+                    'kepala_desa_signature' => $kepala_desa_signature
                 ]);
             }
 
@@ -537,14 +583,16 @@ class SKCKController extends Controller
                 'district_name' => $districtName,
                 'subdistrict_name' => $subdistrictName,
                 'village_name' => $villageName,
-                'villageCode' => $villageCode, // Add the village code
+                'villageCode' => $villageCode,
                 'gender' => $gender,
                 'religion' => $religion,
                 'citizenship' => $citizenship,
                 'formatted_birth_date' => $birthDate,
                 'formatted_letter_date' => $letterDate,
                 'signing_name' => $signing_name,
-                'district_logo' => $districtLogo // Add this line
+                'district_logo' => $district_logo,
+                'kepala_desa_name' => $kepala_desa_name,
+                'kepala_desa_signature' => $kepala_desa_signature
             ]);
 
         } catch (\Exception $e) {
