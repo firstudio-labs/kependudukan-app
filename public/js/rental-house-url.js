@@ -82,7 +82,6 @@ document.addEventListener('DOMContentLoaded', function() {
             // Setup NIK input and name select
             setupNikInput(processedData);
             setupNameSelect(processedData);
-            setupResponsibleNameSelect(processedData);
             setupRfIdTagListener(processedData);
         },
         error: function(error) {
@@ -352,83 +351,6 @@ function setupNameSelect(citizens) {
         }
     });
     */
-}
-
-// Function to setup responsible name select - LEAVE AS IS
-function setupResponsibleNameSelect(citizens) {
-    const responsibleNameSelect = document.getElementById('responsibleNameSelect');
-    if (!responsibleNameSelect) {
-        return;
-    }
-
-    // Create name options array
-    const nameOptions = [];
-
-    // Process citizen data for Select2
-    citizens.forEach(citizen => {
-        if (citizen.full_name) {
-            nameOptions.push({
-                id: citizen.full_name,
-                text: citizen.full_name,
-                citizen: citizen
-            });
-        }
-    });
-
-    // Initialize Responsible Name Select2 dengan minimum input length
-    $('#responsibleNameSelect').select2({
-        placeholder: 'Ketik nama penanggung jawab untuk mencari...',
-        width: '100%',
-        data: nameOptions,
-        minimumInputLength: 3, // Minimal 3 karakter sebelum dropdown muncul
-        language: {
-            noResults: function() {
-                return 'Tidak ada data yang ditemukan';
-            },
-            searching: function() {
-                return 'Mencari...';
-            },
-            inputTooShort: function() {
-                return 'Ketik minimal 3 karakter untuk mencari';
-            }
-        },
-        // Tambahkan delay untuk mengurangi request berlebihan
-        delay: 300,
-        // Fungsi untuk filter data berdasarkan input
-        matcher: function(params, data) {
-            // Jika tidak ada input, jangan tampilkan hasil
-            if (!params.term) {
-                return null;
-            }
-
-            // Jika input kurang dari 3 karakter, jangan tampilkan hasil
-            if (params.term.length < 3) {
-                return null;
-            }
-
-            // Cari berdasarkan nama yang mengandung input
-            const term = params.term.toLowerCase();
-            const text = data.text.toLowerCase();
-
-            if (text.indexOf(term) > -1) {
-                return data;
-            }
-
-            return null;
-        }
-    }).on("select2:open", function() {
-        // This ensures all options are visible when dropdown opens
-        $('.select2-results__options').css('max-height', '400px');
-    });
-
-    // When Responsible Name is selected, fill in other fields (if needed)
-    $('#responsibleNameSelect').on('select2:select', function (e) {
-        const citizen = e.params.data.citizen;
-        if (citizen) {
-            // Jika perlu mengisi field lain untuk penanggung jawab, bisa ditambahkan di sini
-            // Contoh: $('#responsible_address').val(citizen.address || '');
-        }
-    });
 }
 
 // Function to populate citizen data

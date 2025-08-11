@@ -50,9 +50,8 @@
 
                 <div>
                     <label for="responsibleNameSelect" class="block text-sm font-medium text-gray-700">Nama Penanggung Jawab <span class="text-red-500">*</span></label>
-                    <select id="responsibleNameSelect" name="responsible_name" class="responsiblename-select mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
-                        <option value="">Pilih Nama Penanggung Jawab</option>
-                    </select>
+                    <input type="text" id="responsibleNameSelect" name="responsible_name" placeholder="Masukkan nama penanggung jawab" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                    <p class="text-xs text-gray-500 mt-1">Masukkan nama penanggung jawab</p>
                 </div>
             </div>
 
