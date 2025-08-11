@@ -107,6 +107,14 @@ class DataKKController extends Controller
                     // Set the count if family members were found
                     if ($familyMembers && isset($familyMembers['data']) && is_array($familyMembers['data'])) {
                         $kk['data']['citizens'][$index]['jml_anggota_kk'] = count($familyMembers['data']);
+
+                        // Tambahkan NIK kepala keluarga jika tersedia
+                        foreach ($familyMembers['data'] as $member) {
+                            if (isset($member['family_status']) && strtoupper($member['family_status']) === 'KEPALA KELUARGA') {
+                                $kk['data']['citizens'][$index]['nik'] = $member['nik'] ?? null;
+                                break;
+                            }
+                        }
                     } else {
                         $kk['data']['citizens'][$index]['jml_anggota_kk'] = 0;
                     }
@@ -1100,7 +1108,7 @@ class DataKKController extends Controller
     {
         // Cari KK berdasarkan nomor KK dari API
         $citizenData = $this->citizenService->getCitizenByKK($kk);
-        
+
         if (!$citizenData || !isset($citizenData['data'])) {
             return redirect()->route('admin.desa.datakk.index')
                 ->with('error', 'Data KK tidak ditemukan');
@@ -1212,7 +1220,7 @@ class DataKKController extends Controller
             }
         } catch (\Exception $e) {
             Log::error('Error updating KK data: ' . $e->getMessage());
-            
+
             if (Auth::user()->role === 'admin desa') {
                 return redirect()->route('admin.desa.datakk.index')
                     ->with('error', 'Gagal memperbarui data: ' . $e->getMessage());
