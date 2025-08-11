@@ -174,6 +174,9 @@
                     <input type="hidden" id="form_country" name="country">
                     <input type="hidden" id="form_foreign_postal_code" name="foreign_postal_code">
 
+                    <!-- RF ID Tag hidden field -->
+                    <input type="hidden" id="form_rf_id_tag" name="rf_id_tag">
+
                     <!-- NIK -->
                     <div>
                         <label for="nik" class="block text-sm font-medium text-gray-700">NIK</label>
@@ -480,7 +483,7 @@
                     <!-- RF ID Tag -->
 <div>
     <label for="rf_id_tag" class="block text-sm font-medium text-gray-700">RF ID Tag</label>
-    <input type="number" id="rf_id_tag" name="rf_id_tag"
+    <input type="text" id="rf_id_tag" name="rf_id_tag"
         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
 </div>
                 </div>
@@ -640,7 +643,10 @@
                     city: document.getElementById('city').value,
                     state: document.getElementById('state').value,
                     country: document.getElementById('country').value,
-                    foreign_postal_code: document.getElementById('foreign_postal_code').value
+                    foreign_postal_code: document.getElementById('foreign_postal_code').value,
+
+                    // RF ID Tag data
+                    rf_id_tag: document.getElementById('rf_id_tag').value,
                 };
             }
 
@@ -804,6 +810,9 @@
                         state: kkFormData.state,
                         country: kkFormData.country,
                         foreign_postal_code: kkFormData.foreign_postal_code,
+
+                        // RF ID Tag (copied from KK data)
+                        rf_id_tag: kkFormData.rf_id_tag,
                     };
 
                     // Add to array and update JSON
@@ -845,7 +854,10 @@
                     city: document.getElementById('city').value,
                     state: document.getElementById('state').value,
                     country: document.getElementById('country').value,
-                    foreign_postal_code: document.getElementById('foreign_postal_code').value
+                    foreign_postal_code: document.getElementById('foreign_postal_code').value,
+
+                    // RF ID Tag data
+                    rf_id_tag: document.getElementById('rf_id_tag').value,
                 };
 
                 localStorage.setItem('kkDetailData', JSON.stringify(kkData));
@@ -1014,6 +1026,9 @@
                             state: kkFormData.state,
                             country: kkFormData.country,
                             foreign_postal_code: kkFormData.foreign_postal_code,
+
+                            // RF ID Tag data
+                            rf_id_tag: kkFormData.rf_id_tag,
                         };
 
                         // Check if this NIK is already in the array to avoid duplicates
@@ -1055,7 +1070,8 @@
                             city: kkFormData.city,
                             state: kkFormData.state,
                             country: kkFormData.country,
-                            foreign_postal_code: kkFormData.foreign_postal_code
+                            foreign_postal_code: kkFormData.foreign_postal_code,
+                            rf_id_tag: kkFormData.rf_id_tag, // Tambahkan RF ID Tag
                         };
                     });
 

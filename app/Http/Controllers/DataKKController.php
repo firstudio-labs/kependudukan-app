@@ -638,7 +638,7 @@ class DataKKController extends Controller
                 'country' => 'nullable|string|max:100',
                 'foreign_postal_code' => 'nullable|string|max:20',
                 'status' => 'nullable|string|in:Active,Inactive,Deceased,Moved',
-                'rf_id_tag' => 'nullable|integer',
+                'rf_id_tag' => 'nullable|string',
             ]);
 
             // Pemeriksaan apakah validasi gagal
@@ -664,9 +664,9 @@ class DataKKController extends Controller
             $response = $this->citizenService->createCitizen($validatedData);
 
             if ($response['status'] === 'CREATED') {
-                if (Auth::user()->role === 'admin') {
+                if (Auth::user()->role === 'admin desa') {
                     return redirect()
-                        ->route('admin.desa.datakk.create')
+                        ->route('admin.desa.datakk.index')
                         ->with('success', 'Anggota keluarga berhasil ditambahkan!');
                 }
 
@@ -767,7 +767,7 @@ class DataKKController extends Controller
                     'country' => 'nullable|string|max:100',
                     'foreign_postal_code' => 'nullable|string|max:20',
                     'status' => 'nullable|string|in:Active,Inactive,Deceased,Moved',
-                    'rf_id_tag' => 'nullable|integer',
+                    'rf_id_tag' => 'nullable|string',
                 ]);
 
                 if ($validator->fails()) {
@@ -800,9 +800,9 @@ class DataKKController extends Controller
 
             // Create response message based on results
             if ($successCount > 0 && $errorCount === 0) {
-                if (Auth::user()->role === 'admin') {
+                if (Auth::user()->role === 'admin desa') {
                     return redirect()
-                        ->route('admin.desa.datakk.create')
+                        ->route('admin.desa.datakk.index')
                         ->with('success', "Berhasil menambahkan {$successCount} anggota keluarga!");
                 }
 
@@ -810,9 +810,9 @@ class DataKKController extends Controller
                     ->route('superadmin.datakk.create')
                     ->with('success', "Berhasil menambahkan {$successCount} anggota keluarga!");
             } else if ($successCount > 0 && $errorCount > 0) {
-                if (Auth::user()->role === 'admin') {
+                if (Auth::user()->role === 'admin desa') {
                     return redirect()
-                        ->route('admin.desa.datakk.create')
+                        ->route('admin.desa.datakk.index')
                         ->with('warning', "Berhasil menambahkan {$successCount} anggota keluarga, tetapi {$errorCount} gagal: " . implode('; ', $errors));
                 }
 
@@ -861,10 +861,19 @@ class DataKKController extends Controller
             'state',
             'country',
             'foreign_postal_code',
-            'status'
+            'status',
         ];
         foreach ($nullableStringFields as $field) {
             $data[$field] = empty($data[$field]) ? " " : $data[$field];
+        }
+
+        // Special handling for rf_id_tag to avoid duplicate entry errors
+        if (isset($data['rf_id_tag'])) {
+            if (empty(trim($data['rf_id_tag']))) {
+                $data['rf_id_tag'] = null; // Set to null instead of space
+            } else {
+                $data['rf_id_tag'] = trim($data['rf_id_tag']); // Trim whitespace
+            }
         }
 
         $nullableDateFields = ['marriage_date', 'divorce_certificate_date'];
@@ -1199,7 +1208,7 @@ class DataKKController extends Controller
             'country' => 'nullable|string|max:100',
             'foreign_postal_code' => 'nullable|string|max:20',
             'status' => 'nullable|string|in:Active,Inactive,Deceased,Moved',
-            'rf_id_tag' => 'nullable|string',
+            'rf_id_tag' => 'nullable|string', // Ubah dari string ke nullable string
         ]);
 
         try {
