@@ -54,11 +54,24 @@
                 <div class="flex justify-between items-start">
                     <div>
                         <h3 class="text-md font-semibold text-gray-700">Total Admin Desa</h3>
-                        <p class="mt-1 text-2xl font-bold text-[#7886C7]">{{ $userStats['admin'] }}</p>
+                        <p class="mt-1 text-2xl font-bold text-[#7886C7]">{{ $userStats['admin_desa'] }}</p>
                         <p class="text-xs text-gray-500 mt-1">Administrator Desa</p>
                     </div>
                     <div class="text-[#2D336B]">
                         <i class="fas fa-user-tie text-xl md:text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-lg shadow-md transition-transform hover:scale-105">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h3 class="text-md font-semibold text-gray-700">Total Admin Kabupaten</h3>
+                        <p class="mt-1 text-2xl font-bold text-[#7886C7]">{{ $userStats['admin_kabupaten'] }}</p>
+                        <p class="text-xs text-gray-500 mt-1">Administrator Kabupaten</p>
+                    </div>
+                    <div class="text-[#2D336B]">
+                        <i class="fas fa-building text-xl md:text-2xl"></i>
                     </div>
                 </div>
             </div>
@@ -81,14 +94,17 @@
                     <div>
                         <h3 class="text-md font-semibold text-gray-700">Total User</h3>
                         <p class="mt-1 text-2xl font-bold text-[#7886C7]">{{ $userStats['user'] }}</p>
-                        <p class="text-xs text-gray-500 mt-1">Pengguna Terdaftar</p>
+                        <p class="text-xs text-gray-500 mt-1">Penduduk Terdaftar</p>
                     </div>
                     <div class="text-[#2D336B]">
                         <i class="fas fa-users text-xl md:text-2xl"></i>
                     </div>
                 </div>
             </div>
+        </div>
 
+        <!-- Total Penduduk Card - Kept as requested -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-4 mb-6">
             <div class="bg-white p-4 rounded-lg shadow-md transition-transform hover:scale-105">
                 <div class="flex justify-between items-start">
                     <div>
@@ -192,26 +208,34 @@
                             tension: 0.3
                         },
                         {
-                            label: 'Admin',
-                            data: {!! json_encode($monthlyData['admin']) !!},
+                            label: 'Admin Desa',
+                            data: {!! json_encode($monthlyData['admin_desa']) !!},
                             backgroundColor: 'rgba(120, 134, 199, 0.3)',
                             borderColor: '#7886C7', // Medium blue-purple
                             borderWidth: 2,
                             tension: 0.3
                         },
                         {
-                            label: 'Operator',
-                            data: {!! json_encode($monthlyData['operator']) !!},
+                            label: 'Admin Kabupaten',
+                            data: {!! json_encode($monthlyData['admin_kabupaten']) !!},
                             backgroundColor: 'rgba(169, 181, 223, 0.3)',
                             borderColor: '#A9B5DF', // Light blue-purple
                             borderWidth: 2,
                             tension: 0.3
                         },
                         {
-                            label: 'User',
-                            data: {!! json_encode($monthlyData['user']) !!},
+                            label: 'Operator',
+                            data: {!! json_encode($monthlyData['operator']) !!},
                             backgroundColor: 'rgba(255, 242, 242, 0.3)',
                             borderColor: '#FF9A9E', // Light pink
+                            borderWidth: 2,
+                            tension: 0.3
+                        },
+                        {
+                            label: 'User',
+                            data: {!! json_encode($monthlyData['user']) !!},
+                            backgroundColor: 'rgba(255, 154, 158, 0.3)',
+                            borderColor: '#FF6B6B', // Red
                             borderWidth: 2,
                             tension: 0.3
                         }

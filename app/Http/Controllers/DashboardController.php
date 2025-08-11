@@ -7,7 +7,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use App\Models\User;
 use App\Models\Village;
+use App\Models\Penduduk;
 use App\Services\CitizenService;
+use App\Services\WilayahService;
 
 class DashboardController extends Controller
 {
@@ -23,32 +25,41 @@ class DashboardController extends Controller
         $user = Auth::user();
         $role = ucfirst($user->role); // Capitalize first letter of role
 
-        // Get user statistics
+        // Get user statistics - Updated to differentiate admin desa and admin kabupaten
         $userStats = [
             'superadmin' => User::where('role', 'superadmin')->count(),
-            'admin' => User::where('role', 'admin')->count(),
+            'admin_desa' => User::where('role', 'admin desa')->count(),
+            'admin_kabupaten' => User::where('role', 'admin kabupaten')->count(),
             'operator' => User::where('role', 'operator')->count(),
-            'user' => User::where('role', 'user')->count(),
+            'user' => Penduduk::count(), // Changed to use Penduduk table
         ];
 
         // Get monthly registration data by role from database
         $monthlyRegistrationsByRole = User::getMonthlyRegistrationsByRole();
 
-        // Format data for chart
+        // Format data for chart - Updated to include admin_desa and admin_kabupaten
         $months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
         $monthlyData = [
             'labels' => $months,
             'superadmin' => array_fill(0, 12, 0),
-            'admin' => array_fill(0, 12, 0),
+            'admin_desa' => array_fill(0, 12, 0),
+            'admin_kabupaten' => array_fill(0, 12, 0),
             'operator' => array_fill(0, 12, 0),
             'user' => array_fill(0, 12, 0),
         ];
 
-        // Fill in actual registration counts by role
+        // Fill in actual registration counts by role - Updated mapping
         foreach ($monthlyRegistrationsByRole as $registration) {
-            // Month index is 1-based in database but 0-based in our array
-            if (isset($monthlyData[$registration->role])) {
-                $monthlyData[$registration->role][$registration->month - 1] = $registration->count;
+            // Map role names to our new structure
+            $roleKey = $registration->role;
+            if ($roleKey === 'admin desa') {
+                $roleKey = 'admin_desa';
+            } elseif ($roleKey === 'admin kabupaten') {
+                $roleKey = 'admin_kabupaten';
+            }
+
+            if (isset($monthlyData[$roleKey])) {
+                $monthlyData[$roleKey][$registration->month - 1] = $registration->count;
             }
         }
 
@@ -128,7 +139,7 @@ class DashboardController extends Controller
             $villageName = '';
             $villageCode = null; // Initialize village code variable
 
-            $wilayahService = app(\App\Services\WilayahService::class);
+            $wilayahService = app(WilayahService::class);
 
             // Get province data
             if (!empty($user->province_id)) {
