@@ -93,17 +93,13 @@
                         <ul id="pendudukDropdown" class="hidden space-y-2 pl-6">
                             <li>
                                 <a href="{{ route('superadmin.biodata.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                                                        {{ request()->routeIs('superadmin.biodata*')
-                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                                                                                                                                        {{ request()->routeIs('superadmin.biodata.index') || request()->routeIs('superadmin.biodata.create') || request()->routeIs('superadmin.biodata.edit') || request()->routeIs('superadmin.biodata.update') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Biodata</span>
                                 </a>
                             </li>
                             <li>
                                 <a href="{{ route('superadmin.datakk.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                                                        {{ request()->routeIs('superadmin.datakk*')
-                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                                                                                                                                        {{ request()->routeIs('superadmin.datakk.index') || request()->routeIs('superadmin.datakk.edit') || request()->routeIs('superadmin.datakk.update') || request()->routeIs('superadmin.datakk.detail') || request()->routeIs('superadmin.datakk.delete') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Data KK</span>
                                 </a>
                             </li>
@@ -113,9 +109,7 @@
                     <!-- Tambah Data KK (menu terpisah) -->
                     <li class="-ml-5">
                         <a href="{{ route('superadmin.datakk.create') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                                {{ request()->routeIs('superadmin.datakk.create*')
-                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                                                                                                                {{ request()->routeIs('superadmin.datakk.create') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                             <i class="fa-solid fa-plus text-lg transition-all duration-300"></i>
                             <span>Tambah Data KK</span>
                         </a>
@@ -197,14 +191,14 @@
                             <li>
                                 <a href="{{ route('superadmin.surat.domisili.index') }}"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                                    {{ request()->routeIs('superadmin.surat.domisili*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                                                                                                                    {{ request()->routeIs('superadmin.surat.domisili.index') || request()->routeIs('superadmin.surat.domisili.create') || request()->routeIs('superadmin.surat.domisili.edit') || request()->routeIs('superadmin.surat.domisili.detail') || request()->routeIs('superadmin.surat.domisili.delete') || request()->routeIs('superadmin.surat.domisili.pdf') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Surat Domisili</span>
                                 </a>
                             </li>
                             <li>
                                 <a href="{{ route('superadmin.surat.domisili-usaha.index') }}"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                                    {{ request()->routeIs('superadmin.surat.domisili-usaha*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                                                                                                                    {{ request()->routeIs('superadmin.surat.domisili-usaha.index') || request()->routeIs('superadmin.surat.domisili-usaha.create') || request()->routeIs('superadmin.surat.domisili-usaha.edit') || request()->routeIs('superadmin.surat.domisili-usaha.detail') || request()->routeIs('superadmin.surat.domisili-usaha.delete') || request()->routeIs('superadmin.surat.domisili-usaha.pdf') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Surat Domisili Usaha</span>
                                 </a>
                             </li>
@@ -406,17 +400,13 @@
                         <ul id="pendudukDropdown" class="hidden space-y-2 pl-6">
                             <li>
                                 <a href="{{ route('admin.desa.biodata.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                            {{ request()->routeIs('admin.desa.biodata*')
-                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                                                                                            {{ request()->routeIs('admin.desa.biodata.index') || request()->routeIs('admin.desa.biodata.edit') || request()->routeIs('admin.desa.biodata.update') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Biodata</span>
                                 </a>
                             </li>
                             <li>
                                 <a href="{{ route('admin.desa.datakk.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                            {{ request()->routeIs('admin.desa.datakk*')
-                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                                                                                            {{ request()->routeIs('admin.desa.datakk.index') || request()->routeIs('admin.desa.datakk.edit') || request()->routeIs('admin.desa.datakk.update') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Data KK</span>
                                 </a>
                             </li>
@@ -426,9 +416,7 @@
                     <!-- Tambah Data KK (menu terpisah) -->
                     <li class="-ml-5">
                         <a href="{{ route('admin.desa.datakk.create') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                {{ request()->routeIs('admin.desa.datakk.create*')
-                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                                                                                {{ request()->routeIs('admin.desa.datakk.create') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                             <i class="fa-solid fa-plus text-lg transition-all duration-300"></i>
                             <span>Tambah Data KK</span>
                         </a>
@@ -479,14 +467,14 @@
                             <li>
                                 <a href="{{ route('admin.desa.surat.domisili.index') }}"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                                                    {{ request()->routeIs('admin.desa.surat.domisili*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                                                                                                                                    {{ request()->routeIs('admin.desa.surat.domisili.index') || request()->routeIs('admin.desa.surat.domisili.create') || request()->routeIs('admin.desa.surat.domisili.edit') || request()->routeIs('admin.desa.surat.domisili.detail') || request()->routeIs('admin.desa.surat.domisili.delete') || request()->routeIs('admin.desa.surat.domisili.pdf') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Surat Domisili</span>
                                 </a>
                             </li>
                             <li>
                                 <a href="{{ route('admin.desa.surat.domisili-usaha.index') }}"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                                                    {{ request()->routeIs('admin.desa.surat.domisili-usaha*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                                                                                                                                                    {{ request()->routeIs('admin.desa.surat.domisili-usaha.index') || request()->routeIs('admin.desa.surat.domisili-usaha.create') || request()->routeIs('admin.desa.surat.domisili-usaha.edit') || request()->routeIs('admin.desa.surat.domisili-usaha.detail') || request()->routeIs('admin.desa.surat.domisili-usaha.delete') || request()->routeIs('admin.desa.surat.domisili-usaha.pdf') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Surat Domisili Usaha</span>
                                 </a>
                             </li>
