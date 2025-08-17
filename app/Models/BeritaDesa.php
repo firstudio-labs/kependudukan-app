@@ -16,7 +16,11 @@ class BeritaDesa extends Model
         'gambar',
         'deskripsi',
         'komentar',
-        'user_id'
+        'user_id',
+        'id_desa',
+        'id_kecamatan',
+        'id_kabupaten',
+        'id_provinsi'
     ];
 
     // Tambahkan gambar_url ke appends agar selalu muncul di JSON
@@ -26,6 +30,22 @@ class BeritaDesa extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    // Relasi dengan wilayah (commented out karena model tidak ada di database lokal)
+    // public function desa()
+    // {
+    //     return $this->belongsTo(Desa::class, 'id_desa');
+    // }
+
+    // public function kecamatan()
+    // {
+    //     return $this->belongsTo(Kecamatan::class, 'id_kecamatan');
+    // }
+
+    // public function kabupaten()
+    // {
+    //     return $this->belongsTo(Kabupaten::class, 'id_kabupaten');
+    // }
 
     // Accessor untuk URL gambar
     public function getGambarUrlAttribute()

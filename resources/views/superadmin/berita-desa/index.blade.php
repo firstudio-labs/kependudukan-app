@@ -35,6 +35,7 @@
                             <th class="px-6 py-3">No</th>
                             <th class="px-6 py-3">Judul Berita</th>
                             <th class="px-6 py-3">Deskripsi</th>
+                            <th class="px-6 py-3">Wilayah</th>
                             <th class="px-6 py-3">Komentar</th>
                             <th class="px-6 py-3">Aksi</th>
                         </tr>
@@ -47,6 +48,38 @@
                                 </th>
                                 <td class="px-6 py-4">{{ $item->judul }}</td>
                                 <td class="px-6 py-4">{{ Str::limit($item->deskripsi, 50) }}</td>
+                                <td class="px-6 py-4">
+                                    @if(isset($item->wilayah_info) && !empty($item->wilayah_info))
+                                        <div class="text-xs space-y-1">
+                                            @if(isset($item->wilayah_info['provinsi']))
+                                                <div class="font-semibold text-gray-800 border-b border-gray-200 pb-1">
+                                                    <span class="text-blue-500 mr-1">●</span>
+                                                    {{ $item->wilayah_info['provinsi'] }}
+                                                </div>
+                                            @endif
+                                            @if(isset($item->wilayah_info['kabupaten']))
+                                                <div class="text-gray-700 ml-2">
+                                                    <span class="text-green-500 mr-1">●</span>
+                                                    {{ $item->wilayah_info['kabupaten'] }}
+                                                </div>
+                                            @endif
+                                            @if(isset($item->wilayah_info['kecamatan']))
+                                                <div class="text-gray-600 ml-4">
+                                                    <span class="text-orange-500 mr-1">●</span>
+                                                    {{ $item->wilayah_info['kecamatan'] }}
+                                                </div>
+                                            @endif
+                                            @if(isset($item->wilayah_info['desa']))
+                                                <div class="font-medium text-blue-600 ml-6">
+                                                    <span class="text-blue-500 mr-1">●</span>
+                                                    {{ $item->wilayah_info['desa'] }}
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @else
+                                        <span class="text-gray-400">-</span>
+                                    @endif
+                                </td>
                                 <td class="px-6 py-4">{{ Str::limit($item->komentar, 50) }}</td>
                                 <td class="flex items-center px-6 py-4 space-x-2">
                                     <button onclick="showDetailModal({{ $item->id }})"
@@ -65,7 +98,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="text-center py-4">Tidak ada data berita.</td>
+                                <td colspan="6" class="text-center py-4">Tidak ada data berita.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -122,6 +155,11 @@
                     </div>
 
                     <div>
+                        <p class="text-sm font-semibold text-gray-500">Wilayah:</p>
+                        <div id="detailWilayah" class="text-base text-gray-900">-</div>
+                    </div>
+
+                    <div>
                         <p class="text-sm font-semibold text-gray-500">Komentar:</p>
                         <p id="detailKomentar" class="text-base text-gray-900">-</p>
                     </div>
@@ -152,6 +190,7 @@
             document.getElementById('detailJudulBerita').textContent = 'Memuat...';
             document.getElementById('detailDeskripsi').textContent = 'Memuat...';
             document.getElementById('detailKomentar').textContent = 'Memuat...';
+            document.getElementById('detailWilayah').textContent = 'Memuat...';
 
             // Clear previous image and show loading
             const imageContainer = document.getElementById('detailGambar');
@@ -181,6 +220,41 @@
                         document.getElementById('detailJudulBerita').textContent = berita.judul || '-';
                         document.getElementById('detailDeskripsi').textContent = berita.deskripsi || '-';
                         document.getElementById('detailKomentar').textContent = berita.komentar || '-';
+
+                        // Update wilayah information
+                        // Update wilayah information with better formatting
+                        let wilayahHTML = '<span class="text-gray-400">Tidak ada data wilayah</span>';
+                        if (berita.wilayah_info && Object.keys(berita.wilayah_info).length > 0) {
+                            wilayahHTML = `
+                                <div class="space-y-2">
+                                    ${berita.wilayah_info.provinsi ? `
+                                        <div class="flex items-center">
+                                            <span class="inline-flex items-center justify-center w-6 h-6 bg-blue-100 text-blue-600 text-xs font-semibold rounded-full mr-3">P</span>
+                                            <span class="text-sm font-medium text-gray-900">${berita.wilayah_info.provinsi}</span>
+                                        </div>
+                                    ` : ''}
+                                    ${berita.wilayah_info.kabupaten ? `
+                                        <div class="flex items-center ml-3">
+                                            <span class="inline-flex items-center justify-center w-6 h-6 bg-green-100 text-green-600 text-xs font-semibold rounded-full mr-3">K</span>
+                                            <span class="text-sm text-gray-800">${berita.wilayah_info.kabupaten}</span>
+                                        </div>
+                                    ` : ''}
+                                    ${berita.wilayah_info.kecamatan ? `
+                                        <div class="flex items-center ml-6">
+                                            <span class="inline-flex items-center justify-center w-6 h-6 bg-orange-100 text-orange-600 text-xs font-semibold rounded-full mr-3">C</span>
+                                            <span class="text-sm text-gray-700">${berita.wilayah_info.kecamatan}</span>
+                                        </div>
+                                    ` : ''}
+                                    ${berita.wilayah_info.desa ? `
+                                        <div class="flex items-center ml-9">
+                                            <span class="inline-flex items-center justify-center w-6 h-6 bg-purple-100 text-purple-600 text-xs font-semibold rounded-full mr-3">D</span>
+                                            <span class="text-sm font-medium text-blue-600">${berita.wilayah_info.desa}</span>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            `;
+                        }
+                        document.getElementById('detailWilayah').innerHTML = wilayahHTML;
 
                         // Clear previous image
                         imageContainer.innerHTML = '';

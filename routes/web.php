@@ -116,6 +116,8 @@ Route::middleware('guest')->group(function () {
 });
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+
+
 // Route untuk superadmin - menggunakan web guard
 Route::middleware(['auth:web', 'role:superadmin'])->group(function () {
     Route::get('/superadmin/index', [DashboardController::class, 'index'])->name('superadmin.index');
@@ -431,14 +433,16 @@ Route::middleware(['auth:web', 'role:superadmin'])->group(function () {
         ->name('superadmin.berita-desa.create');
     Route::post('/superadmin/berita-desa', [SuperadminBeritaDesaController::class, 'store'])
         ->name('superadmin.berita-desa.store');
+    Route::get('/superadmin/berita-desa/{id}', [SuperadminBeritaDesaController::class, 'show'])
+        ->name('superadmin.berita-desa.show');
     Route::get('/superadmin/berita-desa/{id}/edit', [SuperadminBeritaDesaController::class, 'edit'])
         ->name('superadmin.berita-desa.edit');
     Route::put('/superadmin/berita-desa/{id}', [SuperadminBeritaDesaController::class, 'update'])
         ->name('superadmin.berita-desa.update');
     Route::delete('/superadmin/berita-desa/{id}', [SuperadminBeritaDesaController::class, 'destroy'])
         ->name('superadmin.berita-desa.destroy');
-    Route::get('/superadmin/berita-desa/{id}', [SuperadminBeritaDesaController::class, 'show'])
-        ->name('superadmin.berita-desa.show');
+
+
 });
 
 // Route untuk admin kabupaten - menggunakan web guard
@@ -1041,3 +1045,11 @@ Route::get('/admin/desa/datakk/{kk}/edit', [DataKKController::class, 'editByKK']
     ->name('admin.desa.datakk.edit');
 Route::put('/admin/desa/datakk/{kk}', [DataKKController::class, 'updateByKK'])
     ->name('admin.desa.datakk.update');
+
+// Public AJAX routes untuk wilayah (tidak memerlukan authentication)
+Route::get('/api/wilayah/kabupaten-by-province', [SuperadminBeritaDesaController::class, 'getKabupatenByProvince'])
+    ->name('api.wilayah.kabupaten-by-province');
+Route::get('/api/wilayah/kecamatan-by-kabupaten', [SuperadminBeritaDesaController::class, 'getKecamatanByKabupaten'])
+    ->name('api.wilayah.kecamatan-by-kabupaten');
+Route::get('/api/wilayah/desa-by-kecamatan', [SuperadminBeritaDesaController::class, 'getDesaByKecamatan'])
+    ->name('api.wilayah.desa-by-kecamatan');
