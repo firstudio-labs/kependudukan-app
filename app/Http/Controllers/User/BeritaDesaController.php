@@ -53,11 +53,41 @@ class BeritaDesaController extends Controller
             });
         }
 
-        $berita = $query->latest()->paginate(10);
+        $perPage = (int) ($request->input('per_page', 10));
+        $berita = $query->latest()->paginate($perPage);
         
         // Tambahkan data wilayah untuk setiap berita
         foreach ($berita as $item) {
             $item->wilayah_info = $this->getWilayahInfo($item);
+        }
+        
+        // Jika diminta sebagai JSON (untuk konsumsi mobile), kembalikan JSON
+        if ($request->wantsJson() || $request->ajax() || $request->query('format') === 'json') {
+            $items = collect($berita->items())->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'judul' => $item->judul,
+                    'deskripsi' => $item->deskripsi,
+                    'komentar' => $item->komentar,
+                    'gambar' => $item->gambar,
+                    'gambar_url' => $item->gambar_url,
+                    'user_id' => $item->user_id,
+                    'wilayah_info' => $item->wilayah_info,
+                    'created_at' => $item->created_at,
+                    'updated_at' => $item->updated_at,
+                ];
+            });
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $items,
+                'meta' => [
+                    'current_page' => $berita->currentPage(),
+                    'per_page' => $berita->perPage(),
+                    'total' => $berita->total(),
+                    'last_page' => $berita->lastPage(),
+                ]
+            ]);
         }
         
         return view('user.berita-desa.index', compact('berita'));
