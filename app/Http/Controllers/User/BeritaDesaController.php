@@ -5,20 +5,45 @@ namespace App\Http\Controllers\User;
 use App\Http\Controllers\Controller;
 use App\Models\BeritaDesa;
 use App\Services\WilayahService;
+use App\Services\CitizenService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class BeritaDesaController extends Controller
 {
     protected $wilayahService;
+    protected $citizenService;
 
-    public function __construct(WilayahService $wilayahService)
+    public function __construct(WilayahService $wilayahService, CitizenService $citizenService)
     {
         $this->wilayahService = $wilayahService;
+        $this->citizenService = $citizenService;
     }
 
     public function index(Request $request)
     {
         $query = BeritaDesa::with(['user']);
+
+        // Filter berdasarkan desa penduduk yang login (guard penduduk)
+        if (Auth::guard('penduduk')->check()) {
+            $penduduk = Auth::guard('penduduk')->user();
+
+            // Ambil data penduduk dari API untuk mendapatkan village_id/villages_id
+            $citizenData = $this->citizenService->getCitizenByNIK($penduduk->nik);
+
+            // Ekstrak village id dari beberapa kemungkinan struktur response
+            $villageId = null;
+            if (is_array($citizenData)) {
+                $villageId = $citizenData['village_id']
+                    ?? $citizenData['villages_id']
+                    ?? ($citizenData['data']['village_id'] ?? null)
+                    ?? ($citizenData['data']['villages_id'] ?? null);
+            }
+
+            if (!is_null($villageId)) {
+                $query->where('id_desa', (int) $villageId);
+            }
+        }
 
         if ($request->has('search') && !empty($request->search)) {
             $search = $request->search;

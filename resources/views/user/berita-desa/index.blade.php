@@ -24,6 +24,7 @@
                             <th class="px-6 py-3">No</th>
                             <th class="px-6 py-3">Judul Berita</th>
                             <th class="px-6 py-3">Deskripsi</th>
+                            <th class="px-6 py-3">Wilayah</th>
                             <th class="px-6 py-3">Tanggal</th>
                             <th class="px-6 py-3">Aksi</th>
                         </tr>
@@ -36,6 +37,16 @@
                                 </th>
                                 <td class="px-6 py-4">{{ $item->judul }}</td>
                                 <td class="px-6 py-4">{{ Str::limit($item->deskripsi, 50) }}</td>
+                                <td class="px-6 py-4">
+                                    @if(isset($item->wilayah_info['desa']))
+                                        <span class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                                            <i class="fa-solid fa-location-dot"></i>
+                                            {{ $item->wilayah_info['desa'] }}
+                                        </span>
+                                    @else
+                                        -
+                                    @endif
+                                </td>
                                 <td class="px-6 py-4">{{ $item->created_at->format('d M Y') }}</td>
                                 <td class="px-6 py-4">
                                     <button onclick="showDetailModal({{ $item->id }})"
@@ -46,7 +57,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="text-center py-4">Tidak ada data berita.</td>
+                                <td colspan="6" class="text-center py-4">Tidak ada data berita.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -107,6 +118,14 @@
                         <p id="detailKomentar" class="text-base text-gray-900">-</p>
                     </div>
 
+                    <!-- Wilayah Section -->
+                    <div>
+                        <p class="text-sm font-semibold text-gray-500 mb-1">Wilayah:</p>
+                        <div id="detailWilayah" class="text-sm text-gray-800 space-y-0.5">
+                            <p class="text-gray-500">-</p>
+                        </div>
+                    </div>
+
                     <!-- Gambar Berita Section -->
                     <div>
                         <p class="text-sm font-semibold text-gray-500 mb-2">Gambar Berita:</p>
@@ -162,6 +181,17 @@
                         document.getElementById('detailJudulBerita').textContent = berita.judul || '-';
                         document.getElementById('detailDeskripsi').textContent = berita.deskripsi || '-';
                         document.getElementById('detailKomentar').textContent = berita.komentar || '-';
+
+                        // Render wilayah info
+                        const wilayahContainer = document.getElementById('detailWilayah');
+                        const wilayah = berita.wilayah_info || {};
+                        const wilayahHtml = `
+                            <div class="flex items-center gap-1"><span class="text-gray-500 w-24">Provinsi</span><span class="text-gray-500">:</span><span class="ml-2">${wilayah.provinsi || '-'}</span></div>
+                            <div class="flex items-center gap-1"><span class="text-gray-500 w-24">Kabupaten</span><span class="text-gray-500">:</span><span class="ml-2">${wilayah.kabupaten || '-'}</span></div>
+                            <div class="flex items-center gap-1"><span class="text-gray-500 w-24">Kecamatan</span><span class="text-gray-500">:</span><span class="ml-2">${wilayah.kecamatan || '-'}</span></div>
+                            <div class="flex items-center gap-1"><span class="text-gray-500 w-24">Desa</span><span class="text-gray-500">:</span><span class="ml-2">${wilayah.desa || '-'}</span></div>
+                        `;
+                        wilayahContainer.innerHTML = wilayahHtml;
 
                         // Clear previous image
                         imageContainer.innerHTML = '';
