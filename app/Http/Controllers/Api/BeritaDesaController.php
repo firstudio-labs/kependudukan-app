@@ -5,10 +5,11 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\BeritaDesa;
 use Illuminate\Http\Request;
+use App\Services\CitizenService;
 
 class BeritaDesaController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, CitizenService $citizenService)
     {
         try {
             // Get token owner from request attributes
@@ -20,7 +21,41 @@ class BeritaDesaController extends Controller
                 ], 401);
             }
 
+            // Hanya izinkan penduduk (bukan admin user)
+            if ($request->attributes->get('token_owner_type') !== 'penduduk') {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Hanya penduduk yang dapat mengakses daftar berita desa ini'
+                ], 403);
+            }
+
+            // Ambil NIK penduduk dan cari village_id
+            $nik = $tokenOwner->nik ?? null;
+            $citizenData = $nik ? $citizenService->getCitizenByNIK($nik) : null;
+
+            $villageId = null;
+            if (is_array($citizenData)) {
+                // Beberapa kemungkinan struktur response
+                $payload = $citizenData['data'] ?? $citizenData;
+                if (isset($payload['villages_id'])) {
+                    $villageId = $payload['villages_id'];
+                } elseif (isset($payload['village_id'])) {
+                    $villageId = $payload['village_id'];
+                } elseif (isset($payload['village']['id'])) {
+                    $villageId = $payload['village']['id'];
+                }
+            }
+
+            if (!$villageId) {
+                return response()->json([
+                    'status' => 'success',
+                    'data' => [],
+                    'message' => 'Data desa tidak ditemukan untuk akun ini'
+                ], 200);
+            }
+
             $query = BeritaDesa::query();
+            $query->where('id_desa', $villageId);
 
             // Handle search parameter
             if ($request->has('search') && !empty($request->search)) {
@@ -63,7 +98,7 @@ class BeritaDesaController extends Controller
         }
     }
 
-    public function show(Request $request, $id)
+    public function show(Request $request, $id, CitizenService $citizenService)
     {
         try {
             // Get token owner from request attributes
@@ -75,7 +110,37 @@ class BeritaDesaController extends Controller
                 ], 401);
             }
 
+            // Hanya izinkan penduduk (bukan admin user)
+            if ($request->attributes->get('token_owner_type') !== 'penduduk') {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Hanya penduduk yang dapat mengakses detail berita desa ini'
+                ], 403);
+            }
+
+            // Validasi berita milik desa yang sama dengan penduduk
             $berita = BeritaDesa::findOrFail($id);
+
+            $nik = $tokenOwner->nik ?? null;
+            $citizenData = $nik ? $citizenService->getCitizenByNIK($nik) : null;
+            $villageId = null;
+            if (is_array($citizenData)) {
+                $payload = $citizenData['data'] ?? $citizenData;
+                if (isset($payload['villages_id'])) {
+                    $villageId = $payload['villages_id'];
+                } elseif (isset($payload['village_id'])) {
+                    $villageId = $payload['village_id'];
+                } elseif (isset($payload['village']['id'])) {
+                    $villageId = $payload['village']['id'];
+                }
+            }
+
+            if ($villageId && (string)$berita->id_desa !== (string)$villageId) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Anda tidak berhak mengakses berita desa dari desa lain'
+                ], 403);
+            }
 
             // Format response with gambar_url
             $data = [
@@ -86,6 +151,7 @@ class BeritaDesaController extends Controller
                 'gambar' => $berita->gambar,
                 'gambar_url' => $berita->gambar_url, // URL lengkap gambar
                 'user_id' => $berita->user_id,
+                'id_desa' => $berita->id_desa,
                 'created_at' => $berita->created_at,
                 'updated_at' => $berita->updated_at,
             ];
