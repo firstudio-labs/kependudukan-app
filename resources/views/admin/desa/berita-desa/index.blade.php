@@ -126,6 +126,26 @@
                         <p id="detailKomentar" class="text-base text-gray-900">-</p>
                     </div>
 
+                    <!-- Wilayah -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div>
+                            <p class="text-sm font-semibold text-gray-500">Provinsi:</p>
+                            <p id="detailProvinsi" class="text-base text-gray-900">-</p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-semibold text-gray-500">Kabupaten:</p>
+                            <p id="detailKabupaten" class="text-base text-gray-900">-</p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-semibold text-gray-500">Kecamatan:</p>
+                            <p id="detailKecamatan" class="text-base text-gray-900">-</p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-semibold text-gray-500">Desa:</p>
+                            <p id="detailDesa" class="text-base text-gray-900">-</p>
+                        </div>
+                    </div>
+
                     <!-- Gambar Berita Section -->
                     <div>
                         <p class="text-sm font-semibold text-gray-500 mb-2">Gambar Berita:</p>
@@ -182,8 +202,12 @@
                         document.getElementById('detailDeskripsi').textContent = berita.deskripsi || '-';
                         document.getElementById('detailKomentar').textContent = berita.komentar || '-';
 
-                        // Clear previous image
+                        // Clear previous image + wilayah
                         imageContainer.innerHTML = '';
+                        document.getElementById('detailProvinsi').textContent = '-';
+                        document.getElementById('detailKabupaten').textContent = '-';
+                        document.getElementById('detailKecamatan').textContent = '-';
+                        document.getElementById('detailDesa').textContent = '-';
 
                         // Add image if available
                         if (berita.gambar) {
@@ -195,6 +219,14 @@
                             imageContainer.appendChild(imgElement);
                         } else {
                             imageContainer.innerHTML = '<p class="text-sm text-gray-500">Tidak ada gambar</p>';
+                        }
+
+                        // Set wilayah jika tersedia
+                        if (berita.wilayah_info) {
+                            document.getElementById('detailProvinsi').textContent = berita.wilayah_info.provinsi || '-';
+                            document.getElementById('detailKabupaten').textContent = berita.wilayah_info.kabupaten || '-';
+                            document.getElementById('detailKecamatan').textContent = berita.wilayah_info.kecamatan || '-';
+                            document.getElementById('detailDesa').textContent = berita.wilayah_info.desa || '-';
                         }
                     } else {
                         throw new Error('Data format tidak valid');

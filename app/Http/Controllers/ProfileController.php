@@ -42,6 +42,61 @@ class ProfileController extends Controller
                     if ($citizenData && isset($citizenData['data'])) {
                         $userData->citizen_data = $citizenData['data'];
 
+                        // Enrich lokasi names if missing using WilayahService
+                        try {
+                            $wilayahService = app(WilayahService::class);
+                            $cd = &$userData->citizen_data;
+                            $provId = $cd['province_id'] ?? ($cd['provinsi_id'] ?? ($cd['provinceId'] ?? null));
+                            if ($provId && empty($cd['province_name']) && empty($cd['province'])) {
+                                $provinces = $wilayahService->getProvinces();
+                                $province = collect($provinces)->first(function ($p) use ($provId) {
+                                    return (isset($p['code']) && (string)$p['code'] === (string)$provId)
+                                        || (isset($p['id']) && (string)$p['id'] === (string)$provId);
+                                });
+                                if ($province) {
+                                    $cd['province_name'] = $province['name'] ?? null;
+                                }
+                            }
+
+                            $distId = $cd['district_id'] ?? ($cd['kabupaten_id'] ?? ($cd['city_id'] ?? ($cd['districts_id'] ?? null)));
+                            if ($distId && empty($cd['district_name']) && empty($cd['district']) && empty($cd['city']) && $provId) {
+                                $kabupaten = $wilayahService->getKabupaten($provId);
+                                $kabData = collect($kabupaten)->first(function ($k) use ($distId) {
+                                    return (isset($k['id']) && (string)$k['id'] === (string)$distId)
+                                        || (isset($k['code']) && (string)$k['code'] === (string)$distId);
+                                });
+                                if ($kabData) {
+                                    $cd['district_name'] = $kabData['name'] ?? null;
+                                }
+                            }
+
+                            $subDistId = $cd['sub_district_id'] ?? ($cd['kecamatan_id'] ?? ($cd['sub_districts_id'] ?? null));
+                            if ($subDistId && empty($cd['sub_district_name']) && empty($cd['sub_district']) && empty($cd['kecamatan']) && $provId && !empty($kabData)) {
+                                $kecamatan = $wilayahService->getKecamatan($kabData['code']);
+                                $kecData = collect($kecamatan)->first(function ($k) use ($subDistId) {
+                                    return (isset($k['id']) && (string)$k['id'] === (string)$subDistId)
+                                        || (isset($k['code']) && (string)$k['code'] === (string)$subDistId);
+                                });
+                                if ($kecData) {
+                                    $cd['sub_district_name'] = $kecData['name'] ?? null;
+                                }
+                            }
+
+                            $villageId = $cd['village_id'] ?? ($cd['villages_id'] ?? ($cd['desa_id'] ?? null));
+                            if ($villageId && empty($cd['village_name']) && empty($cd['village']) && $provId && !empty($kabData) && !empty($kecData)) {
+                                $desa = $wilayahService->getDesa($kecData['code']);
+                                $desaData = collect($desa)->first(function ($d) use ($villageId) {
+                                    return (isset($d['id']) && (string)$d['id'] === (string)$villageId)
+                                        || (isset($d['code']) && (string)$d['code'] === (string)$villageId);
+                                });
+                                if ($desaData) {
+                                    $cd['village_name'] = $desaData['name'] ?? null;
+                                }
+                            }
+                        } catch (\Exception $e) {
+                            Log::warning('Failed enriching wilayah names for profile view: ' . $e->getMessage());
+                        }
+
                         if (isset($userData->citizen_data['kk'])) {
                             $userData->no_kk = $userData->citizen_data['kk'];
                             $familyData = $this->citizenService->getFamilyMembersByKK($userData->citizen_data['kk']);
