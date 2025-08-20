@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
             JenisAsetSeeder::class, // Panggil JenisAsetSeeder
             KlasifikasiSeeder::class, // Panggil KlasifikasiSeeder
             LaporDesaSeeder::class,
+            PendudukSeeder::class,
         ]);
     }
 }

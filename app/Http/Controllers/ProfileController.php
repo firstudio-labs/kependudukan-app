@@ -11,11 +11,13 @@ use App\Models\Kecamatan;
 use App\Models\Desa;
 use App\Models\FamilyMemberDocument;
 use App\Services\CitizenService;
+use App\Models\ProfileChangeRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use App\Services\WilayahService;
 
 class ProfileController extends Controller
 {
@@ -69,7 +71,15 @@ class ProfileController extends Controller
                 ->with('error', 'Please login to access your profile');
         }
 
-        return view('user.profile.index', compact('userData'));
+        // Ambil daftar provinsi untuk dropdown wilayah (server-side) via WilayahService (API kependudukan)
+        try {
+            $provinces = app(WilayahService::class)->getProvinces();
+        } catch (\Exception $e) {
+            Log::error('Error fetching provinces: ' . $e->getMessage());
+            $provinces = [];
+        }
+
+        return view('user.profile.index', compact('userData', 'provinces'));
     }
     public function create()
     {
@@ -197,6 +207,50 @@ class ProfileController extends Controller
         return redirect()
             ->route('user.profile.index')
             ->with('success', 'Profile updated successfully');
+    }
+
+    public function requestBiodataApproval(Request $request)
+    {
+        $penduduk = Auth::guard('penduduk')->user();
+        if (!$penduduk) {
+            return redirect()->route('login')->with('error', 'Silakan login.');
+        }
+
+        $validated = $request->validate([
+            'full_name' => 'required|string|max:255',
+            'kk' => 'nullable|numeric',
+            'gender' => 'nullable|string',
+            'age' => 'nullable|numeric',
+            'birth_place' => 'nullable|string',
+            'birth_date' => 'nullable|date',
+            'address' => 'nullable|string',
+            'rt' => 'nullable|string',
+            'rw' => 'nullable|string',
+            'province_id' => 'nullable|numeric',
+            'district_id' => 'nullable|numeric',
+            'sub_district_id' => 'nullable|numeric',
+            'village_id' => 'nullable|numeric',
+        ]);
+
+        try {
+            $citizen = $this->citizenService->getCitizenByNIK((int) $penduduk->nik);
+            $villageId = $citizen['data']['village_id'] ?? $citizen['village_id'] ?? $citizen['data']['villages_id'] ?? $citizen['villages_id'] ?? null;
+            $currentData = $citizen['data'] ?? $citizen ?? [];
+
+            ProfileChangeRequest::create([
+                'nik' => $penduduk->nik,
+                'village_id' => $villageId,
+                'current_data' => $currentData,
+                'requested_changes' => $validated,
+                'status' => 'pending',
+                'requested_at' => now(),
+            ]);
+
+            return redirect()->route('user.profile.index')->with('success', 'Permintaan perubahan biodata dikirim. Menunggu persetujuan admin desa.');
+        } catch (\Exception $e) {
+            Log::error('Error create profile change request from profile page: ' . $e->getMessage());
+            return back()->with('error', 'Gagal mengirim permintaan: ' . $e->getMessage())->withInput();
+        }
     }
 
     public function getFamilyMemberDocuments($nik)

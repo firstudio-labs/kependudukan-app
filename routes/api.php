@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\KelolaAsetController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\ProfileChangeRequestController;
 
 /*
 |--------------------------------------------------------------------------
@@ -147,6 +148,13 @@ Route::middleware(ApiTokenOwnerMiddleware::class)->group(function () {
 
 
     });
+    
+    // Profile Change Requests API
+    Route::post('/profile-change-requests', [ProfileChangeRequestController::class, 'store']);
+    Route::get('/admin/profile-change-requests', [ProfileChangeRequestController::class, 'index']);
+    Route::get('/admin/profile-change-requests/{id}', [ProfileChangeRequestController::class, 'show']);
+    Route::post('/admin/profile-change-requests/{id}/approve', [ProfileChangeRequestController::class, 'approve']);
+    Route::post('/admin/profile-change-requests/{id}/reject', [ProfileChangeRequestController::class, 'reject']);
 });
 
 Route::fallback(function () {

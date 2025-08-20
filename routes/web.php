@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\adminDesa\ProfileDesaController;
+use App\Http\Controllers\adminDesa\BiodataApprovalController as AdminDesaBiodataApprovalController;
 use App\Http\Controllers\BeritaDesaController;
 use App\Http\Controllers\User\RiwayatSuratController;
 use Illuminate\Support\Facades\Route;
@@ -48,6 +49,7 @@ use App\Http\Controllers\guest\BukuTamuController;
 use App\Http\Controllers\superadmin\BeritaDesaController as SuperadminBeritaDesaController;
 use App\Http\Controllers\User\BeritaDesaController as UserBeritaDesaController;
 use App\Http\Controllers\UsersController;
+use App\Http\Controllers\User\BiodataChangeController as UserBiodataChangeController;
 
 
 // Homepage route should use our new method to force logout
@@ -490,6 +492,16 @@ Route::middleware(['auth:web', 'role:admin desa'])->group(function () {
     Route::delete('/admin/desa/biodata/{id}', [BiodataController::class, 'destroy'])
         ->name('admin.desa.biodata.destroy');
 
+    // Biodata change approvals
+    Route::get('/admin/desa/biodata-approval', [AdminDesaBiodataApprovalController::class, 'index'])
+        ->name('admin.desa.biodata-approval.index');
+    Route::get('/admin/desa/biodata-approval/{id}', [AdminDesaBiodataApprovalController::class, 'show'])
+        ->name('admin.desa.biodata-approval.show');
+    Route::post('/admin/desa/biodata-approval/{id}/approve', [AdminDesaBiodataApprovalController::class, 'approve'])
+        ->name('admin.desa.biodata-approval.approve');
+    Route::post('/admin/desa/biodata-approval/{id}/reject', [AdminDesaBiodataApprovalController::class, 'reject'])
+        ->name('admin.desa.biodata-approval.reject');
+
     // Routes for managing family data
     Route::get('/admin/desa/datakk/index', [DataKKController::class, 'index'])
         ->name('admin.desa.datakk.index');
@@ -775,6 +787,8 @@ Route::middleware(['auth:penduduk'])->group(function () {
         ->name('user.profile.edit');
     Route::put('/user/profile', [ProfileController::class, 'update'])
         ->name('user.profile.update');
+    Route::post('/user/profile/request-approval', [ProfileController::class, 'requestBiodataApproval'])
+        ->name('user.profile.request-approval');
     Route::get('/user/profile/create', [ProfileController::class, 'create'])
         ->name('user.profile.create');
     Route::post('/user/profile', [ProfileController::class, 'store'])
@@ -847,6 +861,16 @@ Route::middleware(['auth:penduduk'])->group(function () {
     //riwayat surat routes
     Route::get('/user/riwayat-surat', [RiwayatSuratController::class, 'index'])
         ->name('user.riwayat-surat.index');
+
+    // Biodata Change (Penduduk)
+    Route::get('/user/biodata-change', [UserBiodataChangeController::class, 'index'])
+        ->name('user.biodata-change.index');
+    Route::get('/user/biodata-change/create', [UserBiodataChangeController::class, 'create'])
+        ->name('user.biodata-change.create');
+    Route::post('/user/biodata-change', [UserBiodataChangeController::class, 'store'])
+        ->name('user.biodata-change.store');
+    Route::get('/user/biodata-change/{id}', [UserBiodataChangeController::class, 'show'])
+        ->name('user.biodata-change.show');
 
     // Detail surat routes
     Route::get('/user/surat/skck/{id}/detail', [RiwayatSuratController::class, 'showSKCK'])

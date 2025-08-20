@@ -410,6 +410,12 @@
                                     <span>Data KK</span>
                                 </a>
                             </li>
+                            <li>
+                                <a href="{{ route('admin.desa.biodata-approval.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                                                                                                            {{ request()->routeIs('admin.desa.biodata-approval.*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                    <span>Approval Biodata</span>
+                                </a>
+                            </li>
                         </ul>
                     </li>
 
@@ -534,6 +540,8 @@
                         </a>
                     </li>
 
+                    
+
                     <!-- Add Logout Button for admin.desa -->
                     <li class="-ml-5 mt-8">
                         <form method="POST" action="{{ route('logout') }}">
@@ -615,6 +623,8 @@
                             <span>Profile</span>
                         </a>
                     </li>
+
+                    
 
                     <li class="-ml-5">
                         <a href="{{ route('user.riwayat-surat.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300

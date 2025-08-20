@@ -35,6 +35,11 @@ if (Auth::guard('web')->check()) {
                         <h2 class="text-xl font-semibold text-gray-700">Data Pribadi</h2>
                         <p class="text-gray-500">Informasi personal penduduk</p>
                     </div>
+                    <div>
+                        <button type="button" onclick="toggleEditForm()" class="bg-[#4A47DC] text-white px-4 py-2 rounded">
+                            Edit Biodata (Minta Approval)
+                        </button>
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -105,6 +110,79 @@ if (Auth::guard('web')->check()) {
                         </dl>
                     </div>
                 </div>
+            </div>
+
+            <!-- Form Edit Biodata (Request Approval) -->
+            <div id="editBiodataForm" class="bg-white p-6 rounded-lg shadow-md mb-6 hidden">
+                <h2 class="text-xl font-semibold text-gray-700 mb-4">Edit Biodata</h2>
+                <form method="POST" action="{{ route('user.profile.request-approval') }}" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    @csrf
+                    <input type="hidden" name="nik" value="{{ $userData->nik }}" />
+                    <div class="md:col-span-2">
+                        <label class="block text-sm text-gray-700">NIK</label>
+                        <input value="{{ $userData->nik }}" class="mt-1 w-full border rounded p-2 bg-gray-100" disabled />
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-700">Nama Lengkap</label>
+                        <input name="full_name" value="{{ $userData->citizen_data['full_name'] ?? ($userData->citizen_data['nama'] ?? '') }}" class="mt-1 w-full border rounded p-2" required />
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-700">Nomor KK</label>
+                        <input name="kk" value="{{ $userData->citizen_data['kk'] ?? '' }}" class="mt-1 w-full border rounded p-2 bg-gray-100" readonly />
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-700">Jenis Kelamin</label>
+                        <input name="gender" value="{{ $userData->citizen_data['gender'] ?? '' }}" class="mt-1 w-full border rounded p-2" />
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-700">Umur</label>
+                        <input name="age" value="{{ $userData->citizen_data['age'] ?? '' }}" class="mt-1 w-full border rounded p-2" />
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-700">Tempat Lahir</label>
+                        <input name="birth_place" value="{{ $userData->citizen_data['birth_place'] ?? '' }}" class="mt-1 w-full border rounded p-2" />
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-700">Tanggal Lahir</label>
+                        <input name="birth_date" value="{{ $userData->citizen_data['birth_date'] ?? '' }}" class="mt-1 w-full border rounded p-2" />
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm text-gray-700">Alamat</label>
+                        <textarea name="address" class="mt-1 w-full border rounded p-2" rows="2">{{ $userData->citizen_data['address'] ?? '' }}</textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-700">RT</label>
+                        <input name="rt" value="{{ $userData->citizen_data['rt'] ?? '' }}" class="mt-1 w-full border rounded p-2" />
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-700">RW</label>
+                        <input name="rw" value="{{ $userData->citizen_data['rw'] ?? '' }}" class="mt-1 w-full border rounded p-2" />
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-700">Provinsi</label>
+                        <input value="{{ $userData->citizen_data['province_name'] ?? ($userData->citizen_data['province'] ?? '') }}" class="mt-1 w-full border rounded p-2 bg-gray-100" readonly />
+                        <input type="hidden" id="province_id" name="province_id" value="{{ $userData->citizen_data['province_id'] ?? '' }}" />
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-700">Kabupaten</label>
+                        <input value="{{ $userData->citizen_data['district_name'] ?? ($userData->citizen_data['district'] ?? $userData->citizen_data['city'] ?? '') }}" class="mt-1 w-full border rounded p-2 bg-gray-100" readonly />
+                        <input type="hidden" id="district_id" name="district_id" value="{{ $userData->citizen_data['district_id'] ?? '' }}" />
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-700">Kecamatan</label>
+                        <input value="{{ $userData->citizen_data['sub_district_name'] ?? ($userData->citizen_data['sub_district'] ?? $userData->citizen_data['kecamatan'] ?? '') }}" class="mt-1 w-full border rounded p-2 bg-gray-100" readonly />
+                        <input type="hidden" id="sub_district_id" name="sub_district_id" value="{{ $userData->citizen_data['sub_district_id'] ?? '' }}" />
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-700">Desa</label>
+                        <input value="{{ $userData->citizen_data['village_name'] ?? ($userData->citizen_data['village'] ?? '') }}" class="mt-1 w-full border rounded p-2 bg-gray-100" readonly />
+                        <input type="hidden" id="village_id" name="village_id" value="{{ $userData->citizen_data['village_id'] ?? '' }}" />
+                    </div>
+                    <div class="md:col-span-2 flex justify-end gap-3 mt-2">
+                        <button type="button" onclick="toggleEditForm()" class="px-4 py-2 border rounded">Batal</button>
+                        <button type="submit" class="bg-[#4A47DC] text-white px-4 py-2 rounded">Minta Persetujuan Admin</button>
+                    </div>
+                </form>
             </div>
 
             <!-- Tabel Alamat -->
@@ -1901,5 +1979,18 @@ if (!empty($userData->tag_lokasi)) {
                     </div>
                 </div>
             </div>
+            <script>
+                function toggleEditForm() {
+                    const el = document.getElementById('editBiodataForm');
+                    if (!el) return;
+                    if (el.classList.contains('hidden')) {
+                        el.classList.remove('hidden');
+                        el.scrollIntoView({ behavior: 'smooth' });
+                    } else {
+                        el.classList.add('hidden');
+                    }
+                }
+            </script>
+            <script src="{{ asset('js/location-selector-edit.js') }}"></script>
     </div>
 </x-layout>
