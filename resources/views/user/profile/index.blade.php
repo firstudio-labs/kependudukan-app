@@ -37,7 +37,7 @@ if (Auth::guard('web')->check()) {
                     </div>
                     <div>
                         <button type="button" onclick="toggleEditForm()" id="btnToggleEdit"
-                            class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 focus:bg-indigo-700 text-white px-4 py-2 rounded-lg shadow-sm transition-all">
+                            class="inline-flex items-center gap-2 bg-[#4A47DC] hover:bg-[#2D336B] text-white px-4 py-2 rounded-lg shadow-sm transition-all">
                             <i class="fa-solid fa-user-pen"></i>
                             <span id="btnToggleEditText">Edit Biodata (Minta Approval)</span>
                         </button>
@@ -188,11 +188,11 @@ if (Auth::guard('web')->check()) {
                         <input type="hidden" id="village_id" name="village_id" value="{{ $userData->citizen_data['village_id'] ?? ($userData->citizen_data['villages_id'] ?? ($userData->citizen_data['desa_id'] ?? '')) }}" />
                     </div>
                     <div class="md:col-span-2 flex justify-end gap-3 mt-2">
-                        <button type="button" onclick="toggleEditForm()" class="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-gray-700">
+                        <button type="button" onclick="toggleEditForm()" class="inline-flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-gray-50">
                             <i class="fa-solid fa-xmark"></i>
                             <span>Batal</span>
                         </button>
-                        <button type="submit" class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 focus:bg-indigo-700 text-white px-4 py-2 rounded-lg shadow-sm">
+                        <button type="submit" class="inline-flex items-center gap-2 bg-[#4A47DC] hover:bg-[#2D336B] text-white px-4 py-2 rounded-lg shadow-sm">
                             <i class="fa-solid fa-paper-plane"></i>
                             <span>Kirim Permintaan Approval</span>
                         </button>
@@ -2003,14 +2003,14 @@ if (!empty($userData->tag_lokasi)) {
                     const isHidden = el.classList.contains('hidden');
                     if (isHidden) {
                         el.classList.remove('hidden');
-                        btn.classList.remove('bg-indigo-600');
-                        btn.classList.add('bg-indigo-700');
+                        btn.classList.remove('bg-[#4A47DC]');
+                        btn.classList.add('bg-[#2D336B]');
                         btnText.textContent = 'Tutup Form Edit';
                         el.scrollIntoView({ behavior: 'smooth' });
                     } else {
                         el.classList.add('hidden');
-                        btn.classList.remove('bg-indigo-700');
-                        btn.classList.add('bg-indigo-600');
+                        btn.classList.remove('bg-[#2D336B]');
+                        btn.classList.add('bg-[#4A47DC]');
                         btnText.textContent = 'Edit Biodata (Minta Approval)';
                     }
                 }

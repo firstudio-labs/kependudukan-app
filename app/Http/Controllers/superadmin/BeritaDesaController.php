@@ -65,8 +65,8 @@ class BeritaDesaController extends Controller
         if ($berita->id_kabupaten && $berita->id_provinsi) {
             try {
                 $kabupaten = $this->wilayahService->getKabupaten($berita->id_provinsi);
-                
-                $kabupatenData = collect($kabupaten)->firstWhere('id', $berita->id_kabupaten);
+                // Cocokkan berdasarkan code karena kita menyimpan kode (2/4/6/10 digit) di DB
+                $kabupatenData = collect($kabupaten)->firstWhere('code', (string) $berita->id_kabupaten);
                 if ($kabupatenData) {
                     $wilayah['kabupaten'] = $kabupatenData['name'];
                 }
@@ -79,12 +79,12 @@ class BeritaDesaController extends Controller
             try {
                 // Get kabupaten data first to get the code
                 $kabupaten = $this->wilayahService->getKabupaten($berita->id_provinsi);
-                $kabupatenData = collect($kabupaten)->firstWhere('id', $berita->id_kabupaten);
+                $kabupatenData = collect($kabupaten)->firstWhere('code', (string) $berita->id_kabupaten);
                 
                 if ($kabupatenData) {
                     $kecamatan = $this->wilayahService->getKecamatan($kabupatenData['code']);
-                    
-                    $kecamatanData = collect($kecamatan)->firstWhere('id', $berita->id_kecamatan);
+                    // Cocokkan berdasarkan code karena kita menyimpan kode
+                    $kecamatanData = collect($kecamatan)->firstWhere('code', (string) $berita->id_kecamatan);
                     if ($kecamatanData) {
                         $wilayah['kecamatan'] = $kecamatanData['name'];
                     }
@@ -98,17 +98,17 @@ class BeritaDesaController extends Controller
             try {
                 // Get kabupaten data first to get the code
                 $kabupaten = $this->wilayahService->getKabupaten($berita->id_provinsi);
-                $kabupatenData = collect($kabupaten)->firstWhere('id', $berita->id_kabupaten);
+                $kabupatenData = collect($kabupaten)->firstWhere('code', (string) $berita->id_kabupaten);
                 
                 if ($kabupatenData) {
                     // Get kecamatan data to get the code
                     $kecamatan = $this->wilayahService->getKecamatan($kabupatenData['code']);
-                    $kecamatanData = collect($kecamatan)->firstWhere('id', $berita->id_kecamatan);
+                    $kecamatanData = collect($kecamatan)->firstWhere('code', (string) $berita->id_kecamatan);
                     
                     if ($kecamatanData) {
                         $desa = $this->wilayahService->getDesa($kecamatanData['code']);
-                        
-                        $desaData = collect($desa)->firstWhere('id', $berita->id_desa);
+                        // Cocokkan berdasarkan code karena kita menyimpan kode desa 10 digit
+                        $desaData = collect($desa)->firstWhere('code', (string) $berita->id_desa);
                         if ($desaData) {
                             $wilayah['desa'] = $desaData['name'];
                         }

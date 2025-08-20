@@ -4,7 +4,6 @@ namespace App\Http\Controllers\adminDesa;
 
 use App\Http\Controllers\Controller;
 use App\Models\BeritaDesa;
-use App\Services\WilayahService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -12,12 +11,6 @@ use Illuminate\Support\Str;
 
 class BeritaDesaController extends Controller
 {
-    private WilayahService $wilayahService;
-
-    public function __construct(WilayahService $wilayahService)
-    {
-        $this->wilayahService = $wilayahService;
-    }
     public function index(Request $request)
     {
         $this->authorizeAdminDesa();
@@ -184,8 +177,6 @@ class BeritaDesaController extends Controller
         $this->authorizeAdminDesa();
         $berita = BeritaDesa::with('user')->findOrFail($id);
         abort_unless($berita->id_desa == Auth::user()->villages_id, 403);
-        // Tambahkan informasi nama wilayah untuk ditampilkan di view
-        $berita->wilayah_info = $this->getWilayahInfo($berita);
         return response()->json([
             'status' => 'success',
             'data' => $berita
@@ -195,73 +186,6 @@ class BeritaDesaController extends Controller
     private function authorizeAdminDesa(): void
     {
         abort_unless(Auth::check() && Auth::user()->role === 'admin desa', 403);
-    }
-
-    private function getWilayahInfo($berita): array
-    {
-        $wilayah = [];
-
-        if ($berita->id_provinsi) {
-            try {
-                $provinces = $this->wilayahService->getProvinces();
-                $province = collect($provinces)->firstWhere('code', $berita->id_provinsi);
-                if ($province) {
-                    $wilayah['provinsi'] = $province['name'];
-                }
-            } catch (\Exception $e) {
-                // ignore
-            }
-        }
-
-        if ($berita->id_kabupaten && $berita->id_provinsi) {
-            try {
-                $kabupaten = $this->wilayahService->getKabupaten($berita->id_provinsi);
-                $kabupatenData = collect($kabupaten)->firstWhere('id', $berita->id_kabupaten);
-                if ($kabupatenData) {
-                    $wilayah['kabupaten'] = $kabupatenData['name'];
-                }
-            } catch (\Exception $e) {
-                // ignore
-            }
-        }
-
-        if ($berita->id_kecamatan && $berita->id_kabupaten && $berita->id_provinsi) {
-            try {
-                $kabupaten = $this->wilayahService->getKabupaten($berita->id_provinsi);
-                $kabupatenData = collect($kabupaten)->firstWhere('id', $berita->id_kabupaten);
-                if ($kabupatenData) {
-                    $kecamatan = $this->wilayahService->getKecamatan($kabupatenData['code']);
-                    $kecamatanData = collect($kecamatan)->firstWhere('id', $berita->id_kecamatan);
-                    if ($kecamatanData) {
-                        $wilayah['kecamatan'] = $kecamatanData['name'];
-                    }
-                }
-            } catch (\Exception $e) {
-                // ignore
-            }
-        }
-
-        if ($berita->id_desa && $berita->id_kecamatan && $berita->id_kabupaten && $berita->id_provinsi) {
-            try {
-                $kabupaten = $this->wilayahService->getKabupaten($berita->id_provinsi);
-                $kabupatenData = collect($kabupaten)->firstWhere('id', $berita->id_kabupaten);
-                if ($kabupatenData) {
-                    $kecamatan = $this->wilayahService->getKecamatan($kabupatenData['code']);
-                    $kecamatanData = collect($kecamatan)->firstWhere('id', $berita->id_kecamatan);
-                    if ($kecamatanData) {
-                        $desa = $this->wilayahService->getDesa($kecamatanData['code']);
-                        $desaData = collect($desa)->firstWhere('id', $berita->id_desa);
-                        if ($desaData) {
-                            $wilayah['desa'] = $desaData['name'];
-                        }
-                    }
-                }
-            } catch (\Exception $e) {
-                // ignore
-            }
-        }
-
-        return $wilayah;
     }
 }
 
