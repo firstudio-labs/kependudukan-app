@@ -134,14 +134,32 @@ if (Auth::guard('web')->check()) {
                     </div>
                     <div>
                         <label class="block text-sm text-gray-700">Jenis Kelamin</label>
-                        <select name="gender" class="mt-1 w-full border rounded p-2">
+                        <select name="gender" class="mt-1 w-full border rounded p-2" required>
                             @php
+                                // Handle berbagai kemungkinan format gender dari API
                                 $genderVal = $userData->citizen_data['gender'] ?? '';
+                                
+                                // Normalize gender value untuk comparison yang lebih robust
+                                $normalizedGender = '';
+                                if (!empty($genderVal)) {
+                                    $genderLower = strtolower(trim($genderVal));
+                                    if (in_array($genderLower, ['laki-laki', 'laki laki', 'l', '1', 'male', 'pria'])) {
+                                        $normalizedGender = 'Laki-laki';
+                                    } elseif (in_array($genderLower, ['perempuan', 'p', '2', 'female', 'wanita'])) {
+                                        $normalizedGender = 'Perempuan';
+                                    }
+                                }
                             @endphp
-                            <option value="" {{ $genderVal == '' ? 'selected' : '' }}>Pilih</option>
-                            <option value="Laki-laki" {{ in_array($genderVal, ['Laki-laki','LAKI-LAKI','L']) ? 'selected' : '' }}>Laki-laki</option>
-                            <option value="Perempuan" {{ in_array($genderVal, ['Perempuan','PEREMPUAN','P']) ? 'selected' : '' }}>Perempuan</option>
+                            <option value="" {{ $normalizedGender == '' ? 'selected' : '' }}>Pilih Jenis Kelamin</option>
+                            <option value="Laki-laki" {{ $normalizedGender == 'Laki-laki' ? 'selected' : '' }}>Laki-laki</option>
+                            <option value="Perempuan" {{ $normalizedGender == 'Perempuan' ? 'selected' : '' }}>Perempuan</option>
                         </select>
+                        @if(!empty($genderVal) && $normalizedGender == '')
+                            <p class="text-xs text-orange-600 mt-1">
+                                <i class="fa-solid fa-exclamation-triangle"></i>
+                                Format gender tidak dikenali: "{{ $genderVal }}". Silakan pilih manual.
+                            </p>
+                        @endif
                     </div>
                     <div>
                         <label class="block text-sm text-gray-700">Umur</label>
@@ -169,22 +187,37 @@ if (Auth::guard('web')->check()) {
                     </div>
                     <div>
                         <label class="block text-sm text-gray-700">Provinsi</label>
-                        <input value="{{ $userData->citizen_data['province_name'] ?? ($userData->citizen_data['province'] ?? '') }}" class="mt-1 w-full border rounded p-2 bg-gray-100" readonly />
+                        <select name="province_code" id="province_code" class="mt-1 w-full border rounded p-2 bg-gray-100" disabled>
+                            <option value="">Pilih Provinsi</option>
+                            @foreach($provinces as $province)
+                                <option value="{{ $province['code'] }}" 
+                                    data-id="{{ $province['id'] }}"
+                                    {{ ($userData->citizen_data['province_id'] ?? ($userData->citizen_data['provinsi_id'] ?? ($userData->citizen_data['provinceId'] ?? ''))) == $province['id'] ? 'selected' : '' }}>
+                                    {{ $province['name'] }}
+                                </option>
+                            @endforeach
+                        </select>
                         <input type="hidden" id="province_id" name="province_id" value="{{ $userData->citizen_data['province_id'] ?? ($userData->citizen_data['provinsi_id'] ?? ($userData->citizen_data['provinceId'] ?? '')) }}" />
                     </div>
                     <div>
                         <label class="block text-sm text-gray-700">Kabupaten</label>
-                        <input value="{{ $userData->citizen_data['district_name'] ?? ($userData->citizen_data['district'] ?? $userData->citizen_data['city'] ?? '') }}" class="mt-1 w-full border rounded p-2 bg-gray-100" readonly />
+                        <select name="district_code" id="district_code" class="mt-1 w-full border rounded p-2 bg-gray-100" disabled>
+                            <option value="">Pilih Kabupaten</option>
+                        </select>
                         <input type="hidden" id="district_id" name="district_id" value="{{ $userData->citizen_data['district_id'] ?? ($userData->citizen_data['kabupaten_id'] ?? ($userData->citizen_data['city_id'] ?? ($userData->citizen_data['districts_id'] ?? ''))) }}" />
                     </div>
                     <div>
                         <label class="block text-sm text-gray-700">Kecamatan</label>
-                        <input value="{{ $userData->citizen_data['sub_district_name'] ?? ($userData->citizen_data['sub_district'] ?? $userData->citizen_data['kecamatan'] ?? '') }}" class="mt-1 w-full border rounded p-2 bg-gray-100" readonly />
+                        <select name="sub_district_code" id="sub_district_code" class="mt-1 w-full border rounded p-2 bg-gray-100" disabled>
+                            <option value="">Pilih Kecamatan</option>
+                        </select>
                         <input type="hidden" id="sub_district_id" name="sub_district_id" value="{{ $userData->citizen_data['sub_district_id'] ?? ($userData->citizen_data['kecamatan_id'] ?? ($userData->citizen_data['sub_districts_id'] ?? '')) }}" />
                     </div>
                     <div>
                         <label class="block text-sm text-gray-700">Desa</label>
-                        <input value="{{ $userData->citizen_data['village_name'] ?? ($userData->citizen_data['village'] ?? '') }}" class="mt-1 w-full border rounded p-2 bg-gray-100" readonly />
+                        <select name="village_code" id="village_code" class="mt-1 w-full border rounded p-2 bg-gray-100" disabled>
+                            <option value="">Pilih Desa</option>
+                        </select>
                         <input type="hidden" id="village_id" name="village_id" value="{{ $userData->citizen_data['village_id'] ?? ($userData->citizen_data['villages_id'] ?? ($userData->citizen_data['desa_id'] ?? '')) }}" />
                     </div>
                     <div class="md:col-span-2 flex justify-end gap-3 mt-2">
@@ -213,60 +246,26 @@ if (Auth::guard('web')->check()) {
                     <div>
                         <dl class="grid grid-cols-1 gap-x-4 gap-y-3">
                             <div class="sm:col-span-1">
-                                <dt class="text-sm font-medium text-gray-500">Alamat</dt>
-                                <dd class="mt-1 text-sm text-gray-900">
-                                    @if ($userData->alamat)
-                                        {{ $userData->alamat }}
-                                    @elseif(isset($userData->citizen_data['address']))
-                                        {{ $userData->citizen_data['address'] }}
-                                    @else
-                                        Belum diisi
-                                    @endif
-                                </dd>
-                            </div>
-                            <div class="sm:col-span-1">
                                 <dt class="text-sm font-medium text-gray-500">Provinsi</dt>
-                                <dd class="mt-1 text-sm text-gray-900" id="provinceDisplay">
-                                    @if ($userData->provinsi)
-                                        {{ $userData->provinsi->nama ?? $userData->provinsi->name }}
-                                    @elseif(isset($userData->citizen_data['province']))
-                                        {{ $userData->citizen_data['province'] }}
+                                <dd class="mt-1 text-sm text-gray-900">
+                                    @if(isset($userData->citizen_data['province_name']))
+                                        {{ $userData->citizen_data['province_name'] }}
                                     @elseif(isset($userData->citizen_data['provinsi']))
                                         {{ $userData->citizen_data['provinsi'] }}
                                     @else
-                                        <span class="text-gray-400">Memuat...</span>
+                                        -
                                     @endif
                                 </dd>
                             </div>
                             <div class="sm:col-span-1">
-                                <dt class="text-sm font-medium text-gray-500">Kabupaten/Kota</dt>
-                                <dd class="mt-1 text-sm text-gray-900" id="districtDisplay">
-                                    @if ($userData->kabupaten)
-                                        {{ $userData->kabupaten->nama ?? $userData->kabupaten->name }}
-                                    @elseif(isset($userData->citizen_data['city']))
-                                        {{ $userData->citizen_data['city'] }}
+                                <dt class="text-sm font-medium text-gray-500">Kabupaten</dt>
+                                <dd class="mt-1 text-sm text-gray-900">
+                                    @if(isset($userData->citizen_data['district_name']))
+                                        {{ $userData->citizen_data['district_name'] }}
                                     @elseif(isset($userData->citizen_data['kabupaten']))
                                         {{ $userData->citizen_data['kabupaten'] }}
-                                    @elseif(isset($userData->citizen_data['district']))
-                                        {{ $userData->citizen_data['district'] }}
                                     @else
-                                        <span class="text-gray-400">Memuat...</span>
-                                    @endif
-                                </dd>
-                            </div>
-                            <div class="sm:col-span-1">
-                                <dt class="text-sm font-medium text-gray-500">Kecamatan</dt>
-                                <dd class="mt-1 text-sm text-gray-900" id="subDistrictDisplay">
-                                    @if ($userData->kecamatan)
-                                        {{ $userData->kecamatan->nama ?? $userData->kecamatan->name }}
-                                    @elseif(isset($userData->citizen_data['district']))
-                                        {{ $userData->citizen_data['district'] }}
-                                    @elseif(isset($userData->citizen_data['kecamatan']))
-                                        {{ $userData->citizen_data['kecamatan'] }}
-                                    @elseif(isset($userData->citizen_data['sub_district']))
-                                        {{ $userData->citizen_data['sub_district'] }}
-                                    @else
-                                        <span class="text-gray-400">Memuat...</span>
+                                        -
                                     @endif
                                 </dd>
                             </div>
@@ -275,35 +274,156 @@ if (Auth::guard('web')->check()) {
                     <div>
                         <dl class="grid grid-cols-1 gap-x-4 gap-y-3">
                             <div class="sm:col-span-1">
-                                <dt class="text-sm font-medium text-gray-500">Kelurahan</dt>
-                                <dd class="mt-1 text-sm text-gray-900" id="villageDisplay">
-                                    @if ($userData->kelurahan)
-                                        {{ $userData->kelurahan->nama }}
-                                    @elseif(isset($userData->citizen_data['village']))
-                                        {{ $userData->citizen_data['village'] }}
+                                <dt class="text-sm font-medium text-gray-500">Kecamatan</dt>
+                                <dd class="mt-1 text-sm text-gray-900">
+                                    @if(isset($userData->citizen_data['sub_district_name']))
+                                        {{ $userData->citizen_data['sub_district_name'] }}
+                                    @elseif(isset($userData->citizen_data['kecamatan']))
+                                        {{ $userData->citizen_data['kecamatan'] }}
                                     @else
-                                        <span class="text-gray-400">Memuat...</span>
+                                        -
                                     @endif
                                 </dd>
                             </div>
                             <div class="sm:col-span-1">
-                                <dt class="text-sm font-medium text-gray-500">RT/RW</dt>
+                                <dt class="text-sm font-medium text-gray-500">Desa</dt>
                                 <dd class="mt-1 text-sm text-gray-900">
-                                    @if (isset($userData->rt) && isset($userData->rw))
-                                        {{ $userData->rt }}/{{ $userData->rw }}
-                                    @elseif (isset($userData->rt_rw))
-                                        {{ $userData->rt_rw }}
-                                    @elseif (isset($userData->citizen_data['rt_rw']))
-                                        {{ $userData->citizen_data['rt_rw'] }}
-                                    @elseif (isset($userData->citizen_data['rt']) && isset($userData->citizen_data['rw']))
-                                        {{ $userData->citizen_data['rt'] }}/{{ $userData->citizen_data['rw'] }}
+                                    @if(isset($userData->citizen_data['village_name']))
+                                        {{ $userData->citizen_data['village_name'] }}
+                                    @elseif(isset($userData->citizen_data['desa']))
+                                        {{ $userData->citizen_data['desa'] }}
                                     @else
-                                        Belum diisi
+                                        -
                                     @endif
                                 </dd>
                             </div>
                         </dl>
                     </div>
+                </div>
+            </div>
+
+            <!-- History Perubahan Biodata -->
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="text-xl font-semibold text-gray-700">History Perubahan Biodata</h2>
+                        <p class="text-gray-500">Riwayat permintaan perubahan dan status approval</p>
+                    </div>
+                    <button type="button" onclick="toggleHistorySection()" id="btnToggleHistory" class="inline-flex items-center gap-2 bg-[#4A47DC] hover:bg-[#2D336B] text-white px-4 py-2 rounded-lg shadow-sm transition-all">
+                        <i class="fa-solid fa-history" id="historyIcon"></i>
+                        <span id="btnToggleHistoryText">Lihat History</span>
+                    </button>
+                </div>
+
+                <!-- History Content (Hidden by default) -->
+                <div id="historyContent" class="hidden">
+                    @php
+                        // Ambil data history perubahan biodata dari user
+                        $biodataHistory = \App\Models\ProfileChangeRequest::where('nik', $userData->nik)
+                            ->orderBy('created_at', 'desc')
+                            ->get();
+                    @endphp
+
+                    @if($biodataHistory->count() > 0)
+                        <div class="space-y-4">
+                            @foreach($biodataHistory as $request)
+                                <div class="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                                    <div class="flex items-start justify-between">
+                                        <div class="flex-1">
+                                            <div class="flex items-center gap-3 mb-3">
+                                                <span class="text-sm font-medium text-gray-700">
+                                                    Permintaan #{{ $request->id }}
+                                                </span>
+                                                @if($request->status === 'pending')
+                                                    <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">
+                                                        Menunggu Review
+                                                    </span>
+                                                @elseif($request->status === 'approved')
+                                                    <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                                                        Disetujui
+                                                    </span>
+                                                @elseif($request->status === 'rejected')
+                                                    <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
+                                                        Ditolak
+                                                    </span>
+                                                @endif
+                                            </div>
+                                            
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                                <div>
+                                                    <div class="text-gray-600 mb-1"><strong>Tanggal Request:</strong> {{ $request->created_at->format('d M Y H:i') }}</div>
+                                                    @if($request->reviewed_at)
+                                                        <div class="text-gray-600 mb-1"><strong>Tanggal Review:</strong> {{ $request->reviewed_at->format('d M Y H:i') }}</div>
+                                                        <div class="text-gray-600 mb-1"><strong>Reviewer:</strong> {{ $request->reviewer ? $request->reviewer->name : 'Admin Desa' }}</div>
+                                                    @endif
+                                                </div>
+                                                <div>
+                                                    <div class="text-gray-600 mb-1"><strong>Status:</strong> 
+                                                        @if($request->status === 'pending')
+                                                            <span class="text-yellow-600">Menunggu review admin desa</span>
+                                                        @elseif($request->status === 'approved')
+                                                            <span class="text-green-600">Perubahan telah disetujui dan diterapkan</span>
+                                                        @elseif($request->status === 'rejected')
+                                                            <span class="text-red-600">Perubahan ditolak oleh admin desa</span>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Detail Perubahan -->
+                                            <div class="mt-3 p-3 bg-gray-50 rounded-lg">
+                                                <h4 class="font-medium text-gray-700 mb-2">Detail Perubahan:</h4>
+                                                <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                                                    @if(isset($request->requested_changes['full_name']))
+                                                        <div><strong>Nama:</strong> {{ $request->requested_changes['full_name'] }}</div>
+                                                    @endif
+                                                    @if(isset($request->requested_changes['gender']))
+                                                        <div><strong>Jenis Kelamin:</strong> {{ $request->requested_changes['gender'] }}</div>
+                                                    @endif
+                                                    @if(isset($request->requested_changes['birth_place']))
+                                                        <div><strong>Tempat Lahir:</strong> {{ $request->requested_changes['birth_place'] }}</div>
+                                                    @endif
+                                                    @if(isset($request->requested_changes['birth_date']))
+                                                        <div><strong>Tanggal Lahir:</strong> {{ $request->requested_changes['birth_date'] }}</div>
+                                                    @endif
+                                                    @if(isset($request->requested_changes['address']))
+                                                        <div><strong>Alamat:</strong> {{ $request->requested_changes['address'] }}</div>
+                                                    @endif
+                                                    @if(isset($request->requested_changes['rt']))
+                                                        <div><strong>RT:</strong> {{ $request->requested_changes['rt'] }}</div>
+                                                    @endif
+                                                    @if(isset($request->requested_changes['rw']))
+                                                        <div><strong>RW:</strong> {{ $request->requested_changes['rw'] }}</div>
+                                                    @endif
+                                                </div>
+                                            </div>
+
+                                            <!-- Catatan dari Admin -->
+                                            @if($request->reviewer_note)
+                                                <div class="mt-3 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-400">
+                                                    <h4 class="font-medium text-blue-700 mb-2">
+                                                        <i class="fa-solid fa-comment-dots mr-2"></i>
+                                                        Catatan dari Admin Desa:
+                                                    </h4>
+                                                    <div class="text-sm text-blue-800">
+                                                        {{ $request->reviewer_note }}
+                                                    </div>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="text-center py-8">
+                            <div class="text-gray-400 mb-3">
+                                <i class="fa-solid fa-history text-4xl"></i>
+                            </div>
+                            <h3 class="text-lg font-medium text-gray-600 mb-2">Belum Ada History</h3>
+                            <p class="text-gray-500">Anda belum pernah mengajukan perubahan biodata</p>
+                        </div>
+                    @endif
                 </div>
             </div>
 
@@ -745,338 +865,97 @@ if (!empty($userData->tag_lokasi)) {
                         <!-- Wilayah -->
                         <script>
                             document.addEventListener('DOMContentLoaded', function () {
-                                // Configuration
-                                const config = {
-                                    baseUrl: 'https://api-kependudukan.desaverse.id/api',
-                                    apiKey: '{{ config('services.kependudukan.key') }}',
-                                    locationCache: {},
-                                    locationIds: {
-                                        provinceId: {{ isset($userData->citizen_data['province_id']) ? $userData->citizen_data['province_id'] : 'null' }},
-                                        districtId: {{ isset($userData->citizen_data['district_id']) ? $userData->citizen_data['district_id'] : 'null' }},
-                                        subDistrictId: {{ isset($userData->citizen_data['sub_district_id']) ? $userData->citizen_data['sub_district_id'] : 'null' }},
-                                        villageId: {{ isset($userData->citizen_data['village_id']) ? $userData->citizen_data['village_id'] : 'null' }}
+                                // Set hidden input values for location IDs
+                                const provinceIdInput = document.getElementById('province_id');
+                                const districtIdInput = document.getElementById('district_id');
+                                const subDistrictIdInput = document.getElementById('sub_district_id');
+                                const villageIdInput = document.getElementById('village_id');
+
+                                // Get dropdown elements
+                                const provinceSelect = document.getElementById('province_code');
+                                const districtSelect = document.getElementById('district_code');
+                                const subDistrictSelect = document.getElementById('sub_district_code');
+                                const villageSelect = document.getElementById('village_code');
+
+                                // Ensure hidden inputs have the correct values
+                                if (provinceIdInput && districtIdInput && subDistrictIdInput && villageIdInput) {
+                                    console.log('Location IDs set:', {
+                                        province: provinceIdInput.value,
+                                        district: districtIdInput.value,
+                                        subDistrict: subDistrictIdInput.value,
+                                        village: villageIdInput.value
+                                    });
                                 }
-                                };
 
-
-                                const api = {
-                                    getHeaders() {
-                                        return {
-                                            'Accept': 'application/json',
-                                            'Content-Type': 'application/json',
-                                            'X-API-Key': config.apiKey
-                                        };
-                                    },
-
-                                    async request(url) {
-                                        try {
-                                            const response = await axios.get(url, { headers: this.getHeaders() });
-                                            return response.data?.data || [];
-                                        } catch (error) {
-                                            console.error(`API request error occurred`);
-                                            return [];
-                                        }
-                                    }
-                                };
-
-                                const cache = {
-                                    get(type, id) {
-                                        const cacheKey = `${type}_${id}`;
-                                        return config.locationCache[cacheKey] || null;
-                                    },
-
-
-                                    set(type, id, data) {
-                                        const cacheKey = `${type}_${id}`;
-                                        config.locationCache[cacheKey] = data;
-                                    }
-                                };
-
-
-                                const locationService = {
-
-                                    async getProvince(id) {
-                                        if (!id) return null;
-
-                                        const cachedData = cache.get('province', id);
-                                        if (cachedData) return cachedData;
-
-                                        const provinces = await api.request(`${config.baseUrl}/provinces`);
-                                        const province = provinces.find(p => String(p.id) === String(id));
-
-                                        if (province) {
-                                            cache.set('province', id, province);
-                                            return province;
-                                        }
-
-                                        return null;
-                                    },
-
-
-                                    async getDistrict(id) {
-                                        if (!id) return null;
-
-                                        const cachedData = cache.get('district', id);
-                                        if (cachedData) return cachedData;
-
-                                        const provinces = await api.request(`${config.baseUrl}/provinces`);
-
-                                        for (const province of provinces) {
-                                            try {
-                                                const districts = await api.request(`${config.baseUrl}/districts/${province.code}`);
-                                                const district = districts.find(d => String(d.id) === String(id));
-
-                                                if (district) {
-                                                    district.province = province;
-                                                    cache.set('district', id, district);
-                                                    return district;
-                                                }
-                                            } catch (e) {
-
-                                            }
-                                        }
-
-                                        return null;
-                                    },
-
-
-                                    async getSubDistrict(id, parentDistrictId) {
-                                        if (!id) return null;
-
-                                        const cachedData = cache.get('subdistrict', id);
-                                        if (cachedData) return cachedData;
-
-
-                                        if (parentDistrictId) {
-                                            const parentDistrict = await this.getDistrict(parentDistrictId);
-
-                                            if (parentDistrict) {
-                                                try {
-                                                    const subdistricts = await api.request(
-                                                        `${config.baseUrl}/sub-districts/${parentDistrict.code}`
-                                                    );
-
-                                                    const subdistrict = subdistricts.find(sd => String(sd.id) === String(id));
-
-                                                    if (subdistrict) {
-                                                        subdistrict.district = parentDistrict;
-                                                        cache.set('subdistrict', id, subdistrict);
-                                                        return subdistrict;
-                                                    }
-                                                } catch (e) {
-
-                                                }
-                                            }
-                                        }
-
-
-                                        const provinces = await api.request(`${config.baseUrl}/provinces`);
-
-                                        for (const province of provinces) {
-                                            try {
-                                                const districts = await api.request(`${config.baseUrl}/districts/${province.code}`);
-
-                                                for (const district of districts) {
-                                                    try {
-                                                        const subdistricts = await api.request(
-                                                            `${config.baseUrl}/sub-districts/${district.code}`
-                                                        );
-
-                                                        const subdistrict = subdistricts.find(sd => String(sd.id) === String(id));
-
-                                                        if (subdistrict) {
-                                                            district.province = province;
-                                                            subdistrict.district = district;
-                                                            cache.set('subdistrict', id, subdistrict);
-                                                            return subdistrict;
-                                                        }
-                                                    } catch (e) {
-
-                                                    }
-                                                }
-                                            } catch (e) {
-
-                                            }
-                                        }
-
-                                        return null;
-                                    },
-
-                                    async getVillage(id, parentSubDistrictId, parentDistrictId) {
-                                        if (!id) return null;
-
-                                        const cachedData = cache.get('village', id);
-                                        if (cachedData) return cachedData;
-
-
-                                        if (parentSubDistrictId) {
-                                            const parentSubDistrict = await this.getSubDistrict(
-                                                parentSubDistrictId,
-                                                parentDistrictId
-                                            );
-
-                                            if (parentSubDistrict) {
-                                                try {
-                                                    const villages = await api.request(
-                                                        `${config.baseUrl}/villages/${parentSubDistrict.code}`
-                                                    );
-
-                                                    const village = villages.find(v => String(v.id) === String(id));
-
-                                                    if (village) {
-                                                        village.subdistrict = parentSubDistrict;
-                                                        cache.set('village', id, village);
-                                                        return village;
-                                                    }
-                                                } catch (e) {
-
-                                                }
-                                            }
-                                        }
-
-
-                                        const provinces = await api.request(`${config.baseUrl}/provinces`);
-
-                                        for (const province of provinces) {
-                                            try {
-                                                const districts = await api.request(`${config.baseUrl}/districts/${province.code}`);
-
-                                                for (const district of districts) {
-                                                    try {
-                                                        const subdistricts = await api.request(
-                                                            `${config.baseUrl}/sub-districts/${district.code}`
-                                                        );
-
-                                                        for (const subdistrict of subdistricts) {
-                                                            try {
-                                                                const villages = await api.request(
-                                                                    `${config.baseUrl}/villages/${subdistrict.code}`
-                                                                );
-
-                                                                const village = villages.find(v => String(v.id) === String(id));
-
-                                                                if (village) {
-                                                                    district.province = province;
-                                                                    subdistrict.district = district;
-                                                                    village.subdistrict = subdistrict;
-                                                                    cache.set('village', id, village);
-                                                                    return village;
-                                                                }
-                                                            } catch (e) {
-
-                                                            }
-                                                        }
-                                                    } catch (e) {
-
-                                                    }
-                                                }
-                                            } catch (e) {
-
-                                            }
-                                        }
-
-                                        return null;
-                                    }
-                                };
-
-                                async function fetchLocationData(type, id) {
-                                    if (!id) return null;
+                                // Function to populate disabled dropdowns with data
+                                async function populateDisabledDropdowns() {
+                                    if (!provinceSelect.value) return;
 
                                     try {
-                                        switch (type) {
-                                            case 'province':
-                                                return await locationService.getProvince(id);
-                                            case 'district':
-                                                return await locationService.getDistrict(id);
-                                            case 'subdistrict':
-                                                const parentDistrictId = arguments[2];
-                                                return await locationService.getSubDistrict(id, parentDistrictId);
-                                            case 'village':
-                                                const parentSubdistrictId = arguments[2];
-                                                const parentDistForVillage = arguments[3];
-                                                return await locationService.getVillage(id, parentSubdistrictId, parentDistForVillage);
-                                            default:
-                                                console.error(`Unknown location type: ${type}`);
-                                                return null;
+                                        // Load districts
+                                        const districtResponse = await fetch(`{{ url('/location/districts') }}/${provinceSelect.value}`);
+                                        if (districtResponse.ok) {
+                                            const districts = await districtResponse.json();
+                                            populateSelect(districtSelect, districts, 'Pilih Kabupaten', districtIdInput.value);
+                                        }
+
+                                        // Load sub-districts if district is available
+                                        if (districtSelect.value) {
+                                            const subDistrictResponse = await fetch(`{{ url('/location/sub-districts') }}/${districtSelect.value}`);
+                                            if (subDistrictResponse.ok) {
+                                                const subDistricts = await subDistrictResponse.json();
+                                                populateSelect(subDistrictSelect, subDistricts, 'Pilih Kecamatan', subDistrictIdInput.value);
+                                            }
+                                        }
+
+                                        // Load villages if sub-district is available
+                                        if (subDistrictSelect.value) {
+                                            const villageResponse = await fetch(`{{ url('/location/villages') }}/${subDistrictSelect.value}`);
+                                            if (villageResponse.ok) {
+                                                const villages = await villageResponse.json();
+                                                populateSelect(villageSelect, villages, 'Pilih Desa', villageIdInput.value);
+                                            }
                                         }
                                     } catch (error) {
-                                        console.error(`Error fetching location data`);
-                                        return null;
+                                        console.error('Error populating dropdowns:', error);
                                     }
                                 }
 
-                                async function updateLocationDisplays() {
-                                    const elements = {
-                                        province: document.getElementById('provinceDisplay'),
-                                        district: document.getElementById('districtDisplay'),
-                                        subDistrict: document.getElementById('subDistrictDisplay'),
-                                        village: document.getElementById('villageDisplay')
-                                    };
+                                // Helper function to populate select options
+                                function populateSelect(select, data, defaultText, selectedId = null) {
+                                    try {
+                                        const fragment = document.createDocumentFragment();
+                                        const defaultOption = document.createElement('option');
+                                        defaultOption.value = '';
+                                        defaultOption.textContent = defaultText;
+                                        fragment.appendChild(defaultOption);
 
-                                    let updatesNeeded = 0;
-                                    let updatesCompleted = 0;
+                                        if (Array.isArray(data)) {
+                                            data.forEach(item => {
+                                                const option = document.createElement('option');
+                                                option.value = item.code;
+                                                option.setAttribute('data-id', item.id);
+                                                option.textContent = item.name;
 
-                                    async function updateElement(element, type, id, ...parentIds) {
-                                        if (!element || !element.innerText.includes('Memuat') || !id) {
-                                            return;
+                                                // Check if this should be selected
+                                                if (selectedId && item.id == selectedId) {
+                                                    option.selected = true;
+                                                }
+
+                                                fragment.appendChild(option);
+                                            });
                                         }
 
-                                        updatesNeeded++;
-
-                                        try {
-                                            const data = await fetchLocationData(type, id, ...parentIds);
-
-                                            if (data) {
-                                                element.innerText = data.name;
-                                            } else {
-                                                element.innerText = 'Data tidak tersedia';
-                                            }
-                                        } catch (error) {
-                                            element.innerText = 'Gagal memuat data';
-                                            console.error(`Failed to load location data`);
-                                        }
-
-                                        updatesCompleted++;
-                                    }
-
-                                    await Promise.all([
-                                        updateElement(elements.province, 'province', config.locationIds.provinceId),
-                                        updateElement(elements.district, 'district', config.locationIds.districtId),
-                                        updateElement(
-                                            elements.subDistrict,
-                                            'subdistrict',
-                                            config.locationIds.subDistrictId,
-                                            config.locationIds.districtId
-                                        ),
-                                        updateElement(
-                                            elements.village,
-                                            'village',
-                                            config.locationIds.villageId,
-                                            config.locationIds.subDistrictId,
-                                            config.locationIds.districtId
-                                        )
-                                    ]);
-
-                                }
-
-
-                                function initialize() {
-                                    if (typeof axios !== 'undefined') {
-
-                                        updateLocationDisplays();
-                                    } else {
-                                        console.error('Axios is not loaded. Location data cannot be fetched dynamically.');
-                                        const script = document.createElement('script');
-                                        script.src = 'https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js';
-                                        script.onload = function () {
-                                            console.log('Axios loaded dynamically, now updating location data...');
-                                            updateLocationDisplays();
-                                        };
-                                        document.head.appendChild(script);
+                                        select.innerHTML = '';
+                                        select.appendChild(fragment);
+                                    } catch (error) {
+                                        console.error('Error populating select:', error);
+                                        select.innerHTML = `<option value="">Error loading data</option>`;
                                     }
                                 }
 
-                                initialize();
+                                // Initialize dropdowns when page loads
+                                populateDisabledDropdowns();
                             });
                         </script>
 
@@ -2015,6 +1894,86 @@ if (!empty($userData->tag_lokasi)) {
                     }
                 }
             </script>
-            <script src="{{ asset('js/location-selector-edit.js') }}"></script>
+            <!-- Form Validation -->
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    const form = document.querySelector('form[action*="request-approval"]');
+                    if (!form) return;
+
+                    form.addEventListener('submit', function(e) {
+                        e.preventDefault();
+
+                        // Get form elements
+                        const fullName = document.querySelector('input[name="full_name"]').value.trim();
+                        const gender = document.querySelector('select[name="gender"]').value;
+                        const provinceId = document.getElementById('province_id').value;
+                        const districtId = document.getElementById('district_id').value;
+                        const subDistrictId = document.getElementById('sub_district_id').value;
+                        const villageId = document.getElementById('village_id').value;
+
+                        // Validation
+                        let isValid = true;
+                        let errorMessage = '';
+
+                        if (!fullName) {
+                            errorMessage += 'Nama Lengkap harus diisi\n';
+                            isValid = false;
+                        }
+
+                        if (!gender) {
+                            errorMessage += 'Jenis Kelamin harus dipilih\n';
+                            isValid = false;
+                        }
+
+                        if (!provinceId) {
+                            errorMessage += 'Provinsi harus tersedia\n';
+                            isValid = false;
+                        }
+
+                        if (!districtId) {
+                            errorMessage += 'Kabupaten harus tersedia\n';
+                            isValid = false;
+                        }
+
+                        if (!subDistrictId) {
+                            errorMessage += 'Kecamatan harus tersedia\n';
+                            isValid = false;
+                        }
+
+                        if (!villageId) {
+                            errorMessage += 'Desa harus tersedia\n';
+                            isValid = false;
+                        }
+
+                        if (!isValid) {
+                            alert('Mohon lengkapi data berikut:\n\n' + errorMessage);
+                            return false;
+                        }
+
+                        // If validation passes, submit the form
+                        form.submit();
+                    });
+                });
+            </script>
+            <script>
+                function toggleHistorySection() {
+                    const historyContent = document.getElementById('historyContent');
+                    const historyIcon = document.getElementById('historyIcon');
+                    const historyText = document.getElementById('btnToggleHistoryText');
+                    if (!historyContent) return;
+                    const isHidden = historyContent.classList.contains('hidden');
+                    if (isHidden) {
+                        historyContent.classList.remove('hidden');
+                        historyIcon.classList.remove('fa-history');
+                        historyIcon.classList.add('fa-times');
+                        historyText.textContent = 'Tutup History';
+                    } else {
+                        historyContent.classList.add('hidden');
+                        historyIcon.classList.remove('fa-times');
+                        historyIcon.classList.add('fa-history');
+                        historyText.textContent = 'Lihat History';
+                    }
+                }
+            </script>
     </div>
 </x-layout>

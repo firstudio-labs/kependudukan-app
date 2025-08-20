@@ -57,8 +57,7 @@ class BeritaDesaController extends Controller
             
             try {
                 $provinces = $this->wilayahService->getProvinces();
-                // Perbaikan: Gunakan 'id' field, bukan 'code' field
-                $province = collect($provinces)->firstWhere('id', (int) $berita->province_id);
+                $province = collect($provinces)->firstWhere('code', (string) $berita->province_id);
                 if ($province) {
                     $wilayah['provinsi'] = $province['name'];
                 }
@@ -73,17 +72,10 @@ class BeritaDesaController extends Controller
             
             try {
                 if ($berita->province_id) {
-                    // Dapatkan province code dulu untuk API call kabupaten
-                    $provinces = $this->wilayahService->getProvinces();
-                    $provinceData = collect($provinces)->firstWhere('id', (int) $berita->province_id);
-                    
-                    if ($provinceData && isset($provinceData['code'])) {
-                        $kabupaten = $this->wilayahService->getKabupaten($provinceData['code']);
-                        // Perbaikan: Gunakan 'id' field, bukan 'code' field
-                        $kabupatenData = collect($kabupaten)->firstWhere('id', (int) $berita->districts_id);
-                        if ($kabupatenData) {
-                            $wilayah['kabupaten'] = $kabupatenData['name'];
-                        }
+                    $kabupaten = $this->wilayahService->getKabupaten($berita->province_id);
+                    $kabupatenData = collect($kabupaten)->firstWhere('code', (string) $berita->districts_id);
+                    if ($kabupatenData) {
+                        $wilayah['kabupaten'] = $kabupatenData['name'];
                     }
                 }
             } catch (\Exception $e) {
@@ -97,21 +89,14 @@ class BeritaDesaController extends Controller
             
             try {
                 if ($berita->districts_id && $berita->province_id) {
-                    // Dapatkan province code dulu untuk API call kabupaten
-                    $provinces = $this->wilayahService->getProvinces();
-                    $provinceData = collect($provinces)->firstWhere('id', (int) $berita->province_id);
+                    $kabupaten = $this->wilayahService->getKabupaten($berita->province_id);
+                    $kabupatenData = collect($kabupaten)->firstWhere('code', (string) $berita->districts_id);
                     
-                    if ($provinceData && isset($provinceData['code'])) {
-                        $kabupaten = $this->wilayahService->getKabupaten($provinceData['code']);
-                        $kabupatenData = collect($kabupaten)->firstWhere('id', (int) $berita->districts_id);
-                        
-                        if ($kabupatenData && isset($kabupatenData['code'])) {
-                            $kecamatan = $this->wilayahService->getKecamatan($kabupatenData['code']);
-                            // Perbaikan: Gunakan 'id' field, bukan 'code' field
-                            $kecamatanData = collect($kecamatan)->firstWhere('id', (int) $berita->sub_districts_id);
-                            if ($kecamatanData) {
-                                $wilayah['kecamatan'] = $kecamatanData['name'];
-                            }
+                    if ($kabupatenData) {
+                        $kecamatan = $this->wilayahService->getKecamatan($kabupatenData['code']);
+                        $kecamatanData = collect($kecamatan)->firstWhere('code', (string) $berita->sub_districts_id);
+                        if ($kecamatanData) {
+                            $wilayah['kecamatan'] = $kecamatanData['name'];
                         }
                     }
                 }
@@ -126,25 +111,18 @@ class BeritaDesaController extends Controller
             
             try {
                 if ($berita->sub_districts_id && $berita->districts_id && $berita->province_id) {
-                    // Dapatkan province code dulu untuk API call kabupaten
-                    $provinces = $this->wilayahService->getProvinces();
-                    $provinceData = collect($provinces)->firstWhere('id', (int) $berita->province_id);
+                    $kabupaten = $this->wilayahService->getKabupaten($berita->province_id);
+                    $kabupatenData = collect($kabupaten)->firstWhere('code', (string) $berita->districts_id);
                     
-                    if ($provinceData && isset($provinceData['code'])) {
-                        $kabupaten = $this->wilayahService->getKabupaten($provinceData['code']);
-                        $kabupatenData = collect($kabupaten)->firstWhere('id', (int) $berita->districts_id);
+                    if ($kabupatenData) {
+                        $kecamatan = $this->wilayahService->getKecamatan($kabupatenData['code']);
+                        $kecamatanData = collect($kecamatan)->firstWhere('code', (string) $berita->sub_districts_id);
                         
-                        if ($kabupatenData && isset($kabupatenData['code'])) {
-                            $kecamatan = $this->wilayahService->getKecamatan($kabupatenData['code']);
-                            $kecamatanData = collect($kecamatan)->firstWhere('id', (int) $berita->sub_districts_id);
-                            
-                            if ($kecamatanData && isset($kecamatanData['code'])) {
-                                $desa = $this->wilayahService->getDesa($kecamatanData['code']);
-                                // Perbaikan: Gunakan 'id' field, bukan 'code' field
-                                $desaData = collect($desa)->firstWhere('id', (int) $berita->villages_id);
-                                if ($desaData) {
-                                    $wilayah['desa'] = $desaData['name'];
-                                }
+                        if ($kecamatanData) {
+                            $desa = $this->wilayahService->getDesa($kecamatanData['code']);
+                            $desaData = collect($desa)->firstWhere('code', (string) $berita->villages_id);
+                            if ($desaData) {
+                                $wilayah['desa'] = $desaData['name'];
                             }
                         }
                     }
@@ -205,8 +183,8 @@ class BeritaDesaController extends Controller
     {
         $berita = BeritaDesa::with(['user'])->findOrFail($id);
         
-        // Tambahkan data wilayah untuk berita agar bisa tampilkan nama
-        $berita->wilayah_info = $this->getWilayahInfo($berita);
+        // Tidak perlu lagi generate wilayah_info
+        // Langsung gunakan field dari database: province_id, districts_id, sub_districts_id, villages_id
 
         if (request()->ajax()) {
             return response()->json([

@@ -218,18 +218,18 @@ class ProfileController extends Controller
 
         $validated = $request->validate([
             'full_name' => 'required|string|max:255',
-            'kk' => 'nullable|numeric',
-            'gender' => 'nullable|string',
+            'kk' => 'nullable|string',
+            'gender' => 'required|string|in:Laki-laki,Perempuan',
             'age' => 'nullable|numeric',
-            'birth_place' => 'nullable|string',
+            'birth_place' => 'nullable|string|max:255',
             'birth_date' => 'nullable|date',
             'address' => 'nullable|string',
-            'rt' => 'nullable|string',
-            'rw' => 'nullable|string',
-            'province_id' => 'nullable|numeric',
-            'district_id' => 'nullable|numeric',
-            'sub_district_id' => 'nullable|numeric',
-            'village_id' => 'nullable|numeric',
+            'rt' => 'nullable|string|max:3',
+            'rw' => 'nullable|string|max:3',
+            'province_id' => 'required|numeric',
+            'district_id' => 'required|numeric',
+            'sub_district_id' => 'required|numeric',
+            'village_id' => 'required|numeric',
         ]);
 
         try {

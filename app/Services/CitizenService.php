@@ -169,27 +169,112 @@ class CitizenService
         try {
             $nik = (int) $nik;
 
+            // Filter out empty values and ensure data is clean
+            $cleanData = array_filter($data, function($value) {
+                return $value !== null && $value !== '' && $value !== 'null';
+            });
+
+            // Ensure required fields are present with valid values
+            $requiredFields = [
+                'citizen_status' => 1,
+                'birth_certificate' => 2,
+                'blood_type' => 13,
+                'religion' => 1,
+                'marital_status' => 1,
+                'marital_certificate' => 2,
+                'divorce_certificate' => 2,
+                'mental_disorders' => 2,
+                'education_status' => 1,
+                'family_status' => 2,
+                'job_type_id' => 1
+            ];
+
+            // Add required fields if they don't exist
+            foreach ($requiredFields as $field => $defaultValue) {
+                if (!isset($cleanData[$field])) {
+                    $cleanData[$field] = $defaultValue;
+                }
+            }
+
+            // Log the data being sent
+            Log::info('Updating citizen via API', [
+                'nik' => $nik,
+                'original_data' => $data,
+                'clean_data' => $cleanData,
+                'api_url' => "{$this->baseUrl}/api/citizens/{$nik}"
+            ]);
+
             // Convert KK to integer if exists in data
-            if (isset($data['kk'])) {
-                $data['kk'] = (int) $data['kk'];
+            if (isset($cleanData['kk'])) {
+                $cleanData['kk'] = (int) $cleanData['kk'];
+            }
+
+            // Ensure numeric fields are properly typed
+            $numericFields = ['age', 'province_id', 'district_id', 'sub_district_id', 'village_id', 'citizen_status', 'birth_certificate', 'blood_type', 'religion', 'marital_status', 'marital_certificate', 'divorce_certificate', 'mental_disorders', 'education_status', 'family_status', 'job_type_id'];
+            foreach ($numericFields as $field) {
+                if (isset($cleanData[$field]) && is_numeric($cleanData[$field])) {
+                    $cleanData[$field] = (int) $cleanData[$field];
+                }
             }
 
             $response = Http::withHeaders([
                 'X-API-Key' => $this->apiKey,
-            ])->put("{$this->baseUrl}/api/citizens/{$nik}", $data);
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json'
+            ])->put("{$this->baseUrl}/api/citizens/{$nik}", $cleanData);
 
             if ($response->successful()) {
                 // Clear related caches after successful update
-                $this->clearCitizenCaches($nik, $data);
+                $this->clearCitizenCaches($nik, $cleanData);
 
-                return $response->json();
+                $result = $response->json();
+                Log::info('Citizen updated successfully', [
+                    'nik' => $nik,
+                    'result' => $result
+                ]);
+
+                return $result;
             } else {
-                Log::error('API request failed: ' . $response->status());
-                return ['status' => 'ERROR', 'message' => 'API request failed'];
+                $errorBody = $response->body();
+                $statusCode = $response->status();
+                
+                Log::error('API request failed when updating citizen', [
+                    'nik' => $nik,
+                    'status_code' => $statusCode,
+                    'response_body' => $errorBody,
+                    'request_data' => $cleanData,
+                    'headers' => $response->headers()
+                ]);
+
+                // Try to parse error message from response
+                $errorMessage = 'Unknown error';
+                try {
+                    $errorJson = json_decode($errorBody, true);
+                    if (json_last_error() === JSON_ERROR_NONE && isset($errorJson['message'])) {
+                        $errorMessage = $errorJson['message'];
+                    } else {
+                        $errorMessage = $errorBody;
+                    }
+                } catch (\Exception $e) {
+                    $errorMessage = $errorBody;
+                }
+
+                return [
+                    'status' => 'ERROR', 
+                    'message' => "API request failed with status {$statusCode}: {$errorMessage}"
+                ];
             }
         } catch (\Exception $e) {
-            Log::error('Error updating citizen: ' . $e->getMessage());
-            return ['status' => 'ERROR', 'message' => 'Error updating citizen: ' . $e->getMessage()];
+            Log::error('Error updating citizen', [
+                'nik' => $nik,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return [
+                'status' => 'ERROR', 
+                'message' => 'Error updating citizen: ' . $e->getMessage()
+            ];
         }
     }
 
