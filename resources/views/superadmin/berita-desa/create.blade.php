@@ -56,46 +56,46 @@
                             onchange="loadKabupaten()">
                             <option value="">Pilih Provinsi</option>
                             @foreach($provinces as $province)
-                                <option value="{{ $province['code'] }}" {{ old('province') == $province['code'] ? 'selected' : '' }}>
+                                <option value="{{ $province['id'] }}" {{ old('province') == $province['id'] ? 'selected' : '' }} data-code="{{ $province['code'] }}">
                                     {{ $province['name'] }}
                                 </option>
                             @endforeach
                         </select>
-                        <!-- Hidden field untuk menyimpan id_provinsi -->
-                        <input type="hidden" name="id_provinsi" id="id_provinsi" value="{{ old('id_provinsi') }}">
+                        <!-- Hidden field untuk menyimpan province_id -->
+                        <input type="hidden" name="province_id" id="province_id" value="{{ old('province_id') }}">
                     </div>
 
                     <div>
-                        <label for="id_kabupaten" class="block text-sm font-medium text-gray-700 mb-2">Kabupaten</label>
-                        <select name="id_kabupaten" id="id_kabupaten" 
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('id_kabupaten') border-red-500 @enderror"
+                        <label for="districts_id" class="block text-sm font-medium text-gray-700 mb-2">Kabupaten</label>
+                        <select name="districts_id" id="districts_id" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('districts_id') border-red-500 @enderror"
                             onchange="loadKecamatan()" disabled>
                             <option value="">Pilih Provinsi terlebih dahulu</option>
                         </select>
-                        @error('id_kabupaten')
+                        @error('districts_id')
                             <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                         @enderror
                     </div>
 
                     <div>
-                        <label for="id_kecamatan" class="block text-sm font-medium text-gray-700 mb-2">Kecamatan</label>
-                        <select name="id_kecamatan" id="id_kecamatan" 
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('id_kecamatan') border-red-500 @enderror"
+                        <label for="sub_districts_id" class="block text-sm font-medium text-gray-700 mb-2">Kecamatan</label>
+                        <select name="sub_districts_id" id="sub_districts_id" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('sub_districts_id') border-red-500 @enderror"
                             onchange="loadDesa()" disabled>
                             <option value="">Pilih Kabupaten terlebih dahulu</option>
                         </select>
-                        @error('id_kecamatan')
+                        @error('sub_districts_id')
                             <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                         @enderror
                     </div>
 
                     <div>
-                        <label for="id_desa" class="block text-sm font-medium text-gray-700 mb-2">Desa</label>
-                        <select name="id_desa" id="id_desa" 
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('id_desa') border-red-500 @enderror" disabled>
+                        <label for="villages_id" class="block text-sm font-medium text-gray-700 mb-2">Desa</label>
+                        <select name="villages_id" id="villages_id" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('villages_id') border-red-500 @enderror" disabled>
                             <option value="">Pilih Kecamatan terlebih dahulu</option>
                         </select>
-                        @error('id_desa')
+                        @error('villages_id')
                             <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                         @enderror
                     </div>
@@ -146,10 +146,13 @@
         // Load kabupaten berdasarkan provinsi
         function loadKabupaten() {
             const provinceSelect = document.getElementById('province');
-            const provinceCode = provinceSelect.value;
-            const kabupatenSelect = document.getElementById('id_kabupaten');
-            const kecamatanSelect = document.getElementById('id_kecamatan');
-            const desaSelect = document.getElementById('id_desa');
+            const provinceId = provinceSelect.value;
+            const kabupatenSelect = document.getElementById('districts_id');
+            const kecamatanSelect = document.getElementById('sub_districts_id');
+            const desaSelect = document.getElementById('villages_id');
+
+            // Set hidden field province_id
+            document.getElementById('province_id').value = provinceId;
 
             // Reset dependent dropdowns
             kabupatenSelect.innerHTML = '<option value="">Pilih Kabupaten</option>';
@@ -161,53 +164,52 @@
             kecamatanSelect.disabled = true;
             desaSelect.disabled = true;
 
-            if (provinceCode) {
-                // Save province code to hidden field
-                document.getElementById('id_provinsi').value = provinceCode;
-
+            if (provinceId) {
                 // Enable kabupaten dropdown
                 kabupatenSelect.disabled = false;
-
-                const url = `/api/wilayah/kabupaten-by-province?province_code=${provinceCode}`;
-
-                fetch(url, {
-                    credentials: 'include',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                    }
-                })
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error(`HTTP error! status: ${response.status}`);
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        if (Array.isArray(data)) {
-                            window.kabupatenData = data; // Store kabupaten data globally
-                            data.forEach(kabupaten => {
-                                const option = document.createElement('option');
-                                option.value = kabupaten.id;
-                                option.textContent = kabupaten.name;
-                                kabupatenSelect.appendChild(option);
-                            });
-                        } else {
-                            kabupatenSelect.innerHTML = '<option value="">Invalid data format</option>';
+                
+                // Cari data provinsi untuk mendapatkan code yang benar
+                const provinceData = window.provinceData || [];
+                const selectedProvince = provinceData.find(p => p.id == provinceId);
+                
+                if (selectedProvince) {
+                    const url = `/api/wilayah/kabupaten-by-province?province_code=${selectedProvince.code}`;
+                    
+                    fetch(url, {
+                        credentials: 'include',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                         }
                     })
-                    .catch(error => {
-                        kabupatenSelect.innerHTML = '<option value="">Error loading kabupaten</option>';
-                    });
+                        .then(response => {
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (Array.isArray(data)) {
+                                window.kabupatenData = data; // Store kabupaten data globally
+                                data.forEach(kabupaten => {
+                                    const option = document.createElement('option');
+                                    option.value = kabupaten.id; // Gunakan 'id' untuk value dropdown
+                                    option.textContent = kabupaten.name;
+                                    kabupatenSelect.appendChild(option);
+                                });
+                            } else {
+                                kabupatenSelect.innerHTML = '<option value="">Invalid data format</option>';
+                            }
+                        })
+                        .catch(error => {
+                            kabupatenSelect.innerHTML = '<option value="">Error loading kabupaten</option>';
+                        });
+                }
             }
         }
 
         // Load kecamatan berdasarkan kabupaten
         function loadKecamatan() {
-            const kabupatenSelect = document.getElementById('id_kabupaten');
-            const kabupatenCode = kabupatenSelect.value;
-            const kabupatenText = kabupatenSelect.options[kabupatenSelect.selectedIndex].textContent;
-            const kecamatanSelect = document.getElementById('id_kecamatan');
-            const desaSelect = document.getElementById('id_desa');
+            const kabupatenSelect = document.getElementById('districts_id');
+            const kabupatenId = kabupatenSelect.value;
+            const kecamatanSelect = document.getElementById('sub_districts_id');
+            const desaSelect = document.getElementById('villages_id');
 
             // Reset dependent dropdowns
             kecamatanSelect.innerHTML = '<option value="">Pilih Kecamatan</option>';
@@ -217,62 +219,51 @@
             kecamatanSelect.disabled = true;
             desaSelect.disabled = true;
 
-            if (kabupatenCode) {
-                // Get the kabupaten code from the selected option's text
-                // Extract code from text like "KABUPATEN GROBOGAN" -> "3315"
-                const kabupatenTextMatch = kabupatenText.match(/KABUPATEN\s+([A-Z\s]+)/);
-                if (kabupatenTextMatch) {
-                    const kabupatenName = kabupatenTextMatch[1].trim();
+            if (kabupatenId) {
+                // Find the kabupaten data from the loaded kabupaten data
+                const kabupatenData = window.kabupatenData || [];
+                const selectedKabupaten = kabupatenData.find(k => k.id == kabupatenId);
+                
+                if (selectedKabupaten) {
+                    // Enable kecamatan dropdown
+                    kecamatanSelect.disabled = false;
                     
-                    // Find the kabupaten code from the original data
-                    // We need to get this from the kabupaten data that was loaded
-                    const kabupatenData = window.kabupatenData || [];
-                    const selectedKabupaten = kabupatenData.find(k => k.id == kabupatenCode);
+                    const url = `/api/wilayah/kecamatan-by-kabupaten?kabupaten_code=${selectedKabupaten.code}`;
                     
-                    if (selectedKabupaten && selectedKabupaten.code) {
-                        const wilayahCode = selectedKabupaten.code;
-                        
-                        // Enable kecamatan dropdown
-                        kecamatanSelect.disabled = false;
-                        
-                        const url = `/api/wilayah/kecamatan-by-kabupaten?kabupaten_code=${wilayahCode}`;
-                        
-                        fetch(url, {
-                            credentials: 'include',
-                            headers: {
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    fetch(url, {
+                        credentials: 'include',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        }
+                    })
+                        .then(response => {
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (Array.isArray(data)) {
+                                window.kecamatanData = data; // Store kecamatan data globally
+                                data.forEach(kecamatan => {
+                                    const option = document.createElement('option');
+                                    option.value = kecamatan.id; // Gunakan 'id' untuk value dropdown
+                                    option.textContent = kecamatan.name;
+                                    kecamatanSelect.appendChild(option);
+                                });
+                            } else {
+                                kecamatanSelect.innerHTML = '<option value="">Invalid data format</option>';
                             }
                         })
-                            .then(response => {
-                                return response.json();
-                            })
-                            .then(data => {
-                                if (Array.isArray(data)) {
-                                    window.kecamatanData = data; // Store kecamatan data globally
-                                    data.forEach(kecamatan => {
-                                        const option = document.createElement('option');
-                                        option.value = kecamatan.id;
-                                        option.textContent = kecamatan.name;
-                                        kecamatanSelect.appendChild(option);
-                                    });
-                                } else {
-                                    kecamatanSelect.innerHTML = '<option value="">Invalid data format</option>';
-                                }
-                            })
-                            .catch(error => {
-                                kecamatanSelect.innerHTML = '<option value="">Error loading kecamatan</option>';
-                            });
-                    }
+                        .catch(error => {
+                            kecamatanSelect.innerHTML = '<option value="">Error loading kecamatan</option>';
+                        });
                 }
             }
         }
 
         // Load desa berdasarkan kecamatan
         function loadDesa() {
-            const kecamatanSelect = document.getElementById('id_kecamatan');
-            const kecamatanCode = kecamatanSelect.value;
-            const kecamatanText = kecamatanSelect.options[kecamatanSelect.selectedIndex].textContent;
-            const desaSelect = document.getElementById('id_desa');
+            const kecamatanSelect = document.getElementById('sub_districts_id');
+            const kecamatanId = kecamatanSelect.value;
+            const desaSelect = document.getElementById('villages_id');
 
             // Reset dependent dropdowns
             desaSelect.innerHTML = '<option value="">Pilih Desa</option>';
@@ -280,53 +271,62 @@
             // Disable dependent dropdowns
             desaSelect.disabled = true;
 
-            if (kecamatanCode) {
-                // Get the kecamatan code from the selected option's text
-                // Extract code from text like "KEDUNGREJA" -> "330101"
-                const kecamatanTextMatch = kecamatanText.match(/^([A-Z\s]+)$/);
-                if (kecamatanTextMatch) {
-                    const kecamatanName = kecamatanTextMatch[1].trim();
+            if (kecamatanId) {
+                // Find the kecamatan data from the loaded kecamatan data
+                const kecamatanData = window.kecamatanData || [];
+                const selectedKecamatan = kecamatanData.find(k => k.id == kecamatanId);
+                
+                if (selectedKecamatan) {
+                    // Enable desa dropdown
+                    desaSelect.disabled = false;
                     
-                    // Find the kecamatan code from the original data
-                    // We need to get this from the kecamatan data that was loaded
-                    const kecamatanData = window.kecamatanData || [];
-                    const selectedKecamatan = kecamatanData.find(k => k.id == kecamatanCode);
+                    const url = `/api/wilayah/desa-by-kecamatan?kecamatan_code=${selectedKecamatan.code}`;
                     
-                    if (selectedKecamatan && selectedKecamatan.code) {
-                        const wilayahCode = selectedKecamatan.code;
-                        
-                        // Enable desa dropdown
-                        desaSelect.disabled = false;
-                        
-                        const url = `/api/wilayah/desa-by-kecamatan?kecamatan_code=${wilayahCode}`;
-                        
-                        fetch(url, {
-                            credentials: 'include',
-                            headers: {
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    fetch(url, {
+                        credentials: 'include',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        }
+                    })
+                        .then(response => {
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (Array.isArray(data)) {
+                                window.desaData = data; // Store desa data globally
+                                data.forEach(desa => {
+                                    const option = document.createElement('option');
+                                    option.value = desa.id; // Gunakan 'id' untuk value dropdown
+                                    option.textContent = desa.name;
+                                    desaSelect.appendChild(option);
+                                });
+                            } else {
+                                desaSelect.innerHTML = '<option value="">Invalid data format</option>';
                             }
                         })
-                            .then(response => {
-                                return response.json();
-                            })
-                            .then(data => {
-                                if (Array.isArray(data)) {
-                                    data.forEach(desa => {
-                                        const option = document.createElement('option');
-                                        option.value = desa.id;
-                                        option.textContent = desa.name;
-                                        desaSelect.appendChild(option);
-                                    });
-                                } else {
-                                    desaSelect.innerHTML = '<option value="">Invalid data format</option>';
-                                }
-                            })
-                            .catch(error => {
-                                desaSelect.innerHTML = '<option value="">Error loading desa</option>';
-                            });
-                    }
+                        .catch(error => {
+                            desaSelect.innerHTML = '<option value="">Error loading desa</option>';
+                        });
                 }
             }
         }
+
+        // Load province data saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', function() {
+            // Simpan data provinsi yang sudah ada di dropdown
+            const provinceSelect = document.getElementById('province');
+            const provinces = [];
+            for (let i = 0; i < provinceSelect.options.length; i++) {
+                const option = provinceSelect.options[i];
+                if (option.value) {
+                    provinces.push({
+                        id: option.value,
+                        code: option.getAttribute('data-code') || option.value,
+                        name: option.textContent
+                    });
+                }
+            }
+            window.provinceData = provinces;
+        });
     </script>
 </x-layout>

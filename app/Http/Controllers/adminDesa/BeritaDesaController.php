@@ -4,6 +4,7 @@ namespace App\Http\Controllers\adminDesa;
 
 use App\Http\Controllers\Controller;
 use App\Models\BeritaDesa;
+use App\Services\WilayahService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -11,11 +12,18 @@ use Illuminate\Support\Str;
 
 class BeritaDesaController extends Controller
 {
+    protected $wilayahService;
+
+    public function __construct(WilayahService $wilayahService)
+    {
+        $this->wilayahService = $wilayahService;
+    }
+
     public function index(Request $request)
     {
         $this->authorizeAdminDesa();
 
-        $query = BeritaDesa::with('user')->where('id_desa', Auth::user()->villages_id);
+        $query = BeritaDesa::with('user')->where('villages_id', Auth::user()->villages_id);
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -27,6 +35,21 @@ class BeritaDesaController extends Controller
         }
 
         $berita = $query->latest()->paginate(10);
+        
+        // Buat object dummy dengan data admin yang login untuk menggunakan getWilayahInfo
+        $adminUser = Auth::user();
+        $dummyBerita = (object) [
+            'province_id' => $adminUser->province_id,
+            'districts_id' => $adminUser->districts_id,
+            'sub_districts_id' => $adminUser->sub_districts_id,
+            'villages_id' => $adminUser->villages_id
+        ];
+        
+        // Tambahkan data wilayah untuk setiap berita berdasarkan admin yang login
+        foreach ($berita as $item) {
+            // Gunakan data wilayah dari admin yang login, bukan dari berita
+            $item->wilayah_info = $this->getWilayahInfo($dummyBerita);
+        }
 
         return view('admin.desa.berita-desa.index', compact('berita'));
     }
@@ -34,21 +57,23 @@ class BeritaDesaController extends Controller
     public function create()
     {
         $this->authorizeAdminDesa();
-        return view('admin.desa.berita-desa.create');
+        
+        // Buat object dummy dengan data admin yang login untuk menggunakan getWilayahInfo
+        $adminUser = Auth::user();
+        $dummyBerita = (object) [
+            'province_id' => $adminUser->province_id,
+            'districts_id' => $adminUser->districts_id,
+            'sub_districts_id' => $adminUser->sub_districts_id,
+            'villages_id' => $adminUser->villages_id
+        ];
+        
+        $adminWilayahInfo = $this->getWilayahInfo($dummyBerita);
+        return view('admin.desa.berita-desa.create', compact('adminWilayahInfo'));
     }
 
     public function store(Request $request)
     {
         $this->authorizeAdminDesa();
-
-        // Log untuk debugging
-        \Log::info('AdminDesa BeritaDesaController store method called');
-        \Log::info('User ID: ' . Auth::id());
-        \Log::info('User Role: ' . Auth::user()->role);
-        \Log::info('User Province ID: ' . Auth::user()->province_id);
-        \Log::info('User District ID: ' . Auth::user()->districts_id);
-        \Log::info('User Sub District ID: ' . Auth::user()->sub_districts_id);
-        \Log::info('User Village ID: ' . Auth::user()->villages_id);
 
         $request->validate([
             'judul' => 'required|string|max:255',
@@ -60,32 +85,17 @@ class BeritaDesaController extends Controller
         $data = $request->only(['judul', 'deskripsi', 'komentar']);
         $data['user_id'] = Auth::id();
         
-        // Gunakan pola Lapor Desa: turunkan semua level wilayah dari villages_id
-        // agar konsisten dan menghindari mismatch
+        // Ambil wilayah dari user yang login (admin desa)
         $adminDesa = Auth::user();
-        if (!$adminDesa || !$adminDesa->villages_id) {
-            \Log::error('villages_id admin desa tidak ditemukan', ['user' => optional($adminDesa)->id]);
-            return redirect()->back()->with('error', 'Wilayah admin desa belum terkonfigurasi.')->withInput();
+        if (!$adminDesa) {
+            return redirect()->back()->with('error', 'Data admin desa tidak ditemukan.')->withInput();
         }
-        $villageIdStr = (string)$adminDesa->villages_id;
-        // Pastikan cukup panjang untuk substr
-        if (strlen($villageIdStr) < 10) {
-            \Log::warning('Format villages_id tidak sesuai 10 digit', ['villages_id' => $villageIdStr]);
-        }
-        $data['id_provinsi'] = (int) substr($villageIdStr, 0, 2);
-        $data['id_kabupaten'] = (int) substr($villageIdStr, 0, 4);
-        $data['id_kecamatan'] = (int) substr($villageIdStr, 0, 6);
-        $data['id_desa'] = (int) $adminDesa->villages_id;
-        \Log::info('Wilayah diturunkan dari villages_id', [
-            'villages_id' => $adminDesa->villages_id,
-            'id_provinsi' => $data['id_provinsi'],
-            'id_kabupaten' => $data['id_kabupaten'],
-            'id_kecamatan' => $data['id_kecamatan'],
-            'id_desa' => $data['id_desa'],
-        ]);
-
-        // Log data yang akan disimpan
-        \Log::info('Data to be saved:', $data);
+        
+        // Set wilayah berdasarkan user yang login
+        $data['province_id'] = $adminDesa->province_id;
+        $data['districts_id'] = $adminDesa->districts_id;
+        $data['sub_districts_id'] = $adminDesa->sub_districts_id;
+        $data['villages_id'] = $adminDesa->villages_id;
 
         if ($request->hasFile('gambar')) {
             $file = $request->file('gambar');
@@ -98,9 +108,6 @@ class BeritaDesaController extends Controller
 
         $berita = BeritaDesa::create($data);
 
-        // Log berita yang berhasil dibuat
-        \Log::info('Berita created successfully:', $berita->toArray());
-
         return redirect()->route('admin.desa.berita-desa.index')
             ->with('success', 'Berita desa berhasil ditambahkan');
     }
@@ -109,15 +116,26 @@ class BeritaDesaController extends Controller
     {
         $this->authorizeAdminDesa();
         $berita = BeritaDesa::findOrFail($id);
-        abort_unless($berita->id_desa == Auth::user()->villages_id, 403);
-        return view('admin.desa.berita-desa.edit', compact('berita'));
+        abort_unless($berita->villages_id == Auth::user()->villages_id, 403);
+        
+        // Buat object dummy dengan data admin yang login untuk menggunakan getWilayahInfo
+        $adminUser = Auth::user();
+        $dummyBerita = (object) [
+            'province_id' => $adminUser->province_id,
+            'districts_id' => $adminUser->districts_id,
+            'sub_districts_id' => $adminUser->sub_districts_id,
+            'villages_id' => $adminUser->villages_id
+        ];
+        
+        $adminWilayahInfo = $this->getWilayahInfo($dummyBerita);
+        return view('admin.desa.berita-desa.edit', compact('berita', 'adminWilayahInfo'));
     }
 
     public function update(Request $request, $id)
     {
         $this->authorizeAdminDesa();
         $berita = BeritaDesa::findOrFail($id);
-        abort_unless($berita->id_desa == Auth::user()->villages_id, 403);
+        abort_unless($berita->villages_id == Auth::user()->villages_id, 403);
 
         $request->validate([
             'judul' => 'required|string|max:255',
@@ -127,16 +145,17 @@ class BeritaDesaController extends Controller
         ]);
 
         $data = $request->only(['judul', 'deskripsi', 'komentar']);
-        // Turunkan wilayah dari villages_id (konsisten dengan store)
+        
+        // Set wilayah berdasarkan user yang login (konsisten dengan store)
         $adminDesa = Auth::user();
-        if (!$adminDesa || !$adminDesa->villages_id) {
-            return redirect()->back()->with('error', 'Wilayah admin desa belum terkonfigurasi.')->withInput();
+        if (!$adminDesa) {
+            return redirect()->back()->with('error', 'Data admin desa tidak ditemukan.')->withInput();
         }
-        $villageIdStr = (string)$adminDesa->villages_id;
-        $data['id_provinsi'] = (int) substr($villageIdStr, 0, 2);
-        $data['id_kabupaten'] = (int) substr($villageIdStr, 0, 4);
-        $data['id_kecamatan'] = (int) substr($villageIdStr, 0, 6);
-        $data['id_desa'] = (int) $adminDesa->villages_id;
+        
+        $data['province_id'] = $adminDesa->province_id;
+        $data['districts_id'] = $adminDesa->districts_id;
+        $data['sub_districts_id'] = $adminDesa->sub_districts_id;
+        $data['villages_id'] = $adminDesa->villages_id;
 
         if ($request->hasFile('gambar')) {
             if ($berita->gambar && Storage::exists('public/' . $berita->gambar)) {
@@ -160,7 +179,7 @@ class BeritaDesaController extends Controller
     {
         $this->authorizeAdminDesa();
         $berita = BeritaDesa::findOrFail($id);
-        abort_unless($berita->id_desa == Auth::user()->villages_id, 403);
+        abort_unless($berita->villages_id == Auth::user()->villages_id, 403);
 
         if ($berita->gambar && Storage::exists('public/' . $berita->gambar)) {
             Storage::delete('public/' . $berita->gambar);
@@ -176,7 +195,7 @@ class BeritaDesaController extends Controller
     {
         $this->authorizeAdminDesa();
         $berita = BeritaDesa::with('user')->findOrFail($id);
-        abort_unless($berita->id_desa == Auth::user()->villages_id, 403);
+        abort_unless($berita->villages_id == Auth::user()->villages_id, 403);
         return response()->json([
             'status' => 'success',
             'data' => $berita
@@ -186,6 +205,141 @@ class BeritaDesaController extends Controller
     private function authorizeAdminDesa(): void
     {
         abort_unless(Auth::check() && Auth::user()->role === 'admin desa', 403);
+    }
+
+    /**
+     * Get wilayah information for a berita
+     */
+    private function getWilayahInfo($berita)
+    {
+        $wilayah = [];
+        
+        // Always set fallback first for safety
+        if ($berita->province_id) {
+            $wilayah['provinsi'] = 'Provinsi ID: ' . $berita->province_id;
+            
+            try {
+                $provinces = $this->wilayahService->getProvinces();
+                
+                if (is_array($provinces) && !empty($provinces)) {
+                    // Provinsi menggunakan 'id' field, BUKAN 'code' field
+                    $province = collect($provinces)->firstWhere('id', (int) $berita->province_id);
+                    
+                    if ($province && isset($province['name'])) {
+                        $wilayah['provinsi'] = $province['name'];
+                    }
+                }
+            } catch (\Exception $e) {
+                // Fallback already set, no need to change
+            }
+        }
+        
+        if ($berita->districts_id) {
+            $wilayah['kabupaten'] = 'Kabupaten ID: ' . $berita->districts_id;
+            
+            try {
+                if ($berita->province_id) {
+                    // Dapatkan province code dulu untuk API call kabupaten
+                    $provinces = $this->wilayahService->getProvinces();
+                    if (is_array($provinces) && !empty($provinces)) {
+                        $provinceData = collect($provinces)->firstWhere('id', (int) $berita->province_id);
+                        
+                        if ($provinceData && isset($provinceData['code'])) {
+                            // Gunakan province CODE untuk API call kabupaten
+                            $kabupaten = $this->wilayahService->getKabupaten($provinceData['code']);
+                            
+                            if (is_array($kabupaten) && !empty($kabupaten)) {
+                                // Kabupaten menggunakan 'id' field
+                                $kabupatenData = collect($kabupaten)->firstWhere('id', (int) $berita->districts_id);
+                                
+                                if ($kabupatenData && isset($kabupatenData['name'])) {
+                                    $wilayah['kabupaten'] = $kabupatenData['name'];
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                // Fallback already set, no need to change
+            }
+        }
+        
+        if ($berita->sub_districts_id) {
+            $wilayah['kecamatan'] = 'Kecamatan ID: ' . $berita->sub_districts_id;
+            
+            try {
+                if ($berita->districts_id && $berita->province_id) {
+                    // Dapatkan province code dulu untuk API call kabupaten
+                    $provinces = $this->wilayahService->getProvinces();
+                    if (is_array($provinces) && !empty($provinces)) {
+                        $provinceData = collect($provinces)->firstWhere('id', (int) $berita->province_id);
+                        if ($provinceData && isset($provinceData['code'])) {
+                            // Gunakan province CODE untuk API call kabupaten
+                            $kabupaten = $this->wilayahService->getKabupaten($provinceData['code']);
+                            if (is_array($kabupaten) && !empty($kabupaten)) {
+                                $kabupatenData = collect($kabupaten)->firstWhere('id', (int) $berita->districts_id);
+                                if ($kabupatenData && isset($kabupatenData['code'])) {
+                                    // Gunakan kabupaten CODE untuk API call kecamatan
+                                    $kecamatan = $this->wilayahService->getKecamatan($kabupatenData['code']);
+                                    if (is_array($kecamatan) && !empty($kecamatan)) {
+                                        // Kecamatan menggunakan 'id' field
+                                        $kecamatanData = collect($kecamatan)->firstWhere('id', (int) $berita->sub_districts_id);
+                                        if ($kecamatanData && isset($kecamatanData['name'])) {
+                                            $wilayah['kecamatan'] = $kecamatanData['name'];
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                // Fallback already set, no need to change
+            }
+        }
+        
+        if ($berita->villages_id) {
+            $wilayah['desa'] = 'Desa ID: ' . $berita->villages_id;
+            
+            try {
+                if ($berita->sub_districts_id && $berita->districts_id && $berita->province_id) {
+                    // Dapatkan province code dulu untuk API call kabupaten
+                    $provinces = $this->wilayahService->getProvinces();
+                    if (is_array($provinces) && !empty($provinces)) {
+                        $provinceData = collect($provinces)->firstWhere('id', (int) $berita->province_id);
+                        if ($provinceData && isset($provinceData['code'])) {
+                            // Gunakan province CODE untuk API call kabupaten
+                            $kabupaten = $this->wilayahService->getKabupaten($provinceData['code']);
+                            if (is_array($kabupaten) && !empty($kabupaten)) {
+                                $kabupatenData = collect($kabupaten)->firstWhere('id', (int) $berita->districts_id);
+                                if ($kabupatenData && isset($kabupatenData['code'])) {
+                                    // Gunakan kabupaten CODE untuk API call kecamatan
+                                    $kecamatan = $this->wilayahService->getKecamatan($kabupatenData['code']);
+                                    if (is_array($kecamatan) && !empty($kecamatan)) {
+                                        $kecamatanData = collect($kecamatan)->firstWhere('id', (int) $berita->sub_districts_id);
+                                        if ($kecamatanData && isset($kecamatanData['code'])) {
+                                            // Gunakan kecamatan CODE untuk API call desa
+                                            $desa = $this->wilayahService->getDesa($kecamatanData['code']);
+                                            if (is_array($desa) && !empty($desa)) {
+                                                // Desa menggunakan 'id' field
+                                                $desaData = collect($desa)->firstWhere('id', (int) $berita->villages_id);
+                                                if ($desaData && isset($desaData['name'])) {
+                                                    $wilayah['desa'] = $desaData['name'];
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                // Fallback already set, no need to change
+            }
+        }
+        
+        return $wilayah;
     }
 }
 

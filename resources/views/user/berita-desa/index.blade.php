@@ -1,6 +1,21 @@
 <x-layout>
     <div class="p-4 mt-14">
-        <h1 class="text-2xl font-bold text-gray-800 mb-6">Berita Desa</h1>
+        <h1 class="text-2xl font-bold text-gray-800 mb-6">
+            Berita Desa 
+            @if($berita->count() > 0 && isset($berita->first()->wilayah_info['desa']) && !str_contains($berita->first()->wilayah_info['desa'], 'ID:'))
+                {{ $berita->first()->wilayah_info['desa'] }}
+            @elseif($berita->count() > 0 && isset($berita->first()->wilayah_info['kecamatan']) && !str_contains($berita->first()->wilayah_info['kecamatan'], 'ID:'))
+                {{ $berita->first()->wilayah_info['kecamatan'] }}
+            @elseif($berita->count() > 0 && isset($berita->first()->wilayah_info['kabupaten']) && !str_contains($berita->first()->wilayah_info['kabupaten'], 'ID:'))
+                {{ $berita->first()->wilayah_info['kabupaten'] }}
+            @elseif($berita->count() > 0 && isset($berita->first()->wilayah_info['provinsi']) && !str_contains($berita->first()->wilayah_info['provinsi'], 'ID:'))
+                {{ $berita->first()->wilayah_info['provinsi'] }}
+            @elseif($berita->count() > 0)
+                {{ $berita->first()->villages_id ?? 'Anda' }}
+            @else
+                Anda
+            @endif
+        </h1>
 
         <div class="flex justify-between items-center mb-4">
             <form method="GET" action="{{ route('user.berita-desa.index') }}" class="relative w-full max-w-xs">
@@ -24,7 +39,7 @@
                             <th class="px-6 py-3">No</th>
                             <th class="px-6 py-3">Judul Berita</th>
                             <th class="px-6 py-3">Deskripsi</th>
-                            <th class="px-6 py-3">Wilayah</th>
+                            <th class="px-6 py-3">Lokasi</th>
                             <th class="px-6 py-3">Tanggal</th>
                             <th class="px-6 py-3">Aksi</th>
                         </tr>
@@ -35,19 +50,89 @@
                                 <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
                                     {{ $berita->firstItem() + $index }}
                                 </th>
-                                <td class="px-6 py-4">{{ $item->judul }}</td>
-                                <td class="px-6 py-4">{{ Str::limit($item->deskripsi, 50) }}</td>
                                 <td class="px-6 py-4">
-                                    @if(isset($item->wilayah_info['desa']))
-                                        <span class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
-                                            <i class="fa-solid fa-location-dot"></i>
-                                            {{ $item->wilayah_info['desa'] }}
-                                        </span>
-                                    @else
-                                        -
+                                    <div class="font-medium text-gray-900">{{ $item->judul }}</div>
+                                    @if($item->gambar)
+                                        <div class="mt-2">
+                                            <img src="{{ asset('storage/' . $item->gambar) }}" 
+                                                 alt="Gambar {{ $item->judul }}"
+                                                 class="w-16 h-16 object-cover rounded-lg border border-gray-200 hover:scale-105 transition-transform duration-200 cursor-pointer"
+                                                 onclick="showImageModal('{{ asset('storage/' . $item->gambar) }}', '{{ $item->judul }}')"
+                                            />
+                                        </div>
                                     @endif
                                 </td>
-                                <td class="px-6 py-4">{{ $item->created_at->format('d M Y') }}</td>
+                                <td class="px-6 py-4">
+                                    <div class="max-w-xs">
+                                        {{ Str::limit($item->deskripsi, 80) }}
+                                        @if(strlen($item->deskripsi) > 80)
+                                            <span class="text-blue-600 text-xs">...selengkapnya</span>
+                                        @endif
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    @if(isset($item->wilayah_info) && !empty($item->wilayah_info))
+                                        <div class="text-xs space-y-1">
+                                            @if(isset($item->wilayah_info['provinsi']))
+                                                <div class="text-gray-600">
+                                                    <span class="font-medium">Provinsi:</span>
+                                                    <span class="ml-1">
+                                                        @if(!str_contains($item->wilayah_info['provinsi'], 'ID:'))
+                                                            {{ $item->wilayah_info['provinsi'] }}
+                                                        @else
+                                                            {{ $item->province_id }}
+                                                        @endif
+                                                    </span>
+                                                </div>
+                                            @endif
+                                            @if(isset($item->wilayah_info['kabupaten']))
+                                                <div class="text-gray-600">
+                                                    <span class="font-medium">Kabupaten:</span>
+                                                    <span class="ml-1">
+                                                        @if(!str_contains($item->wilayah_info['kabupaten'], 'ID:'))
+                                                            {{ $item->wilayah_info['kabupaten'] }}
+                                                        @else
+                                                            {{ $item->districts_id }}
+                                                        @endif
+                                                    </span>
+                                                </div>
+                                            @endif
+                                            @if(isset($item->wilayah_info['kecamatan']))
+                                                <div class="text-gray-600">
+                                                    <span class="font-medium">Kecamatan:</span>
+                                                    <span class="ml-1">
+                                                        @if(!str_contains($item->wilayah_info['kecamatan'], 'ID:'))
+                                                            {{ $item->wilayah_info['kecamatan'] }}
+                                                        @else
+                                                            {{ $item->sub_districts_id }}
+                                                        @endif
+                                                    </span>
+                                                </div>
+                                            @endif
+                                            @if(isset($item->wilayah_info['desa']))
+                                                <div class="text-gray-800 font-medium">
+                                                    <span class="font-medium">Desa:</span>
+                                                    <span class="ml-1">
+                                                        @if(!str_contains($item->wilayah_info['desa'], 'ID:'))
+                                                            {{ $item->wilayah_info['desa'] }}
+                                                        @else
+                                                            {{ $item->villages_id }}
+                                                        @endif
+                                                    </span>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @else
+                                        <span class="text-gray-400">-</span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="text-center">
+                                        <div class="font-medium text-gray-900">{{ $item->created_at->format('d') }}</div>
+                                        <div class="text-xs text-gray-500">{{ $item->created_at->format('M Y') }}</div>
+                                        <div class="text-xs text-gray-400">{{ $item->created_at->format('H:i') }}</div>
+                                    </div>
+                                </td>
                                 <td class="px-6 py-4">
                                     <button onclick="showDetailModal({{ $item->id }})"
                                         class="text-blue-600 hover:text-blue-800" aria-label="Detail">
@@ -120,9 +205,36 @@
 
                     <!-- Wilayah Section -->
                     <div>
-                        <p class="text-sm font-semibold text-gray-500 mb-1">Wilayah:</p>
-                        <div id="detailWilayah" class="text-sm text-gray-800 space-y-0.5">
-                            <p class="text-gray-500">-</p>
+                        <p class="text-sm font-semibold text-gray-500 mb-3">Informasi Lokasi:</p>
+                        <div id="detailWilayah" class="bg-gray-50 rounded-lg p-4 space-y-3">
+                            <div class="flex items-center space-x-3">
+                                <span class="inline-flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-600 text-sm font-semibold rounded-full">D</span>
+                                <div>
+                                    <div class="text-xs text-gray-500 uppercase tracking-wide">Desa</div>
+                                    <div id="detailDesa" class="font-medium text-gray-900">-</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <span class="inline-flex items-center justify-center w-8 h-8 bg-green-100 text-green-600 text-sm font-semibold rounded-full">K</span>
+                                <div>
+                                    <div class="text-xs text-gray-500 uppercase tracking-wide">Kecamatan</div>
+                                    <div id="detailKecamatan" class="font-medium text-gray-900">-</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <span class="inline-flex items-center justify-center w-8 h-8 bg-orange-100 text-orange-600 text-sm font-semibold rounded-full">B</span>
+                                <div>
+                                    <div class="text-xs text-gray-500 uppercase tracking-wide">Kabupaten</div>
+                                    <div id="detailKabupaten" class="font-medium text-gray-900">-</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <span class="inline-flex items-center justify-center w-8 h-8 bg-purple-100 text-purple-600 text-sm font-semibold rounded-full">P</span>
+                                <div>
+                                    <div class="text-xs text-gray-500 uppercase tracking-wide">Provinsi</div>
+                                    <div id="detailProvinsi" class="font-medium text-gray-900">-</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -142,6 +254,19 @@
                         Tutup
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Modal -->
+    <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-75 hidden z-50 flex items-center justify-center">
+        <div class="relative max-w-4xl max-h-full p-4">
+            <button onclick="closeImageModal()" class="absolute top-4 right-4 text-white hover:text-gray-300 text-2xl font-bold z-10">
+                &times;
+            </button>
+            <img id="modalImage" src="" alt="" class="max-w-full max-h-full object-contain rounded-lg" />
+            <div class="text-center mt-4">
+                <h3 id="modalTitle" class="text-white text-lg font-semibold"></h3>
             </div>
         </div>
     </div>
@@ -182,16 +307,14 @@
                         document.getElementById('detailDeskripsi').textContent = berita.deskripsi || '-';
                         document.getElementById('detailKomentar').textContent = berita.komentar || '-';
 
-                        // Render wilayah info
-                        const wilayahContainer = document.getElementById('detailWilayah');
+                        // Update wilayah info dengan format baru
                         const wilayah = berita.wilayah_info || {};
-                        const wilayahHtml = `
-                            <div class="flex items-center gap-1"><span class="text-gray-500 w-24">Provinsi</span><span class="text-gray-500">:</span><span class="ml-2">${wilayah.provinsi || '-'}</span></div>
-                            <div class="flex items-center gap-1"><span class="text-gray-500 w-24">Kabupaten</span><span class="text-gray-500">:</span><span class="ml-2">${wilayah.kabupaten || '-'}</span></div>
-                            <div class="flex items-center gap-1"><span class="text-gray-500 w-24">Kecamatan</span><span class="text-gray-500">:</span><span class="ml-2">${wilayah.kecamatan || '-'}</span></div>
-                            <div class="flex items-center gap-1"><span class="text-gray-500 w-24">Desa</span><span class="text-gray-500">:</span><span class="ml-2">${wilayah.desa || '-'}</span></div>
-                        `;
-                        wilayahContainer.innerHTML = wilayahHtml;
+                        
+                        // Update setiap field wilayah
+                        document.getElementById('detailDesa').textContent = wilayah.desa || 'Tidak tersedia';
+                        document.getElementById('detailKecamatan').textContent = wilayah.kecamatan || 'Tidak tersedia';
+                        document.getElementById('detailKabupaten').textContent = wilayah.kabupaten || 'Tidak tersedia';
+                        document.getElementById('detailProvinsi').textContent = wilayah.provinsi || 'Tidak tersedia';
 
                         // Clear previous image
                         imageContainer.innerHTML = '';
@@ -224,6 +347,32 @@
         function closeDetailModal() {
             document.getElementById('detailModal').classList.add('hidden');
         }
+
+        function showImageModal(imageSrc, title) {
+            document.getElementById('modalImage').src = imageSrc;
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('imageModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeImageModal() {
+            document.getElementById('imageModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('imageModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeImageModal();
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeImageModal();
+            }
+        });
     </script>
 
     <script>

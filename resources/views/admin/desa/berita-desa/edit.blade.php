@@ -59,6 +59,71 @@
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
+
+                <!-- Informasi Wilayah (Read-only) -->
+                <div class="col-span-1 md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Informasi Wilayah</label>
+                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                            <div class="flex items-center">
+                                <span class="inline-flex items-center justify-center w-6 h-6 bg-blue-100 text-blue-600 text-xs font-semibold rounded-full mr-3">P</span>
+                                <div>
+                                    <span class="font-medium text-gray-900">Provinsi:</span>
+                                    <span class="text-gray-600 ml-2">
+                                        @if(isset($adminWilayahInfo['provinsi']) && !str_contains($adminWilayahInfo['provinsi'], 'ID:'))
+                                            {{ $adminWilayahInfo['provinsi'] }}
+                                        @else
+                                            {{ Auth::user()->province_id ?? 'Belum diatur' }}
+                                        @endif
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="inline-flex items-center justify-center w-6 h-6 bg-green-100 text-green-600 text-xs font-semibold rounded-full mr-3">B</span>
+                                <div>
+                                    <span class="font-medium text-gray-900">Kabupaten:</span>
+                                    <span class="text-gray-600 ml-2">
+                                        @if(isset($adminWilayahInfo['kabupaten']) && !str_contains($adminWilayahInfo['kabupaten'], 'ID:'))
+                                            {{ $adminWilayahInfo['kabupaten'] }}
+                                        @else
+                                            {{ Auth::user()->districts_id ?? 'Belum diatur' }}
+                                        @endif
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="inline-flex items-center justify-center w-6 h-6 bg-orange-100 text-orange-600 text-xs font-semibold rounded-full mr-3">K</span>
+                                <div>
+                                    <span class="font-medium text-gray-900">Kecamatan:</span>
+                                    <span class="text-gray-600 ml-2">
+                                        @if(isset($adminWilayahInfo['kecamatan']) && !str_contains($adminWilayahInfo['kecamatan'], 'ID:'))
+                                            {{ $adminWilayahInfo['kecamatan'] }}
+                                        @else
+                                            {{ Auth::user()->sub_districts_id ?? 'Belum diatur' }}
+                                        @endif
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="inline-flex items-center justify-center w-6 h-6 bg-purple-100 text-purple-600 text-xs font-semibold rounded-full mr-3">D</span>
+                                <div>
+                                    <span class="font-medium text-gray-900">Desa:</span>
+                                    <span class="text-gray-600 ml-2">
+                                        @if(isset($adminWilayahInfo['desa']) && !str_contains($adminWilayahInfo['desa'], 'ID:'))
+                                            {{ $adminWilayahInfo['desa'] }}
+                                        @else
+                                            {{ Auth::user()->villages_id ?? 'Belum diatur' }}
+                                        @endif
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-3">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Informasi wilayah berdasarkan data admin desa yang login
+                        </p>
+                    </div>
+                </div>
             </div>
 
             <div class="mt-6 flex justify-end space-x-4">

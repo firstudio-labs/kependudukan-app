@@ -1078,3 +1078,7 @@ Route::get('/api/wilayah/kecamatan-by-kabupaten', [SuperadminBeritaDesaControlle
     ->name('api.wilayah.kecamatan-by-kabupaten');
 Route::get('/api/wilayah/desa-by-kecamatan', [SuperadminBeritaDesaController::class, 'getDesaByKecamatan'])
     ->name('api.wilayah.desa-by-kecamatan');
+
+
+
+

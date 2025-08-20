@@ -49,30 +49,54 @@
                                 <td class="px-6 py-4">{{ $item->judul }}</td>
                                 <td class="px-6 py-4">{{ Str::limit($item->deskripsi, 50) }}</td>
                                 <td class="px-6 py-4">
-                                    @if(isset($item->wilayah_info) && !empty($item->wilayah_info))
+                                    @if($item->province_id || $item->districts_id || $item->sub_districts_id || $item->villages_id)
                                         <div class="text-xs space-y-1">
-                                            @if(isset($item->wilayah_info['provinsi']))
+                                            @if($item->province_id)
                                                 <div class="font-semibold text-gray-800 border-b border-gray-200 pb-1">
                                                     <span class="text-blue-500 mr-1">●</span>
-                                                    {{ $item->wilayah_info['provinsi'] }}
+                                                    <span class="font-medium">
+                                                        @if(isset($item->wilayah_info['provinsi']) && !str_contains($item->wilayah_info['provinsi'], 'ID:'))
+                                                            {{ $item->wilayah_info['provinsi'] }}
+                                                        @else
+                                                            Provinsi ID: {{ $item->province_id }}
+                                                        @endif
+                                                    </span>
                                                 </div>
                                             @endif
-                                            @if(isset($item->wilayah_info['kabupaten']))
+                                            @if($item->districts_id)
                                                 <div class="text-gray-700 ml-2">
                                                     <span class="text-green-500 mr-1">●</span>
-                                                    {{ $item->wilayah_info['kabupaten'] }}
+                                                    <span class="font-medium">
+                                                        @if(isset($item->wilayah_info['kabupaten']) && !str_contains($item->wilayah_info['kabupaten'], 'ID:'))
+                                                            {{ $item->wilayah_info['kabupaten'] }}
+                                                        @else
+                                                            Kabupaten ID: {{ $item->districts_id }}
+                                                        @endif
+                                                    </span>
                                                 </div>
                                             @endif
-                                            @if(isset($item->wilayah_info['kecamatan']))
+                                            @if($item->sub_districts_id)
                                                 <div class="text-gray-600 ml-4">
                                                     <span class="text-orange-500 mr-1">●</span>
-                                                    {{ $item->wilayah_info['kecamatan'] }}
+                                                    <span class="font-medium">
+                                                        @if(isset($item->wilayah_info['kecamatan']) && !str_contains($item->wilayah_info['kecamatan'], 'ID:'))
+                                                            {{ $item->wilayah_info['kecamatan'] }}
+                                                        @else
+                                                            Kecamatan ID: {{ $item->sub_districts_id }}
+                                                        @endif
+                                                    </span>
                                                 </div>
                                             @endif
-                                            @if(isset($item->wilayah_info['desa']))
+                                            @if($item->villages_id)
                                                 <div class="font-medium text-blue-600 ml-6">
                                                     <span class="text-blue-500 mr-1">●</span>
-                                                    {{ $item->wilayah_info['desa'] }}
+                                                    <span class="font-medium">
+                                                        @if(isset($item->wilayah_info['desa']) && !str_contains($item->wilayah_info['desa'], 'ID:'))
+                                                            {{ $item->wilayah_info['desa'] }}
+                                                        @else
+                                                            Desa ID: {{ $item->villages_id }}
+                                                        @endif
+                                                    </span>
                                                 </div>
                                             @endif
                                         </div>
@@ -221,34 +245,49 @@
                         document.getElementById('detailDeskripsi').textContent = berita.deskripsi || '-';
                         document.getElementById('detailKomentar').textContent = berita.komentar || '-';
 
-                        // Update wilayah information
                         // Update wilayah information with better formatting
                         let wilayahHTML = '<span class="text-gray-400">Tidak ada data wilayah</span>';
-                        if (berita.wilayah_info && Object.keys(berita.wilayah_info).length > 0) {
+                        if (berita.province_id || berita.districts_id || berita.sub_districts_id || berita.villages_id) {
                             wilayahHTML = `
                                 <div class="space-y-2">
-                                    ${berita.wilayah_info.provinsi ? `
+                                    ${berita.province_id ? `
                                         <div class="flex items-center">
                                             <span class="inline-flex items-center justify-center w-6 h-6 bg-blue-100 text-blue-600 text-xs font-semibold rounded-full mr-3">P</span>
-                                            <span class="text-sm font-medium text-gray-900">${berita.wilayah_info.provinsi}</span>
+                                            <span class="text-sm font-medium text-gray-900">
+                                                ${berita.wilayah_info && berita.wilayah_info.provinsi && !berita.wilayah_info.provinsi.includes('ID:') 
+                                                    ? berita.wilayah_info.provinsi 
+                                                    : 'Provinsi ID: ' + berita.province_id}
+                                            </span>
                                         </div>
                                     ` : ''}
-                                    ${berita.wilayah_info.kabupaten ? `
+                                    ${berita.districts_id ? `
                                         <div class="flex items-center ml-3">
                                             <span class="inline-flex items-center justify-center w-6 h-6 bg-green-100 text-green-600 text-xs font-semibold rounded-full mr-3">K</span>
-                                            <span class="text-sm text-gray-800">${berita.wilayah_info.kabupaten}</span>
+                                            <span class="text-sm text-gray-800">
+                                                ${berita.wilayah_info && berita.wilayah_info.kabupaten && !berita.wilayah_info.kabupaten.includes('ID:') 
+                                                    ? berita.wilayah_info.kabupaten 
+                                                    : 'Kabupaten ID: ' + berita.districts_id}
+                                            </span>
                                         </div>
                                     ` : ''}
-                                    ${berita.wilayah_info.kecamatan ? `
+                                    ${berita.sub_districts_id ? `
                                         <div class="flex items-center ml-6">
                                             <span class="inline-flex items-center justify-center w-6 h-6 bg-orange-100 text-orange-600 text-xs font-semibold rounded-full mr-3">C</span>
-                                            <span class="text-sm text-gray-700">${berita.wilayah_info.kecamatan}</span>
+                                            <span class="text-sm text-gray-700">
+                                                ${berita.wilayah_info && berita.wilayah_info.kecamatan && !berita.wilayah_info.kecamatan.includes('ID:') 
+                                                    ? berita.wilayah_info.kecamatan 
+                                                    : 'Kecamatan ID: ' + berita.sub_districts_id}
+                                            </span>
                                         </div>
                                     ` : ''}
-                                    ${berita.wilayah_info.desa ? `
+                                    ${berita.villages_id ? `
                                         <div class="flex items-center ml-9">
                                             <span class="inline-flex items-center justify-center w-6 h-6 bg-purple-100 text-purple-600 text-xs font-semibold rounded-full mr-3">D</span>
-                                            <span class="text-sm font-medium text-blue-600">${berita.wilayah_info.desa}</span>
+                                            <span class="text-sm font-medium text-blue-600">
+                                                ${berita.wilayah_info && berita.wilayah_info.desa && !berita.wilayah_info.desa.includes('ID:') 
+                                                    ? berita.wilayah_info.desa 
+                                                    : 'Desa ID: ' + berita.villages_id}
+                                            </span>
                                         </div>
                                     ` : ''}
                                 </div>

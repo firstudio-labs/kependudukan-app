@@ -1,6 +1,13 @@
 <x-layout>
     <div class="p-4 mt-14">
-        <h1 class="text-2xl font-bold text-gray-800 mb-6">Berita Desa</h1>
+        <h1 class="text-2xl font-bold text-gray-800 mb-6">
+            Berita Desa 
+            @if(isset($berita->first()->wilayah_info['desa']) && !str_contains($berita->first()->wilayah_info['desa'], 'ID:'))
+                {{ $berita->first()->wilayah_info['desa'] }}
+            @else
+                {{ $berita->first()->villages_id ?? 'Anda' }}
+            @endif
+        </h1>
 
         <div class="flex justify-between items-center mb-4">
             <form method="GET" action="{{ route('admin.desa.berita-desa.index') }}" class="relative w-full max-w-xs">
@@ -35,7 +42,8 @@
                             <th class="px-6 py-3">No</th>
                             <th class="px-6 py-3">Judul Berita</th>
                             <th class="px-6 py-3">Deskripsi</th>
-                            <th class="px-6 py-3">Komentar</th>
+                            <th class="px-6 py-3">Lokasi</th>
+                            <th class="px-6 py-3">Tanggal</th>
                             <th class="px-6 py-3">Aksi</th>
                         </tr>
                     </thead>
@@ -45,27 +53,125 @@
                                 <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
                                     {{ $berita->firstItem() + $index }}
                                 </th>
-                                <td class="px-6 py-4">{{ $item->judul }}</td>
-                                <td class="px-6 py-4">{{ Str::limit($item->deskripsi, 50) }}</td>
-                                <td class="px-6 py-4">{{ Str::limit($item->komentar, 50) }}</td>
-                                <td class="flex items-center px-6 py-4 space-x-2">
-                                    <button onclick="showDetailModal({{ $item->id }})"
-                                        class="text-blue-600 hover:text-blue-800" aria-label="Detail">
-                                        <i class="fa-solid fa-eye"></i>
-                                    </button>
-                                    <a href="{{ route('admin.desa.berita-desa.edit', $item->id) }}"
-                                        class="text-yellow-600 hover:text-yellow-800" aria-label="Edit">
-                                        <i class="fa-solid fa-pen-to-square"></i>
-                                    </a>
-                                    <button onclick="confirmDelete({{ $item->id }})" class="text-red-600 hover:text-red-800"
-                                        aria-label="Delete">
-                                        <i class="fa-solid fa-trash"></i>
-                                    </button>
+                                <td class="px-6 py-4">
+                                    <div class="font-medium text-gray-900">{{ $item->judul }}</div>
+                                    @if($item->gambar)
+                                        <div class="mt-2">
+                                            <img src="{{ asset('storage/' . $item->gambar) }}" 
+                                                 alt="Gambar {{ $item->judul }}"
+                                                 class="w-16 h-16 object-cover rounded-lg border border-gray-200 hover:scale-105 transition-transform duration-200 cursor-pointer"
+                                                 onclick="showImageModal('{{ asset('storage/' . $item->gambar) }}', '{{ $item->judul }}')"
+                                            />
+                                        </div>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="max-w-xs">
+                                        {{ Str::limit($item->deskripsi, 80) }}
+                                        @if(strlen($item->deskripsi) > 80)
+                                            <span class="text-blue-600 text-xs">...selengkapnya</span>
+                                        @endif
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    @if(isset($item->wilayah_info) && !empty($item->wilayah_info))
+                                        <div class="text-xs space-y-1">
+                                            @if(isset($item->wilayah_info['provinsi']))
+                                                <div class="text-gray-600">
+                                                    <span class="font-medium">Provinsi:</span>
+                                                    <span class="ml-1">
+                                                        @if(!str_contains($item->wilayah_info['provinsi'], 'ID:'))
+                                                            {{ $item->wilayah_info['provinsi'] }}
+                                                        @else
+                                                            {{ $item->province_id }}
+                                                        @endif
+                                                    </span>
+                                                </div>
+                                            @endif
+                                            @if(isset($item->wilayah_info['kabupaten']))
+                                                <div class="text-gray-600">
+                                                    <span class="font-medium">Kabupaten:</span>
+                                                    <span class="ml-1">
+                                                        @if(!str_contains($item->wilayah_info['kabupaten'], 'ID:'))
+                                                            {{ $item->wilayah_info['kabupaten'] }}
+                                                        @else
+                                                            {{ $item->districts_id }}
+                                                        @endif
+                                                    </span>
+                                                </div>
+                                            @endif
+                                            @if(isset($item->wilayah_info['kecamatan']))
+                                                <div class="text-gray-600">
+                                                    <span class="font-medium">Kecamatan:</span>
+                                                    <span class="ml-1">
+                                                        @if(!str_contains($item->wilayah_info['kecamatan'], 'ID:'))
+                                                            {{ $item->wilayah_info['kecamatan'] }}
+                                                        @else
+                                                            {{ $item->sub_districts_id }}
+                                                        @endif
+                                                    </span>
+                                                </div>
+                                            @endif
+                                            @if(isset($item->wilayah_info['desa']))
+                                                <div class="text-gray-800 font-medium">
+                                                    <span class="font-medium">Desa:</span>
+                                                    <span class="ml-1">
+                                                        @if(!str_contains($item->wilayah_info['desa'], 'ID:'))
+                                                            {{ $item->wilayah_info['desa'] }}
+                                                        @else
+                                                            {{ $item->villages_id }}
+                                                        @endif
+                                                    </span>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @else
+                                        <span class="text-gray-400">-</span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="text-center">
+                                        <div class="font-medium text-gray-900">{{ $item->created_at->format('d') }}</div>
+                                        <div class="text-xs text-gray-500">{{ $item->created_at->format('M Y') }}</div>
+                                        <div class="text-xs text-gray-400">{{ $item->created_at->format('H:i') }}</div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center space-x-2">
+                                        <button onclick="showDetailModal({{ $item->id }})"
+                                            class="inline-flex items-center px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200"
+                                            aria-label="Lihat Detail">
+                                            <i class="fa-solid fa-eye mr-2"></i>
+                                            Detail
+                                        </button>
+                                        <a href="{{ route('admin.desa.berita-desa.edit', $item->id) }}"
+                                            class="inline-flex items-center px-3 py-2 text-sm font-medium text-yellow-600 bg-yellow-50 rounded-lg hover:bg-yellow-100 focus:outline-none focus:ring-2 focus:ring-yellow-500 transition-colors duration-200"
+                                            aria-label="Edit Berita">
+                                            <i class="fa-solid fa-pen-to-square mr-2"></i>
+                                            Edit
+                                        </a>
+                                        <button onclick="confirmDelete({{ $item->id }})" 
+                                            class="inline-flex items-center px-3 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors duration-200"
+                                            aria-label="Hapus Berita">
+                                            <i class="fa-solid fa-trash mr-2"></i>
+                                            Hapus
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="text-center py-4">Tidak ada data berita.</td>
+                                <td colspan="6" class="text-center py-12">
+                                    <div class="flex flex-col items-center space-y-4">
+                                        <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+                                            <i class="fa-solid fa-newspaper text-2xl text-gray-400"></i>
+                                        </div>
+                                        <div class="text-gray-500">
+                                            <div class="font-medium text-lg">Belum ada berita</div>
+                                            <div class="text-sm">Berita desa akan muncul di sini</div>
+                                        </div>
+                                    </div>
+                                </td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -76,8 +182,8 @@
             @if($berita->count() > 0)
                 <div class="px-4 py-3 flex flex-col sm:flex-row justify-between items-center">
                     <div class="text-sm text-gray-700 mb-4 sm:mb-0">
-                        Showing {{ $berita->firstItem() }} to {{ $berita->lastItem() }} of {{ $berita->total() }}
-                        results
+                        Menampilkan {{ $berita->firstItem() }} sampai {{ $berita->lastItem() }} dari {{ $berita->total() }}
+                        hasil
                     </div>
                     {{ $berita->links('pagination::tailwind') }}
                 </div>
@@ -142,6 +248,19 @@
                         Tutup
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Modal -->
+    <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-75 hidden z-50 flex items-center justify-center">
+        <div class="relative max-w-4xl max-h-full p-4">
+            <button onclick="closeImageModal()" class="absolute top-4 right-4 text-white hover:text-gray-300 text-2xl font-bold z-10">
+                &times;
+            </button>
+            <img id="modalImage" src="" alt="" class="max-w-full max-h-full object-contain rounded-lg" />
+            <div class="text-center mt-4">
+                <h3 id="modalTitle" class="text-white text-lg font-semibold"></h3>
             </div>
         </div>
     </div>
@@ -251,6 +370,32 @@
                 }
             });
         }
+
+        function showImageModal(imageSrc, title) {
+            document.getElementById('modalImage').src = imageSrc;
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('imageModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeImageModal() {
+            document.getElementById('imageModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('imageModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeImageModal();
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeImageModal();
+            }
+        });
     </script>
 
     <script>

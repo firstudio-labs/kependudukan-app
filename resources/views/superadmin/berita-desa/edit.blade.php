@@ -60,62 +60,62 @@
                             <option value="">Pilih Provinsi</option>
                             @foreach($provinces as $province)
                                 <option value="{{ $province['code'] }}" 
-                                    {{ old('province', $berita->id_provinsi) == $province['code'] ? 'selected' : '' }}>
+                                    {{ old('province', $berita->province_id) == $province['code'] ? 'selected' : '' }}>
                                     {{ $province['name'] }}
                                 </option>
                             @endforeach
                         </select>
-                        <!-- Hidden field untuk menyimpan id_provinsi -->
-                        <input type="hidden" name="id_provinsi" id="id_provinsi" value="{{ old('id_provinsi', $berita->id_provinsi) }}">
+                        <!-- Hidden field untuk menyimpan province_id -->
+                        <input type="hidden" name="province_id" id="province_id" value="{{ old('province_id', $berita->province_id) }}">
                     </div>
 
                     <div>
-                        <label for="id_kabupaten" class="block text-sm font-medium text-gray-700 mb-2">Kabupaten</label>
-                        <select name="id_kabupaten" id="id_kabupaten" 
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('id_kabupaten') border-red-500 @enderror"
-                            onchange="loadKecamatan()" {{ $berita->id_provinsi ? '' : 'disabled' }}>
+                        <label for="districts_id" class="block text-sm font-medium text-gray-700 mb-2">Kabupaten</label>
+                        <select name="districts_id" id="districts_id" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('districts_id') border-red-500 @enderror"
+                            onchange="loadKecamatan()" {{ $berita->province_id ? '' : 'disabled' }}>
                             <option value="">Pilih Provinsi terlebih dahulu</option>
                             @foreach($kabupaten as $kab)
-                                <option value="{{ $kab['id'] }}" {{ old('id_kabupaten', $berita->id_kabupaten) == $kab['id'] ? 'selected' : '' }}>
+                                <option value="{{ $kab['code'] }}" {{ old('districts_id', $berita->districts_id) == $kab['code'] ? 'selected' : '' }}>
                                     {{ $kab['name'] }}
                                 </option>
                             @endforeach
                         </select>
-                        @error('id_kabupaten')
+                        @error('districts_id')
                             <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                         @enderror
                     </div>
 
                     <div>
-                        <label for="id_kecamatan" class="block text-sm font-medium text-gray-700 mb-2">Kecamatan</label>
-                        <select name="id_kecamatan" id="id_kecamatan" 
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('id_kecamatan') border-red-500 @enderror"
-                            onchange="loadDesa()" {{ $berita->id_kabupaten ? '' : 'disabled' }}>
+                        <label for="sub_districts_id" class="block text-sm font-medium text-gray-700 mb-2">Kecamatan</label>
+                        <select name="sub_districts_id" id="sub_districts_id" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('sub_districts_id') border-red-500 @enderror"
+                            onchange="loadDesa()" {{ $berita->districts_id ? '' : 'disabled' }}>
                             <option value="">Pilih Kabupaten terlebih dahulu</option>
                             @foreach($kecamatan as $kec)
-                                <option value="{{ $kec['id'] }}" {{ old('id_kecamatan', $berita->id_kecamatan) == $kec['id'] ? 'selected' : '' }}>
+                                <option value="{{ $kec['code'] }}" {{ old('sub_districts_id', $berita->sub_districts_id) == $kec['code'] ? 'selected' : '' }}>
                                     {{ $kec['name'] }}
                                 </option>
                             @endforeach
                         </select>
-                        @error('id_kecamatan')
+                        @error('sub_districts_id')
                             <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                         @enderror
                     </div>
 
                     <div>
-                        <label for="id_desa" class="block text-sm font-medium text-gray-700 mb-2">Desa</label>
-                        <select name="id_desa" id="id_desa" 
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('id_desa') border-red-500 @enderror" 
-                            {{ $berita->id_kecamatan ? '' : 'disabled' }}>
+                        <label for="villages_id" class="block text-sm font-medium text-gray-700 mb-2">Desa</label>
+                        <select name="villages_id" id="villages_id" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('villages_id') border-red-500 @enderror" 
+                            {{ $berita->sub_districts_id ? '' : 'disabled' }}>
                             <option value="">Pilih Kecamatan terlebih dahulu</option>
-                            @foreach($desa as $d)
-                                <option value="{{ $d['id'] }}" {{ old('id_desa', $berita->id_desa) == $d['id'] ? 'selected' : '' }}>
-                                    {{ $d['name'] }}
+                            @foreach($desa as $des)
+                                <option value="{{ $des['code'] }}" {{ old('villages_id', $berita->villages_id) == $des['code'] ? 'selected' : '' }}>
+                                    {{ $des['name'] }}
                                 </option>
                             @endforeach
                         </select>
-                        @error('id_desa')
+                        @error('villages_id')
                             <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                         @enderror
                     </div>
@@ -167,26 +167,26 @@
         function loadKabupaten() {
             const provinceSelect = document.getElementById('province');
             const provinceCode = provinceSelect.value;
-            const kabupatenSelect = document.getElementById('id_kabupaten');
-            const kecamatanSelect = document.getElementById('id_kecamatan');
-            const desaSelect = document.getElementById('id_desa');
+            const districtsSelect = document.getElementById('districts_id');
+            const subDistrictsSelect = document.getElementById('sub_districts_id');
+            const villagesSelect = document.getElementById('villages_id');
 
             // Reset dependent dropdowns
-            kabupatenSelect.innerHTML = '<option value="">Pilih Kabupaten</option>';
-            kecamatanSelect.innerHTML = '<option value="">Pilih Kecamatan</option>';
-            desaSelect.innerHTML = '<option value="">Pilih Desa</option>';
+            districtsSelect.innerHTML = '<option value="">Pilih Kabupaten</option>';
+            subDistrictsSelect.innerHTML = '<option value="">Pilih Kecamatan</option>';
+            villagesSelect.innerHTML = '<option value="">Pilih Desa</option>';
 
             // Disable dependent dropdowns
-            kabupatenSelect.disabled = true;
-            kecamatanSelect.disabled = true;
-            desaSelect.disabled = true;
+            districtsSelect.disabled = true;
+            subDistrictsSelect.disabled = true;
+            villagesSelect.disabled = true;
 
             if (provinceCode) {
                 // Save province code to hidden field
-                document.getElementById('id_provinsi').value = provinceCode;
+                document.getElementById('province_id').value = provinceCode;
 
-                // Enable kabupaten dropdown
-                kabupatenSelect.disabled = false;
+                // Enable districts dropdown
+                districtsSelect.disabled = false;
 
                 const url = `/api/wilayah/kabupaten-by-province?province_code=${provinceCode}`;
 
@@ -197,9 +197,6 @@
                     }
                 })
                     .then(response => {
-                        if (!response.ok) {
-                            throw new Error(`HTTP error! status: ${response.status}`);
-                        }
                         return response.json();
                     })
                     .then(data => {
@@ -207,47 +204,45 @@
                             window.kabupatenData = data; // Store kabupaten data globally
                             data.forEach(kabupaten => {
                                 const option = document.createElement('option');
-                                option.value = kabupaten.id;
+                                option.value = kabupaten.code; // Use code as value
                                 option.textContent = kabupaten.name;
-                                kabupatenSelect.appendChild(option);
+                                districtsSelect.appendChild(option);
                             });
                         } else {
-                            kabupatenSelect.innerHTML = '<option value="">Invalid data format</option>';
+                            districtsSelect.innerHTML = '<option value="">Invalid data format</option>';
                         }
                     })
                     .catch(error => {
-                        kabupatenSelect.innerHTML = '<option value="">Error loading kabupaten</option>';
+                        districtsSelect.innerHTML = '<option value="">Error loading kabupaten</option>';
                     });
             }
         }
 
         // Load kecamatan berdasarkan kabupaten
         function loadKecamatan() {
-            const kabupatenSelect = document.getElementById('id_kabupaten');
-            const kabupatenCode = kabupatenSelect.value;
-            const kecamatanSelect = document.getElementById('id_kecamatan');
-            const desaSelect = document.getElementById('id_desa');
+            const districtsSelect = document.getElementById('districts_id');
+            const districtsCode = districtsSelect.value;
+            const subDistrictsSelect = document.getElementById('sub_districts_id');
+            const villagesSelect = document.getElementById('villages_id');
 
             // Reset dependent dropdowns
-            kecamatanSelect.innerHTML = '<option value="">Pilih Kecamatan</option>';
-            desaSelect.innerHTML = '<option value="">Pilih Desa</option>';
+            subDistrictsSelect.innerHTML = '<option value="">Pilih Kecamatan</option>';
+            villagesSelect.innerHTML = '<option value="">Pilih Desa</option>';
 
             // Disable dependent dropdowns
-            kecamatanSelect.disabled = true;
-            desaSelect.disabled = true;
+            subDistrictsSelect.disabled = true;
+            villagesSelect.disabled = true;
 
-            if (kabupatenCode) {
-                // Find the kabupaten code from the original data
-                const kabupatenData = window.kabupatenData || [];
-                const selectedKabupaten = kabupatenData.find(k => k.id == kabupatenCode);
+            if (districtsCode) {
+                // Find the districts data from the loaded kabupaten data
+                const districtsData = window.kabupatenData || [];
+                const selectedDistricts = districtsData.find(d => d.code == districtsCode);
                 
-                if (selectedKabupaten && selectedKabupaten.code) {
-                    const wilayahCode = selectedKabupaten.code;
+                if (selectedDistricts) {
+                    // Enable subDistricts dropdown
+                    subDistrictsSelect.disabled = false;
                     
-                    // Enable kecamatan dropdown
-                    kecamatanSelect.disabled = false;
-                    
-                    const url = `/api/wilayah/kecamatan-by-kabupaten?kabupaten_code=${wilayahCode}`;
+                    const url = `/api/wilayah/kecamatan-by-kabupaten?kabupaten_code=${districtsCode}`;
                     
                     fetch(url, {
                         credentials: 'include',
@@ -263,16 +258,16 @@
                                 window.kecamatanData = data; // Store kecamatan data globally
                                 data.forEach(kecamatan => {
                                     const option = document.createElement('option');
-                                    option.value = kecamatan.id;
+                                    option.value = kecamatan.code; // Use code as value
                                     option.textContent = kecamatan.name;
-                                    kecamatanSelect.appendChild(option);
+                                    subDistrictsSelect.appendChild(option);
                                 });
                             } else {
-                                kecamatanSelect.innerHTML = '<option value="">Invalid data format</option>';
+                                subDistrictsSelect.innerHTML = '<option value="">Invalid data format</option>';
                             }
                         })
                         .catch(error => {
-                            kecamatanSelect.innerHTML = '<option value="">Error loading kecamatan</option>';
+                            subDistrictsSelect.innerHTML = '<option value="">Error loading kecamatan</option>';
                         });
                 }
             }
@@ -280,28 +275,26 @@
 
         // Load desa berdasarkan kecamatan
         function loadDesa() {
-            const kecamatanSelect = document.getElementById('id_kecamatan');
-            const kecamatanCode = kecamatanSelect.value;
-            const desaSelect = document.getElementById('id_desa');
+            const subDistrictsSelect = document.getElementById('sub_districts_id');
+            const subDistrictsCode = subDistrictsSelect.value;
+            const villagesSelect = document.getElementById('villages_id');
 
             // Reset dependent dropdowns
-            desaSelect.innerHTML = '<option value="">Pilih Desa</option>';
+            villagesSelect.innerHTML = '<option value="">Pilih Desa</option>';
 
             // Disable dependent dropdowns
-            desaSelect.disabled = true;
+            villagesSelect.disabled = true;
 
-            if (kecamatanCode) {
-                // Find the kecamatan code from the original data
-                const kecamatanData = window.kecamatanData || [];
-                const selectedKecamatan = kecamatanData.find(k => k.id == kecamatanCode);
+            if (subDistrictsCode) {
+                // Find the subDistricts data from the loaded kecamatan data
+                const subDistrictsData = window.kecamatanData || [];
+                const selectedSubDistricts = subDistrictsData.find(s => s.code == subDistrictsCode);
                 
-                if (selectedKecamatan && selectedKecamatan.code) {
-                    const wilayahCode = selectedKecamatan.code;
+                if (selectedSubDistricts) {
+                    // Enable villages dropdown
+                    villagesSelect.disabled = false;
                     
-                    // Enable desa dropdown
-                    desaSelect.disabled = false;
-                    
-                    const url = `/api/wilayah/desa-by-kecamatan?kecamatan_code=${wilayahCode}`;
+                    const url = `/api/wilayah/desa-by-kecamatan?kecamatan_code=${subDistrictsCode}`;
                     
                     fetch(url, {
                         credentials: 'include',
@@ -314,18 +307,19 @@
                         })
                         .then(data => {
                             if (Array.isArray(data)) {
+                                window.desaData = data; // Store desa data globally
                                 data.forEach(desa => {
                                     const option = document.createElement('option');
-                                    option.value = desa.id;
+                                    option.value = desa.code; // Use code as value
                                     option.textContent = desa.name;
-                                    desaSelect.appendChild(option);
+                                    villagesSelect.appendChild(option);
                                 });
                             } else {
-                                desaSelect.innerHTML = '<option value="">Invalid data format</option>';
+                                villagesSelect.innerHTML = '<option value="">Invalid data format</option>';
                             }
                         })
                         .catch(error => {
-                            desaSelect.innerHTML = '<option value="">Error loading desa</option>';
+                            villagesSelect.innerHTML = '<option value="">Error loading desa</option>';
                         });
                 }
             }
@@ -334,28 +328,28 @@
         // Load data wilayah saat halaman dimuat
         document.addEventListener('DOMContentLoaded', function() {
             // Set nilai yang sudah ada jika ada data
-            @if($berita->id_kabupaten && $berita->id_kecamatan && $berita->id_desa)
+            @if($berita->districts_id && $berita->sub_districts_id && $berita->villages_id)
                 // Trigger load kabupaten dan set nilai
                 loadKabupaten();
                 
                 // Set timeout untuk memastikan data kabupaten sudah ter-load
                 setTimeout(() => {
                     // Set nilai kabupaten
-                    document.getElementById('id_kabupaten').value = '{{ $berita->id_kabupaten }}';
+                    document.getElementById('districts_id').value = '{{ $berita->districts_id }}';
                     
                     // Trigger load kecamatan
                     loadKecamatan();
                     
                     setTimeout(() => {
                         // Set nilai kecamatan
-                        document.getElementById('id_kecamatan').value = '{{ $berita->id_kecamatan }}';
+                        document.getElementById('sub_districts_id').value = '{{ $berita->sub_districts_id }}';
                         
                         // Trigger load desa
                         loadDesa();
                         
                         setTimeout(() => {
                             // Set nilai desa
-                            document.getElementById('id_desa').value = '{{ $berita->id_desa }}';
+                            document.getElementById('villages_id').value = '{{ $berita->villages_id }}';
                         }, 500);
                     }, 500);
                 }, 500);

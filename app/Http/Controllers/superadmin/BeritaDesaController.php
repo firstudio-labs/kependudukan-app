@@ -35,7 +35,7 @@ class BeritaDesaController extends Controller
 
         $berita = $query->latest()->paginate(10);
         
-        // Tambahkan data wilayah untuk setiap berita
+        // Tambahkan data wilayah untuk setiap berita agar bisa tampilkan nama
         foreach ($berita as $item) {
             $item->wilayah_info = $this->getWilayahInfo($item);
         }
@@ -50,10 +50,15 @@ class BeritaDesaController extends Controller
     {
         $wilayah = [];
 
-        if ($berita->id_provinsi) {
+        // Always show IDs first as fallback
+        if ($berita->province_id) {
+            $wilayah['provinsi'] = 'Provinsi ID: ' . $berita->province_id;
+            $wilayah['provinsi_code'] = $berita->province_id;
+            
             try {
                 $provinces = $this->wilayahService->getProvinces();
-                $province = collect($provinces)->firstWhere('code', (string) $berita->id_provinsi);
+                // Perbaikan: Gunakan 'id' field, bukan 'code' field
+                $province = collect($provinces)->firstWhere('id', (int) $berita->province_id);
                 if ($province) {
                     $wilayah['provinsi'] = $province['name'];
                 }
@@ -62,31 +67,52 @@ class BeritaDesaController extends Controller
             }
         }
         
-        if ($berita->id_kabupaten && $berita->id_provinsi) {
+        if ($berita->districts_id) {
+            $wilayah['kabupaten'] = 'Kabupaten ID: ' . $berita->districts_id;
+            $wilayah['kabupaten_code'] = $berita->districts_id;
+            
             try {
-                $kabupaten = $this->wilayahService->getKabupaten($berita->id_provinsi);
-                // Cocokkan berdasarkan code karena kita menyimpan kode (2/4/6/10 digit) di DB
-                $kabupatenData = collect($kabupaten)->firstWhere('code', (string) $berita->id_kabupaten);
-                if ($kabupatenData) {
-                    $wilayah['kabupaten'] = $kabupatenData['name'];
+                if ($berita->province_id) {
+                    // Dapatkan province code dulu untuk API call kabupaten
+                    $provinces = $this->wilayahService->getProvinces();
+                    $provinceData = collect($provinces)->firstWhere('id', (int) $berita->province_id);
+                    
+                    if ($provinceData && isset($provinceData['code'])) {
+                        $kabupaten = $this->wilayahService->getKabupaten($provinceData['code']);
+                        // Perbaikan: Gunakan 'id' field, bukan 'code' field
+                        $kabupatenData = collect($kabupaten)->firstWhere('id', (int) $berita->districts_id);
+                        if ($kabupatenData) {
+                            $wilayah['kabupaten'] = $kabupatenData['name'];
+                        }
+                    }
                 }
             } catch (\Exception $e) {
                 Log::error('Error getting kabupaten info: ' . $e->getMessage());
             }
         }
         
-        if ($berita->id_kecamatan && $berita->id_kabupaten && $berita->id_provinsi) {
+        if ($berita->sub_districts_id) {
+            $wilayah['kecamatan'] = 'Kecamatan ID: ' . $berita->sub_districts_id;
+            $wilayah['kecamatan_code'] = $berita->sub_districts_id;
+            
             try {
-                // Get kabupaten data first to get the code
-                $kabupaten = $this->wilayahService->getKabupaten($berita->id_provinsi);
-                $kabupatenData = collect($kabupaten)->firstWhere('code', (string) $berita->id_kabupaten);
-                
-                if ($kabupatenData) {
-                    $kecamatan = $this->wilayahService->getKecamatan($kabupatenData['code']);
-                    // Cocokkan berdasarkan code karena kita menyimpan kode
-                    $kecamatanData = collect($kecamatan)->firstWhere('code', (string) $berita->id_kecamatan);
-                    if ($kecamatanData) {
-                        $wilayah['kecamatan'] = $kecamatanData['name'];
+                if ($berita->districts_id && $berita->province_id) {
+                    // Dapatkan province code dulu untuk API call kabupaten
+                    $provinces = $this->wilayahService->getProvinces();
+                    $provinceData = collect($provinces)->firstWhere('id', (int) $berita->province_id);
+                    
+                    if ($provinceData && isset($provinceData['code'])) {
+                        $kabupaten = $this->wilayahService->getKabupaten($provinceData['code']);
+                        $kabupatenData = collect($kabupaten)->firstWhere('id', (int) $berita->districts_id);
+                        
+                        if ($kabupatenData && isset($kabupatenData['code'])) {
+                            $kecamatan = $this->wilayahService->getKecamatan($kabupatenData['code']);
+                            // Perbaikan: Gunakan 'id' field, bukan 'code' field
+                            $kecamatanData = collect($kecamatan)->firstWhere('id', (int) $berita->sub_districts_id);
+                            if ($kecamatanData) {
+                                $wilayah['kecamatan'] = $kecamatanData['name'];
+                            }
+                        }
                     }
                 }
             } catch (\Exception $e) {
@@ -94,23 +120,32 @@ class BeritaDesaController extends Controller
             }
         }
         
-        if ($berita->id_desa && $berita->id_kecamatan && $berita->id_kabupaten && $berita->id_provinsi) {
+        if ($berita->villages_id) {
+            $wilayah['desa'] = 'Desa ID: ' . $berita->villages_id;
+            $wilayah['desa_code'] = $berita->villages_id;
+            
             try {
-                // Get kabupaten data first to get the code
-                $kabupaten = $this->wilayahService->getKabupaten($berita->id_provinsi);
-                $kabupatenData = collect($kabupaten)->firstWhere('code', (string) $berita->id_kabupaten);
-                
-                if ($kabupatenData) {
-                    // Get kecamatan data to get the code
-                    $kecamatan = $this->wilayahService->getKecamatan($kabupatenData['code']);
-                    $kecamatanData = collect($kecamatan)->firstWhere('code', (string) $berita->id_kecamatan);
+                if ($berita->sub_districts_id && $berita->districts_id && $berita->province_id) {
+                    // Dapatkan province code dulu untuk API call kabupaten
+                    $provinces = $this->wilayahService->getProvinces();
+                    $provinceData = collect($provinces)->firstWhere('id', (int) $berita->province_id);
                     
-                    if ($kecamatanData) {
-                        $desa = $this->wilayahService->getDesa($kecamatanData['code']);
-                        // Cocokkan berdasarkan code karena kita menyimpan kode desa 10 digit
-                        $desaData = collect($desa)->firstWhere('code', (string) $berita->id_desa);
-                        if ($desaData) {
-                            $wilayah['desa'] = $desaData['name'];
+                    if ($provinceData && isset($provinceData['code'])) {
+                        $kabupaten = $this->wilayahService->getKabupaten($provinceData['code']);
+                        $kabupatenData = collect($kabupaten)->firstWhere('id', (int) $berita->districts_id);
+                        
+                        if ($kabupatenData && isset($kabupatenData['code'])) {
+                            $kecamatan = $this->wilayahService->getKecamatan($kabupatenData['code']);
+                            $kecamatanData = collect($kecamatan)->firstWhere('id', (int) $berita->sub_districts_id);
+                            
+                            if ($kecamatanData && isset($kecamatanData['code'])) {
+                                $desa = $this->wilayahService->getDesa($kecamatanData['code']);
+                                // Perbaikan: Gunakan 'id' field, bukan 'code' field
+                                $desaData = collect($desa)->firstWhere('id', (int) $berita->villages_id);
+                                if ($desaData) {
+                                    $wilayah['desa'] = $desaData['name'];
+                                }
+                            }
                         }
                     }
                 }
@@ -142,13 +177,13 @@ class BeritaDesaController extends Controller
             'gambar' => 'nullable|image|mimes:jpeg,png,jpg|max:4096',
             'deskripsi' => 'required|string',
             'komentar' => 'nullable|string',
-            'id_desa' => 'nullable|integer',
-            'id_kecamatan' => 'nullable|integer',
-            'id_kabupaten' => 'nullable|integer',
-            'id_provinsi' => 'nullable|string|max:10',
+            'villages_id' => 'nullable|integer',
+            'sub_districts_id' => 'nullable|integer',
+            'districts_id' => 'nullable|integer',
+            'province_id' => 'nullable|string|max:10',
         ]);
 
-        $data = $request->only(['judul', 'deskripsi', 'komentar', 'id_desa', 'id_kecamatan', 'id_kabupaten', 'id_provinsi']);
+        $data = $request->only(['judul', 'deskripsi', 'komentar', 'villages_id', 'sub_districts_id', 'districts_id', 'province_id']);
         $data['user_id'] = Auth::id();
 
         if ($request->hasFile('gambar')) {
@@ -170,7 +205,7 @@ class BeritaDesaController extends Controller
     {
         $berita = BeritaDesa::with(['user'])->findOrFail($id);
         
-        // Tambahkan data wilayah untuk berita
+        // Tambahkan data wilayah untuk berita agar bisa tampilkan nama
         $berita->wilayah_info = $this->getWilayahInfo($berita);
 
         if (request()->ajax()) {
@@ -193,18 +228,17 @@ class BeritaDesaController extends Controller
         $kecamatan = [];
         $desa = [];
         
-        if ($berita->id_provinsi) {
+        if ($berita->province_id) {
             try {
-                $kabupaten = $this->wilayahService->getKabupaten($berita->id_provinsi);
+                $kabupaten = $this->wilayahService->getKabupaten($berita->province_id);
             } catch (\Exception $e) {
                 Log::error('Error loading kabupaten for edit: ' . $e->getMessage());
             }
         }
         
-        if ($berita->id_kabupaten && $berita->id_provinsi) {
+        if ($berita->districts_id && $berita->province_id) {
             try {
-                // Get kabupaten data first to get the code
-                $kabupatenData = collect($kabupaten)->firstWhere('code', (string) $berita->id_kabupaten);
+                $kabupatenData = collect($kabupaten)->firstWhere('code', (string) $berita->districts_id);
                 if ($kabupatenData) {
                     $kecamatan = $this->wilayahService->getKecamatan($kabupatenData['code']);
                 }
@@ -213,13 +247,11 @@ class BeritaDesaController extends Controller
             }
         }
         
-        if ($berita->id_kecamatan && $berita->id_kabupaten && $berita->id_provinsi) {
+        if ($berita->sub_districts_id && $berita->districts_id && $berita->province_id) {
             try {
-                // Get kabupaten data first to get the code
-                $kabupatenData = collect($kabupaten)->firstWhere('code', (string) $berita->id_kabupaten);
+                $kabupatenData = collect($kabupaten)->firstWhere('code', (string) $berita->districts_id);
                 if ($kabupatenData) {
-                    // Get kecamatan data to get the code
-                    $kecamatanData = collect($kecamatan)->firstWhere('code', (string) $berita->id_kecamatan);
+                    $kecamatanData = collect($kecamatan)->firstWhere('code', (string) $berita->sub_districts_id);
                     if ($kecamatanData) {
                         $desa = $this->wilayahService->getDesa($kecamatanData['code']);
                     }
@@ -239,14 +271,14 @@ class BeritaDesaController extends Controller
             'gambar' => 'nullable|image|mimes:jpeg,png,jpg|max:4096',
             'deskripsi' => 'required|string',
             'komentar' => 'nullable|string',
-            'id_desa' => 'nullable|integer',
-            'id_kecamatan' => 'nullable|integer',
-            'id_kabupaten' => 'nullable|integer',
-            'id_provinsi' => 'nullable|string|max:10',
+            'villages_id' => 'nullable|integer',
+            'sub_districts_id' => 'nullable|integer',
+            'districts_id' => 'nullable|integer',
+            'province_id' => 'nullable|string|max:10',
         ]);
 
         $berita = BeritaDesa::findOrFail($id);
-        $data = $request->only(['judul', 'deskripsi', 'komentar', 'id_desa', 'id_kecamatan', 'id_kabupaten', 'id_provinsi']);
+        $data = $request->only(['judul', 'deskripsi', 'komentar', 'villages_id', 'sub_districts_id', 'districts_id', 'province_id']);
 
         if ($request->hasFile('gambar')) {
             // Hapus gambar lama jika ada

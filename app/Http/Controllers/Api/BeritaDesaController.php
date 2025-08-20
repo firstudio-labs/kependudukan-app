@@ -6,9 +6,17 @@ use App\Http\Controllers\Controller;
 use App\Models\BeritaDesa;
 use Illuminate\Http\Request;
 use App\Services\CitizenService;
+use App\Services\WilayahService;
 
 class BeritaDesaController extends Controller
 {
+    protected $wilayahService;
+
+    public function __construct(WilayahService $wilayahService)
+    {
+        $this->wilayahService = $wilayahService;
+    }
+
     public function index(Request $request, CitizenService $citizenService)
     {
         try {
@@ -55,7 +63,7 @@ class BeritaDesaController extends Controller
             }
 
             $query = BeritaDesa::query();
-            $query->where('id_desa', $villageId);
+            $query->where('villages_id', $villageId); // Updated field name
 
             // Handle search parameter
             if ($request->has('search') && !empty($request->search)) {
@@ -70,7 +78,7 @@ class BeritaDesaController extends Controller
             $perPage = $request->input('per_page', 10);
             $berita = $query->latest()->paginate($perPage);
 
-            // Transform data to include gambar_url
+            // Transform data to include gambar_url and wilayah_info
             $items = collect($berita->items())->map(function ($item) {
                 return [
                     'id' => $item->id,
@@ -80,6 +88,7 @@ class BeritaDesaController extends Controller
                     'gambar' => $item->gambar,
                     'gambar_url' => $item->gambar_url, // URL lengkap gambar
                     'user_id' => $item->user_id,
+                    'wilayah_info' => $this->getWilayahInfo($item), // Added wilayah info
                     'created_at' => $item->created_at,
                     'updated_at' => $item->updated_at,
                 ];
@@ -88,6 +97,12 @@ class BeritaDesaController extends Controller
             return response()->json([
                 'status' => 'success',
                 'data' => $items,
+                'meta' => [
+                    'current_page' => $berita->currentPage(),
+                    'per_page' => $berita->perPage(),
+                    'total' => $berita->total(),
+                    'last_page' => $berita->lastPage(),
+                ]
             ], 200);
 
         } catch (\Exception $e) {
@@ -135,14 +150,14 @@ class BeritaDesaController extends Controller
                 }
             }
 
-            if ($villageId && (string)$berita->id_desa !== (string)$villageId) {
+            if ($villageId && (string)$berita->villages_id !== (string)$villageId) { // Updated field name
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Anda tidak berhak mengakses berita desa dari desa lain'
                 ], 403);
             }
 
-            // Format response with gambar_url
+            // Format response with gambar_url and wilayah_info
             $data = [
                 'id' => $berita->id,
                 'judul' => $berita->judul,
@@ -151,7 +166,8 @@ class BeritaDesaController extends Controller
                 'gambar' => $berita->gambar,
                 'gambar_url' => $berita->gambar_url, // URL lengkap gambar
                 'user_id' => $berita->user_id,
-                'id_desa' => $berita->id_desa,
+                'villages_id' => $berita->villages_id, // Updated field name
+                'wilayah_info' => $this->getWilayahInfo($berita), // Added wilayah info
                 'created_at' => $berita->created_at,
                 'updated_at' => $berita->updated_at,
             ];
@@ -172,6 +188,140 @@ class BeritaDesaController extends Controller
                 'message' => 'Failed to fetch berita desa: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Get wilayah information for a berita
+     */
+    private function getWilayahInfo($berita)
+    {
+        $wilayah = [];
+        
+        // Always set fallback first for safety
+        if ($berita->province_id) {
+            $wilayah['provinsi'] = 'Provinsi ID: ' . $berita->province_id;
+            
+            try {
+                $provinces = $this->wilayahService->getProvinces();
+                // Perbaikan: Gunakan 'id' field, bukan 'code' field
+                $province = collect($provinces)->firstWhere('id', (int) $berita->province_id);
+                if ($province && isset($province['name'])) {
+                    $wilayah['provinsi'] = $province['name'];
+                }
+            } catch (\Exception $e) {
+                // Fallback already set, no need to change
+            }
+        }
+        
+        if ($berita->districts_id) {
+            $wilayah['kabupaten'] = 'Kabupaten ID: ' . $berita->districts_id;
+            
+            try {
+                if ($berita->province_id) {
+                    // Cari province dulu untuk mendapatkan code yang benar
+                    $provinces = $this->wilayahService->getProvinces();
+                    if (is_array($provinces) && !empty($provinces)) {
+                        $provinceData = collect($provinces)->firstWhere('id', (int) $berita->province_id);
+                        
+                        if ($provinceData && isset($provinceData['code'])) {
+                            $kabupaten = $this->wilayahService->getKabupaten($provinceData['code']);
+                            if (is_array($kabupaten) && !empty($kabupaten)) {
+                                // Perbaikan: Gunakan 'id' field, bukan 'code' field
+                                $kabupatenData = collect($kabupaten)->firstWhere('id', (int) $berita->districts_id);
+                                
+                                if ($kabupatenData && isset($kabupatenData['name'])) {
+                                    $wilayah['kabupaten'] = $kabupatenData['name'];
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                // Fallback already set, no need to change
+            }
+        }
+        
+        if ($berita->sub_districts_id) {
+            $wilayah['kecamatan'] = 'Kecamatan ID: ' . $berita->sub_districts_id;
+            
+            try {
+                if ($berita->districts_id && $berita->province_id) {
+                    // Cari province dulu untuk mendapatkan code yang benar
+                    $provinces = $this->wilayahService->getProvinces();
+                    if (is_array($provinces) && !empty($provinces)) {
+                        $provinceData = collect($provinces)->firstWhere('id', (int) $berita->province_id);
+                        
+                        if ($provinceData && isset($provinceData['code'])) {
+                            $kabupaten = $this->wilayahService->getKabupaten($provinceData['code']);
+                            if (is_array($kabupaten) && !empty($kabupaten)) {
+                                // Perbaikan: Gunakan 'id' field, bukan 'code' field
+                                $kabupatenData = collect($kabupaten)->firstWhere('id', (int) $berita->districts_id);
+                                
+                                if ($kabupatenData && isset($kabupatenData['code'])) {
+                                    $kecamatan = $this->wilayahService->getKecamatan($kabupatenData['code']);
+                                    if (is_array($kecamatan) && !empty($kecamatan)) {
+                                        // Perbaikan: Gunakan 'id' field, bukan 'code' field
+                                        $kecamatanData = collect($kecamatan)->firstWhere('id', (int) $berita->sub_districts_id);
+                                        
+                                        if ($kecamatanData && isset($kecamatanData['name'])) {
+                                            $wilayah['kecamatan'] = $kecamatanData['name'];
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                // Fallback already set, no need to change
+            }
+        }
+        
+        if ($berita->villages_id) {
+            $wilayah['desa'] = 'Desa ID: ' . $berita->villages_id;
+            
+            try {
+                if ($berita->sub_districts_id && $berita->districts_id && $berita->province_id) {
+                    // Cari province dulu untuk mendapatkan code yang benar
+                    $provinces = $this->wilayahService->getProvinces();
+                    if (is_array($provinces) && !empty($provinces)) {
+                        $provinceData = collect($provinces)->firstWhere('id', (int) $berita->province_id);
+                        
+                        if ($provinceData && isset($provinceData['code'])) {
+                            $kabupaten = $this->wilayahService->getKabupaten($provinceData['code']);
+                            if (is_array($kabupaten) && !empty($kabupaten)) {
+                                // Perbaikan: Gunakan 'id' field, bukan 'code' field
+                                $kabupatenData = collect($kabupaten)->firstWhere('id', (int) $berita->districts_id);
+                                
+                                if ($kabupatenData && isset($kabupatenData['code'])) {
+                                    $kecamatan = $this->wilayahService->getKecamatan($kabupatenData['code']);
+                                    if (is_array($kecamatan) && !empty($kecamatan)) {
+                                        // Perbaikan: Gunakan 'id' field, bukan 'code' field
+                                        $kecamatanData = collect($kecamatan)->firstWhere('id', (int) $berita->sub_districts_id);
+                                        
+                                        if ($kecamatanData && isset($kecamatanData['code'])) {
+                                            $desa = $this->wilayahService->getDesa($kecamatanData['code']);
+                                            if (is_array($desa) && !empty($desa)) {
+                                                // Perbaikan: Gunakan 'id' field, bukan 'code' field
+                                                $desaData = collect($desa)->firstWhere('id', (int) $berita->villages_id);
+                                                
+                                                if ($desaData && isset($desaData['name'])) {
+                                                    $wilayah['desa'] = $desaData['name'];
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                // Fallback already set, no need to change
+            }
+        }
+        
+        return $wilayah;
     }
 }
 

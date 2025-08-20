@@ -8,6 +8,7 @@ use App\Services\WilayahService;
 use App\Services\CitizenService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class BeritaDesaController extends Controller
 {
@@ -41,7 +42,7 @@ class BeritaDesaController extends Controller
             }
 
             if (!is_null($villageId)) {
-                $query->where('id_desa', (int) $villageId);
+                $query->where('villages_id', (int) $villageId); // Updated field name
             }
         }
 
@@ -95,7 +96,41 @@ class BeritaDesaController extends Controller
 
     public function show($id)
     {
-        $berita = BeritaDesa::with(['user'])->findOrFail($id);
+        // Filter berdasarkan desa penduduk yang login (guard penduduk)
+        if (Auth::guard('penduduk')->check()) {
+            $penduduk = Auth::guard('penduduk')->user();
+
+            // Ambil data penduduk dari API untuk mendapatkan village_id/villages_id
+            $citizenData = $this->citizenService->getCitizenByNIK($penduduk->nik);
+
+            // Ekstrak village id dari beberapa kemungkinan struktur response
+            $villageId = null;
+            if (is_array($citizenData)) {
+                $villageId = $citizenData['village_id']
+                    ?? $citizenData['villages_id']
+                    ?? ($citizenData['data']['village_id'] ?? null)
+                    ?? ($citizenData['data']['villages_id'] ?? null);
+            }
+
+            if (!is_null($villageId)) {
+                // Cari berita dan validasi bahwa berita milik desa penduduk
+                $berita = BeritaDesa::with(['user'])
+                    ->where('villages_id', (int) $villageId)
+                    ->findOrFail($id);
+            } else {
+                // Jika tidak ada village_id, return error
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Data desa tidak ditemukan untuk akun ini'
+                ], 404);
+            }
+        } else {
+            // Jika tidak ada penduduk yang login, return error
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unauthorized access'
+            ], 401);
+        }
         
         // Tambahkan data wilayah untuk berita
         $berita->wilayah_info = $this->getWilayahInfo($berita);
@@ -110,72 +145,157 @@ class BeritaDesaController extends Controller
     {
         $wilayah = [];
         
-        if ($berita->id_provinsi) {
+        // Always set fallback first for safety
+        if ($berita->province_id) {
+            $wilayah['provinsi'] = 'Provinsi ID: ' . $berita->province_id;
+            
             try {
                 $provinces = $this->wilayahService->getProvinces();
-                $province = collect($provinces)->firstWhere('code', $berita->id_provinsi);
-                if ($province) {
-                    $wilayah['provinsi'] = $province['name'];
-                }
-            } catch (\Exception $e) {
-                // Log error if needed
-            }
-        }
-        
-        if ($berita->id_kabupaten && $berita->id_provinsi) {
-            try {
-                $kabupaten = $this->wilayahService->getKabupaten($berita->id_provinsi);
-                $kabupatenData = collect($kabupaten)->firstWhere('id', $berita->id_kabupaten);
-                if ($kabupatenData) {
-                    $wilayah['kabupaten'] = $kabupatenData['name'];
-                }
-            } catch (\Exception $e) {
-                // Log error if needed
-            }
-        }
-        
-        if ($berita->id_kecamatan && $berita->id_kabupaten && $berita->id_provinsi) {
-            try {
-                // Get kabupaten data first to get the code
-                $kabupaten = $this->wilayahService->getKabupaten($berita->id_provinsi);
-                $kabupatenData = collect($kabupaten)->firstWhere('id', $berita->id_kabupaten);
+                Log::info('Provinces API Response:', ['data' => $provinces, 'count' => is_array($provinces) ? count($provinces) : 'not array']);
                 
-                if ($kabupatenData) {
-                    $kecamatan = $this->wilayahService->getKecamatan($kabupatenData['code']);
-                    $kecamatanData = collect($kecamatan)->firstWhere('id', $berita->id_kecamatan);
-                    if ($kecamatanData) {
-                        $wilayah['kecamatan'] = $kecamatanData['name'];
+                if (is_array($provinces) && !empty($provinces)) {
+                    // Perbaikan: Gunakan 'id' field, bukan 'code' field
+                    $province = collect($provinces)->firstWhere('id', (int) $berita->province_id);
+                    Log::info('Province Found:', ['province_id' => $berita->province_id, 'province' => $province]);
+                    
+                    if ($province && isset($province['name'])) {
+                        $wilayah['provinsi'] = $province['name'];
                     }
                 }
             } catch (\Exception $e) {
-                // Log error if needed
+                Log::error('Error getting province info: ' . $e->getMessage());
             }
         }
         
-        if ($berita->id_desa && $berita->id_kecamatan && $berita->id_kabupaten && $berita->id_provinsi) {
+        if ($berita->districts_id) {
+            $wilayah['kabupaten'] = 'Kabupaten ID: ' . $berita->districts_id;
+            
             try {
-                // Get kabupaten data first to get the code
-                $kabupaten = $this->wilayahService->getKabupaten($berita->id_provinsi);
-                $kabupatenData = collect($kabupaten)->firstWhere('id', $berita->id_kabupaten);
-                
-                if ($kabupatenData) {
-                    // Get kecamatan data to get the code
-                    $kecamatan = $this->wilayahService->getKecamatan($kabupatenData['code']);
-                    $kecamatanData = collect($kecamatan)->firstWhere('id', $berita->id_kecamatan);
+                if ($berita->province_id) {
+                    Log::info('Calling Kabupaten API:', ['province_id' => $berita->province_id]);
                     
-                    if ($kecamatanData) {
-                        $desa = $this->wilayahService->getDesa($kecamatanData['code']);
-                        $desaData = collect($desa)->firstWhere('id', $berita->id_desa);
-                        if ($desaData) {
-                            $wilayah['desa'] = $desaData['name'];
+                    // Cari province dulu untuk mendapatkan code yang benar
+                    $provinces = $this->wilayahService->getProvinces();
+                    if (is_array($provinces) && !empty($provinces)) {
+                        $provinceData = collect($provinces)->firstWhere('id', (int) $berita->province_id);
+                        
+                        if ($provinceData && isset($provinceData['code'])) {
+                            $kabupaten = $this->wilayahService->getKabupaten($provinceData['code']);
+                            Log::info('Kabupaten API Response:', ['data' => $kabupaten, 'count' => is_array($kabupaten) ? count($kabupaten) : 'not array']);
+                            
+                            if (is_array($kabupaten) && !empty($kabupaten)) {
+                                // Perbaikan: Gunakan 'id' field, bukan 'code' field
+                                $kabupatenData = collect($kabupaten)->firstWhere('id', (int) $berita->districts_id);
+                                
+                                Log::info('Kabupaten Found:', ['districts_id' => $berita->districts_id, 'kabupaten' => $kabupatenData]);
+                                
+                                if ($kabupatenData && isset($kabupatenData['name'])) {
+                                    $wilayah['kabupaten'] = $kabupatenData['name'];
+                                }
+                            }
                         }
                     }
                 }
             } catch (\Exception $e) {
-                // Log error if needed
+                Log::error('Error getting kabupaten info: ' . $e->getMessage());
             }
         }
         
+        if ($berita->sub_districts_id) {
+            $wilayah['kecamatan'] = 'Kecamatan ID: ' . $berita->sub_districts_id;
+            
+            try {
+                if ($berita->districts_id && $berita->province_id) {
+                    Log::info('Calling Kecamatan API:', ['districts_id' => $berita->districts_id, 'province_id' => $berita->province_id]);
+                    
+                    // Cari province dulu untuk mendapatkan code yang benar
+                    $provinces = $this->wilayahService->getProvinces();
+                    if (is_array($provinces) && !empty($provinces)) {
+                        $provinceData = collect($provinces)->firstWhere('id', (int) $berita->province_id);
+                        
+                        if ($provinceData && isset($provinceData['code'])) {
+                            $kabupaten = $this->wilayahService->getKabupaten($provinceData['code']);
+                            if (is_array($kabupaten) && !empty($kabupaten)) {
+                                // Perbaikan: Gunakan 'id' field, bukan 'code' field
+                                $kabupatenData = collect($kabupaten)->firstWhere('id', (int) $berita->districts_id);
+                                
+                                if ($kabupatenData && isset($kabupatenData['code'])) {
+                                    Log::info('Calling Kecamatan with kabupaten code:', ['kabupaten_code' => $kabupatenData['code']]);
+                                    $kecamatan = $this->wilayahService->getKecamatan($kabupatenData['code']);
+                                    Log::info('Kecamatan API Response:', ['data' => $kecamatan, 'count' => is_array($kecamatan) ? count($kecamatan) : 'not array']);
+                                    
+                                    if (is_array($kecamatan) && !empty($kecamatan)) {
+                                        // Perbaikan: Gunakan 'id' field, bukan 'code' field
+                                        $kecamatanData = collect($kecamatan)->firstWhere('id', (int) $berita->sub_districts_id);
+                                        
+                                        Log::info('Kecamatan Found:', ['sub_districts_id' => $berita->sub_districts_id, 'kecamatan' => $kecamatanData]);
+                                        
+                                        if ($kecamatanData && isset($kecamatanData['name'])) {
+                                            $wilayah['kecamatan'] = $kecamatanData['name'];
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::error('Error getting kecamatan info: ' . $e->getMessage());
+            }
+        }
+        
+        if ($berita->villages_id) {
+            $wilayah['desa'] = 'Desa ID: ' . $berita->villages_id;
+            
+            try {
+                if ($berita->sub_districts_id && $berita->districts_id && $berita->province_id) {
+                    Log::info('Calling Desa API:', ['villages_id' => $berita->villages_id, 'sub_districts_id' => $berita->sub_districts_id]);
+                    
+                    // Cari province dulu untuk mendapatkan code yang benar
+                    $provinces = $this->wilayahService->getProvinces();
+                    if (is_array($provinces) && !empty($provinces)) {
+                        $provinceData = collect($provinces)->firstWhere('id', (int) $berita->province_id);
+                        
+                        if ($provinceData && isset($provinceData['code'])) {
+                            $kabupaten = $this->wilayahService->getKabupaten($provinceData['code']);
+                            if (is_array($kabupaten) && !empty($kabupaten)) {
+                                // Perbaikan: Gunakan 'id' field, bukan 'code' field
+                                $kabupatenData = collect($kabupaten)->firstWhere('id', (int) $berita->districts_id);
+                                
+                                if ($kabupatenData && isset($kabupatenData['code'])) {
+                                    $kecamatan = $this->wilayahService->getKecamatan($kabupatenData['code']);
+                                    if (is_array($kecamatan) && !empty($kecamatan)) {
+                                        // Perbaikan: Gunakan 'id' field, bukan 'code' field
+                                        $kecamatanData = collect($kecamatan)->firstWhere('id', (int) $berita->sub_districts_id);
+                                        
+                                        if ($kecamatanData && isset($kecamatanData['code'])) {
+                                            Log::info('Calling Desa with kecamatan code:', ['kecamatan_code' => $kecamatanData['code']]);
+                                            $desa = $this->wilayahService->getDesa($kecamatanData['code']);
+                                            Log::info('Desa API Response:', ['data' => $desa, 'count' => is_array($desa) ? count($desa) : 'not array']);
+                                            
+                                            if (is_array($desa) && !empty($desa)) {
+                                                // Perbaikan: Gunakan 'id' field, bukan 'code' field
+                                                $desaData = collect($desa)->firstWhere('id', (int) $berita->villages_id);
+                                                
+                                                Log::info('Desa Found:', ['villages_id' => $berita->villages_id, 'desa' => $desaData]);
+                                                
+                                                if ($desaData && isset($desaData['name'])) {
+                                                    $wilayah['desa'] = $desaData['name'];
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::error('Error getting desa info: ' . $e->getMessage());
+            }
+        }
+        
+        Log::info('Final Wilayah Info:', $wilayah);
         return $wilayah;
     }
 }
