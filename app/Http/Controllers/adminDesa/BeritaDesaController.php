@@ -41,6 +41,15 @@ class BeritaDesaController extends Controller
     {
         $this->authorizeAdminDesa();
 
+        // Log untuk debugging
+        \Log::info('AdminDesa BeritaDesaController store method called');
+        \Log::info('User ID: ' . Auth::id());
+        \Log::info('User Role: ' . Auth::user()->role);
+        \Log::info('User Province ID: ' . Auth::user()->province_id);
+        \Log::info('User District ID: ' . Auth::user()->districts_id);
+        \Log::info('User Sub District ID: ' . Auth::user()->sub_districts_id);
+        \Log::info('User Village ID: ' . Auth::user()->villages_id);
+
         $request->validate([
             'judul' => 'required|string|max:255',
             'gambar' => 'nullable|image|mimes:jpeg,png,jpg|max:4096',
@@ -50,10 +59,41 @@ class BeritaDesaController extends Controller
 
         $data = $request->only(['judul', 'deskripsi', 'komentar']);
         $data['user_id'] = Auth::id();
-        $data['id_provinsi'] = Auth::user()->province_id;
-        $data['id_kabupaten'] = Auth::user()->districts_id;
-        $data['id_kecamatan'] = Auth::user()->sub_districts_id;
-        $data['id_desa'] = Auth::user()->villages_id;
+        
+        // Gunakan pola yang sama dengan lapor desa yang sudah berhasil
+        // Ambil data dari admin desa yang login
+        $adminDesa = Auth::user();
+        
+        // Pastikan data wilayah ada dan valid
+        if ($adminDesa->province_id && $adminDesa->districts_id && 
+            $adminDesa->sub_districts_id && $adminDesa->villages_id) {
+            
+            $data['id_provinsi'] = $adminDesa->province_id;
+            $data['id_kabupaten'] = $adminDesa->districts_id;
+            $data['id_kecamatan'] = $adminDesa->sub_districts_id;
+            $data['id_desa'] = $adminDesa->villages_id;
+            
+            \Log::info('Wilayah data dari admin desa:', [
+                'province_id' => $adminDesa->province_id,
+                'districts_id' => $adminDesa->districts_id,
+                'sub_districts_id' => $adminDesa->sub_districts_id,
+                'villages_id' => $adminDesa->villages_id
+            ]);
+        } else {
+            \Log::error('Data wilayah admin desa tidak lengkap:', [
+                'province_id' => $adminDesa->province_id,
+                'districts_id' => $adminDesa->districts_id,
+                'sub_districts_id' => $adminDesa->sub_districts_id,
+                'villages_id' => $adminDesa->villages_id
+            ]);
+            
+            return redirect()->back()
+                ->with('error', 'Data wilayah admin desa tidak lengkap. Silakan hubungi superadmin.')
+                ->withInput();
+        }
+
+        // Log data yang akan disimpan
+        \Log::info('Data to be saved:', $data);
 
         if ($request->hasFile('gambar')) {
             $file = $request->file('gambar');
@@ -64,7 +104,10 @@ class BeritaDesaController extends Controller
             $data['gambar'] = $path;
         }
 
-        BeritaDesa::create($data);
+        $berita = BeritaDesa::create($data);
+
+        // Log berita yang berhasil dibuat
+        \Log::info('Berita created successfully:', $berita->toArray());
 
         return redirect()->route('admin.desa.berita-desa.index')
             ->with('success', 'Berita desa berhasil ditambahkan');
@@ -92,10 +135,23 @@ class BeritaDesaController extends Controller
         ]);
 
         $data = $request->only(['judul', 'deskripsi', 'komentar']);
-        $data['id_provinsi'] = Auth::user()->province_id;
-        $data['id_kabupaten'] = Auth::user()->districts_id;
-        $data['id_kecamatan'] = Auth::user()->sub_districts_id;
-        $data['id_desa'] = Auth::user()->villages_id;
+        
+        // Gunakan pola yang sama dengan store method
+        $adminDesa = Auth::user();
+        
+        // Pastikan data wilayah ada dan valid
+        if ($adminDesa->province_id && $adminDesa->districts_id && 
+            $adminDesa->sub_districts_id && $adminDesa->villages_id) {
+            
+            $data['id_provinsi'] = $adminDesa->province_id;
+            $data['id_kabupaten'] = $adminDesa->districts_id;
+            $data['id_kecamatan'] = $adminDesa->sub_districts_id;
+            $data['id_desa'] = $adminDesa->villages_id;
+        } else {
+            return redirect()->back()
+                ->with('error', 'Data wilayah admin desa tidak lengkap. Silakan hubungi superadmin.')
+                ->withInput();
+        }
 
         if ($request->hasFile('gambar')) {
             if ($berita->gambar && Storage::exists('public/' . $berita->gambar)) {

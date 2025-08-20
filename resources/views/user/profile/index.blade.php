@@ -36,8 +36,10 @@ if (Auth::guard('web')->check()) {
                         <p class="text-gray-500">Informasi personal penduduk</p>
                     </div>
                     <div>
-                        <button type="button" onclick="toggleEditForm()" class="bg-[#4A47DC] text-white px-4 py-2 rounded">
-                            Edit Biodata (Minta Approval)
+                        <button type="button" onclick="toggleEditForm()" id="btnToggleEdit"
+                            class="inline-flex items-center gap-2 bg-[#4A47DC] hover:bg-[#2D336B] text-white px-4 py-2 rounded-lg shadow-sm transition-all">
+                            <i class="fa-solid fa-user-pen"></i>
+                            <span id="btnToggleEditText">Edit Biodata (Minta Approval)</span>
                         </button>
                     </div>
                 </div>
@@ -132,7 +134,14 @@ if (Auth::guard('web')->check()) {
                     </div>
                     <div>
                         <label class="block text-sm text-gray-700">Jenis Kelamin</label>
-                        <input name="gender" value="{{ $userData->citizen_data['gender'] ?? '' }}" class="mt-1 w-full border rounded p-2" />
+                        <select name="gender" class="mt-1 w-full border rounded p-2">
+                            @php
+                                $genderVal = $userData->citizen_data['gender'] ?? '';
+                            @endphp
+                            <option value="" {{ $genderVal == '' ? 'selected' : '' }}>Pilih</option>
+                            <option value="Laki-laki" {{ in_array($genderVal, ['Laki-laki','LAKI-LAKI','L']) ? 'selected' : '' }}>Laki-laki</option>
+                            <option value="Perempuan" {{ in_array($genderVal, ['Perempuan','PEREMPUAN','P']) ? 'selected' : '' }}>Perempuan</option>
+                        </select>
                     </div>
                     <div>
                         <label class="block text-sm text-gray-700">Umur</label>
@@ -144,7 +153,7 @@ if (Auth::guard('web')->check()) {
                     </div>
                     <div>
                         <label class="block text-sm text-gray-700">Tanggal Lahir</label>
-                        <input name="birth_date" value="{{ $userData->citizen_data['birth_date'] ?? '' }}" class="mt-1 w-full border rounded p-2" />
+                        <input type="date" name="birth_date" value="{{ isset($userData->citizen_data['birth_date']) ? substr($userData->citizen_data['birth_date'],0,10) : '' }}" class="mt-1 w-full border rounded p-2" />
                     </div>
                     <div class="md:col-span-2">
                         <label class="block text-sm text-gray-700">Alamat</label>
@@ -161,26 +170,32 @@ if (Auth::guard('web')->check()) {
                     <div>
                         <label class="block text-sm text-gray-700">Provinsi</label>
                         <input value="{{ $userData->citizen_data['province_name'] ?? ($userData->citizen_data['province'] ?? '') }}" class="mt-1 w-full border rounded p-2 bg-gray-100" readonly />
-                        <input type="hidden" id="province_id" name="province_id" value="{{ $userData->citizen_data['province_id'] ?? '' }}" />
+                        <input type="hidden" id="province_id" name="province_id" value="{{ $userData->citizen_data['province_id'] ?? ($userData->citizen_data['provinsi_id'] ?? ($userData->citizen_data['provinceId'] ?? '')) }}" />
                     </div>
                     <div>
                         <label class="block text-sm text-gray-700">Kabupaten</label>
                         <input value="{{ $userData->citizen_data['district_name'] ?? ($userData->citizen_data['district'] ?? $userData->citizen_data['city'] ?? '') }}" class="mt-1 w-full border rounded p-2 bg-gray-100" readonly />
-                        <input type="hidden" id="district_id" name="district_id" value="{{ $userData->citizen_data['district_id'] ?? '' }}" />
+                        <input type="hidden" id="district_id" name="district_id" value="{{ $userData->citizen_data['district_id'] ?? ($userData->citizen_data['kabupaten_id'] ?? ($userData->citizen_data['city_id'] ?? ($userData->citizen_data['districts_id'] ?? ''))) }}" />
                     </div>
                     <div>
                         <label class="block text-sm text-gray-700">Kecamatan</label>
                         <input value="{{ $userData->citizen_data['sub_district_name'] ?? ($userData->citizen_data['sub_district'] ?? $userData->citizen_data['kecamatan'] ?? '') }}" class="mt-1 w-full border rounded p-2 bg-gray-100" readonly />
-                        <input type="hidden" id="sub_district_id" name="sub_district_id" value="{{ $userData->citizen_data['sub_district_id'] ?? '' }}" />
+                        <input type="hidden" id="sub_district_id" name="sub_district_id" value="{{ $userData->citizen_data['sub_district_id'] ?? ($userData->citizen_data['kecamatan_id'] ?? ($userData->citizen_data['sub_districts_id'] ?? '')) }}" />
                     </div>
                     <div>
                         <label class="block text-sm text-gray-700">Desa</label>
                         <input value="{{ $userData->citizen_data['village_name'] ?? ($userData->citizen_data['village'] ?? '') }}" class="mt-1 w-full border rounded p-2 bg-gray-100" readonly />
-                        <input type="hidden" id="village_id" name="village_id" value="{{ $userData->citizen_data['village_id'] ?? '' }}" />
+                        <input type="hidden" id="village_id" name="village_id" value="{{ $userData->citizen_data['village_id'] ?? ($userData->citizen_data['villages_id'] ?? ($userData->citizen_data['desa_id'] ?? '')) }}" />
                     </div>
                     <div class="md:col-span-2 flex justify-end gap-3 mt-2">
-                        <button type="button" onclick="toggleEditForm()" class="px-4 py-2 border rounded">Batal</button>
-                        <button type="submit" class="bg-[#4A47DC] text-white px-4 py-2 rounded">Minta Persetujuan Admin</button>
+                        <button type="button" onclick="toggleEditForm()" class="inline-flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-gray-50">
+                            <i class="fa-solid fa-xmark"></i>
+                            <span>Batal</span>
+                        </button>
+                        <button type="submit" class="inline-flex items-center gap-2 bg-[#4A47DC] hover:bg-[#2D336B] text-white px-4 py-2 rounded-lg shadow-sm">
+                            <i class="fa-solid fa-paper-plane"></i>
+                            <span>Kirim Permintaan Approval</span>
+                        </button>
                     </div>
                 </form>
             </div>
@@ -1982,12 +1997,21 @@ if (!empty($userData->tag_lokasi)) {
             <script>
                 function toggleEditForm() {
                     const el = document.getElementById('editBiodataForm');
+                    const btn = document.getElementById('btnToggleEdit');
+                    const btnText = document.getElementById('btnToggleEditText');
                     if (!el) return;
-                    if (el.classList.contains('hidden')) {
+                    const isHidden = el.classList.contains('hidden');
+                    if (isHidden) {
                         el.classList.remove('hidden');
+                        btn.classList.remove('bg-[#4A47DC]');
+                        btn.classList.add('bg-[#2D336B]');
+                        btnText.textContent = 'Tutup Form Edit';
                         el.scrollIntoView({ behavior: 'smooth' });
                     } else {
                         el.classList.add('hidden');
+                        btn.classList.remove('bg-[#2D336B]');
+                        btn.classList.add('bg-[#4A47DC]');
+                        btnText.textContent = 'Edit Biodata (Minta Approval)';
                     }
                 }
             </script>
