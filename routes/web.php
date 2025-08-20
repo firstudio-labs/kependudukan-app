@@ -3,6 +3,7 @@
 use App\Http\Controllers\adminDesa\ProfileDesaController;
 use App\Http\Controllers\adminDesa\BiodataApprovalController as AdminDesaBiodataApprovalController;
 use App\Http\Controllers\BeritaDesaController;
+use App\Http\Controllers\adminDesa\BeritaDesaController as AdminDesaBeritaDesaController;
 use App\Http\Controllers\User\RiwayatSuratController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
@@ -751,20 +752,20 @@ Route::middleware(['auth:web', 'role:admin desa'])->group(function () {
     Route::get('/admin/desa/surat/pengantar-ktp/{id}/pdf', [PengantarKtpController::class, 'exportPDF'])
         ->name('admin.desa.surat.pengantar-ktp.pdf');
 
-    //Berita Desa
-    Route::get('/admin/desa/berita-desa', [BeritaDesaController::class, 'index'])
+    //Berita Desa (Admin Desa)
+    Route::get('/admin/desa/berita-desa', [AdminDesaBeritaDesaController::class, 'index'])
         ->name('admin.desa.berita-desa.index');
-    Route::get('/admin/desa/berita-desa/create', [BeritaDesaController::class, 'create'])
+    Route::get('/admin/desa/berita-desa/create', [AdminDesaBeritaDesaController::class, 'create'])
         ->name('admin.desa.berita-desa.create');
-    Route::post('/admin/desa/berita-desa', [BeritaDesaController::class, 'store'])
+    Route::post('/admin/desa/berita-desa', [AdminDesaBeritaDesaController::class, 'store'])
         ->name('admin.desa.berita-desa.store');
-    Route::get('/admin/desa/berita-desa/{id}/edit', [BeritaDesaController::class, 'edit'])
+    Route::get('/admin/desa/berita-desa/{id}/edit', [AdminDesaBeritaDesaController::class, 'edit'])
         ->name('admin.desa.berita-desa.edit');
-    Route::put('/admin/desa/berita-desa/{id}', [BeritaDesaController::class, 'update'])
+    Route::put('/admin/desa/berita-desa/{id}', [AdminDesaBeritaDesaController::class, 'update'])
         ->name('admin.desa.berita-desa.update');
-    Route::delete('/admin/desa/berita-desa/{id}', [BeritaDesaController::class, 'destroy'])
+    Route::delete('/admin/desa/berita-desa/{id}', [AdminDesaBeritaDesaController::class, 'destroy'])
         ->name('admin.desa.berita-desa.destroy');
-    Route::get('/admin/desa/berita-desa/{id}', [BeritaDesaController::class, 'show'])
+    Route::get('/admin/desa/berita-desa/{id}', [AdminDesaBeritaDesaController::class, 'show'])
         ->name('admin.desa.berita-desa.show');
 });
 

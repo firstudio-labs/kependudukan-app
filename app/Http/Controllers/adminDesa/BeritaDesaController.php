@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\adminDesa;
 
+use App\Http\Controllers\Controller;
 use App\Models\BeritaDesa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -12,9 +13,11 @@ class BeritaDesaController extends Controller
 {
     public function index(Request $request)
     {
-        $query = BeritaDesa::with('user');
+        $this->authorizeAdminDesa();
 
-        if ($request->has('search') && !empty($request->search)) {
+        $query = BeritaDesa::with('user')->where('id_desa', Auth::user()->villages_id);
+
+        if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('judul', 'like', "%{$search}%")
@@ -23,31 +26,21 @@ class BeritaDesaController extends Controller
             });
         }
 
-        // Filter khusus admin desa: hanya berita di desanya
-        if (Auth::check() && Auth::user()->role === 'admin desa') {
-            $query->where('id_desa', Auth::user()->villages_id);
-        }
-
         $berita = $query->latest()->paginate(10);
 
-        if (Auth::user()->role == 'admin desa') {
-            return view('admin.desa.berita-desa.index', compact('berita'));
-        }
-
-        return view('user.berita-desa.index', compact('berita'));
+        return view('admin.desa.berita-desa.index', compact('berita'));
     }
 
     public function create()
     {
-        if (Auth::user()->role == 'admin desa') {
-            return view('admin.desa.berita-desa.create');
-        }
-
-        return view('user.berita-desa.create');
+        $this->authorizeAdminDesa();
+        return view('admin.desa.berita-desa.create');
     }
 
     public function store(Request $request)
     {
+        $this->authorizeAdminDesa();
+
         $request->validate([
             'judul' => 'required|string|max:255',
             'gambar' => 'nullable|image|mimes:jpeg,png,jpg|max:4096',
@@ -57,14 +50,10 @@ class BeritaDesaController extends Controller
 
         $data = $request->only(['judul', 'deskripsi', 'komentar']);
         $data['user_id'] = Auth::id();
-
-        // Otomatis set wilayah berdasarkan admin desa yang membuat
-        if (Auth::check() && Auth::user()->role === 'admin desa') {
-            $data['id_provinsi'] = Auth::user()->province_id;
-            $data['id_kabupaten'] = Auth::user()->districts_id;
-            $data['id_kecamatan'] = Auth::user()->sub_districts_id;
-            $data['id_desa'] = Auth::user()->villages_id;
-        }
+        $data['id_provinsi'] = Auth::user()->province_id;
+        $data['id_kabupaten'] = Auth::user()->districts_id;
+        $data['id_kecamatan'] = Auth::user()->sub_districts_id;
+        $data['id_desa'] = Auth::user()->villages_id;
 
         if ($request->hasFile('gambar')) {
             $file = $request->file('gambar');
@@ -77,31 +66,23 @@ class BeritaDesaController extends Controller
 
         BeritaDesa::create($data);
 
-        if (Auth::user()->role == 'admin desa') {
-            return redirect()->route('admin.desa.berita-desa.index')
-                ->with('success', 'Berita desa berhasil ditambahkan');
-        }
-
-        return redirect()->route('user.berita-desa.index')
+        return redirect()->route('admin.desa.berita-desa.index')
             ->with('success', 'Berita desa berhasil ditambahkan');
     }
 
     public function edit($id)
     {
+        $this->authorizeAdminDesa();
         $berita = BeritaDesa::findOrFail($id);
-
-        // Batasi admin desa hanya bisa mengedit berita desanya
-        if (Auth::user()->role == 'admin desa') {
-            abort_unless($berita->id_desa == Auth::user()->villages_id, 403);
-            return view('admin.desa.berita-desa.edit', compact('berita'));
-        }
-
-        return view('user.berita-desa.edit', compact('berita'));
+        abort_unless($berita->id_desa == Auth::user()->villages_id, 403);
+        return view('admin.desa.berita-desa.edit', compact('berita'));
     }
 
     public function update(Request $request, $id)
     {
+        $this->authorizeAdminDesa();
         $berita = BeritaDesa::findOrFail($id);
+        abort_unless($berita->id_desa == Auth::user()->villages_id, 403);
 
         $request->validate([
             'judul' => 'required|string|max:255',
@@ -111,22 +92,15 @@ class BeritaDesaController extends Controller
         ]);
 
         $data = $request->only(['judul', 'deskripsi', 'komentar']);
-
-        // Pastikan wilayah tetap mengikuti admin desa yang mengubah
-        if (Auth::check() && Auth::user()->role === 'admin desa') {
-            abort_unless($berita->id_desa == Auth::user()->villages_id, 403);
-            $data['id_provinsi'] = Auth::user()->province_id;
-            $data['id_kabupaten'] = Auth::user()->districts_id;
-            $data['id_kecamatan'] = Auth::user()->sub_districts_id;
-            $data['id_desa'] = Auth::user()->villages_id;
-        }
+        $data['id_provinsi'] = Auth::user()->province_id;
+        $data['id_kabupaten'] = Auth::user()->districts_id;
+        $data['id_kecamatan'] = Auth::user()->sub_districts_id;
+        $data['id_desa'] = Auth::user()->villages_id;
 
         if ($request->hasFile('gambar')) {
-            // Hapus gambar lama jika ada
             if ($berita->gambar && Storage::exists('public/' . $berita->gambar)) {
                 Storage::delete('public/' . $berita->gambar);
             }
-
             $file = $request->file('gambar');
             $beritaName = Str::slug(substr($request->judul, 0, 30));
             $timestamp = time();
@@ -137,23 +111,15 @@ class BeritaDesaController extends Controller
 
         $berita->update($data);
 
-        if (Auth::user()->role == 'admin desa') {
-            return redirect()->route('admin.desa.berita-desa.index')
-                ->with('success', 'Berita desa berhasil diperbarui');
-        }
-
-        return redirect()->route('user.berita-desa.index')
+        return redirect()->route('admin.desa.berita-desa.index')
             ->with('success', 'Berita desa berhasil diperbarui');
     }
 
     public function destroy($id)
     {
+        $this->authorizeAdminDesa();
         $berita = BeritaDesa::findOrFail($id);
-
-        // Batasi admin desa hanya bisa menghapus berita desanya
-        if (Auth::check() && Auth::user()->role === 'admin desa') {
-            abort_unless($berita->id_desa == Auth::user()->villages_id, 403);
-        }
+        abort_unless($berita->id_desa == Auth::user()->villages_id, 403);
 
         if ($berita->gambar && Storage::exists('public/' . $berita->gambar)) {
             Storage::delete('public/' . $berita->gambar);
@@ -161,21 +127,25 @@ class BeritaDesaController extends Controller
 
         $berita->delete();
 
-        if (Auth::user()->role == 'admin desa') {
-            return redirect()->route('admin.desa.berita-desa.index')
-                ->with('success', 'Berita desa berhasil dihapus');
-        }
-
-        return redirect()->route('user.berita-desa.index')
+        return redirect()->route('admin.desa.berita-desa.index')
             ->with('success', 'Berita desa berhasil dihapus');
     }
 
     public function show($id)
     {
+        $this->authorizeAdminDesa();
         $berita = BeritaDesa::with('user')->findOrFail($id);
+        abort_unless($berita->id_desa == Auth::user()->villages_id, 403);
         return response()->json([
             'status' => 'success',
             'data' => $berita
         ]);
     }
+
+    private function authorizeAdminDesa(): void
+    {
+        abort_unless(Auth::check() && Auth::user()->role === 'admin desa', 403);
+    }
 }
+
+

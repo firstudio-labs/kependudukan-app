@@ -540,6 +540,17 @@
                         </a>
                     </li>
 
+                    <!-- Berita Desa -->
+                    <li class="-ml-5">
+                        <a href="{{ route('admin.desa.berita-desa.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                                                                                                                                    {{ request()->routeIs('admin.desa.berita-desa.*')
+                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                            <i class="fa-solid fa-newspaper text-lg transition-all duration-300"></i>
+                            <span>Berita Desa</span>
+                        </a>
+                    </li>
+
                     
 
                     <!-- Add Logout Button for admin.desa -->

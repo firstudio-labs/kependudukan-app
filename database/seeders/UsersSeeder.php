@@ -36,7 +36,7 @@ class UsersSeeder extends Seeder
 
         // Admin Desa (lengkap)
         DB::table('users')->insert([
-            'nik' => '3201999900000001',
+            'nik' => 'admindesa',
             'username' => 'admindesa',
             'email' => 'admindesa@example.com',
             'password' => Hash::make('password'),
@@ -56,7 +56,7 @@ class UsersSeeder extends Seeder
 
         // Admin Kabupaten (lengkap)
         DB::table('users')->insert([
-            'nik' => '3201888800000001',
+            'nik' => 'adminkabupaten',
             'username' => 'adminkabupaten',
             'email' => 'adminkabupaten@example.com',
             'password' => Hash::make('password'),
@@ -76,7 +76,7 @@ class UsersSeeder extends Seeder
 
         // Operator (lengkap)
         DB::table('users')->insert([
-            'nik' => '3201777700000001',
+            'nik' => 'operator',
             'username' => 'operator',
             'email' => 'operator@example.com',
             'password' => Hash::make('password'),
