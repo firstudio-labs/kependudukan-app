@@ -242,32 +242,116 @@ if (Auth::guard('web')->check()) {
                     </div>
                 </div>
 
+                @php
+                    $citizen = $userData->citizen_data ?? [];
+
+                    // Default names from API if present
+                    $provinceName = $citizen['province_name'] ?? ($citizen['provinsi'] ?? null);
+                    $districtName = $citizen['district_name'] ?? ($citizen['kabupaten'] ?? null);
+                    $subDistrictName = $citizen['sub_district_name'] ?? ($citizen['kecamatan'] ?? null);
+                    $villageName = $citizen['village_name'] ?? ($citizen['desa'] ?? null);
+
+                    // IDs
+                    $provinceId = $citizen['province_id'] ?? null;
+                    $districtId = $citizen['district_id'] ?? ($citizen['districts_id'] ?? null);
+                    $subDistrictId = $citizen['sub_district_id'] ?? ($citizen['sub_districts_id'] ?? null);
+                    $villageId = $citizen['village_id'] ?? ($citizen['villages_id'] ?? null);
+
+                    // Codes (will be derived as needed)
+                    $provinceCode = null;
+                    $districtCode = null;
+                    $subDistrictCode = null;
+
+                    try {
+                        // Resolve province name via $provinces if missing
+                        if (!$provinceName && $provinceId && !empty($provinces)) {
+                            foreach ($provinces as $prov) {
+                                if ((string)($prov['id'] ?? '') === (string)$provinceId) {
+                                    $provinceName = $prov['name'] ?? null;
+                                    $provinceCode = $prov['code'] ?? null;
+                                    break;
+                                }
+                            }
+                        } else {
+                            // find provinceCode too if possible
+                            if ($provinceId && !empty($provinces)) {
+                                foreach ($provinces as $prov) {
+                                    if ((string)($prov['id'] ?? '') === (string)$provinceId) {
+                                        $provinceCode = $prov['code'] ?? null;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        // Resolve district name via WilayahService if missing
+                        if (!$districtName && $districtId && $provinceCode) {
+                            $districts = app(\App\Services\WilayahService::class)->getKabupaten($provinceCode);
+                            if (is_array($districts)) {
+                                foreach ($districts as $dist) {
+                                    if ((string)($dist['id'] ?? '') === (string)$districtId) {
+                                        $districtName = $dist['name'] ?? null;
+                                        $districtCode = $dist['code'] ?? null;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        // Resolve sub-district name via WilayahService if missing
+                        if (!$subDistrictName && $subDistrictId && $districtCode) {
+                            $subs = app(\App\Services\WilayahService::class)->getKecamatan($districtCode);
+                            if (is_array($subs)) {
+                                foreach ($subs as $sub) {
+                                    if ((string)($sub['id'] ?? '') === (string)$subDistrictId) {
+                                        $subDistrictName = $sub['name'] ?? null;
+                                        $subDistrictCode = $sub['code'] ?? null;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        // Resolve village name via WilayahService if missing
+                        if (!$villageName && $villageId) {
+                            if ($subDistrictCode) {
+                                $villages = app(\App\Services\WilayahService::class)->getDesa($subDistrictCode);
+                                if (is_array($villages)) {
+                                    foreach ($villages as $vill) {
+                                        if ((string)($vill['id'] ?? '') === (string)$villageId) {
+                                            $villageName = $vill['name'] ?? null;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                            if (!$villageName) {
+                                // fallback by ID lookup
+                                $villageData = app(\App\Services\WilayahService::class)->getVillageById($villageId);
+                                if (is_array($villageData)) {
+                                    if (isset($villageData['name'])) {
+                                        $villageName = $villageData['name'];
+                                    } elseif (isset($villageData['data']['name'])) {
+                                        $villageName = $villageData['data']['name'];
+                                    }
+                                }
+                            }
+                        }
+                    } catch (\Exception $e) {
+                        // swallow errors, keep names as-is
+                    }
+                @endphp
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <dl class="grid grid-cols-1 gap-x-4 gap-y-3">
                             <div class="sm:col-span-1">
                                 <dt class="text-sm font-medium text-gray-500">Provinsi</dt>
-                                <dd class="mt-1 text-sm text-gray-900">
-                                    @if(isset($userData->citizen_data['province_name']))
-                                        {{ $userData->citizen_data['province_name'] }}
-                                    @elseif(isset($userData->citizen_data['provinsi']))
-                                        {{ $userData->citizen_data['provinsi'] }}
-                                    @else
-                                        -
-                                    @endif
-                                </dd>
+                                <dd class="mt-1 text-sm text-gray-900">{{ $provinceName ?? '-' }}</dd>
                             </div>
                             <div class="sm:col-span-1">
                                 <dt class="text-sm font-medium text-gray-500">Kabupaten</dt>
-                                <dd class="mt-1 text-sm text-gray-900">
-                                    @if(isset($userData->citizen_data['district_name']))
-                                        {{ $userData->citizen_data['district_name'] }}
-                                    @elseif(isset($userData->citizen_data['kabupaten']))
-                                        {{ $userData->citizen_data['kabupaten'] }}
-                                    @else
-                                        -
-                                    @endif
-                                </dd>
+                                <dd class="mt-1 text-sm text-gray-900">{{ $districtName ?? '-' }}</dd>
                             </div>
                         </dl>
                     </div>
@@ -275,27 +359,11 @@ if (Auth::guard('web')->check()) {
                         <dl class="grid grid-cols-1 gap-x-4 gap-y-3">
                             <div class="sm:col-span-1">
                                 <dt class="text-sm font-medium text-gray-500">Kecamatan</dt>
-                                <dd class="mt-1 text-sm text-gray-900">
-                                    @if(isset($userData->citizen_data['sub_district_name']))
-                                        {{ $userData->citizen_data['sub_district_name'] }}
-                                    @elseif(isset($userData->citizen_data['kecamatan']))
-                                        {{ $userData->citizen_data['kecamatan'] }}
-                                    @else
-                                        -
-                                    @endif
-                                </dd>
+                                <dd class="mt-1 text-sm text-gray-900">{{ $subDistrictName ?? '-' }}</dd>
                             </div>
                             <div class="sm:col-span-1">
                                 <dt class="text-sm font-medium text-gray-500">Desa</dt>
-                                <dd class="mt-1 text-sm text-gray-900">
-                                    @if(isset($userData->citizen_data['village_name']))
-                                        {{ $userData->citizen_data['village_name'] }}
-                                    @elseif(isset($userData->citizen_data['desa']))
-                                        {{ $userData->citizen_data['desa'] }}
-                                    @else
-                                        -
-                                    @endif
-                                </dd>
+                                <dd class="mt-1 text-sm text-gray-900">{{ $villageName ?? '-' }}</dd>
                             </div>
                         </dl>
                     </div>
