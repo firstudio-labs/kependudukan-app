@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Middleware\ApiTokenOwnerMiddleware;
 use App\Models\ProfileChangeRequest;
 use App\Services\CitizenService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
@@ -14,8 +14,30 @@ class ProfileChangeRequestController extends Controller
 {
 	public function __construct()
 	{
-		// Ensure ApiTokenOwnerMiddleware runs for all methods except store (store needs it too for penduduk token)
-		$this->middleware(ApiTokenOwnerMiddleware::class);
+		// Gunakan Sanctum standar, tanpa middleware kustom
+		$this->middleware('auth:sanctum');
+	}
+
+	/**
+	 * Helper untuk mendapatkan konteks token (owner, type, role)
+	 */
+	private function resolveTokenContext(): array
+	{
+		$owner = Auth::user();
+		$type = 'user';
+		$role = method_exists($owner, 'getAttribute') ? ($owner->getAttribute('role') ?? null) : null;
+
+		// Deteksi model penduduk lewat namespace/kelas atau ketiadaan role
+		if ($owner && (stripos(get_class($owner), 'Penduduk') !== false || empty($role))) {
+			$type = 'penduduk';
+			$role = 'penduduk';
+		}
+
+		return [
+			'owner' => $owner,
+			'type' => $type,
+			'role' => $role,
+		];
 	}
 
 	/**
@@ -40,10 +62,8 @@ class ProfileChangeRequestController extends Controller
 				], 422);
 			}
 
-			$tokenOwner = $request->attributes->get('token_owner');
-			$tokenOwnerType = $request->attributes->get('token_owner_type');
-
-			if (!$tokenOwner || $tokenOwnerType !== 'penduduk') {
+			$ctx = $this->resolveTokenContext();
+			if (!$ctx['owner'] || $ctx['type'] !== 'penduduk') {
 				return response()->json([
 					'status' => 'UNAUTHORIZED',
 					'message' => 'Hanya penduduk yang dapat mengajukan perubahan biodata'
@@ -87,18 +107,15 @@ class ProfileChangeRequestController extends Controller
 	 */
 	public function index(Request $request)
 	{
-		$tokenOwner = $request->attributes->get('token_owner');
-		$tokenOwnerType = $request->attributes->get('token_owner_type');
-		$tokenOwnerRole = $request->attributes->get('token_owner_role');
-
-		if (!$tokenOwner || $tokenOwnerType !== 'user' || $tokenOwnerRole !== 'admin desa') {
+		$ctx = $this->resolveTokenContext();
+		if (!$ctx['owner'] || $ctx['type'] !== 'user' || $ctx['role'] !== 'admin desa') {
 			return response()->json([
 				'status' => 'UNAUTHORIZED',
 				'message' => 'Hanya admin desa yang dapat melihat daftar permintaan'
 			], 401);
 		}
 
-		$villageId = $tokenOwner->villages_id ?? null;
+		$villageId = $ctx['owner']->villages_id ?? null;
 		$status = $request->query('status');
 
 		$query = ProfileChangeRequest::query()->where('village_id', $villageId);
@@ -119,11 +136,8 @@ class ProfileChangeRequestController extends Controller
 	 */
 	public function show(Request $request, $id)
 	{
-		$tokenOwner = $request->attributes->get('token_owner');
-		$tokenOwnerType = $request->attributes->get('token_owner_type');
-		$tokenOwnerRole = $request->attributes->get('token_owner_role');
-
-		if (!$tokenOwner || $tokenOwnerType !== 'user' || $tokenOwnerRole !== 'admin desa') {
+		$ctx = $this->resolveTokenContext();
+		if (!$ctx['owner'] || $ctx['type'] !== 'user' || $ctx['role'] !== 'admin desa') {
 			return response()->json([
 				'status' => 'UNAUTHORIZED',
 				'message' => 'Hanya admin desa yang dapat melihat detail permintaan'
@@ -132,7 +146,7 @@ class ProfileChangeRequestController extends Controller
 
 		$requestModel = ProfileChangeRequest::findOrFail($id);
 
-		if ($requestModel->village_id !== ($tokenOwner->villages_id ?? null)) {
+		if ($requestModel->village_id !== ($ctx['owner']->villages_id ?? null)) {
 			return response()->json([
 				'status' => 'FORBIDDEN',
 				'message' => 'Anda tidak berhak mengakses permintaan ini'
@@ -150,11 +164,8 @@ class ProfileChangeRequestController extends Controller
 	 */
 	public function approve(Request $request, $id)
 	{
-		$tokenOwner = $request->attributes->get('token_owner');
-		$tokenOwnerType = $request->attributes->get('token_owner_type');
-		$tokenOwnerRole = $request->attributes->get('token_owner_role');
-
-		if (!$tokenOwner || $tokenOwnerType !== 'user' || $tokenOwnerRole !== 'admin desa') {
+		$ctx = $this->resolveTokenContext();
+		if (!$ctx['owner'] || $ctx['type'] !== 'user' || $ctx['role'] !== 'admin desa') {
 			return response()->json([
 				'status' => 'UNAUTHORIZED',
 				'message' => 'Hanya admin desa yang dapat melakukan approval'
@@ -170,7 +181,7 @@ class ProfileChangeRequestController extends Controller
 			], 400);
 		}
 
-		if ($requestModel->village_id !== ($tokenOwner->villages_id ?? null)) {
+		if ($requestModel->village_id !== ($ctx['owner']->villages_id ?? null)) {
 			return response()->json([
 				'status' => 'FORBIDDEN',
 				'message' => 'Anda tidak berhak menyetujui permintaan ini'
@@ -214,7 +225,7 @@ class ProfileChangeRequestController extends Controller
 
 			$requestModel->status = 'approved';
 			$requestModel->reviewed_at = now();
-			$requestModel->reviewed_by = $tokenOwner->id;
+			$requestModel->reviewed_by = $ctx['owner']->id;
 			$requestModel->reviewer_note = $request->input('reviewer_note');
 			$requestModel->save();
 
@@ -237,11 +248,8 @@ class ProfileChangeRequestController extends Controller
 	 */
 	public function reject(Request $request, $id)
 	{
-		$tokenOwner = $request->attributes->get('token_owner');
-		$tokenOwnerType = $request->attributes->get('token_owner_type');
-		$tokenOwnerRole = $request->attributes->get('token_owner_role');
-
-		if (!$tokenOwner || $tokenOwnerType !== 'user' || $tokenOwnerRole !== 'admin desa') {
+		$ctx = $this->resolveTokenContext();
+		if (!$ctx['owner'] || $ctx['type'] !== 'user' || $ctx['role'] !== 'admin desa') {
 			return response()->json([
 				'status' => 'UNAUTHORIZED',
 				'message' => 'Hanya admin desa yang dapat menolak permintaan'
@@ -257,7 +265,7 @@ class ProfileChangeRequestController extends Controller
 			], 400);
 		}
 
-		if ($requestModel->village_id !== ($tokenOwner->villages_id ?? null)) {
+		if ($requestModel->village_id !== ($ctx['owner']->villages_id ?? null)) {
 			return response()->json([
 				'status' => 'FORBIDDEN',
 				'message' => 'Anda tidak berhak menolak permintaan ini'
@@ -266,7 +274,7 @@ class ProfileChangeRequestController extends Controller
 
 		$requestModel->status = 'rejected';
 		$requestModel->reviewed_at = now();
-		$requestModel->reviewed_by = $tokenOwner->id;
+		$requestModel->reviewed_by = $ctx['owner']->id;
 		$requestModel->reviewer_note = $request->input('reviewer_note');
 		$requestModel->save();
 
