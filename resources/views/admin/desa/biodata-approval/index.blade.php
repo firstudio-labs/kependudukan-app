@@ -9,6 +9,7 @@
                         <tr>
                             <th class="px-6 py-3">No</th>
                             <th class="px-6 py-3">NIK</th>
+                            <th class="px-6 py-3">Nama</th>
                             <th class="px-6 py-3">Status</th>
                             <th class="px-6 py-3">Diminta Pada</th>
                             <th class="px-6 py-3">Aksi</th>
@@ -22,6 +23,9 @@
                                 </th>
                                 <td class="px-6 py-4">{{ $item->nik }}</td>
                                 <td class="px-6 py-4">
+                                    {{ $item->current_data['full_name'] ?? '-' }}
+                                </td>
+                                <td class="px-6 py-4">
                                     <span class="px-2 py-1 rounded text-white {{ $item->status === 'pending' ? 'bg-yellow-500' : ($item->status === 'approved' ? 'bg-green-600' : 'bg-red-600') }}">
                                         {{ ucfirst($item->status) }}
                                     </span>
@@ -33,7 +37,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="text-center py-4">Belum ada permintaan.</td>
+                                <td colspan="6" class="text-center py-4">Belum ada permintaan.</td>
                             </tr>
                         @endforelse
                     </tbody>
