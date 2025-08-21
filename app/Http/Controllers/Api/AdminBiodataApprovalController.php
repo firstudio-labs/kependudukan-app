@@ -288,6 +288,7 @@ class AdminBiodataApprovalController extends Controller
 	/**
 	 * Convert form data to API format by merging with existing data
 	 * PRINCIPLE: Don't make up data - only use what exists and what user wants to change
+	 * CRITICAL: Ensure all required fields by external API are preserved
 	 */
 	private function convertFormDataToApiFormat($formData, $requestModel)
 	{
@@ -309,6 +310,25 @@ class AdminBiodataApprovalController extends Controller
 
 			// Start with existing data - DON'T MAKE UP DATA
 			$apiData = $existingData;
+
+			// CRITICAL: Ensure all required fields by external API are preserved
+			// These fields must exist in the data sent to external API
+			$requiredFields = [
+				'citizen_status', 'birth_certificate', 'blood_type', 'religion', 
+				'marital_status', 'marital_certificate', 'divorce_certificate', 
+				'mental_disorders', 'education_status', 'family_status', 'job_type_id'
+			];
+
+			// Log warning if any required field is missing from existing data
+			foreach ($requiredFields as $field) {
+				if (!isset($existingData[$field]) || $existingData[$field] === null) {
+					Log::warning("Required field '$field' is missing from existing data", [
+						'nik' => $requestModel->nik,
+						'field' => $field,
+						'value' => $existingData[$field] ?? 'NOT_SET'
+					]);
+				}
+			}
 
 			// Only update fields that are actually changed in the form
 			// Keep all other existing data exactly as it is
@@ -384,11 +404,29 @@ class AdminBiodataApprovalController extends Controller
 			// The API should have all the required data already
 			// We only send what exists + what user wants to change
 
+			// Final validation: ensure all required fields are present
+			$missingFields = [];
+			foreach ($requiredFields as $field) {
+				if (!isset($apiData[$field]) || $apiData[$field] === null) {
+					$missingFields[] = $field;
+				}
+			}
+
+			if (!empty($missingFields)) {
+				Log::error('Critical: Required fields are missing after merge', [
+					'nik' => $requestModel->nik,
+					'missing_fields' => $missingFields,
+					'available_fields' => array_keys($apiData)
+				]);
+				throw new \Exception('Data tidak lengkap. Field berikut diperlukan: ' . implode(', ', $missingFields));
+			}
+
 			Log::info('Final API data (existing + changes only)', [
 				'nik' => $requestModel->nik,
 				'form_data' => $formData,
-				'existing_data' => $existingData,
-				'final_api_data' => $apiData,
+				'existing_data_keys' => array_keys($existingData),
+				'final_api_data_keys' => array_keys($apiData),
+				'required_fields_present' => $requiredFields,
 				'message' => 'No data made up - only existing data + user changes'
 			]);
 

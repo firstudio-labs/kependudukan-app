@@ -35,14 +35,31 @@ class BiodataController extends Controller
                 ], 401);
             }
 
-            // Get citizen data from API
-            $citizenData = $this->citizenService->getCitizenByNIK($user->nik);
+            // Get citizen data from API - sama dengan ProfileController
+            $citizen = $this->citizenService->getCitizenByNIK((int) $user->nik);
             
-            if (!$citizenData) {
+            if (!$citizen) {
                 return response()->json([
                     'status' => 'ERROR',
                     'message' => 'Data penduduk tidak ditemukan'
                 ], 404);
+            }
+
+            // Extract data - sama dengan ProfileController
+            $citizenData = $citizen['data'] ?? $citizen ?? [];
+            $villageId = $citizenData['village_id'] ?? $citizen['village_id'] ?? $citizenData['villages_id'] ?? $citizen['villages_id'] ?? null;
+
+            // Get family members if KK exists
+            $familyMembers = [];
+            if (isset($citizenData['kk'])) {
+                try {
+                    $familyData = $this->citizenService->getFamilyMembersByKK($citizenData['kk']);
+                    if ($familyData && isset($familyData['data'])) {
+                        $familyMembers = $familyData['data'];
+                    }
+                } catch (\Exception $e) {
+                    Log::warning('Failed to retrieve family members: ' . $e->getMessage());
+                }
             }
 
             return response()->json([
@@ -54,7 +71,9 @@ class BiodataController extends Controller
                         'email' => $user->email,
                         'no_hp' => $user->no_hp ?? null,
                     ],
-                    'biodata' => $citizenData
+                    'biodata' => $citizenData,
+                    'family_members' => $familyMembers,
+                    'village_id' => $villageId
                 ]
             ]);
 
@@ -82,7 +101,7 @@ class BiodataController extends Controller
                 ], 401);
             }
 
-            // Validation rules - sama dengan form web
+            // Validation rules - sama dengan ProfileController
             $validator = Validator::make($request->all(), [
                 'full_name' => 'required|string|max:255',
                 'kk' => 'nullable|string',
@@ -107,35 +126,23 @@ class BiodataController extends Controller
                 ], 422);
             }
 
-            // Get current citizen data for comparison
-            $currentData = $this->citizenService->getCitizenByNIK($user->nik);
-            
-            if (!$currentData) {
+            // Get current citizen data - sama dengan ProfileController
+            $citizen = $this->citizenService->getCitizenByNIK((int) $user->nik);
+            if (!$citizen) {
                 return response()->json([
                     'status' => 'ERROR',
-                    'message' => 'Data penduduk saat ini tidak ditemukan'
+                    'message' => 'Data penduduk tidak ditemukan'
                 ], 404);
             }
 
-            // Check if there are actual changes
-            $hasChanges = false;
-            $requestedChanges = $request->only([
-                'full_name', 'kk', 'gender', 'age', 'birth_place', 
-                'birth_date', 'address', 'rt', 'rw', 
-                'province_id', 'district_id', 'sub_district_id', 'village_id'
-            ]);
+            // Extract village_id dan current_data - sama dengan ProfileController
+            $villageId = $citizen['data']['village_id'] ?? $citizen['village_id'] ?? $citizen['data']['villages_id'] ?? $citizen['villages_id'] ?? null;
+            $currentData = $citizen['data'] ?? $citizen ?? [];
 
-            foreach ($requestedChanges as $key => $value) {
-                if (isset($currentData[$key]) && $currentData[$key] != $value) {
-                    $hasChanges = true;
-                    break;
-                }
-            }
-
-            if (!$hasChanges) {
+            if (!$villageId) {
                 return response()->json([
                     'status' => 'ERROR',
-                    'message' => 'Tidak ada perubahan data yang diminta'
+                    'message' => 'Data desa tidak ditemukan'
                 ], 400);
             }
 
@@ -151,12 +158,15 @@ class BiodataController extends Controller
                 ], 400);
             }
 
-            // Create profile change request
+            // Get validated data
+            $validated = $validator->validated();
+
+            // Create profile change request - sama dengan ProfileController
             $profileChangeRequest = ProfileChangeRequest::create([
                 'nik' => $user->nik,
-                'village_id' => $request->village_id,
+                'village_id' => $villageId,
                 'current_data' => $currentData,
-                'requested_changes' => $requestedChanges,
+                'requested_changes' => $validated,
                 'status' => 'pending',
                 'requested_at' => now(),
             ]);
@@ -168,8 +178,8 @@ class BiodataController extends Controller
                     'request_id' => $profileChangeRequest->id,
                     'status' => 'pending',
                     'requested_at' => $profileChangeRequest->requested_at,
-                    'requested_changes' => $requestedChanges,
-                    'village_id' => $request->village_id,
+                    'requested_changes' => $validated,
+                    'village_id' => $villageId,
                     'message' => 'Permintaan Anda sedang menunggu approval dari admin desa'
                 ]
             ]);

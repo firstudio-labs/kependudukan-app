@@ -154,6 +154,7 @@ Route::middleware(ApiTokenOwnerMiddleware::class)->group(function () {
 // Versi sederhana tanpa middleware kustom, gunakan auth:sanctum
 Route::middleware('auth:sanctum')->group(function () {
     // Penduduk kirim form perubahan biodata (simple)
+    Route::get('/biodata', [BiodataController::class, 'getBiodata']);
     Route::post('/biodata/request-update', [BiodataController::class, 'requestUpdate']);
 
     // Admin desa approval (simple)
