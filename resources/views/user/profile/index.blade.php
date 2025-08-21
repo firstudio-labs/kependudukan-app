@@ -37,7 +37,7 @@ if (Auth::guard('web')->check()) {
                     </div>
                     <div>
                         <button type="button" onclick="toggleEditForm()" id="btnToggleEdit"
-                            class="inline-flex items-center gap-2 bg-[#4A47DC] hover:bg-[#2D336B] text-white px-4 py-2 rounded-lg shadow-sm transition-all">
+                            class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-md border border-blue-500 transition-all font-medium">
                             <i class="fa-solid fa-user-pen"></i>
                             <span id="btnToggleEditText">Edit Biodata (Minta Approval)</span>
                         </button>
@@ -225,7 +225,7 @@ if (Auth::guard('web')->check()) {
                             <i class="fa-solid fa-xmark"></i>
                             <span>Batal</span>
                         </button>
-                        <button type="submit" class="inline-flex items-center gap-2 bg-[#4A47DC] hover:bg-[#2D336B] text-white px-4 py-2 rounded-lg shadow-sm">
+                        <button type="submit" class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg shadow-md border border-green-500 transition-all font-medium">
                             <i class="fa-solid fa-paper-plane"></i>
                             <span>Kirim Permintaan Approval</span>
                         </button>
@@ -309,7 +309,7 @@ if (Auth::guard('web')->check()) {
                         <h2 class="text-xl font-semibold text-gray-700">History Perubahan Biodata</h2>
                         <p class="text-gray-500">Riwayat permintaan perubahan dan status approval</p>
                     </div>
-                    <button type="button" onclick="toggleHistorySection()" id="btnToggleHistory" class="inline-flex items-center gap-2 bg-[#4A47DC] hover:bg-[#2D336B] text-white px-4 py-2 rounded-lg shadow-sm transition-all">
+                    <button type="button" onclick="toggleHistorySection()" id="btnToggleHistory" class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-md border border-blue-500 transition-all font-medium">
                         <i class="fa-solid fa-history" id="historyIcon"></i>
                         <span id="btnToggleHistoryText">Lihat History</span>
                     </button>
@@ -1882,14 +1882,22 @@ if (!empty($userData->tag_lokasi)) {
                     const isHidden = el.classList.contains('hidden');
                     if (isHidden) {
                         el.classList.remove('hidden');
-                        btn.classList.remove('bg-[#4A47DC]');
-                        btn.classList.add('bg-[#2D336B]');
+                        btn.classList.remove('bg-blue-600');
+                        btn.classList.add('bg-red-600');
+                        btn.classList.remove('border-blue-500');
+                        btn.classList.add('border-red-500');
+                        btn.classList.remove('hover:bg-blue-700');
+                        btn.classList.add('hover:bg-red-700');
                         btnText.textContent = 'Tutup Form Edit';
                         el.scrollIntoView({ behavior: 'smooth' });
                     } else {
                         el.classList.add('hidden');
-                        btn.classList.remove('bg-[#2D336B]');
-                        btn.classList.add('bg-[#4A47DC]');
+                        btn.classList.remove('bg-red-600');
+                        btn.classList.add('bg-blue-600');
+                        btn.classList.remove('border-red-500');
+                        btn.classList.add('border-blue-500');
+                        btn.classList.remove('hover:bg-red-700');
+                        btn.classList.add('hover:bg-blue-700');
                         btnText.textContent = 'Edit Biodata (Minta Approval)';
                     }
                 }
@@ -1960,6 +1968,7 @@ if (!empty($userData->tag_lokasi)) {
                     const historyContent = document.getElementById('historyContent');
                     const historyIcon = document.getElementById('historyIcon');
                     const historyText = document.getElementById('btnToggleHistoryText');
+                    const historyBtn = document.getElementById('btnToggleHistory');
                     if (!historyContent) return;
                     const isHidden = historyContent.classList.contains('hidden');
                     if (isHidden) {
@@ -1967,11 +1976,17 @@ if (!empty($userData->tag_lokasi)) {
                         historyIcon.classList.remove('fa-history');
                         historyIcon.classList.add('fa-times');
                         historyText.textContent = 'Tutup History';
+                        // Change button color to red when open
+                        historyBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700', 'border-blue-500');
+                        historyBtn.classList.add('bg-red-600', 'hover:bg-red-700', 'border-red-500');
                     } else {
                         historyContent.classList.add('hidden');
                         historyIcon.classList.remove('fa-times');
                         historyIcon.classList.add('fa-history');
                         historyText.textContent = 'Lihat History';
+                        // Change button color back to blue when closed
+                        historyBtn.classList.remove('bg-red-600', 'hover:bg-red-700', 'border-red-500');
+                        historyBtn.classList.add('bg-blue-600', 'hover:bg-blue-700', 'border-blue-500');
                     }
                 }
             </script>
