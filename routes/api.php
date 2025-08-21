@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\KelolaAsetController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\ProfileChangeRequestController;
 
 /*
 |--------------------------------------------------------------------------
@@ -59,6 +60,17 @@ Route::middleware(ApiTokenOwnerMiddleware::class)->group(function () {
     Route::get('/klasifikasi', [KlasifikasiController::class, 'index']);
     Route::get('/jenis-aset', [JenisAsetController::class, 'index']);
     Route::get('/lapor-desa', [LaporDesaController::class, 'index']);
+
+    // Approval Biodata (API untuk mobile)
+    // - Penduduk membuat permintaan perubahan
+    Route::post('/profile-change-requests', [ProfileChangeRequestController::class, 'store']);
+    // - Admin desa melihat daftar permintaan di desanya
+    Route::get('/admin/profile-change-requests', [ProfileChangeRequestController::class, 'index']);
+    // - Admin desa melihat detail permintaan
+    Route::get('/admin/profile-change-requests/{id}', [ProfileChangeRequestController::class, 'show']);
+    // - Admin desa approve / reject
+    Route::post('/admin/profile-change-requests/{id}/approve', [ProfileChangeRequestController::class, 'approve']);
+    Route::post('/admin/profile-change-requests/{id}/reject', [ProfileChangeRequestController::class, 'reject']);
 
     Route::prefix('user')->group(function () {
         //kelola aset
