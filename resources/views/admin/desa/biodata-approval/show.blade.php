@@ -21,7 +21,76 @@
                 <div>
                     <div class="text-gray-600 mb-2"><strong>NIK:</strong> {{ $requestModel->nik }}</div>
                     <div class="text-gray-600 mb-2"><strong>Nama Penduduk:</strong> {{ $requestModel->requested_changes['full_name'] ?? ($requestModel->current_data['full_name'] ?? 'Tidak tersedia') }}</div>
-                    <div class="text-gray-600 mb-2"><strong>Desa:</strong> {{ $requestModel->village ? $requestModel->village->name : 'Tidak tersedia' }}</div>
+                    <div class="text-gray-600 mb-2"><strong>Desa:</strong> 
+                        @php
+                            $villageName = 'Tidak tersedia';
+                            $adminVillageId = auth()->user()->villages_id;
+                            
+                            if ($adminVillageId) {
+                                // Coba dari current_data dulu (data penduduk)
+                                $currentData = $requestModel->current_data ?? [];
+                                
+                                // Cek berbagai kemungkinan field desa
+                                if (isset($currentData['desa']) && !empty($currentData['desa'])) {
+                                    $villageName = $currentData['desa'];
+                                } elseif (isset($currentData['village_name']) && !empty($currentData['village_name'])) {
+                                    $villageName = $currentData['village_name'];
+                                } elseif (isset($currentData['villages_name']) && !empty($currentData['villages_name'])) {
+                                    $villageName = $currentData['villages_name'];
+                                } elseif (isset($currentData['village']) && !empty($currentData['village'])) {
+                                    $villageName = $currentData['village'];
+                                } else {
+                                    // Coba dari WilayahService
+                                    try {
+                                        $villageData = app(\App\Services\WilayahService::class)->getVillageById($adminVillageId);
+                                        
+                                        if ($villageData && isset($villageData['name'])) {
+                                            $villageName = $villageData['name'];
+                                        } elseif ($villageData && isset($villageData['data']['name'])) {
+                                            $villageName = $villageData['data']['name'];
+                                        } else {
+                                            // Fallback: coba cari dari data penduduk berdasarkan village_id
+                                            if (isset($currentData['village_id']) && $currentData['village_id'] == $adminVillageId) {
+                                                // Jika village_id sama, coba ambil dari field lain
+                                                if (isset($currentData['address'])) {
+                                                    // Parse address untuk mendapatkan nama desa (dinamis)
+                                                    $address = $currentData['address'];
+                                                    $addressParts = explode(',', $address);
+                                                    
+                                                    // Ambil bagian pertama dari address (biasanya nama desa/kelurahan)
+                                                    if (!empty($addressParts[0])) {
+                                                        $villageName = trim($addressParts[0]);
+                                                    } else {
+                                                        $villageName = 'Desa ID: ' . $adminVillageId;
+                                                    }
+                                                } else {
+                                                    $villageName = 'Desa ID: ' . $adminVillageId;
+                                                }
+                                            } else {
+                                                $villageName = 'Desa ID: ' . $adminVillageId;
+                                            }
+                                        }
+                                    } catch (\Exception $e) {
+                                        // Jika service error, gunakan fallback dari address
+                                        if (isset($currentData['address'])) {
+                                            $address = $currentData['address'];
+                                            $addressParts = explode(',', $address);
+                                            
+                                            // Ambil bagian pertama dari address (biasanya nama desa/kelurahan)
+                                            if (!empty($addressParts[0])) {
+                                                $villageName = trim($addressParts[0]);
+                                            } else {
+                                                $villageName = 'Desa ID: ' . $adminVillageId . ' (Error: ' . $e->getMessage() . ')';
+                                            }
+                                        } else {
+                                            $villageName = 'Desa ID: ' . $adminVillageId . ' (Error: ' . $e->getMessage() . ')';
+                                        }
+                                    }
+                                }
+                            }
+                        @endphp
+                        {{ $villageName }}
+                    </div>
                 </div>
                 <div>
                     <div class="text-gray-600 mb-2"><strong>Status:</strong> 
@@ -36,7 +105,22 @@
                     <div class="text-gray-600 mb-2"><strong>Tanggal Request:</strong> {{ $requestModel->requested_at ? $requestModel->requested_at->format('d M Y H:i') : '-' }}</div>
                     @if($requestModel->reviewed_at)
                         <div class="text-gray-600 mb-2"><strong>Tanggal Review:</strong> {{ $requestModel->reviewed_at->format('d M Y H:i') }}</div>
-                        <div class="text-gray-600 mb-2"><strong>Reviewer:</strong> {{ $requestModel->reviewer ? $requestModel->reviewer->name : 'Admin' }}</div>
+                        <div class="text-gray-600 mb-2"><strong>Reviewer:</strong> 
+                            @php
+                                $reviewerName = 'Admin';
+                                $reviewedBy = $requestModel->reviewed_by;
+                                if ($reviewedBy) {
+                                    $reviewer = \App\Models\User::find($reviewedBy);
+                                    if ($reviewer) {
+                                        // Coba berbagai field yang mungkin ada
+                                        $reviewerName = $reviewer->name ?? $reviewer->nama ?? $reviewer->username ?? 'User ID: ' . $reviewedBy;
+                                    } else {
+                                        $reviewerName = 'User ID: ' . $reviewedBy . ' (tidak ditemukan)';
+                                    }
+                                }
+                            @endphp
+                            {{ $reviewerName }}
+                        </div>
                     @endif
                 </div>
             </div>
