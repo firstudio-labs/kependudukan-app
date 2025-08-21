@@ -18,7 +18,6 @@ class AdminBiodataApprovalController extends Controller
 	public function __construct(CitizenService $citizenService)
 	{
 		$this->citizenService = $citizenService;
-		$this->middleware('auth:sanctum');
 	}
 
 	/**
