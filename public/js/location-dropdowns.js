@@ -299,15 +299,24 @@ function initializeCitizenSelect(routeUrl, onDataLoaded = null, options = {}) {
     // Opsi default
     const filterByVillage = options.filterByVillage !== undefined ? options.filterByVillage : true;
     const useTextInput = options.useTextInput !== undefined ? options.useTextInput : false;
+    const isAdminDesa = options.isAdminDesa !== undefined ? options.isAdminDesa : false;
 
     let isUpdating = false;
     let allCitizens = [];
 
     // Siapkan data request
     let requestData = { limit: 10000 };
+
     if (filterByVillage) {
-        // Ambil village_id dari input hidden jika ada
-        const villageId = document.getElementById('village_id')?.value;
+        let villageId;
+        if (isAdminDesa) {
+            // Untuk admin desa, ambil village_id dari admin yang sedang login
+            villageId = document.getElementById('admin_village_id')?.value;
+        } else {
+            // Untuk superadmin atau guest, tidak perlu filter (ambil semua data)
+            villageId = null;
+        }
+
         if (villageId) requestData.village_id = villageId;
     }
 
@@ -338,11 +347,11 @@ function initializeCitizenSelect(routeUrl, onDataLoaded = null, options = {}) {
 
             allCitizens = processedData;
 
-            // Jika pakai input text (superadmin)
+            // Jika pakai input text (untuk admin desa dengan fitur baru)
             if (useTextInput) {
                 setupTextInputAutofill(allCitizens);
             } else {
-            setupSelect2WithData(allCitizens);
+                setupSelect2WithData(allCitizens);
             }
 
             // If callback provided, call it with the loaded citizen data
@@ -472,6 +481,11 @@ function initializeCitizenSelect(routeUrl, onDataLoaded = null, options = {}) {
                 // Fill other form fields
                 populateCitizenData(citizen);
 
+                // Set RF ID Tag if it exists
+                if (citizen.rf_id_tag && document.querySelector('#rf_id_tag')) {
+                    document.querySelector('#rf_id_tag').value = citizen.rf_id_tag.toString();
+                }
+
                 // Set domicile_address immediately from citizen data
                 if (citizen.address) {
                     $('#domicile_address').val(citizen.address);
@@ -504,6 +518,11 @@ function initializeCitizenSelect(routeUrl, onDataLoaded = null, options = {}) {
                 // Fill other form fields
                 populateCitizenData(citizen);
 
+                // Set RF ID Tag if it exists
+                if (citizen.rf_id_tag && document.querySelector('#rf_id_tag')) {
+                    document.querySelector('#rf_id_tag').value = citizen.rf_id_tag.toString();
+                }
+
                 // Set domicile_address immediately from citizen data
                 if (citizen.address) {
                     $('#domicile_address').val(citizen.address);
@@ -533,79 +552,237 @@ function initializeCitizenSelect(routeUrl, onDataLoaded = null, options = {}) {
         }, 500);
     }
 
-    // Fungsi autofill untuk input text
+    // Fungsi autofill untuk input text (untuk admin desa)
     function setupTextInputAutofill(citizens) {
-        // NIK
-        const nikInput = document.getElementById('nik') || document.getElementById('nikSelect');
+        // NIK input listener
+        const nikInput = document.getElementById('nikSelect');
         if (nikInput) {
-            nikInput.addEventListener('input', function() {
-                const nikValue = this.value.trim();
-                if (nikValue.length === 16 && /^\d+$/.test(nikValue)) {
-                    const matched = citizens.find(c => c.nik == nikValue);
-                    if (matched) populateCitizenData(matched);
-                }
-            });
-        }
-        // Nama
-        const nameInput = document.getElementById('full_name') || document.getElementById('fullNameSelect');
-        if (nameInput) {
-            nameInput.addEventListener('input', function() {
-                const nameValue = this.value.trim().toLowerCase();
-                if (nameValue.length >= 3) {
-                    const matched = citizens.find(c => c.full_name && c.full_name.toLowerCase() === nameValue);
-                    if (matched) populateCitizenData(matched);
-                }
-            });
-        }
-        // RF ID
-        const rfidInput = document.getElementById('rf_id_tag');
-        if (rfidInput) {
             // Remove any existing event listeners by cloning the element
-            const newRfidInput = rfidInput.cloneNode(true);
-            rfidInput.parentNode.replaceChild(newRfidInput, rfidInput);
+            const newNikInput = nikInput.cloneNode(true);
+            nikInput.parentNode.replaceChild(newNikInput, nikInput);
+
+            // Add input event listener
+            newNikInput.addEventListener('input', function() {
+                const nikValue = this.value.trim();
+
+                // Only process if NIK is exactly 16 digits
+                if (nikValue.length === 16 && /^\d+$/.test(nikValue)) {
+                    // Find citizen with matching NIK
+                    const matchedCitizen = citizens.find(citizen => {
+                        const citizenNik = citizen.nik ? citizen.nik.toString() : '';
+                        return citizenNik === nikValue;
+                    });
+
+                    if (matchedCitizen) {
+                        // Fill form with citizen data
+                        populateCitizenData(matchedCitizen);
+
+                        // Update full name input
+                        if ($('#fullNameSelect').length) {
+                            $('#fullNameSelect').val(matchedCitizen.full_name);
+                        }
+
+                        // Set RF ID Tag if it exists
+                        if (matchedCitizen.rf_id_tag && document.querySelector('#rf_id_tag')) {
+                            document.querySelector('#rf_id_tag').value = matchedCitizen.rf_id_tag.toString();
+                        }
+
+                        // Auto-populate location dropdowns based on citizen's location IDs
+                        populateLocationDropdowns(
+                            matchedCitizen.province_id,
+                            matchedCitizen.district_id,
+                            matchedCitizen.subdistrict_id || matchedCitizen.sub_district_id,
+                            matchedCitizen.village_id
+                        );
+
+                        // Visual feedback for success
+                        $(newNikInput).addClass('border-green-500').removeClass('border-red-500 border-gray-300');
+                        setTimeout(() => {
+                            $(newNikInput).removeClass('border-green-500').addClass('border-gray-300');
+                        }, 2000);
+                    } else {
+                        // Show error alert for NIK not found
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                title: 'Data Tidak Ditemukan',
+                                text: 'NIK yang dimasukkan tidak terdaftar dalam sistem',
+                                icon: 'error',
+                                confirmButtonText: 'OK'
+                            });
+                        }
+
+                        // Visual feedback for error
+                        $(newNikInput).addClass('border-red-500').removeClass('border-green-500 border-gray-300');
+                        setTimeout(() => {
+                            $(newNikInput).removeClass('border-red-500').addClass('border-gray-300');
+                        }, 2000);
+                    }
+                }
+            });
+        }
+
+        // RF ID Tag event listener
+        const rfIdInput = document.getElementById('rf_id_tag');
+        if (rfIdInput) {
+            // Remove any existing event listeners by cloning the element
+            const newRfIdInput = rfIdInput.cloneNode(true);
+            rfIdInput.parentNode.replaceChild(newRfIdInput, rfIdInput);
+
+            // Prevent form submission when Enter is pressed on RF ID input
+            newRfIdInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }
+            });
 
             // Add input event listener with debouncing
             let inputTimeout;
-            newRfidInput.addEventListener('input', function() {
-                const rfidValue = this.value.trim();
+            newRfIdInput.addEventListener('input', function() {
+                const rfIdValue = this.value.trim();
 
                 // Clear previous timeout
                 clearTimeout(inputTimeout);
 
-                if (rfidValue.length > 0) {
+                if (rfIdValue.length > 0) {
                     // Set a timeout to process the RF ID after a short delay
                     inputTimeout = setTimeout(() => {
-                        const matched = citizens.find(c => c.rf_id_tag && c.rf_id_tag.toString() === rfidValue);
-                        if (matched) {
-                            populateCitizenData(matched);
-                            // Visual feedback
-                            $(newRfidInput).addClass('border-green-500').removeClass('border-red-500 border-gray-300');
-                            setTimeout(() => {
-                                $(newRfidInput).removeClass('border-green-500').addClass('border-gray-300');
-                            }, 2000);
-                        }
+                        processRfIdValue(rfIdValue, citizens, newRfIdInput);
                     }, 300); // 300ms delay to prevent immediate processing
                 }
             });
 
             // Handle paste events with immediate processing
-            newRfidInput.addEventListener('paste', function(e) {
+            newRfIdInput.addEventListener('paste', function(e) {
                 e.preventDefault();
                 const pastedText = (e.clipboardData || window.clipboardData).getData('text');
                 this.value = pastedText;
 
                 // Process immediately after paste
                 setTimeout(() => {
-                    const rfidValue = this.value.trim();
-                    if (rfidValue.length > 0) {
-                        const matched = citizens.find(c => c.rf_id_tag && c.rf_id_tag.toString() === rfidValue);
-                        if (matched) {
-                            populateCitizenData(matched);
-                        }
+                    const rfIdValue = this.value.trim();
+                    if (rfIdValue.length > 0) {
+                        processRfIdValue(rfIdValue, citizens, newRfIdInput);
                     }
                 }, 100);
             });
+
+            // Handle keyup events for RF ID scanner
+            newRfIdInput.addEventListener('keyup', function(e) {
+                // Prevent form submission on Enter
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }
+
+                const rfIdValue = this.value.trim();
+                if (rfIdValue.length > 0) {
+                    // Clear previous timeout
+                    clearTimeout(inputTimeout);
+
+                    // Set a timeout to process the RF ID
+                    inputTimeout = setTimeout(() => {
+                        processRfIdValue(rfIdValue, citizens, newRfIdInput);
+                    }, 200); // 200ms delay for keyup events
+                }
+            });
         }
+    }
+
+    // Proses RF ID: cari dan isi data jika ditemukan
+    function processRfIdValue(rfIdValue, citizens, inputElement) {
+        if (!citizens || !Array.isArray(citizens)) {
+            console.warn('Data citizens tidak tersedia untuk pencarian RF ID');
+            return;
+        }
+
+        const matchedCitizen = testRfIdSearch(rfIdValue, citizens);
+        if (matchedCitizen) {
+            populateCitizenData(matchedCitizen);
+
+            // Update NIK input
+            if ($('#nikSelect').length) {
+                $('#nikSelect').val(matchedCitizen.nik ? matchedCitizen.nik.toString() : '');
+            }
+
+            // Update full name input
+            if ($('#fullNameSelect').length) {
+                $('#fullNameSelect').val(matchedCitizen.full_name);
+            }
+
+            // Auto-populate location dropdowns based on citizen's location IDs
+            populateLocationDropdowns(
+                matchedCitizen.province_id,
+                matchedCitizen.district_id,
+                matchedCitizen.subdistrict_id || matchedCitizen.sub_district_id,
+                matchedCitizen.village_id
+            );
+
+            // Feedback visual sukses
+            $(inputElement).addClass('border-green-500').removeClass('border-red-500 border-gray-300');
+            setTimeout(() => {
+                $(inputElement).removeClass('border-green-500').addClass('border-gray-300');
+            }, 2000);
+        } else {
+            // Feedback error jika tidak ditemukan
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: 'Data Tidak Ditemukan',
+                    text: 'RF ID yang dimasukkan tidak terdaftar dalam sistem',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+            }
+            $(inputElement).addClass('border-red-500').removeClass('border-green-500 border-gray-300');
+            setTimeout(() => {
+                $(inputElement).removeClass('border-red-500').addClass('border-gray-300');
+            }, 2000);
+        }
+    }
+
+    // Test pencarian RF ID
+    function testRfIdSearch(rfId, citizens) {
+        if (!citizens || !Array.isArray(citizens)) {
+            console.warn('Data citizens tidak tersedia');
+            return null;
+        }
+
+        // Cari di data yang sudah ter-load
+        const matched = citizens.find(citizen => {
+            if (!citizen.rf_id_tag) return false;
+
+            const normalizedInput = normalizeRfId(rfId);
+            const normalizedStored = normalizeRfId(citizen.rf_id_tag);
+
+            const exactMatch = normalizedInput === normalizedStored;
+            const partialMatch = normalizedStored.includes(normalizedInput) && normalizedInput.length >= 5;
+            const reverseMatch = normalizedInput.includes(normalizedStored) && normalizedStored.length >= 5;
+
+            return exactMatch || partialMatch || reverseMatch;
+        });
+
+        return matched;
+    }
+
+    // Normalize RF ID for comparison
+    function normalizeRfId(rfId) {
+        if (!rfId) return '';
+
+        // Convert to string
+        let normalized = rfId.toString();
+
+        // Remove leading zeros
+        normalized = normalized.replace(/^0+/, '');
+
+        // Remove any non-digit characters (spaces, dashes, etc.)
+        normalized = normalized.replace(/[^0-9]/g, '');
+
+        // Trim whitespace
+        normalized = normalized.trim();
+
+        return normalized;
     }
 
     // Fill citizen data into form fields

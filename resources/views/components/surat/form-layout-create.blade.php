@@ -6,6 +6,20 @@
     <form method="POST" action="{{ $route }}" class="bg-white p-3 sm:p-6 rounded-lg shadow-md">
         @csrf
 
+        <!-- Hidden field for admin village_id (only for admin desa) -->
+        @if(auth()->user()->role === 'admin desa')
+            <input type="hidden" id="admin_village_id" name="admin_village_id" value="{{ auth()->user()->villages_id ?? '' }}">
+        @endif
+
+        <!-- RF ID Tag - Moved to top, standalone -->
+        <div class="mb-4">
+            <label for="rf_id_tag" class="block text-sm font-medium text-gray-700">RF ID Tag</label>
+            <input type="text" id="rf_id_tag" name="rf_id_tag"
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm sm:text-base p-1.5 sm:p-2"
+                placeholder="Scan RF ID Tag">
+            <p class="text-xs text-gray-500 mt-1">Masukkan RF ID Tag untuk mengisi data otomatis</p>
+        </div>
+
         <!-- Data Pribadi/Almarhum Section -->
         <div class="mt-4 sm:mt-6">
             <h2 class="text-base sm:text-lg font-semibold text-gray-700 mb-2 sm:mb-3">{{ $section_title }}</h2>
@@ -14,17 +28,34 @@
                     <!-- NIK -->
                     <div>
                         <label for="nikSelect" class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">NIK <span class="text-red-500">*</span></label>
-                        <select id="nikSelect" name="nik" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm sm:text-base p-1.5 sm:p-2" required>
-                            <option value="">Pilih NIK</option>
-                        </select>
+                        @if(auth()->user()->role === 'admin desa')
+                            <input type="text" id="nikSelect" name="nik"
+                                   class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm sm:text-base p-1.5 sm:p-2"
+                                   placeholder="Masukkan NIK (16 digit)"
+                                   maxlength="16"
+                                   pattern="\d{16}"
+                                   required>
+                            <p class="text-xs text-gray-500 mt-1">Masukkan 16 digit NIK untuk pencarian otomatis</p>
+                        @else
+                            <select id="nikSelect" name="nik" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm sm:text-base p-1.5 sm:p-2" required>
+                                <option value="">Pilih NIK</option>
+                            </select>
+                        @endif
                     </div>
 
                     <!-- Nama Lengkap -->
                     <div>
                         <label for="fullNameSelect" class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Nama Lengkap <span class="text-red-500">*</span></label>
-                        <select id="fullNameSelect" name="full_name" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm sm:text-base p-1.5 sm:p-2" required>
-                            <option value="">Pilih Nama Lengkap</option>
-                        </select>
+                        @if(auth()->user()->role === 'admin desa')
+                            <input type="text" id="fullNameSelect" name="full_name"
+                                   class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm sm:text-base p-1.5 sm:p-2"
+                                   placeholder="Nama Lengkap" required>
+                            <p class="text-xs text-gray-500 mt-1">Masukkan nama lengkap secara manual</p>
+                        @else
+                            <select id="fullNameSelect" name="full_name" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm sm:text-base p-1.5 sm:p-2" required>
+                                <option value="">Pilih Nama Lengkap</option>
+                            </select>
+                        @endif
                     </div>
 
                     <!-- Tempat & Tanggal Lahir on same row on larger screens -->

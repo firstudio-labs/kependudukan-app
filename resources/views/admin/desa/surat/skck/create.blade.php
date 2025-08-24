@@ -35,8 +35,11 @@
             <script>
                 document.addEventListener('DOMContentLoaded', function() {
                     // Initialize citizen data select fields
-                    initializeCitizenSelect('{{ route("citizens.administrasi") }}');
-
+                    initializeCitizenSelect('{{ route("citizens.administrasi") }}', null, {
+                        filterByVillage: true,
+                        useTextInput: true,
+                        isAdminDesa: true
+                    });
                     // Setup location dropdown events
                     setupLocationDropdowns();
 
@@ -59,6 +62,10 @@
                         @foreach($signers as $signer)
                         signingDropdown.innerHTML += `<option value="{{ $signer->id }}">{{ $signer->judul }} - {{ $signer->keterangan }}</option>`;
                         @endforeach
+                    }
+                    const rfIdInput = document.getElementById('rf_id_tag');
+                    if (rfIdInput) {
+                        rfIdInput.title = "Masukkan RF ID Tag untuk mengisi data otomatis";
                     }
                 });
             </script>

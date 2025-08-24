@@ -142,7 +142,13 @@ class AdministrasiController extends Controller
         ]);
 
         try {
-            Administration::create($request->all());
+            // For admin desa, ensure village_id is set from the logged-in admin user
+            $data = $request->all();
+            if (Auth::user()->role === 'admin desa') {
+                $data['village_id'] = Auth::user()->villages_id;
+            }
+
+            Administration::create($data);
             if (Auth::user()->role === 'admin desa') {
                 return redirect()->route('admin.desa.surat.administrasi.index')
                     ->with('success', 'Surat administrasi berhasil dibuat!');
