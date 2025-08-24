@@ -57,7 +57,7 @@
                     @endif
                     {{ strtoupper($village_name ?? 'XXXX') }}
                 </p>
-                <p class="text-sm">Alamat: {{ $village_name ?? 'XXXX' }}, {{ $subdistrict_name ?? 'XXXX' }}, {{ $district_name ?? 'XXXX' }}</p>
+                <p class="text-sm">Alamat: {{ ucwords(strtolower($village_name ?? 'XXXX')) }}, {{ ucwords(strtolower($subdistrict_name ?? 'XXXX')) }}, {{ ucwords(strtolower($district_name ?? 'XXXX')) }}</p>
             </div>
             <div class="w-24">
             </div>
@@ -82,7 +82,7 @@
                 @else
                     {{ isset($administrationData) && isset($administrationData['village_head_title']) ? $administrationData['village_head_title'] : 'Kepala Desa/Lurah' }}
                 @endif
-                {{ $village_name ?? 'XXXX' }} Kecamatan {{ $subdistrict_name ?? 'XXXX' }} dengan ini menerangkan bahwa :
+                {{ ucwords(strtolower($village_name ?? 'XXXX')) }} Kecamatan {{ ucwords(strtolower($subdistrict_name ?? 'XXXX')) }} dengan ini menerangkan bahwa :
             </p>
         </div>
 
@@ -93,7 +93,7 @@
                     <tr>
                         <td class="w-1/3">Nama Lengkap</td>
                         <td class="w-1/12">:</td>
-                        <td>{{ $keramaian->full_name }}</td>
+                        <td>{{ ucwords(strtolower($keramaian->full_name)) }}</td>
                     </tr>
                     <tr>
                         <td>NIK</td>
@@ -103,7 +103,7 @@
                     <tr>
                         <td>Tempat Lahir</td>
                         <td>:</td>
-                        <td>{{ $keramaian->birth_place }}</td>
+                        <td>{{ ucwords(strtolower($keramaian->birth_place)) }}</td>
                     </tr>
                     <tr>
                         <td>Tanggal Lahir</td>
@@ -118,7 +118,7 @@
                     <tr>
                         <td>Pekerjaan</td>
                         <td>:</td>
-                        <td>{{ $jobName }}</td>
+                        <td>{{ ucwords(strtolower($jobName)) }}</td>
                     </tr>
                     <tr>
                         <td>Agama</td>
@@ -134,12 +134,12 @@
                         <td>Alamat</td>
                         <td>:</td>
                         <td>
-                            {{ $keramaian->address ?? '-' }}
+                            {{ ucwords(strtolower($keramaian->address ?? '-')) }}
                             ,
-                            {{ !empty($village_name) ? $village_name : 'Desa/Kelurahan' }},
-                            {{ !empty($subdistrict_name) ? $subdistrict_name : 'Kecamatan' }},
-                            {{ !empty($district_name) ? $district_name : 'Kabupaten' }},
-                            {{ !empty($province_name) ? $province_name : 'Provinsi' }}
+                            {{ !empty($village_name) ? ucwords(strtolower($village_name)) : 'Desa/Kelurahan' }},
+                            {{ !empty($subdistrict_name) ? ucwords(strtolower($subdistrict_name)) : 'Kecamatan' }},
+                            {{ !empty($district_name) ? ucwords(strtolower($district_name)) : 'Kabupaten' }},
+                            {{ !empty($province_name) ? ucwords(strtolower($province_name)) : 'Provinsi' }}
                         </td>
                     </tr>
                 </tbody>
@@ -200,7 +200,7 @@
         <!-- Signature -->
         <div class="text-center mt-16">
             <div class="mb-4">
-                {{ $village_name ?? 'XXXX' }},
+                {{ ucwords(strtolower($village_name ?? 'XXXX')) }},
                 @if(isset($formatted_letter_date) && !empty($formatted_letter_date))
                     {{ \Carbon\Carbon::parse($formatted_letter_date)->locale('id')->isoFormat('D MMMM Y') }}
                 @else

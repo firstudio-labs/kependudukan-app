@@ -58,7 +58,7 @@
                     @endif
                     {{ strtoupper($village_name ?? $villageName ?? 'XXXX') }}
                 </p>
-                <p class="text-sm">Alamat: {{ $village_name ?? $villageName ?? 'XXXX' }}, {{ $subdistrict_name ?? $subdistrictName ?? 'XXXX' }}, {{ $district_name ?? $districtName ?? 'XXXX' }}</p>
+                <p class="text-sm">Alamat: {{ ucwords(strtolower($village_name ?? $villageName ?? 'XXXX')) }}, {{ ucwords(strtolower($subdistrict_name ?? $subdistrictName ?? 'XXXX')) }}, {{ ucwords(strtolower($district_name ?? $districtName ?? 'XXXX')) }}</p>
             </div>
             <div class="w-24">
             </div>
@@ -83,7 +83,7 @@
                 @else
                     {{ isset($administrationData) && isset($administrationData['village_head_title']) ? $administrationData['village_head_title'] : 'Kepala Desa' }}
                 @endif
-                {{ $village_name ?? $villageName ?? 'Desa/Kelurahan' }} Kecamatan {{ $subdistrict_name ?? $subdistrictName ?? 'Kecamatan' }} dengan ini menerangkan bahwa :
+                {{ ucwords(strtolower($village_name ?? $villageName ?? 'Desa/Kelurahan')) }} Kecamatan {{ ucwords(strtolower($subdistrict_name ?? $subdistrictName ?? 'Kecamatan')) }} dengan ini menerangkan bahwa :
             </p>
         </div>
 
@@ -121,7 +121,7 @@
                         <tr>
                             <td class="w-1/3">Nama Lengkap</td>
                             <td class="w-1/12">:</td>
-                            <td>{{ $heir['full_name'] ?? '-' }}</td>
+                            <td>{{ ucwords(strtolower($heir['full_name'] ?? '-')) }}</td>
                         </tr>
                         <tr>
                             <td>NIK</td>
@@ -131,7 +131,7 @@
                         <tr>
                             <td>Tempat Lahir</td>
                             <td>:</td>
-                            <td>{{ $heir['birth_place'] ?? '-' }}</td>
+                            <td>{{ ucwords(strtolower($heir['birth_place'] ?? '-')) }}</td>
                         </tr>
                         <tr>
                             <td>Tanggal Lahir</td>
@@ -191,12 +191,12 @@
                             <td>Alamat</td>
                             <td>:</td>
                             <td>
-                                {{ is_array($heir['address'] ?? null) ? implode(', ', $heir['address']) : ($heir['address'] ?? '-') }}
+                                {{ ucwords(strtolower(is_array($heir['address'] ?? null) ? implode(', ', $heir['address']) : ($heir['address'] ?? '-'))) }}
                                 ,
-                                {{ $village_name ?? $villageName ?? 'Desa/Kelurahan' }},
-                                {{ $subdistrict_name ?? $subdistrictName ?? 'Kecamatan' }},
-                                {{ $district_name ?? $districtName ?? 'Kabupaten' }},
-                                {{ $province_name ?? $provinceName ?? 'Provinsi' }}
+                                {{ ucwords(strtolower($village_name ?? $villageName ?? 'Desa/Kelurahan')) }},
+                                {{ ucwords(strtolower($subdistrict_name ?? $subdistrictName ?? 'Kecamatan')) }},
+                                {{ ucwords(strtolower($district_name ?? $districtName ?? 'Kabupaten')) }},
+                                {{ ucwords(strtolower($province_name ?? $provinceName ?? 'Provinsi')) }}
                             </td>
                         </tr>
                     </tbody>
@@ -210,7 +210,7 @@
         <!-- Perbaiki bagian signature agar sama seperti AdministrasiUmum -->
         <div class="text-center mt-16">
             <div class="mb-4">
-                {{ $village_name ?? $villageName ?? 'XXXX' }},
+                {{ ucwords(strtolower($village_name ?? $villageName ?? 'XXXX')) }},
                 @if(isset($formatted_letter_date) && !empty($formatted_letter_date))
                     {{ \Carbon\Carbon::parse($formatted_letter_date)->locale('id')->isoFormat('D MMMM Y') }}
                 @else

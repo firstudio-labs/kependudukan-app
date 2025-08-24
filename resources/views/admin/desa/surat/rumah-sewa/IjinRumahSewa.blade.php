@@ -59,7 +59,7 @@
                     @endif
                     {{ strtoupper($villageName ?? 'XXXX') }}
                 </p>
-                <p class="text-sm">Alamat: {{ $villageName ?? 'XXXX' }}, {{ $subdistrictName ?? 'XXXX' }}, {{ $districtName ?? 'XXXX' }}</p>
+                <p class="text-sm">Alamat: {{ ucwords(strtolower($villageName ?? 'XXXX')) }}, {{ ucwords(strtolower($subdistrictName ?? 'XXXX')) }}, {{ ucwords(strtolower($districtName ?? 'XXXX')) }}</p>
             </div>
             <div class="w-24"></div>
         </div>
@@ -83,7 +83,7 @@
                 @else
                     {{ isset($administrationData) && isset($administrationData['village_head_title']) ? $administrationData['village_head_title'] : 'Lurah/Kepala Desa' }}
                 @endif
-                {{ $villageName ?? 'Desa/Kelurahan' }} Kecamatan {{ $subdistrictName ?? 'Kecamatan' }} dengan ini menerangkan bahwa :
+                {{ ucwords(strtolower($villageName ?? 'Desa/Kelurahan')) }} Kecamatan {{ ucwords(strtolower($subdistrictName ?? 'Kecamatan')) }} dengan ini menerangkan bahwa :
             </p>
         </div>
 
@@ -94,39 +94,39 @@
                     <tr>
                         <td class="w-1/3">Nama Penyelenggara</td>
                         <td class="w-1/12">:</td>
-                        <td>{{ $rumahSewa->full_name }}</td>
+                        <td>{{ ucwords(strtolower($rumahSewa->full_name)) }}</td>
                     </tr>
                     <tr>
                         <td>Alamat Penyelenggara</td>
                         <td>:</td>
                         <td>
-                            {{ $rumahSewa->address ?? $addressString ?? '-' }}
+                            {{ ucwords(strtolower($rumahSewa->address ?? $addressString ?? '-')) }}
                             RT {{ $rumahSewa->rt ?? '0' }},
-                            {{ !empty($villageName) ? $villageName : 'Desa/Kelurahan' }},
-                            {{ !empty($subdistrictName) ? $subdistrictName : 'Kecamatan' }},
-                            {{ !empty($districtName) ? $districtName : 'Kabupaten' }},
-                            {{ !empty($provinceName) ? $provinceName : 'Provinsi' }}
+                            {{ !empty($villageName) ? ucwords(strtolower($villageName)) : 'Desa/Kelurahan' }},
+                            {{ !empty($subdistrictName) ? ucwords(strtolower($subdistrictName)) : 'Kecamatan' }},
+                            {{ !empty($districtName) ? ucwords(strtolower($districtName)) : 'Kabupaten' }},
+                            {{ !empty($provinceName) ? ucwords(strtolower($provinceName)) : 'Provinsi' }}
                         </td>
                     </tr>
                     <tr>
                         <td>Nama Penanggungjawab</td>
                         <td>:</td>
-                        <td>{{ $rumahSewa->responsible_name }}</td>
+                        <td>{{ ucwords(strtolower($rumahSewa->responsible_name)) }}</td>
                     </tr>
                     <tr>
                         <td>Alamat Rumah/Kamar</td>
                         <td>:</td>
-                        <td>{{ $rumahSewa->rental_address ?? $rentalAddressString ?? '-' }}</td>
+                        <td>{{ ucwords(strtolower($rumahSewa->rental_address ?? $rentalAddressString ?? '-')) }}</td>
                     </tr>
                     <tr>
                         <td>Jalan</td>
                         <td>:</td>
-                        <td>{{ $rumahSewa->street }}</td>
+                        <td>{{ ucwords(strtolower($rumahSewa->street)) }}</td>
                     </tr>
                     <tr>
                         <td>Gang/Nomor</td>
                         <td>:</td>
-                        <td>{{ $rumahSewa->alley_number }}</td>
+                        <td>{{ ucwords(strtolower($rumahSewa->alley_number)) }}</td>
                     </tr>
                     <tr>
                         <td>RT</td>
@@ -136,7 +136,7 @@
                     <tr>
                         <td>Kelurahan</td>
                         <td>:</td>
-                        <td>{{ $villageName ?? $rumahSewa->village_name }}</td>
+                        <td>{{ ucwords(strtolower($villageName ?? $rumahSewa->village_name)) }}</td>
                     </tr>
                     <tr>
                         <td>Luas Bangunan</td>
@@ -165,7 +165,7 @@
         <!-- Signature -->
         <div class="text-center mt-16">
             <div class="mb-4">
-                {{ $villageName ?? 'XXXX' }},
+                {{ ucwords(strtolower($villageName ?? 'XXXX')) }},
                 @if(isset($formatted_letter_date) && !empty($formatted_letter_date))
                     {{ \Carbon\Carbon::parse($formatted_letter_date)->locale('id')->isoFormat('D MMMM Y') }}
                 @else

@@ -76,7 +76,7 @@
                     @endif
                     {{ strtoupper($village_name ?? 'XXXX') }}
                 </p>
-                <p class="text-sm">Alamat: {{ $village_name ?? 'XXXX' }}, {{ $subdistrict_name ?? 'XXXX' }}, {{ $district_name ?? 'XXXX' }}</p>
+                <p class="text-sm">Alamat: {{ ucwords(strtolower($village_name ?? 'XXXX')) }}, {{ ucwords(strtolower($subdistrict_name ?? 'XXXX')) }}, {{ ucwords(strtolower($district_name ?? 'XXXX')) }}</p>
             </div>
             <div class="w-24">
             </div>
@@ -101,7 +101,7 @@
                 @else
                     {{ isset($administrationData) && isset($administrationData['village_head_title']) ? $administrationData['village_head_title'] : 'Lurah/Kepala Desa' }}
                 @endif
-                {{ $village_name ?? 'Desa/Kelurahan' }} Kecamatan {{ $subdistrict_name ?? 'Kecamatan' }} dengan ini menerangkan bahwa :
+                {{ ucwords(strtolower($village_name ?? 'Desa/Kelurahan')) }} Kecamatan {{ ucwords(strtolower($subdistrict_name ?? 'Kecamatan')) }} dengan ini menerangkan bahwa :
             </p>
         </div>
 
@@ -112,7 +112,7 @@
                     <tr>
                         <td class="w-1/3">Nama Lengkap</td>
                         <td class="w-1/12">:</td>
-                        <td>{{ $domisiliUsaha->full_name ?? '-' }}</td>
+                        <td>{{ ucwords(strtolower($domisiliUsaha->full_name ?? 'XXXX')) }}</td>
                     </tr>
                     <tr>
                         <td>NIK</td>
@@ -122,7 +122,7 @@
                     <tr>
                         <td>Tempat Lahir</td>
                         <td>:</td>
-                        <td>{{ $domisiliUsaha->birth_place ?? '-' }}</td>
+                        <td>{{ ucwords(strtolower($domisiliUsaha->birth_place ?? 'XXXX')) }}</td>
                     </tr>
                     <tr>
                         <td>Tanggal Lahir</td>
@@ -143,7 +143,7 @@
                     <tr>
                         <td>Pekerjaan</td>
                         <td>:</td>
-                        <td>{{ $job_name ?? '-' }}</td>
+                        <td>{{ ucwords(strtolower($job_name ?? 'XXXX')) }}</td>
                     </tr>
                     <tr>
                         <td>Agama</td>
@@ -159,12 +159,12 @@
                         <td>Alamat</td>
                         <td>:</td>
                         <td>
-                            {{ $domisiliUsaha->address ?? '-' }}
+                            {{ ucwords(strtolower($domisiliUsaha->address ?? '-')) }}
                             RT {{ $domisiliUsaha->rt ?? '0' }},
-                            {{ !empty($village_name) ? $village_name : 'Desa/Kelurahan' }},
-                            {{ !empty($subdistrict_name) ? $subdistrict_name : 'Kecamatan' }},
-                            {{ !empty($district_name) ? $district_name : 'Kabupaten' }},
-                            {{ !empty($province_name) ? $province_name : 'Provinsi' }}
+                            {{ !empty($village_name) ? ucwords(strtolower($village_name)) : 'Desa/Kelurahan' }},
+                            {{ !empty($subdistrict_name) ? ucwords(strtolower($subdistrict_name)) : 'Kecamatan' }},
+                            {{ !empty($district_name) ? ucwords(strtolower($district_name)) : 'Kabupaten' }},
+                            {{ !empty($province_name) ? ucwords(strtolower($province_name)) : 'Provinsi' }}
                         </td>
                     </tr>
                 </tbody>
@@ -175,18 +175,18 @@
         <div class="mb-6">
             <p class="mb-2">
                 Berdasarkan Surat Keterangan dari Ketua RT {{ $domisiliUsaha->rt ?? 'XX' }}
-                {{ $domisiliUsaha->address ?? '-' }},
-                {{ $village_name ?? 'XXXX' }},
-                {{ $subdistrict_name ?? 'XXXX' }},
-                {{ $district_name ?? 'XXXX' }},
-                {{ $province_name ?? 'XXXX' }},
+                {{ ucwords(strtolower($domisiliUsaha->address ?? '-')) }},
+                {{ ucwords(strtolower($village_name ?? 'XXXX')) }},
+                {{ ucwords(strtolower($subdistrict_name ?? 'XXXX')) }},
+                {{ ucwords(strtolower($district_name ?? 'XXXX')) }},
+                {{ ucwords(strtolower($province_name ?? 'XXXX')) }},
                 Tanggal
                 @if(isset($formatted_letter_date) && !empty($formatted_letter_date))
                     {{ \Carbon\Carbon::parse($formatted_letter_date)->locale('id')->isoFormat('D MMMM Y') }}
                 @else
                     XX-XX-XXXX
                 @endif
-                bahwa benar yang bersangkutan memiliki usaha yang berdomisili di {{ $domisiliUsaha->business_address ?? '-' }} sejak tahun {{ $domisiliUsaha->business_year ?? '-' }}.
+                bahwa benar yang bersangkutan memiliki usaha yang berdomisili di {{ ucwords(strtolower($domisiliUsaha->business_address ?? '-')) }} sejak tahun {{ $domisiliUsaha->business_year ?? '-' }}.
             </p>
             <p>Demikian Surat Keterangan ini dibuat untuk dapat dipergunakan {{ $domisiliUsaha->purpose ?? 'sebagaimana mestinya' }}.</p>
         </div>
@@ -194,7 +194,7 @@
         <!-- Signature -->
         <div class="text-center mt-16">
             <div class="mb-4">
-                {{ $village_name ?? 'XXXX' }},
+                {{ ucwords(strtolower($village_name ?? 'XXXX')) }},
                 @if(isset($formatted_letter_date) && !empty($formatted_letter_date))
                     {{ \Carbon\Carbon::parse($formatted_letter_date)->locale('id')->isoFormat('D MMMM Y') }}
                 @else
