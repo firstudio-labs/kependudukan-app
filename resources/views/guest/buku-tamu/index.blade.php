@@ -161,6 +161,31 @@
             border-radius: 8px;
             margin-top: 10px;
         }
+
+        #webcam {
+            border: 2px solid #969BE7;
+            border-radius: 10px;
+        }
+
+        #photo-canvas {
+            border: 2px solid #969BE7;
+            border-radius: 10px;
+            max-width: 100%;
+            height: auto;
+        }
+
+        .camera-button {
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 12px rgba(31, 38, 135, 0.15);
+            transition: all 0.3s ease;
+        }
+
+        .camera-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(31, 38, 135, 0.2);
+        }
     </style>
 </head>
 <body class="relative h-screen overflow-hidden bg-gradient-to-br from-white to-[#fcf8fb]">
@@ -242,15 +267,34 @@
                             <!-- Foto - full width -->
                             <div class="space-y-2 md:col-span-2">
                                 <label class="block text-sm font-medium text-gray-700">Foto</label>
-                                <div class="file-upload">
-                                    <input type="file" name="foto" id="foto" accept="image/*" onchange="previewImage(this)">
-                                    <label for="foto" class="file-upload-label">
-                                        <i class="fa fa-camera mr-2"></i>
-                                        <span id="file-label">Pilih Foto</span>
-                                    </label>
-                                </div>
-                                <div id="image-preview" class="hidden">
-                                    <img id="preview-img" class="preview-image" alt="Preview">
+                                <div class="flex flex-col items-center space-y-3">
+                                    <!-- Webcam Container -->
+                                    <div id="webcam-container" class="w-full max-w-md">
+                                        <video id="webcam" class="w-full h-64 bg-gray-100 rounded-lg" autoplay muted></video>
+                                        <canvas id="photo-canvas" class="hidden"></canvas>
+                                    </div>
+
+                                    <!-- Camera Controls -->
+                                    <div class="flex space-x-2">
+                                        <button type="button" id="start-camera" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md transition duration-300">
+                                            <i class="fa fa-camera mr-2"></i> Buka Kamera
+                                        </button>
+                                        <button type="button" id="capture-photo" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-md transition duration-300 hidden">
+                                            <i class="fa fa-camera-retro mr-2"></i> Ambil Foto
+                                        </button>
+                                        <button type="button" id="retake-photo" class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-md transition duration-300 hidden">
+                                            <i class="fa fa-redo mr-2"></i> Ambil Ulang
+                                        </button>
+                                    </div>
+
+                                    <!-- Photo Preview -->
+                                    <div id="photo-preview" class="hidden">
+                                        <img id="preview-img" class="preview-image" alt="Preview Foto">
+                                        <p class="text-sm text-gray-600 text-center mt-2">Foto yang akan disimpan</p>
+                                    </div>
+
+                                    <!-- Hidden input for photo data -->
+                                    <input type="hidden" name="foto" id="foto_data">
                                 </div>
                             </div>
 
@@ -291,11 +335,18 @@
     </div>
 
     <script>
-        // Signature Pad
+        // Global variables
+        let stream = null;
+        let photoTaken = false;
+        let signaturePad = null;
+
+        // Main functionality
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, initializing...');
+
             // Initialize signature pad
             const canvas = document.getElementById('signature-pad');
-            const signaturePad = new SignaturePad(canvas, {
+            signaturePad = new SignaturePad(canvas, {
                 backgroundColor: 'rgba(255, 255, 255, 0)',
                 penColor: 'rgb(0, 0, 0)'
             });
@@ -317,13 +368,147 @@
                 signaturePad.clear();
             });
 
-            // On form submit, save signature data to hidden input
-            document.querySelector('form').addEventListener('submit', function(e) {
-                if (!signaturePad.isEmpty()) {
-                    const signatureData = signaturePad.toDataURL();
-                    document.getElementById('tanda_tangan_value').value = signatureData;
+            // Start camera
+            document.getElementById('start-camera').addEventListener('click', async function() {
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({
+                        video: {
+                            width: { ideal: 640 },
+                            height: { ideal: 480 },
+                            facingMode: 'user' // Front camera
+                        }
+                    });
+
+                    const video = document.getElementById('webcam');
+                    video.srcObject = stream;
+
+                    // Show capture button, hide start button
+                    document.getElementById('start-camera').classList.add('hidden');
+                    document.getElementById('capture-photo').classList.remove('hidden');
+
+                } catch (err) {
+                    console.error('Error accessing camera:', err);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal Membuka Kamera',
+                        text: 'Tidak dapat mengakses kamera. Pastikan Anda memberikan izin akses kamera.',
+                        showConfirmButton: true
+                    });
                 }
             });
+
+            // Capture photo
+            document.getElementById('capture-photo').addEventListener('click', function() {
+                const video = document.getElementById('webcam');
+                const canvas = document.getElementById('photo-canvas');
+                const preview = document.getElementById('photo-preview');
+                const previewImg = document.getElementById('preview-img');
+
+                // Set canvas size to match video
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+
+                // Draw video frame to canvas
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                // Convert to data URL with lower quality and smaller size
+                const photoData = canvas.toDataURL('image/jpeg', 0.5); // Kompres ke 50% quality
+                previewImg.src = photoData;
+
+                // Store photo data in hidden input
+                document.getElementById('foto_data').value = photoData;
+
+                // Show preview and retake button
+                preview.classList.remove('hidden');
+                document.getElementById('capture-photo').classList.add('hidden');
+                document.getElementById('retake-photo').classList.remove('hidden');
+
+                // Stop camera stream
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                }
+
+                // Hide video, show canvas
+                video.classList.add('hidden');
+                canvas.classList.remove('hidden');
+
+                photoTaken = true;
+                console.log('Photo taken:', photoTaken);
+                console.log('Photo data length:', photoData.length);
+            });
+
+            // Retake photo
+            document.getElementById('retake-photo').addEventListener('click', function() {
+                // Reset to initial state
+                document.getElementById('photo-preview').classList.add('hidden');
+                document.getElementById('retake-photo').classList.add('hidden');
+                document.getElementById('start-camera').classList.remove('hidden');
+                document.getElementById('capture-photo').classList.add('hidden');
+
+                // Clear photo data
+                document.getElementById('foto_data').value = '';
+
+                // Show video again
+                document.getElementById('webcam').classList.remove('hidden');
+                document.getElementById('photo-canvas').classList.add('hidden');
+
+                photoTaken = false;
+                console.log('Photo reset:', photoTaken);
+            });
+
+            // SIMPLE APPROACH: Just remove the old submit listener and add new one
+            const form = document.querySelector('form');
+
+            // Remove the old submit event listener by using a flag
+            let submitHandler = null;
+
+            // Create new submit handler
+            submitHandler = function(e) {
+                console.log('Form submit triggered');
+                console.log('photoTaken:', photoTaken);
+                console.log('signaturePad exists:', !!signaturePad);
+
+                // Check if photo is taken
+                if (!photoTaken) {
+                    e.preventDefault();
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Foto Belum Diambil',
+                        text: 'Silakan ambil foto terlebih dahulu sebelum menyimpan data.',
+                        showConfirmButton: true
+                    });
+                    return false;
+                }
+
+                // Save signature data to hidden input
+                if (signaturePad && !signaturePad.isEmpty()) {
+                    const signatureData = signaturePad.toDataURL();
+                    document.getElementById('tanda_tangan_value').value = signatureData;
+                    console.log('Signature saved');
+                } else {
+                    console.log('No signature or signature is empty');
+                }
+
+                // Debug: Log all form data before submit
+                const formData = new FormData(this);
+                console.log('Form data being sent:');
+                for (let [key, value] of formData.entries()) {
+                    if (key === 'foto') {
+                        console.log(key + ':', value ? 'base64 data (length: ' + value.length + ')' : 'empty');
+                    } else {
+                        console.log(key + ':', value);
+                    }
+                }
+
+                // Form can proceed
+                console.log('Form can proceed, submitting...');
+                return true;
+            };
+
+            // Remove old listener and add new one
+            form.removeEventListener('submit', submitHandler);
+            form.addEventListener('submit', submitHandler);
         });
 
         // Function to show success alert
@@ -356,27 +541,6 @@
                 showErrorAlert("{{ session('error') }}");
             @endif
         });
-
-        // Image preview function
-        function previewImage(input) {
-            const file = input.files[0];
-            const preview = document.getElementById('image-preview');
-            const previewImg = document.getElementById('preview-img');
-            const fileLabel = document.getElementById('file-label');
-
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    previewImg.src = e.target.result;
-                    preview.classList.remove('hidden');
-                    fileLabel.textContent = file.name;
-                }
-                reader.readAsDataURL(file);
-            } else {
-                preview.classList.add('hidden');
-                fileLabel.textContent = 'Pilih Foto';
-            }
-        }
     </script>
 </body>
 </html>
