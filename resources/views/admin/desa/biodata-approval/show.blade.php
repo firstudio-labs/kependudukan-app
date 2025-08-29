@@ -126,57 +126,87 @@
             </div>
         </div>
 
+        @php
+            $changes = $requestModel->requested_changes ?? [];
+            $current = $requestModel->current_data ?? [];
+
+            // Mapping label untuk tampilkan nama field yang ramah
+            $fieldLabels = [
+                'full_name' => 'Nama Lengkap',
+                'gender' => 'Jenis Kelamin',
+                'age' => 'Umur',
+                'birth_place' => 'Tempat Lahir',
+                'birth_date' => 'Tanggal Lahir',
+                'address' => 'Alamat',
+                'rt' => 'RT',
+                'rw' => 'RW',
+                'province_id' => 'Provinsi',
+                'district_id' => 'Kabupaten',
+                'sub_district_id' => 'Kecamatan',
+                'village_id' => 'Desa',
+                'blood_type' => 'Golongan Darah',
+                'education_status' => 'Pendidikan Terakhir',
+                'job_type_id' => 'Pekerjaan',
+            ];
+
+            // Mapper nilai numerik ke label untuk beberapa field select
+            $bloodTypes = [1=>'A',2=>'B',3=>'AB',4=>'O',5=>'A+',6=>'A-',7=>'B+',8=>'B-',9=>'AB+',10=>'AB-',11=>'O+',12=>'O-',13=>'Tidak Tahu'];
+            $educationStatuses = [1=>'Tidak/Belum Sekolah',2=>'Belum tamat SD/Sederajat',3=>'Tamat SD',4=>'SLTP/SMP/Sederajat',5=>'SLTA/SMA/Sederajat',6=>'Diploma I/II',7=>'Akademi/Diploma III/ Sarjana Muda',8=>'Diploma IV/ Strata I/ Strata II',9=>'Strata III',10=>'Lainnya'];
+
+            $valueFormatter = function($key, $val) use ($bloodTypes, $educationStatuses) {
+                if ($val === null || $val === '') return '';
+                switch ($key) {
+                    case 'gender':
+                        return in_array(strtolower((string)$val), ['2','perempuan']) ? 'Perempuan' : 'Laki-laki';
+                    case 'blood_type':
+                        return $bloodTypes[(int)$val] ?? $val;
+                    case 'education_status':
+                        return $educationStatuses[(int)$val] ?? $val;
+                    case 'job_type_id':
+                        try {
+                            $job = app(\App\Services\JobService::class)->getJobById((int)$val);
+                            return $job['name'] ?? $val;
+                        } catch (\Exception $e) { return $val; }
+                    default:
+                        return $val;
+                }
+            };
+
+            // Hitung list perubahan saja (key yang ada di requested_changes)
+            $changedKeys = array_keys($changes);
+        @endphp
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="bg-white rounded-lg shadow p-4">
                 <h2 class="font-semibold text-gray-700 mb-3">Data Saat Ini</h2>
                 <div class="text-sm text-gray-800 space-y-2">
-                    @if(isset($requestModel->current_data['full_name']))
-                        <div><strong>Nama:</strong> {{ $requestModel->current_data['full_name'] }}</div>
-                    @endif
-                    @if(isset($requestModel->current_data['gender']))
-                        <div><strong>Jenis Kelamin:</strong> {{ $requestModel->current_data['gender'] }}</div>
-                    @endif
-                    @if(isset($requestModel->current_data['birth_place']))
-                        <div><strong>Tempat Lahir:</strong> {{ $requestModel->current_data['birth_place'] }}</div>
-                    @endif
-                    @if(isset($requestModel->current_data['birth_date']))
-                        <div><strong>Tanggal Lahir:</strong> {{ $requestModel->current_data['birth_date'] }}</div>
-                    @endif
-                    @if(isset($requestModel->current_data['address']))
-                        <div><strong>Alamat:</strong> {{ $requestModel->current_data['address'] }}</div>
-                    @endif
-                    @if(isset($requestModel->current_data['rt']))
-                        <div><strong>RT:</strong> {{ $requestModel->current_data['rt'] }}</div>
-                    @endif
-                    @if(isset($requestModel->current_data['rw']))
-                        <div><strong>RW:</strong> {{ $requestModel->current_data['rw'] }}</div>
-                    @endif
+                    @forelse($changedKeys as $key)
+                        @php
+                            $label = $fieldLabels[$key] ?? ucfirst(str_replace('_',' ',$key));
+                            $currentVal = $valueFormatter($key, $current[$key] ?? ($current['data'][$key] ?? ''));
+                        @endphp
+                        <div>
+                            <strong>{{ $label }}:</strong> {{ $currentVal !== '' ? $currentVal : '-' }}
+                        </div>
+                    @empty
+                        <div class="text-gray-500">Tidak ada data untuk ditampilkan</div>
+                    @endforelse
                 </div>
             </div>
             <div class="bg-white rounded-lg shadow p-4">
                 <h2 class="font-semibold text-gray-700 mb-3">Perubahan Diminta</h2>
                 <div class="text-sm text-gray-800 space-y-2">
-                    @if(isset($requestModel->requested_changes['full_name']))
-                        <div><strong>Nama:</strong> {{ $requestModel->requested_changes['full_name'] }}</div>
-                    @endif
-                    @if(isset($requestModel->requested_changes['gender']))
-                        <div><strong>Jenis Kelamin:</strong> {{ $requestModel->requested_changes['gender'] }}</div>
-                    @endif
-                    @if(isset($requestModel->requested_changes['birth_place']))
-                        <div><strong>Tempat Lahir:</strong> {{ $requestModel->requested_changes['birth_place'] }}</div>
-                    @endif
-                    @if(isset($requestModel->requested_changes['birth_date']))
-                        <div><strong>Tanggal Lahir:</strong> {{ $requestModel->requested_changes['birth_date'] }}</div>
-                    @endif
-                    @if(isset($requestModel->requested_changes['address']))
-                        <div><strong>Alamat:</strong> {{ $requestModel->requested_changes['address'] }}</div>
-                    @endif
-                    @if(isset($requestModel->requested_changes['rt']))
-                        <div><strong>RT:</strong> {{ $requestModel->requested_changes['rt'] }}</div>
-                    @endif
-                    @if(isset($requestModel->requested_changes['rw']))
-                        <div><strong>RW:</strong> {{ $requestModel->requested_changes['rw'] }}</div>
-                    @endif
+                    @forelse($changedKeys as $key)
+                        @php
+                            $label = $fieldLabels[$key] ?? ucfirst(str_replace('_',' ',$key));
+                            $newVal = $valueFormatter($key, $changes[$key] ?? '');
+                        @endphp
+                        <div>
+                            <strong>{{ $label }}:</strong> {{ $newVal !== '' ? $newVal : '-' }}
+                        </div>
+                    @empty
+                        <div class="text-gray-500">Tidak ada perubahan</div>
+                    @endforelse
                 </div>
             </div>
         </div>

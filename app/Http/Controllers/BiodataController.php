@@ -30,6 +30,182 @@ class BiodataController extends Controller
         $this->jobService = $jobService;
         $this->wilayahService = $wilayahService;
     }
+    /**
+     * Ambil daftar anggota keluarga (NIK + nama) untuk dropdown di profil.
+     */
+    public function getProfileFamilyMembers()
+    {
+        try {
+            $user = auth()->guard('penduduk')->user() ?: auth()->guard('web')->user();
+            if (!$user) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+            }
+
+            $members = [];
+
+            // Ambil dari API berdasarkan KK bila tersedia, jika tidak coba cari KK lewat NIK
+            $kk = $user->citizen_data['kk'] ?? $user->no_kk ?? null;
+            if (!$kk && !empty($user->nik)) {
+                try {
+                    $citizenSelf = $this->citizenService->getCitizenByNIK((int) $user->nik);
+                    $kk = $citizenSelf['data']['kk'] ?? $citizenSelf['kk'] ?? $kk;
+                } catch (\Exception $e) {
+                    Log::warning('Fallback getCitizenByNIK failed when fetching KK: ' . $e->getMessage());
+                }
+            }
+
+            if ($kk) {
+                $resp = $this->citizenService->getFamilyMembersByKK($kk);
+                if (isset($resp['data']) && is_array($resp['data'])) {
+                    foreach ($resp['data'] as $m) {
+                        $members[] = [
+                            'nik' => $m['nik'] ?? '',
+                            'full_name' => $m['full_name'] ?? ($m['nama'] ?? ''),
+                            'family_status' => $m['family_status'] ?? ($m['hubungan_keluarga'] ?? ''),
+                        ];
+                    }
+                }
+            }
+
+            // Fallback: gunakan family_members yang mungkin sudah ditempel di session user
+            if (empty($members) && isset($user->family_members) && is_array($user->family_members)) {
+                foreach ($user->family_members as $m) {
+                    $members[] = [
+                        'nik' => $m['nik'] ?? '',
+                        'full_name' => $m['full_name'] ?? ($m['nama'] ?? ''),
+                        'family_status' => $m['family_status'] ?? ($m['hubungan_keluarga'] ?? ''),
+                    ];
+                }
+            }
+
+            // Pastikan user sendiri ada di daftar
+            $selfNik = $user->nik ?? null;
+            if ($selfNik && !collect($members)->pluck('nik')->contains($selfNik)) {
+                $members[] = [
+                    'nik' => $selfNik,
+                    'full_name' => $user->nama_lengkap ?? ($user->nama ?? 'Pengguna'),
+                    'family_status' => $user->citizen_data['family_status'] ?? ($user->hubungan_keluarga ?? ''),
+                ];
+            }
+
+            return response()->json(['success' => true, 'data' => $members]);
+        } catch (\Exception $e) {
+            Log::error('getProfileFamilyMembers error: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Gagal memuat anggota keluarga'], 500);
+        }
+    }
+
+    /**
+     * Ambil detail biodata by NIK untuk prefill form profil (numeric select values).
+     */
+    public function getCitizenForProfile($nik)
+    {
+        try {
+            $data = $this->getLatestDataForForm($nik);
+            if (!$data) {
+                return response()->json(['success' => false, 'message' => 'Data tidak ditemukan'], 404);
+            }
+            
+            $this->normalizeSelectValues($data);
+            $this->formatDatesForView($data);
+
+            return response()->json(['success' => true, 'data' => $data]);
+        } catch (\Exception $e) {
+            Log::error('getCitizenForProfile error: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Gagal memuat data'], 500);
+        }
+    }
+
+    /**
+     * Dapatkan data terbaru untuk form edit (termasuk perubahan yang sudah diapprove)
+     */
+    public function getLatestDataForForm($nik)
+    {
+        try {
+            $citizen = $this->citizenService->getCitizenByNIK((int) $nik);
+            if (!$citizen || !isset($citizen['data'])) {
+                return null;
+            }
+
+            $data = $citizen['data'];
+            
+            // Ambil data perubahan yang sudah diapprove untuk NIK ini
+            $approvedChanges = \App\Models\ProfileChangeRequest::where('nik', $nik)
+                ->where('status', 'approved')
+                ->orderBy('reviewed_at', 'desc')
+                ->get();
+            
+            // Terapkan perubahan yang sudah diapprove ke data
+            foreach ($approvedChanges as $change) {
+                if (isset($change->requested_changes) && is_array($change->requested_changes)) {
+                    foreach ($change->requested_changes as $field => $value) {
+                        // Skip field yang tidak boleh diubah (readonly)
+                        if (in_array($field, ['full_name', 'gender', 'address', 'rt', 'rw'])) {
+                            continue;
+                        }
+                        
+                        // Terapkan perubahan yang sudah diapprove
+                        $data[$field] = $value;
+                    }
+                }
+            }
+            
+            return $data;
+        } catch (\Exception $e) {
+            Log::error('getLatestDataForForm error: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Simpan request approval perubahan biodata dari halaman profil.
+     */
+    public function requestApprovalFromProfile(Request $request)
+    {
+        try {
+            $user = auth()->guard('penduduk')->user();
+            if (!$user) {
+                return redirect()->route('login')->with('error', 'Silakan login.');
+            }
+
+            $validated = $request->validate([
+                'nik' => 'required|digits:16',
+                'full_name' => 'required|string|max:255',
+                'gender' => 'required|string|in:Laki-laki,Perempuan',
+                'age' => 'nullable|numeric',
+                'birth_place' => 'nullable|string|max:255',
+                'birth_date' => 'nullable|date',
+                'address' => 'nullable|string',
+                'rt' => 'nullable|string|max:3',
+                'rw' => 'nullable|string|max:3',
+                'province_id' => 'required|numeric',
+                'district_id' => 'required|numeric',
+                'sub_district_id' => 'required|numeric',
+                'village_id' => 'required|numeric',
+                'blood_type' => 'nullable|numeric',
+                'education_status' => 'nullable|numeric',
+                'job_type_id' => 'nullable|numeric',
+            ]);
+
+            $citizen = $this->citizenService->getCitizenByNIK((int) $validated['nik']);
+            $villageId = $citizen['data']['village_id'] ?? $citizen['village_id'] ?? $citizen['data']['villages_id'] ?? $citizen['villages_id'] ?? null;
+            $currentData = $citizen['data'] ?? $citizen ?? [];
+
+            \App\Models\ProfileChangeRequest::create([
+                'nik' => $validated['nik'],
+                'village_id' => $villageId,
+                'current_data' => $currentData,
+                'requested_changes' => $validated,
+                'status' => 'pending',
+                'requested_at' => now(),
+            ]);
+
+            return redirect()->route('user.profile.index')->with('success', 'Permintaan perubahan biodata dikirim. Menunggu persetujuan admin desa.');
+        } catch (\Exception $e) {
+            Log::error('requestApprovalFromProfile error: ' . $e->getMessage());
+            return back()->with('error', 'Gagal mengirim permintaan: ' . $e->getMessage())->withInput();
+        }
+    }
 
     public function index(Request $request)
     {

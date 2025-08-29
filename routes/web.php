@@ -797,6 +797,14 @@ Route::middleware(['auth:penduduk'])->group(function () {
     Route::post('/user/profile/update-location', [ProfileController::class, 'updateLocation'])
         ->name('user.profile.updateLocation');
 
+    // Alur baru edit biodata via BiodataController
+    Route::get('/user/profile/family-members', [\App\Http\Controllers\BiodataController::class, 'getProfileFamilyMembers'])
+        ->name('profile.family-members');
+    Route::get('/user/profile/citizen/{nik}', [\App\Http\Controllers\BiodataController::class, 'getCitizenForProfile'])
+        ->name('profile.citizen.by-nik');
+    Route::post('/user/profile/request-biodata-approval', [\App\Http\Controllers\BiodataController::class, 'requestApprovalFromProfile'])
+        ->name('profile.biodata.request-approval');
+
     Route::get('/user/family-member/{nik}/documents', [ProfileController::class, 'getFamilyMemberDocuments'])
         ->name('user.family-member.documents');
     Route::post('/user/family-member/{nik}/upload-document', [ProfileController::class, 'uploadFamilyMemberDocument'])

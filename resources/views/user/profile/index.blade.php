@@ -117,16 +117,23 @@ if (Auth::guard('web')->check()) {
             <!-- Form Edit Biodata (Request Approval) -->
             <div id="editBiodataForm" class="bg-white p-6 rounded-lg shadow-md mb-6 hidden">
                 <h2 class="text-xl font-semibold text-gray-700 mb-4">Edit Biodata</h2>
-                <form method="POST" action="{{ route('user.profile.request-approval') }}" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <form method="POST" action="{{ route('profile.biodata.request-approval') }}" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     @csrf
-                    <input type="hidden" name="nik" value="{{ $userData->nik }}" />
+                    <input type="hidden" name="nik" id="selectedNik" value="{{ $userData->nik }}" />
+                    <div class="md:col-span-2">
+                        <label class="block text-sm text-gray-700">Pilih NIK Anggota Keluarga</label>
+                        <select id="editNikSelect" class="mt-1 w-full border rounded p-2">
+                            <option value="{{ $userData->nik }}">{{ $userData->nik }} - {{ $userData->nama_lengkap ?? ($userData->citizen_data['full_name'] ?? ($userData->citizen_data['nama'] ?? 'Pengguna')) }}</option>
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1">Pilih NIK yang biodatanya ingin diajukan perubahan.</p>
+                    </div>
                     <div class="md:col-span-2">
                         <label class="block text-sm text-gray-700">NIK</label>
                         <input value="{{ $userData->nik }}" class="mt-1 w-full border rounded p-2 bg-gray-100" disabled />
                     </div>
                     <div>
                         <label class="block text-sm text-gray-700">Nama Lengkap</label>
-                        <input name="full_name" value="{{ $userData->citizen_data['full_name'] ?? ($userData->citizen_data['nama'] ?? '') }}" class="mt-1 w-full border rounded p-2" required />
+                        <input name="full_name" value="{{ $userData->citizen_data['full_name'] ?? ($userData->citizen_data['nama'] ?? '') }}" class="mt-1 w-full border rounded p-2 bg-gray-100" readonly required />
                     </div>
                     <div>
                         <label class="block text-sm text-gray-700">Nomor KK</label>
@@ -134,7 +141,7 @@ if (Auth::guard('web')->check()) {
                     </div>
                     <div>
                         <label class="block text-sm text-gray-700">Jenis Kelamin</label>
-                        <select name="gender" class="mt-1 w-full border rounded p-2" required>
+                        <select class="mt-1 w-full border rounded p-2 bg-gray-100" disabled>
                             @php
                                 // Handle berbagai kemungkinan format gender dari API
                                 $genderVal = $userData->citizen_data['gender'] ?? '';
@@ -154,12 +161,61 @@ if (Auth::guard('web')->check()) {
                             <option value="Laki-laki" {{ $normalizedGender == 'Laki-laki' ? 'selected' : '' }}>Laki-laki</option>
                             <option value="Perempuan" {{ $normalizedGender == 'Perempuan' ? 'selected' : '' }}>Perempuan</option>
                         </select>
+                        <input type="hidden" name="gender" value="{{ $normalizedGender }}" />
                         @if(!empty($genderVal) && $normalizedGender == '')
                             <p class="text-xs text-orange-600 mt-1">
                                 <i class="fa-solid fa-exclamation-triangle"></i>
                                 Format gender tidak dikenali: "{{ $genderVal }}". Silakan pilih manual.
                             </p>
                         @endif
+                    </div>
+                    <!-- Golongan Darah -->
+                    <div>
+                        <label class="block text-sm text-gray-700">Golongan Darah</label>
+                        @php
+                            $bloodTypeValue = $userData->citizen_data['blood_type'] ?? '';
+                            $bloodTypeNumeric = is_numeric($bloodTypeValue) ? (int)$bloodTypeValue : '';
+                        @endphp
+                        <select name="blood_type" id="blood_type" class="mt-1 w-full border rounded p-2">
+                            <option value="">Pilih Golongan Darah</option>
+                            @isset($bloodTypes)
+                                @foreach($bloodTypes as $btKey => $btLabel)
+                                    <option value="{{ $btKey }}" {{ $bloodTypeNumeric === (int)$btKey ? 'selected' : '' }}>{{ $btLabel }}</option>
+                                @endforeach
+                            @endisset
+                        </select>
+                    </div>
+                    <!-- Pendidikan Terakhir -->
+                    <div>
+                        <label class="block text-sm text-gray-700">Pendidikan Terakhir</label>
+                        @php
+                            $educationValue = $userData->citizen_data['education_status'] ?? '';
+                            $educationNumeric = is_numeric($educationValue) ? (int)$educationValue : '';
+                        @endphp
+                        <select name="education_status" id="education_status" class="mt-1 w-full border rounded p-2">
+                            <option value="">Pilih Pendidikan</option>
+                            @isset($educationStatuses)
+                                @foreach($educationStatuses as $edKey => $edLabel)
+                                    <option value="{{ $edKey }}" {{ $educationNumeric === (int)$edKey ? 'selected' : '' }}>{{ $edLabel }}</option>
+                                @endforeach
+                            @endisset
+                        </select>
+                    </div>
+                    <!-- Pekerjaan -->
+                    <div>
+                        <label class="block text-sm text-gray-700">Pekerjaan</label>
+                        @php
+                            $jobIdValue = $userData->citizen_data['job_type_id'] ?? '';
+                            $jobIdNumeric = is_numeric($jobIdValue) ? (int)$jobIdValue : '';
+                        @endphp
+                        <select name="job_type_id" id="job_type_id" class="mt-1 w-full border rounded p-2">
+                            <option value="">Pilih Pekerjaan</option>
+                            @isset($jobs)
+                                @foreach($jobs as $job)
+                                    <option value="{{ $job['id'] }}" {{ ($jobIdNumeric === (int)($job['id'] ?? 0)) ? 'selected' : '' }}>{{ $job['name'] ?? ('Pekerjaan #' . ($job['id'] ?? '')) }}</option>
+                                @endforeach
+                            @endisset
+                        </select>
                     </div>
                     <div>
                         <label class="block text-sm text-gray-700">Umur</label>
@@ -175,15 +231,15 @@ if (Auth::guard('web')->check()) {
                     </div>
                     <div class="md:col-span-2">
                         <label class="block text-sm text-gray-700">Alamat</label>
-                        <textarea name="address" class="mt-1 w-full border rounded p-2" rows="2">{{ $userData->citizen_data['address'] ?? '' }}</textarea>
+                        <textarea name="address" class="mt-1 w-full border rounded p-2 bg-gray-100" rows="2" readonly>{{ $userData->citizen_data['address'] ?? '' }}</textarea>
                     </div>
                     <div>
                         <label class="block text-sm text-gray-700">RT</label>
-                        <input name="rt" value="{{ $userData->citizen_data['rt'] ?? '' }}" class="mt-1 w-full border rounded p-2" />
+                        <input name="rt" value="{{ $userData->citizen_data['rt'] ?? '' }}" class="mt-1 w-full border rounded p-2 bg-gray-100" readonly />
                     </div>
                     <div>
                         <label class="block text-sm text-gray-700">RW</label>
-                        <input name="rw" value="{{ $userData->citizen_data['rw'] ?? '' }}" class="mt-1 w-full border rounded p-2" />
+                        <input name="rw" value="{{ $userData->citizen_data['rw'] ?? '' }}" class="mt-1 w-full border rounded p-2 bg-gray-100" readonly />
                     </div>
                     <div>
                         <label class="block text-sm text-gray-700">Provinsi</label>
@@ -386,8 +442,35 @@ if (Auth::guard('web')->check()) {
                 <!-- History Content (Hidden by default) -->
                 <div id="historyContent" class="hidden">
                     @php
-                        // Ambil data history perubahan biodata dari user
-                        $biodataHistory = \App\Models\ProfileChangeRequest::where('nik', $userData->nik)
+                        // Ambil data history perubahan biodata dari semua anggota keluarga berdasarkan KK
+                        $kk = $userData->citizen_data['kk'] ?? $userData->no_kk ?? null;
+                        $familyNiks = [$userData->nik]; // Mulai dengan NIK user sendiri
+                        
+                        // Jika ada KK, coba ambil NIK anggota keluarga lainnya
+                        if ($kk) {
+                            try {
+                                $familyData = app(\App\Services\CitizenService::class)->getFamilyMembersByKK($kk);
+                                if (isset($familyData['data']) && is_array($familyData['data'])) {
+                                    foreach ($familyData['data'] as $member) {
+                                        if (isset($member['nik']) && $member['nik'] != $userData->nik) {
+                                            $familyNiks[] = $member['nik'];
+                                        }
+                                    }
+                                }
+                            } catch (\Exception $e) {
+                                // Jika gagal ambil dari API, gunakan family_members yang sudah ada
+                                if (isset($userData->family_members) && is_array($userData->family_members)) {
+                                    foreach ($userData->family_members as $member) {
+                                        if (isset($member['nik']) && $member['nik'] != $userData->nik) {
+                                            $familyNiks[] = $member['nik'];
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Ambil history dari semua NIK keluarga
+                        $biodataHistory = \App\Models\ProfileChangeRequest::whereIn('nik', $familyNiks)
                             ->orderBy('created_at', 'desc')
                             ->get();
                     @endphp
@@ -400,7 +483,7 @@ if (Auth::guard('web')->check()) {
                                         <div class="flex-1">
                                             <div class="flex items-center gap-3 mb-3">
                                                 <span class="text-sm font-medium text-gray-700">
-                                                    Permintaan #{{ $request->id }}
+                                                    Permintaan #{{ $request->id }} - NIK: {{ $request->nik }}
                                                 </span>
                                                 @if($request->status === 'pending')
                                                     <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">
@@ -442,27 +525,140 @@ if (Auth::guard('web')->check()) {
                                             <div class="mt-3 p-3 bg-gray-50 rounded-lg">
                                                 <h4 class="font-medium text-gray-700 mb-2">Detail Perubahan:</h4>
                                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-                                                    @if(isset($request->requested_changes['full_name']))
-                                                        <div><strong>Nama:</strong> {{ $request->requested_changes['full_name'] }}</div>
-                                                    @endif
-                                                    @if(isset($request->requested_changes['gender']))
-                                                        <div><strong>Jenis Kelamin:</strong> {{ $request->requested_changes['gender'] }}</div>
-                                                    @endif
-                                                    @if(isset($request->requested_changes['birth_place']))
-                                                        <div><strong>Tempat Lahir:</strong> {{ $request->requested_changes['birth_place'] }}</div>
-                                                    @endif
-                                                    @if(isset($request->requested_changes['birth_date']))
-                                                        <div><strong>Tanggal Lahir:</strong> {{ $request->requested_changes['birth_date'] }}</div>
-                                                    @endif
-                                                    @if(isset($request->requested_changes['address']))
-                                                        <div><strong>Alamat:</strong> {{ $request->requested_changes['address'] }}</div>
-                                                    @endif
-                                                    @if(isset($request->requested_changes['rt']))
-                                                        <div><strong>RT:</strong> {{ $request->requested_changes['rt'] }}</div>
-                                                    @endif
-                                                    @if(isset($request->requested_changes['rw']))
-                                                        <div><strong>RW:</strong> {{ $request->requested_changes['rw'] }}</div>
-                                                    @endif
+                                                    @php
+                                                        $changes = $request->requested_changes ?? [];
+                                                        $currentData = $request->current_data ?? [];
+                                                        $fieldLabels = [
+                                                            'full_name' => 'Nama Lengkap',
+                                                            'gender' => 'Jenis Kelamin',
+                                                            'age' => 'Umur',
+                                                            'birth_place' => 'Tempat Lahir',
+                                                            'birth_date' => 'Tanggal Lahir',
+                                                            'address' => 'Alamat',
+                                                            'rt' => 'RT',
+                                                            'rw' => 'RW',
+                                                            'province_id' => 'Provinsi',
+                                                            'district_id' => 'Kabupaten',
+                                                            'sub_district_id' => 'Kecamatan',
+                                                            'village_id' => 'Desa',
+                                                            'blood_type' => 'Golongan Darah',
+                                                            'education_status' => 'Pendidikan Terakhir',
+                                                            'job_type_id' => 'Pekerjaan',
+                                                        ];
+                                                        
+                                                        // Konversi ID ke nama yang mudah dibaca
+                                                        $displayValue = function($key, $value) {
+                                                            switch($key) {
+                                                                case 'gender':
+                                                                    $genderMap = [1 => 'Laki-laki', 2 => 'Perempuan'];
+                                                                    return $genderMap[$value] ?? $value;
+                                                                    
+                                                                case 'blood_type':
+                                                                    $bloodMap = [1 => 'A', 2 => 'B', 3 => 'AB', 4 => 'O'];
+                                                                    return $bloodMap[$value] ?? $value;
+                                                                    
+                                                                case 'education_status':
+                                                                    $educationMap = [
+                                                                        1 => 'Tidak/Belum Sekolah',
+                                                                        2 => 'Belum Tamat SD/Sederajat',
+                                                                        3 => 'Tamat SD/Sederajat',
+                                                                        4 => 'SLTP/Sederajat',
+                                                                        5 => 'SLTA/Sederajat',
+                                                                        6 => 'Diploma I/II',
+                                                                        7 => 'Akademi/Diploma III/S.Muda',
+                                                                        8 => 'Diploma IV/Strata I',
+                                                                        9 => 'Strata II',
+                                                                        10 => 'Strata III'
+                                                                    ];
+                                                                    return $educationMap[$value] ?? $value;
+                                                                    
+                                                                case 'job_type_id':
+                                                                    try {
+                                                                        $job = app(\App\Services\JobService::class)->getJobById($value);
+                                                                        return $job['name'] ?? $value;
+                                                                    } catch (\Exception $e) {
+                                                                        return $value;
+                                                                    }
+                                                                    
+                                                                case 'province_id':
+                                                                    try {
+                                                                        // Fallback: ambil semua provinsi dan cari yang sesuai
+                                                                        $provinces = app(\App\Services\WilayahService::class)->getProvinces();
+                                                                        $province = collect($provinces)->firstWhere('id', $value);
+                                                                        return $province['name'] ?? $value;
+                                                                    } catch (\Exception $e) {
+                                                                        return $value;
+                                                                    }
+                                                                    
+                                                                case 'district_id':
+                                                                    try {
+                                                                        // Fallback: ambil semua kabupaten dan cari yang sesuai
+                                                                        $districts = app(\App\Services\WilayahService::class)->getKabupatenByPage();
+                                                                        $district = collect($districts)->firstWhere('id', $value);
+                                                                        return $district['name'] ?? $value;
+                                                                    } catch (\Exception $e) {
+                                                                        return $value;
+                                                                    }
+                                                                    
+                                                                case 'sub_district_id':
+                                                                    try {
+                                                                        // Fallback: ambil semua kecamatan dan cari yang sesuai
+                                                                        $subDistricts = app(\App\Services\WilayahService::class)->getKecamatanByPage();
+                                                                        $subDistrict = collect($subDistricts)->firstWhere('id', $value);
+                                                                        return $subDistrict['name'] ?? $value;
+                                                                    } catch (\Exception $e) {
+                                                                        return $value;
+                                                                    }
+                                                                    
+                                                                case 'village_id':
+                                                                    try {
+                                                                        $village = app(\App\Services\WilayahService::class)->getVillageById($value);
+                                                                        return $village['name'] ?? $value;
+                                                                    } catch (\Exception $e) {
+                                                                        return $value;
+                                                                    }
+                                                                    
+                                                                default:
+                                                                    return $value;
+                                                            }
+                                                        };
+                                                    @endphp
+                                                    
+                                                    <!-- Data Saat Ini vs Data yang Diminta -->
+                                                    <div class="col-span-1 md:col-span-2">
+                                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                            <!-- Data Saat Ini -->
+                                                            <div class="bg-white p-3 rounded border">
+                                                                <h5 class="font-medium text-gray-700 mb-2 text-sm">Data Saat Ini:</h5>
+                                                                @foreach($changes as $key => $value)
+                                                                    @php
+                                                                        $label = $fieldLabels[$key] ?? ucfirst(str_replace('_',' ',$key));
+                                                                        $currentVal = $currentData[$key] ?? '-';
+                                                                        $displayCurrentVal = $displayValue($key, $currentVal);
+                                                                    @endphp
+                                                                    <div class="text-xs mb-1">
+                                                                        <span class="font-medium">{{ $label }}:</span> 
+                                                                        <span class="text-gray-600">{{ $displayCurrentVal }}</span>
+                                                                    </div>
+                                                                @endforeach
+                                                            </div>
+                                                            
+                                                            <!-- Data yang Diminta -->
+                                                            <div class="bg-blue-50 p-3 rounded border border-blue-200">
+                                                                <h5 class="font-medium text-blue-700 mb-2 text-sm">Data yang Diminta:</h5>
+                                                                @foreach($changes as $key => $value)
+                                                                    @php
+                                                                        $label = $fieldLabels[$key] ?? ucfirst(str_replace('_',' ',$key));
+                                                                        $displayVal = $displayValue($key, $value);
+                                                                    @endphp
+                                                                    <div class="text-xs mb-1">
+                                                                        <span class="font-medium">{{ $label }}:</span> 
+                                                                        <span class="text-blue-600">{{ $displayVal }}</span>
+                                                                    </div>
+                                                                @endforeach
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
 
@@ -1970,6 +2166,112 @@ if (!empty($userData->tag_lokasi)) {
                     }
                 }
             </script>
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    const nikSelect = document.getElementById('editNikSelect');
+                    const hiddenNik = document.getElementById('selectedNik');
+
+                    if (nikSelect) {
+                        fetch('{{ route('profile.family-members') }}')
+                            .then(r => r.json())
+                            .then(res => {
+                                if (res.success && Array.isArray(res.data)) {
+                                    const existing = new Set(Array.from(nikSelect.options).map(o => o.value));
+                                    res.data.forEach(m => {
+                                        if (m.nik && !existing.has(m.nik)) {
+                                            const opt = document.createElement('option');
+                                            opt.value = m.nik;
+                                            opt.textContent = `${m.nik} - ${m.full_name || ''}`;
+                                            nikSelect.appendChild(opt);
+                                        }
+                                    });
+                                }
+                            })
+                            .catch(() => {});
+
+                        function fillFormByCitizen(data) {
+                            if (!data) return;
+                            const nameInput = document.querySelector('input[name="full_name"]');
+                            if (nameInput) nameInput.value = data.full_name || data.nama || '';
+                            const genderHidden = document.querySelector('input[name="gender"]');
+                            if (genderHidden) genderHidden.value = (String(data.gender) === '2') ? 'Perempuan' : 'Laki-laki';
+                            const addr = document.querySelector('textarea[name="address"]');
+                            if (addr) addr.value = data.address || '';
+                            const rt = document.querySelector('input[name="rt"]');
+                            if (rt) rt.value = data.rt || '';
+                            const rw = document.querySelector('input[name="rw"]');
+                            if (rw) rw.value = data.rw || '';
+
+                            // Age & birth info
+                            const age = document.querySelector('input[name="age"]');
+                            if (age) age.value = data.age || '';
+                            const birthPlace = document.querySelector('input[name="birth_place"]');
+                            if (birthPlace) birthPlace.value = data.birth_place || '';
+                            const birthDate = document.querySelector('input[name="birth_date"]');
+                            if (birthDate) birthDate.value = (data.birth_date && String(data.birth_date).slice(0,10)) || '';
+
+                            const bt = document.getElementById('blood_type');
+                            if (bt && data.blood_type) bt.value = String(data.blood_type);
+                            const edu = document.getElementById('education_status');
+                            if (edu && data.education_status) edu.value = String(data.education_status);
+                            const job = document.getElementById('job_type_id');
+                            if (job && data.job_type_id) job.value = String(data.job_type_id);
+
+                            const provinceIdInput = document.getElementById('province_id');
+                            const districtIdInput = document.getElementById('district_id');
+                            const subDistrictIdInput = document.getElementById('sub_district_id');
+                            const villageIdInput = document.getElementById('village_id');
+                            if (provinceIdInput) provinceIdInput.value = data.province_id || data.provinsi_id || data.provinceId || '';
+                            if (districtIdInput) districtIdInput.value = data.district_id || data.kabupaten_id || data.city_id || data.districts_id || '';
+                            if (subDistrictIdInput) subDistrictIdInput.value = data.sub_district_id || data.kecamatan_id || data.sub_districts_id || '';
+                            if (villageIdInput) villageIdInput.value = data.village_id || data.villages_id || data.desa_id || '';
+                        }
+
+                        nikSelect.addEventListener('change', function () {
+                            const nik = this.value;
+                            if (!nik) return;
+                            if (hiddenNik) hiddenNik.value = nik;
+                            fetch(`{{ url('/user/profile/citizen') }}/${nik}`)
+                                .then(r => r.json())
+                                .then(res => {
+                                    if (res.success) {
+                                        fillFormByCitizen(res.data);
+                                    }
+                                })
+                                .catch(() => {});
+                        });
+                    }
+                });
+                
+                                                        // Populate form with current user data when page loads
+                document.addEventListener('DOMContentLoaded', function() {
+                    const currentUserNik = '{{ $userData->nik }}';
+                    if (currentUserNik) {
+                        // Set NIK user sebagai pilihan default
+                        const nikSelect = document.getElementById('editNikSelect');
+                        if (nikSelect) {
+                            nikSelect.value = currentUserNik;
+                            // Trigger change event untuk mengisi form
+                            const event = new Event('change');
+                            nikSelect.dispatchEvent(event);
+                        }
+                        
+                        // Set hidden NIK input
+                        const hiddenNik = document.getElementById('selectedNik');
+                        if (hiddenNik) {
+                            hiddenNik.value = currentUserNik;
+                        }
+                        
+                        // Pastikan form terisi dengan data terbaru
+                        setTimeout(() => {
+                            if (nikSelect) {
+                                const changeEvent = new Event('change');
+                                nikSelect.dispatchEvent(changeEvent);
+                            }
+                        }, 100);
+                    }
+                });
+            </script>
             <!-- Form Validation -->
             <script>
                 document.addEventListener('DOMContentLoaded', function () {
@@ -1979,13 +2281,28 @@ if (!empty($userData->tag_lokasi)) {
                     form.addEventListener('submit', function(e) {
                         e.preventDefault();
 
-                        // Get form elements
-                        const fullName = document.querySelector('input[name="full_name"]').value.trim();
-                        const gender = document.querySelector('select[name="gender"]').value;
-                        const provinceId = document.getElementById('province_id').value;
-                        const districtId = document.getElementById('district_id').value;
-                        const subDistrictId = document.getElementById('sub_district_id').value;
-                        const villageId = document.getElementById('village_id').value;
+                        // Get form elements with null checks
+                        const fullNameInput = document.querySelector('input[name="full_name"]');
+                        const genderInput = document.querySelector('input[name="gender"]');
+                        const genderSelect = document.querySelector('select[name="gender"]');
+                        const provinceIdInput = document.getElementById('province_id');
+                        const districtIdInput = document.getElementById('district_id');
+                        const subDistrictIdInput = document.getElementById('sub_district_id');
+                        const villageIdInput = document.getElementById('village_id');
+
+                        // Check if elements exist before reading values
+                        if (!fullNameInput || !provinceIdInput || !districtIdInput || !subDistrictIdInput || !villageIdInput) {
+                            console.error('Required form elements not found');
+                            alert('Form tidak lengkap. Silakan refresh halaman.');
+                            return false;
+                        }
+
+                        const fullName = fullNameInput.value.trim();
+                        const gender = (genderInput?.value || genderSelect?.value || '').trim();
+                        const provinceId = provinceIdInput.value;
+                        const districtId = districtIdInput.value;
+                        const subDistrictId = subDistrictIdInput.value;
+                        const villageId = villageIdInput.value;
 
                         // Validation
                         let isValid = true;

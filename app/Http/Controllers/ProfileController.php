@@ -79,7 +79,33 @@ class ProfileController extends Controller
             $provinces = [];
         }
 
-        return view('user.profile.index', compact('userData', 'provinces'));
+        // Ambil daftar pekerjaan dari layanan API agar form bisa menampilkan opsi pekerjaan
+        try {
+            $jobs = app(\App\Services\JobService::class)->getAllJobs();
+        } catch (\Exception $e) {
+            Log::error('Error fetching jobs: ' . $e->getMessage());
+            $jobs = [];
+        }
+
+        // Mapping opsi select (single source untuk view)
+        $bloodTypes = [
+            1 => 'A', 2 => 'B', 3 => 'AB', 4 => 'O', 5 => 'A+', 6 => 'A-',
+            7 => 'B+', 8 => 'B-', 9 => 'AB+', 10 => 'AB-', 11 => 'O+', 12 => 'O-', 13 => 'Tidak Tahu'
+        ];
+        $educationStatuses = [
+            1 => 'Tidak/Belum Sekolah',
+            2 => 'Belum tamat SD/Sederajat',
+            3 => 'Tamat SD',
+            4 => 'SLTP/SMP/Sederajat',
+            5 => 'SLTA/SMA/Sederajat',
+            6 => 'Diploma I/II',
+            7 => 'Akademi/Diploma III/ Sarjana Muda',
+            8 => 'Diploma IV/ Strata I/ Strata II',
+            9 => 'Strata III',
+            10 => 'Lainnya',
+        ];
+
+        return view('user.profile.index', compact('userData', 'provinces', 'jobs', 'bloodTypes', 'educationStatuses'));
     }
     public function create()
     {
@@ -230,6 +256,9 @@ class ProfileController extends Controller
             'district_id' => 'required|numeric',
             'sub_district_id' => 'required|numeric',
             'village_id' => 'required|numeric',
+            'blood_type' => 'nullable|numeric',
+            'education_status' => 'nullable|numeric',
+            'job_type_id' => 'nullable|numeric',
         ]);
 
         try {
