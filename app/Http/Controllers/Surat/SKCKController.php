@@ -231,15 +231,12 @@ class SKCKController extends Controller
         $signers = Penandatangan::all(); // Fetch signers
 
         // Initialize arrays for district, sub-district, and village data
+        // These will be populated via AJAX in the view (same as AdministrasiController)
         $districts = [];
         $subDistricts = [];
         $villages = [];
 
         if (Auth::user()->role === 'admin desa') {
-            $districts = $this->wilayahService->getDistrictsByVillage(Auth::user()->village_id);
-            $subDistricts = $this->wilayahService->getSubDistrictsByVillage(Auth::user()->village_id);
-            $villages = $this->wilayahService->getVillagesByVillage(Auth::user()->village_id);
-
             return view('admin.desa.surat.skck.edit', compact(
             'skck',
             'jobs',
