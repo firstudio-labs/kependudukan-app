@@ -57,6 +57,16 @@
                         </a>
                     </li>
 
+                    <li class="-ml-5">
+                        <a href="{{ route('user.pengumuman.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                                                                                                {{ request()->routeIs('user.pengumuman*')
+                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                            <i class="fa-solid fa-bullhorn text-lg transition-all duration-300"></i>
+                            <span>Pengumuman</span>
+                        </a>
+                    </li>
+
                     <!-- Replace single Master User with Master Users dropdown -->
                     <li class="-ml-5">
                         <button type="button"
@@ -78,6 +88,16 @@
                                 </a>
                             </li>
                         </ul>
+                    </li>
+
+                    <li class="-ml-5">
+                        <a href="{{ route('user.pengumuman.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                                                                                                {{ request()->routeIs('user.pengumuman*')
+                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                            <i class="fa-solid fa-bullhorn text-lg transition-all duration-300"></i>
+                            <span>Pengumuman</span>
+                        </a>
                     </li>
 
                     <!-- Keep Master Penduduk as a separate dropdown -->
@@ -569,6 +589,17 @@
                         </ul>
                     </li>
 
+                    <!-- Pengumuman -->
+                    <li class="-ml-5">
+                        <a href="{{ route('admin.desa.pengumuman.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                                                                                                                                    {{ request()->routeIs('admin.desa.pengumuman.*')
+                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                            <i class="fa-solid fa-bullhorn text-lg transition-all duration-300"></i>
+                            <span>Pengumuman</span>
+                        </a>
+                    </li>
+
                     
 
                     <!-- Add Logout Button for admin.desa -->
@@ -701,6 +732,16 @@
                                 </a>
                             </li>
                         </ul>
+                    </li>
+
+                    <li class="-ml-5">
+                        <a href="{{ route('user.pengumuman.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                                                                                                {{ request()->routeIs('user.pengumuman*')
+                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                            <i class="fa-solid fa-bullhorn text-lg transition-all duration-300"></i>
+                            <span>Pengumuman</span>
+                        </a>
                     </li>
 
                     <!-- Add Logout Button for User (Penduduk) -->

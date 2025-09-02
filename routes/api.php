@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\BiodataController;
 use App\Http\Controllers\Api\AdminBiodataApprovalController;
+use App\Http\Controllers\Api\PengumumanController as ApiPengumumanController;
 
 /*
 |--------------------------------------------------------------------------
@@ -123,6 +124,12 @@ Route::middleware(ApiTokenOwnerMiddleware::class)->group(function () {
             ->name('user.berita-desa.send-approval');
         Route::get('/berita-desa/{id}', [BeritaDesaController::class, 'show'])
             ->name('user.berita-desa.show');
+
+        // pengumuman
+        Route::get('/pengumuman', [ApiPengumumanController::class, 'index'])
+            ->name('user.pengumuman.index');
+        Route::get('/pengumuman/{id}', [ApiPengumumanController::class, 'show'])
+            ->name('user.pengumuman.show');
 
 
         //riwayat surat

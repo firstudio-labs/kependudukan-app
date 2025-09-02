@@ -4,6 +4,7 @@ use App\Http\Controllers\adminDesa\ProfileDesaController;
 use App\Http\Controllers\adminDesa\BiodataApprovalController as AdminDesaBiodataApprovalController;
 use App\Http\Controllers\BeritaDesaController;
 use App\Http\Controllers\adminDesa\BeritaDesaController as AdminDesaBeritaDesaController;
+use App\Http\Controllers\adminDesa\PengumumanController as AdminDesaPengumumanController;
 use App\Http\Controllers\User\RiwayatSuratController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
@@ -49,6 +50,7 @@ use App\Http\Controllers\adminDesa\LaporanDesaController as AdminDesaLaporanDesa
 use App\Http\Controllers\guest\BukuTamuController;
 use App\Http\Controllers\superadmin\BeritaDesaController as SuperadminBeritaDesaController;
 use App\Http\Controllers\User\BeritaDesaController as UserBeritaDesaController;
+use App\Http\Controllers\User\PengumumanController as UserPengumumanController;
 use App\Http\Controllers\UsersController;
 use App\Http\Controllers\User\BiodataChangeController as UserBiodataChangeController;
 
@@ -769,6 +771,21 @@ Route::middleware(['auth:web', 'role:admin desa'])->group(function () {
         ->name('admin.desa.berita-desa.destroy');
     Route::get('/admin/desa/berita-desa/{id}', [AdminDesaBeritaDesaController::class, 'show'])
         ->name('admin.desa.berita-desa.show');
+    // Pengumuman admin desa
+    Route::get('/admin/desa/pengumuman', [AdminDesaPengumumanController::class, 'index'])
+        ->name('admin.desa.pengumuman.index');
+    Route::get('/admin/desa/pengumuman/create', [AdminDesaPengumumanController::class, 'create'])
+        ->name('admin.desa.pengumuman.create');
+    Route::post('/admin/desa/pengumuman', [AdminDesaPengumumanController::class, 'store'])
+        ->name('admin.desa.pengumuman.store');
+    Route::get('/admin/desa/pengumuman/{id}/edit', [AdminDesaPengumumanController::class, 'edit'])
+        ->name('admin.desa.pengumuman.edit');
+    Route::put('/admin/desa/pengumuman/{id}', [AdminDesaPengumumanController::class, 'update'])
+        ->name('admin.desa.pengumuman.update');
+    Route::delete('/admin/desa/pengumuman/{id}', [AdminDesaPengumumanController::class, 'destroy'])
+        ->name('admin.desa.pengumuman.destroy');
+    Route::get('/admin/desa/pengumuman/{id}', [AdminDesaPengumumanController::class, 'show'])
+        ->name('admin.desa.pengumuman.show');
     Route::post('/admin/desa/berita-desa/{id}/approve', [AdminDesaBeritaDesaController::class, 'approve'])
         ->name('admin.desa.berita-desa.approve');
     Route::post('/admin/desa/berita-desa/{id}/reject', [AdminDesaBeritaDesaController::class, 'reject'])
@@ -923,6 +940,9 @@ Route::middleware(['auth:penduduk'])->group(function () {
         ->name('user.berita-desa.send-approval');
     Route::get('/user/berita-desa/{id}', [UserBeritaDesaController::class, 'show'])
         ->name('user.berita-desa.show');
+    // Pengumuman user
+    Route::get('/user/pengumuman', [UserPengumumanController::class, 'index'])->name('user.pengumuman.index');
+    Route::get('/user/pengumuman/{id}', [UserPengumumanController::class, 'show'])->name('user.pengumuman.show');
 
     Route::get('/profile/family-member/{nik}/document/{type}', [ProfileController::class, 'viewFamilyMemberDocument'])
         ->middleware(['auth:admin_desa']); // atau middleware yang sesuai
