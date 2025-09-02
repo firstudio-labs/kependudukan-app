@@ -156,6 +156,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Penduduk kirim form perubahan biodata (simple)
     Route::get('/biodata', [BiodataController::class, 'getBiodata']);
     Route::post('/biodata/request-update', [BiodataController::class, 'requestUpdate']);
+    Route::get('/biodata/history', [BiodataController::class, 'getHistory']);
+    Route::get('/biodata/request/{requestId}', [BiodataController::class, 'getRequestDetail']);
+    Route::delete('/biodata/request/{requestId}', [BiodataController::class, 'cancelRequest']);
 
     // Admin desa approval (simple)
     Route::prefix('admin/biodata-approval')->group(function () {
@@ -169,4 +172,3 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::fallback(function () {
     return response()->json(['message' => 'API endpoint not found'], 404);
 });
-

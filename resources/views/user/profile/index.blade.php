@@ -426,6 +426,7 @@ if (Auth::guard('web')->check()) {
                 </div>
             </div>
 
+            {{--
             <!-- History Perubahan Biodata -->
             <div class="bg-white p-6 rounded-lg shadow-md">
                 <div class="flex items-center justify-between mb-6">
@@ -690,6 +691,7 @@ if (Auth::guard('web')->check()) {
                     @endif
                 </div>
             </div>
+            --}}
 
             <!-- Tabel Anggota Keluarga -->
             <div class="bg-white p-6 rounded-lg shadow-md mt-6">
@@ -2348,6 +2350,7 @@ if (!empty($userData->tag_lokasi)) {
                     });
                 });
             </script>
+            {{--
             <script>
                 function toggleHistorySection() {
                     const historyContent = document.getElementById('historyContent');
@@ -2375,5 +2378,6 @@ if (!empty($userData->tag_lokasi)) {
                     }
                 }
             </script>
+            --}}
     </div>
 </x-layout>

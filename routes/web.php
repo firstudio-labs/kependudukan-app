@@ -755,6 +755,8 @@ Route::middleware(['auth:web', 'role:admin desa'])->group(function () {
     //Berita Desa (Admin Desa)
     Route::get('/admin/desa/berita-desa', [AdminDesaBeritaDesaController::class, 'index'])
         ->name('admin.desa.berita-desa.index');
+    Route::get('/admin/desa/berita-desa/pending', [AdminDesaBeritaDesaController::class, 'pending'])
+        ->name('admin.desa.berita-desa.pending');
     Route::get('/admin/desa/berita-desa/create', [AdminDesaBeritaDesaController::class, 'create'])
         ->name('admin.desa.berita-desa.create');
     Route::post('/admin/desa/berita-desa', [AdminDesaBeritaDesaController::class, 'store'])
@@ -767,6 +769,10 @@ Route::middleware(['auth:web', 'role:admin desa'])->group(function () {
         ->name('admin.desa.berita-desa.destroy');
     Route::get('/admin/desa/berita-desa/{id}', [AdminDesaBeritaDesaController::class, 'show'])
         ->name('admin.desa.berita-desa.show');
+    Route::post('/admin/desa/berita-desa/{id}/approve', [AdminDesaBeritaDesaController::class, 'approve'])
+        ->name('admin.desa.berita-desa.approve');
+    Route::post('/admin/desa/berita-desa/{id}/reject', [AdminDesaBeritaDesaController::class, 'reject'])
+        ->name('admin.desa.berita-desa.reject');
 });
 
 // Route untuk operator - menggunakan web guard
@@ -908,6 +914,13 @@ Route::middleware(['auth:penduduk'])->group(function () {
     // Berita Desa routes
     Route::get('/user/berita-desa', [UserBeritaDesaController::class, 'index'])
         ->name('user.berita-desa.index');
+    // Penting: letakkan route yang spesifik terlebih dahulu sebelum yang dinamis {id}
+    Route::get('/user/berita-desa/create', [UserBeritaDesaController::class, 'create'])
+        ->name('user.berita-desa.create');
+    Route::post('/user/berita-desa', [UserBeritaDesaController::class, 'store'])
+        ->name('user.berita-desa.store');
+    Route::post('/user/berita-desa/{id}/send-approval', [UserBeritaDesaController::class, 'sendApproval'])
+        ->name('user.berita-desa.send-approval');
     Route::get('/user/berita-desa/{id}', [UserBeritaDesaController::class, 'show'])
         ->name('user.berita-desa.show');
 

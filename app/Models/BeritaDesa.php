@@ -16,6 +16,7 @@ class BeritaDesa extends Model
         'gambar',
         'deskripsi',
         'komentar',
+        'status',
         'user_id',
         'province_id',
         'districts_id',

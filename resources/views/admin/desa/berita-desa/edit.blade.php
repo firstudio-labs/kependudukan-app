@@ -21,15 +21,18 @@
 
                 <!-- Gambar -->
                 <div>
-                    <label for="gambar" class="block text-sm font-medium text-gray-700">Gambar</label>
-                    <input type="file" id="gambar" name="gambar"
-                        class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none p-2 mt-1"
-                        accept="image/png,image/jpeg,image/jpg" onchange="previewImage(this, 'preview')">
-                    <p class="mt-1 text-sm text-gray-500">PNG, JPG (MAX. 4MB).</p>
+                    <label for="gambar" class="block text-sm font-medium text-gray-700">Gambar (opsional)</label>
+                    <div class="mt-1">
+                        <label for="gambar" class="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm font-medium rounded cursor-pointer border border-gray-300">
+                            <i class="fa-solid fa-upload mr-2"></i> Pilih Gambar
+                        </label>
+                        <input type="file" id="gambar" name="gambar" class="hidden" accept="image/png,image/jpeg,image/jpg" onchange="previewImageAdminEdit(this)" aria-describedby="gambar_help_admin_edit gambar_filename_admin_edit">
+                        <span id="gambar_filename_admin_edit" class="ml-3 text-sm text-gray-600 align-middle">{{ $berita->gambar ? basename($berita->gambar) : 'Belum ada file dipilih' }}</span>
+                    </div>
+                    <p id="gambar_help_admin_edit" class="mt-2 text-sm text-gray-500">PNG, JPG (MAX. 4MB).</p>
                     <div id="preview" class="mt-2">
                         @if ($berita->gambar)
-                            <img id="preview_image" src="{{ asset('storage/' . $berita->gambar) }}" alt="Preview"
-                                class="max-w-xs rounded-lg shadow-md">
+                            <img id="preview_image" src="{{ asset('storage/' . $berita->gambar) }}" alt="Preview" class="max-w-xs rounded-lg shadow-md">
                         @else
                             <img id="preview_image" src="#" alt="Preview" class="hidden max-w-xs rounded-lg shadow-md">
                         @endif
@@ -43,7 +46,7 @@
                 <div class="col-span-1 md:col-span-2">
                     <label for="deskripsi" class="block text-sm font-medium text-gray-700">Deskripsi Berita <span
                             class="text-red-500">*</span></label>
-                    <textarea id="deskripsi" name="deskripsi" rows="4" required
+                    <textarea id="deskripsi" name="deskripsi" rows="4"
                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">{{ old('deskripsi', $berita->deskripsi) }}</textarea>
                     @error('deskripsi')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -51,7 +54,7 @@
                 </div>
 
                 <!-- Komentar -->
-                <div class="col-span-1 md:col-span-2">
+                <div class="col-span-1 md:col-span-2 ck-wrapper-komentar">
                     <label for="komentar" class="block text-sm font-medium text-gray-700">Komentar</label>
                     <textarea id="komentar" name="komentar" rows="2"
                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">{{ old('komentar', $berita->komentar) }}</textarea>
@@ -139,6 +142,12 @@
         </form>
     </div>
 
+    <style>
+        .ck-editor__editable[role="textbox"] { min-height: 380px; }
+        .ck-wrapper-komentar .ck-editor__editable[role="textbox"] { min-height: 120px; }
+        .ck-editor__editable { width: 100%; box-sizing: border-box; }
+    </style>
+    <script src="https://cdn.ckeditor.com/ckeditor5/41.4.2/classic/ckeditor.js"></script>
     <script>
         @if(session('success'))
             Swal.fire({
@@ -160,23 +169,40 @@
             });
         @endif
 
-        function previewImage(input, previewId) {
-            const preview = document.getElementById(previewId);
+        function previewImageAdminEdit(input) {
             const previewImage = document.getElementById('preview_image');
-
+            const name = document.getElementById('gambar_filename_admin_edit');
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
-
                 reader.onload = function (e) {
                     previewImage.src = e.target.result;
                     previewImage.classList.remove('hidden');
                 }
-
                 reader.readAsDataURL(input.files[0]);
+                name.textContent = input.files[0].name;
             } else {
                 previewImage.src = '#';
                 previewImage.classList.add('hidden');
+                name.textContent = 'Belum ada file dipilih';
             }
         }
+
+        // Init CKEditor
+        document.addEventListener('DOMContentLoaded', function () {
+            if (document.getElementById('deskripsi')) {
+                ClassicEditor.create(document.querySelector('#deskripsi'), {
+                    toolbar: {
+                        items: ['heading','|','bold','italic','link','bulletedList','numberedList','blockQuote','|','undo','redo']
+                    }
+                }).then(editor => {
+                    editor.ui.view.editable.element.style.minHeight = '380px';
+                }).catch(() => {});
+            }
+            if (document.getElementById('komentar')) {
+                ClassicEditor.create(document.querySelector('#komentar'), {
+                    toolbar: ['bold','italic','link','bulletedList','numberedList','undo','redo']
+                }).then(editor => { editor.ui.view.editable.element.style.minHeight = '120px'; }).catch(() => {});
+            }
+        });
     </script>
 </x-layout>

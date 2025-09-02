@@ -51,7 +51,7 @@
                                     {{ $berita->firstItem() + $index }}
                                 </th>
                                 <td class="px-6 py-4">
-                                    <div class="font-medium text-gray-900">{{ $item->judul }}</div>
+                                    <div class="font-medium text-gray-900">{{ strip_tags($item->judul) }}</div>
                                     @if($item->gambar)
                                         <div class="mt-2">
                                             <img src="{{ asset('storage/' . $item->gambar) }}" 
@@ -64,7 +64,7 @@
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="max-w-xs">
-                                        {{ Str::limit($item->deskripsi, 80) }}
+                                        {{ Str::limit(strip_tags($item->deskripsi), 80) }}
                                         @if(strlen($item->deskripsi) > 80)
                                             <span class="text-blue-600 text-xs">...selengkapnya</span>
                                         @endif
@@ -302,10 +302,10 @@
                     if (data.data) {
                         const berita = data.data;
 
-                        // Update modal content
-                        document.getElementById('detailJudulBerita').textContent = berita.judul || '-';
-                        document.getElementById('detailDeskripsi').textContent = berita.deskripsi || '-';
-                        document.getElementById('detailKomentar').textContent = berita.komentar || '-';
+                        // Update modal content (render CKEditor HTML)
+                        document.getElementById('detailJudulBerita').innerHTML = berita.judul || '-';
+                        document.getElementById('detailDeskripsi').innerHTML = berita.deskripsi || '-';
+                        document.getElementById('detailKomentar').innerHTML = berita.komentar || '-';
 
                         // Update wilayah info dengan format baru
                         const wilayah = berita.wilayah_info || {};

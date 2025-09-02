@@ -23,7 +23,7 @@ class BeritaDesaController extends Controller
 
     public function index(Request $request)
     {
-        $query = BeritaDesa::with(['user']);
+        $query = BeritaDesa::with(['user'])->where('status', 'approved');
 
         // Filter berdasarkan desa penduduk yang login (guard penduduk)
         if (Auth::guard('penduduk')->check()) {
@@ -136,6 +136,79 @@ class BeritaDesaController extends Controller
         $berita->wilayah_info = $this->getWilayahInfo($berita);
         
         return response()->json(['data' => $berita]);
+    }
+
+    public function create()
+    {
+        // Hanya penduduk yang boleh membuat
+        abort_unless(Auth::guard('penduduk')->check(), 403);
+        return view('user.berita-desa.create');
+    }
+
+    public function store(Request $request)
+    {
+        abort_unless(Auth::guard('penduduk')->check(), 403);
+
+        $request->validate([
+            'judul' => 'required|string|max:255',
+            'gambar' => 'nullable|image|mimes:jpeg,png,jpg|max:4096',
+            'deskripsi' => 'required|string',
+            'komentar' => 'nullable|string'
+        ]);
+
+        $penduduk = Auth::guard('penduduk')->user();
+        $citizenData = $this->citizenService->getCitizenByNIK($penduduk->nik);
+
+        // Ekstrak id wilayah dari berbagai kemungkinan struktur
+        $payload = is_array($citizenData) ? ($citizenData['data'] ?? $citizenData) : [];
+        $provinceId = $payload['province_id'] ?? $payload['provinsi_id'] ?? null;
+        $districtId = $payload['district_id'] ?? $payload['districts_id'] ?? null;
+        $subDistrictId = $payload['sub_district_id'] ?? $payload['sub_districts_id'] ?? null;
+        $villageId = $payload['villages_id'] ?? $payload['village_id'] ?? null;
+
+        if (!$villageId) {
+            return back()->with('error', 'Gagal mengambil lokasi desa dari data akun.')->withInput();
+        }
+
+        $data = $request->only(['judul', 'deskripsi', 'komentar']);
+        $data['user_id'] = $penduduk->id ?? null;
+        $data['province_id'] = $provinceId ? (int) $provinceId : null;
+        $data['districts_id'] = $districtId ? (int) $districtId : null;
+        $data['sub_districts_id'] = $subDistrictId ? (int) $subDistrictId : null;
+        $data['villages_id'] = (int) $villageId;
+        $data['status'] = 'pending';
+
+        if ($request->hasFile('gambar')) {
+            $file = $request->file('gambar');
+            $beritaName = \Illuminate\Support\Str::slug(substr($request->judul, 0, 30));
+            $timestamp = time();
+            $filename = $timestamp . '_' . $beritaName . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('uploads/documents/berita-desa', $filename, 'public');
+            $data['gambar'] = $path;
+        }
+
+        BeritaDesa::create($data);
+
+        return redirect()->route('user.berita-desa.index')
+            ->with('success', 'Berita disimpan dan dikirim untuk persetujuan admin desa.');
+    }
+
+    public function sendApproval($id)
+    {
+        abort_unless(Auth::guard('penduduk')->check(), 403);
+
+        $penduduk = Auth::guard('penduduk')->user();
+        $berita = BeritaDesa::where('id', $id)
+            ->where('user_id', $penduduk->id)
+            ->firstOrFail();
+
+        if ($berita->status === 'approved') {
+            return back()->with('success', 'Berita sudah disetujui.');
+        }
+
+        $berita->update(['status' => 'pending']);
+
+        return back()->with('success', 'Berita dikirim untuk persetujuan admin desa.');
     }
 
     /**

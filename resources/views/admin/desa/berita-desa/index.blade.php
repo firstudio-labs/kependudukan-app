@@ -10,7 +10,7 @@
         </h1>
 
         <div class="flex justify-between items-center mb-4">
-            <form method="GET" action="{{ route('admin.desa.berita-desa.index') }}" class="relative w-full max-w-xs">
+            <form method="GET" action="{{ request()->routeIs('admin.desa.berita-desa.pending') ? route('admin.desa.berita-desa.pending') : route('admin.desa.berita-desa.index') }}" class="relative w-full max-w-xs">
                 <input type="text" name="search" id="search" value="{{ request('search') }}"
                     class="block p-2 pl-10 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="Cari berita..." />
@@ -21,17 +21,18 @@
                     </svg>
                 </button>
             </form>
-
-            <div>
-                <a href="{{ route('admin.desa.berita-desa.create') }}"
-                    class="flex items-center justify-center bg-[#7886C7] text-white font-semibold py-2 px-4 rounded-lg hover:bg-[#2D336B] transition duration-300 ease-in-out">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                        class="w-4 h-4 mr-2">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                    </svg>
-                    <span>Tambah Berita</span>
-                </a>
-            </div>
+            @if(($context ?? 'approved') === 'approved')
+                <div>
+                    <a href="{{ route('admin.desa.berita-desa.create') }}"
+                        class="flex items-center justify-center bg-[#7886C7] text-white font-semibold py-2 px-4 rounded-lg hover:bg-[#2D336B] transition duration-300 ease-in-out">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                            class="w-4 h-4 mr-2">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        <span>Tambah Berita</span>
+                    </a>
+                </div>
+            @endif
         </div>
 
         <div class="bg-white shadow-md rounded-lg overflow-hidden">
@@ -44,7 +45,12 @@
                             <th class="px-6 py-3">Deskripsi</th>
                             <th class="px-6 py-3">Lokasi</th>
                             <th class="px-6 py-3">Tanggal</th>
-                            <th class="px-6 py-3">Aksi</th>
+                            @if(($context ?? 'approved') === 'pending')
+                                <th class="px-6 py-3">Status</th>
+                                <th class="px-6 py-3">Aksi</th>
+                            @else
+                                <th class="px-6 py-3">Aksi</th>
+                            @endif
                         </tr>
                     </thead>
                     <tbody>
@@ -54,7 +60,7 @@
                                     {{ $berita->firstItem() + $index }}
                                 </th>
                                 <td class="px-6 py-4">
-                                    <div class="font-medium text-gray-900">{{ $item->judul }}</div>
+                                    <div class="font-medium text-gray-900">{{ strip_tags($item->judul) }}</div>
                                     @if($item->gambar)
                                         <div class="mt-2">
                                             <img src="{{ asset('storage/' . $item->gambar) }}" 
@@ -67,7 +73,7 @@
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="max-w-xs">
-                                        {{ Str::limit($item->deskripsi, 80) }}
+                                        {{ Str::limit(strip_tags($item->deskripsi), 80) }}
                                         @if(strlen($item->deskripsi) > 80)
                                             <span class="text-blue-600 text-xs">...selengkapnya</span>
                                         @endif
@@ -136,28 +142,58 @@
                                         <div class="text-xs text-gray-400">{{ $item->created_at->format('H:i') }}</div>
                                     </div>
                                 </td>
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center space-x-2">
-                                        <button onclick="showDetailModal({{ $item->id }})"
-                                            class="inline-flex items-center px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200"
-                                            aria-label="Lihat Detail">
-                                            <i class="fa-solid fa-eye mr-2"></i>
-                                            Detail
-                                        </button>
-                                        <a href="{{ route('admin.desa.berita-desa.edit', $item->id) }}"
-                                            class="inline-flex items-center px-3 py-2 text-sm font-medium text-yellow-600 bg-yellow-50 rounded-lg hover:bg-yellow-100 focus:outline-none focus:ring-2 focus:ring-yellow-500 transition-colors duration-200"
-                                            aria-label="Edit Berita">
-                                            <i class="fa-solid fa-pen-to-square mr-2"></i>
-                                            Edit
-                                        </a>
-                                        <button onclick="confirmDelete({{ $item->id }})" 
-                                            class="inline-flex items-center px-3 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors duration-200"
-                                            aria-label="Hapus Berita">
-                                            <i class="fa-solid fa-trash mr-2"></i>
-                                            Hapus
-                                        </button>
-                                    </div>
-                                </td>
+                                @if(($context ?? 'approved') === 'pending')
+                                    <td class="px-6 py-4">
+                                        <span class="inline-flex items-center px-2 py-1 text-xs font-medium rounded {{ $item->status === 'approved' ? 'bg-green-100 text-green-700' : ($item->status === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700') }}">
+                                            {{ ucfirst($item->status ?? 'pending') }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center space-x-2">
+                                            <button onclick="showDetailModal({{ $item->id }})"
+                                                class="inline-flex items-center px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200"
+                                                aria-label="Lihat Detail">
+                                                <i class="fa-solid fa-eye mr-2"></i>
+                                                Detail
+                                            </button>
+                                            <form action="{{ route('admin.desa.berita-desa.approve', $item->id) }}" method="POST">
+                                                @csrf
+                                                <button type="submit" class="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500">
+                                                    <i class="fa-solid fa-check mr-2"></i> Approve
+                                                </button>
+                                            </form>
+                                            <form action="{{ route('admin.desa.berita-desa.reject', $item->id) }}" method="POST">
+                                                @csrf
+                                                <button type="submit" class="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500">
+                                                    <i class="fa-solid fa-xmark mr-2"></i> Tolak
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                @else
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center space-x-2">
+                                            <button onclick="showDetailModal({{ $item->id }})"
+                                                class="inline-flex items-center px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200"
+                                                aria-label="Lihat Detail">
+                                                <i class="fa-solid fa-eye mr-2"></i>
+                                                Detail
+                                            </button>
+                                            <a href="{{ route('admin.desa.berita-desa.edit', $item->id) }}"
+                                                class="inline-flex items-center px-3 py-2 text-sm font-medium text-yellow-600 bg-yellow-50 rounded-lg hover:bg-yellow-100 focus:outline-none focus:ring-2 focus:ring-yellow-500 transition-colors duration-200"
+                                                aria-label="Edit Berita">
+                                                <i class="fa-solid fa-pen-to-square mr-2"></i>
+                                                Edit
+                                            </a>
+                                            <button onclick="confirmDelete({{ $item->id }})" 
+                                                class="inline-flex items-center px-3 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors duration-200"
+                                                aria-label="Hapus Berita">
+                                                <i class="fa-solid fa-trash mr-2"></i>
+                                                Hapus
+                                            </button>
+                                        </div>
+                                    </td>
+                                @endif
                             </tr>
                         @empty
                             <tr>
@@ -296,10 +332,10 @@
                     if (data.status === 'success' && data.data) {
                         const berita = data.data;
 
-                        // Update modal content
-                        document.getElementById('detailJudulBerita').textContent = berita.judul || '-';
-                        document.getElementById('detailDeskripsi').textContent = berita.deskripsi || '-';
-                        document.getElementById('detailKomentar').textContent = berita.komentar || '-';
+                        // Update modal content (render CKEditor HTML)
+                        document.getElementById('detailJudulBerita').innerHTML = berita.judul || '-';
+                        document.getElementById('detailDeskripsi').innerHTML = berita.deskripsi || '-';
+                        document.getElementById('detailKomentar').innerHTML = berita.komentar || '-';
 
                         // Clear previous image
                         imageContainer.innerHTML = '';

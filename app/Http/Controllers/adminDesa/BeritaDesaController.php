@@ -23,7 +23,9 @@ class BeritaDesaController extends Controller
     {
         $this->authorizeAdminDesa();
 
-        $query = BeritaDesa::with('user')->where('villages_id', Auth::user()->villages_id);
+        $query = BeritaDesa::with('user')
+            ->where('villages_id', Auth::user()->villages_id)
+            ->where('status', 'approved');
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -51,7 +53,43 @@ class BeritaDesaController extends Controller
             $item->wilayah_info = $this->getWilayahInfo($dummyBerita);
         }
 
-        return view('admin.desa.berita-desa.index', compact('berita'));
+        $context = 'approved';
+        return view('admin.desa.berita-desa.index', compact('berita', 'context'));
+    }
+
+    public function pending(Request $request)
+    {
+        $this->authorizeAdminDesa();
+
+        $query = BeritaDesa::with('user')
+            ->where('villages_id', Auth::user()->villages_id)
+            ->where('status', 'pending');
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('judul', 'like', "%{$search}%")
+                    ->orWhere('deskripsi', 'like', "%{$search}%")
+                    ->orWhere('komentar', 'like', "%{$search}%");
+            });
+        }
+
+        $berita = $query->latest()->paginate(10);
+
+        // Wilayah info pakai data admin login (konsisten dengan index)
+        $adminUser = Auth::user();
+        $dummyBerita = (object) [
+            'province_id' => $adminUser->province_id,
+            'districts_id' => $adminUser->districts_id,
+            'sub_districts_id' => $adminUser->sub_districts_id,
+            'villages_id' => $adminUser->villages_id
+        ];
+        foreach ($berita as $item) {
+            $item->wilayah_info = $this->getWilayahInfo($dummyBerita);
+        }
+
+        $context = 'pending';
+        return view('admin.desa.berita-desa.index', compact('berita', 'context'));
     }
 
     public function create()
@@ -84,6 +122,7 @@ class BeritaDesaController extends Controller
 
         $data = $request->only(['judul', 'deskripsi', 'komentar']);
         $data['user_id'] = Auth::id();
+        $data['status'] = 'approved';
         
         // Ambil wilayah dari user yang login (admin desa)
         $adminDesa = Auth::user();
@@ -145,6 +184,7 @@ class BeritaDesaController extends Controller
         ]);
 
         $data = $request->only(['judul', 'deskripsi', 'komentar']);
+        $data['status'] = $berita->status; // pertahankan status saat update biasa
         
         // Set wilayah berdasarkan user yang login (konsisten dengan store)
         $adminDesa = Auth::user();
@@ -200,6 +240,24 @@ class BeritaDesaController extends Controller
             'status' => 'success',
             'data' => $berita
         ]);
+    }
+
+    public function approve($id)
+    {
+        $this->authorizeAdminDesa();
+        $berita = BeritaDesa::findOrFail($id);
+        abort_unless($berita->villages_id == Auth::user()->villages_id, 403);
+        $berita->update(['status' => 'approved']);
+        return redirect()->back()->with('success', 'Berita disetujui.');
+    }
+
+    public function reject($id)
+    {
+        $this->authorizeAdminDesa();
+        $berita = BeritaDesa::findOrFail($id);
+        abort_unless($berita->villages_id == Auth::user()->villages_id, 403);
+        $berita->update(['status' => 'rejected']);
+        return redirect()->back()->with('success', 'Berita ditolak.');
     }
 
     private function authorizeAdminDesa(): void

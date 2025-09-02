@@ -542,13 +542,31 @@
 
                     <!-- Berita Desa -->
                     <li class="-ml-5">
-                        <a href="{{ route('admin.desa.berita-desa.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                                    {{ request()->routeIs('admin.desa.berita-desa.*')
-                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                        <button type="button"
+                            class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
+                            onclick="toggleDropdown('adminBeritaDropdown')">
                             <i class="fa-solid fa-newspaper text-lg transition-all duration-300"></i>
                             <span>Berita Desa</span>
-                        </a>
+                            <i id="dropdown-icon-admin-berita" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
+                        </button>
+                        <ul id="adminBeritaDropdown" class="hidden space-y-2 pl-6">
+                            <li>
+                                <a href="{{ route('admin.desa.berita-desa.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                                                                                                                                        {{ request()->routeIs('admin.desa.berita-desa.index')
+                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                    <span>Daftar Berita</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('admin.desa.berita-desa.pending') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                                                                                                                                        {{ request()->routeIs('admin.desa.berita-desa.pending')
+                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                    <span>Approval Berita Desa</span>
+                                </a>
+                            </li>
+                        </ul>
                     </li>
 
                     
@@ -658,13 +676,31 @@
                     </li>
 
                     <li class="-ml-5">
-                        <a href="{{ route('user.berita-desa.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                {{ request()->routeIs('user.berita-desa*')
-                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                        <button type="button"
+                            class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
+                            onclick="toggleDropdown('userBeritaDropdown')">
                             <i class="fa-solid fa-newspaper text-lg transition-all duration-300"></i>
                             <span>Berita Desa</span>
-                        </a>
+                            <i id="dropdown-icon-user-berita" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
+                        </button>
+                        <ul id="userBeritaDropdown" class="hidden space-y-2 pl-6">
+                            <li>
+                                <a href="{{ route('user.berita-desa.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                                                                                                        {{ request()->routeIs('user.berita-desa.index')
+                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                    <span>Daftar Berita</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('user.berita-desa.create') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                                                                                                        {{ request()->routeIs('user.berita-desa.create')
+                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                    <span>Buat Berita Desa</span>
+                                </a>
+                            </li>
+                        </ul>
                     </li>
 
                     <!-- Add Logout Button for User (Penduduk) -->

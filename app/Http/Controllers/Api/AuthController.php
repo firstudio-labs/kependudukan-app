@@ -83,9 +83,24 @@ class AuthController extends Controller
 
     public function showLoginForm()
     {
-
         $this->forceLogoutIfAuthenticated();
-        return view('login');
+        
+        return response()->json([
+            'status' => true,
+            'message' => 'Login form endpoint',
+            'data' => [
+                'endpoint' => '/api/login',
+                'method' => 'POST',
+                'required_fields' => [
+                    'nik' => 'string (required)',
+                    'password' => 'string (required)'
+                ],
+                'example' => [
+                    'nik' => '1234567890123456',
+                    'password' => 'password123'
+                ]
+            ]
+        ]);
     }
 
     protected function isPublicPage($url)

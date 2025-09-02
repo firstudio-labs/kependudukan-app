@@ -101,7 +101,7 @@ class BiodataController extends Controller
                 ], 401);
             }
 
-            // Validation rules - sama dengan ProfileController
+            // Validation rules - disamakan dengan form di BiodataController::requestApprovalFromProfile
             $validator = Validator::make($request->all(), [
                 'full_name' => 'required|string|max:255',
                 'kk' => 'nullable|string',
@@ -116,6 +116,9 @@ class BiodataController extends Controller
                 'district_id' => 'required|numeric',
                 'sub_district_id' => 'required|numeric',
                 'village_id' => 'required|numeric',
+                'blood_type' => 'nullable|numeric',
+                'education_status' => 'nullable|numeric',
+                'job_type_id' => 'nullable|numeric',
             ]);
 
             if ($validator->fails()) {
@@ -208,7 +211,10 @@ class BiodataController extends Controller
                 ], 401);
             }
 
-            $history = ProfileChangeRequest::where('nik', $user->nik)
+            // Dukung opsi mengambil history untuk anggota keluarga via query ?nik=...
+            $targetNik = $request->query('nik', $user->nik);
+
+            $history = ProfileChangeRequest::where('nik', $targetNik)
                 ->orderBy('created_at', 'desc')
                 ->get()
                 ->map(function ($request) {
