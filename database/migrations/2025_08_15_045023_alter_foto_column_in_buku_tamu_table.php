@@ -9,7 +9,7 @@ return new class extends Migration
     public function up()
     {
         Schema::table('buku_tamu', function (Blueprint $table) {
-            $table->text('foto')->change(); // Ubah dari VARCHAR ke TEXT
+            $table->text('foto')->nullable()->change();
         });
     }
 
