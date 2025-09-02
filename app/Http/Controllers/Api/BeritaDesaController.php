@@ -63,7 +63,8 @@ class BeritaDesaController extends Controller
             }
 
             $query = BeritaDesa::query();
-            $query->where('villages_id', $villageId); // Updated field name
+            $query->where('villages_id', $villageId)
+                  ->where('status', 'approved');
 
             // Handle search parameter
             if ($request->has('search') && !empty($request->search)) {
@@ -110,6 +111,98 @@ class BeritaDesaController extends Controller
                 'status' => 'error',
                 'message' => 'Failed to fetch berita desa: ' . $e->getMessage()
             ], 500);
+        }
+    }
+
+    public function store(Request $request, CitizenService $citizenService)
+    {
+        try {
+            $tokenOwner = $request->attributes->get('token_owner');
+            if (!$tokenOwner || $request->attributes->get('token_owner_type') !== 'penduduk') {
+                return response()->json(['status' => 'error', 'message' => 'Unauthorized'], 401);
+            }
+
+            $request->validate([
+                'judul' => 'required|string|max:255',
+                'deskripsi' => 'required|string',
+                'komentar' => 'nullable|string',
+                'gambar' => 'nullable|image|mimes:jpeg,png,jpg|max:4096',
+                'submit_for_approval' => 'nullable|boolean'
+            ]);
+
+            $nik = $tokenOwner->nik ?? null;
+            $citizenData = $nik ? $citizenService->getCitizenByNIK($nik) : null;
+            $payload = is_array($citizenData) ? ($citizenData['data'] ?? $citizenData) : [];
+
+            $provinceId = $payload['province_id'] ?? $payload['provinsi_id'] ?? null;
+            $districtId = $payload['district_id'] ?? $payload['districts_id'] ?? null;
+            $subDistrictId = $payload['sub_district_id'] ?? $payload['sub_districts_id'] ?? null;
+            $villageId = $payload['villages_id'] ?? $payload['village_id'] ?? null;
+
+            if (!$villageId) {
+                return response()->json(['status' => 'error', 'message' => 'Data desa tidak ditemukan untuk akun ini'], 422);
+            }
+
+            $data = [
+                'judul' => $request->input('judul'),
+                'deskripsi' => $request->input('deskripsi'),
+                'komentar' => $request->input('komentar'),
+                'user_id' => $tokenOwner->id ?? null,
+                'province_id' => $provinceId ? (int) $provinceId : null,
+                'districts_id' => $districtId ? (int) $districtId : null,
+                'sub_districts_id' => $subDistrictId ? (int) $subDistrictId : null,
+                'villages_id' => (int) $villageId,
+                'status' => $request->boolean('submit_for_approval', true) ? 'pending' : 'draft',
+            ];
+
+            if ($request->hasFile('gambar')) {
+                $file = $request->file('gambar');
+                $titleSlug = \Illuminate\Support\Str::slug(substr($request->input('judul'), 0, 30));
+                $filename = time() . '_' . $titleSlug . '.' . $file->getClientOriginalExtension();
+                $path = $file->storeAs('uploads/documents/berita-desa', $filename, 'public');
+                $data['gambar'] = $path;
+            }
+
+            $berita = BeritaDesa::create($data);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => $data['status'] === 'pending' ? 'Berita dibuat dan dikirim untuk persetujuan' : 'Berita disimpan sebagai draf',
+                'data' => $berita
+            ], 201);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json(['status' => 'error', 'message' => 'Validasi gagal', 'errors' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'error', 'message' => 'Gagal menyimpan berita: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function sendApproval(Request $request, $id)
+    {
+        try {
+            $tokenOwner = $request->attributes->get('token_owner');
+            if (!$tokenOwner || $request->attributes->get('token_owner_type') !== 'penduduk') {
+                return response()->json(['status' => 'error', 'message' => 'Unauthorized'], 401);
+            }
+
+            $berita = BeritaDesa::where('id', $id)
+                ->where(function ($q) use ($tokenOwner) {
+                    $q->where('user_id', $tokenOwner->id)->orWhereNull('user_id');
+                })
+                ->firstOrFail();
+
+            if ($berita->status === 'approved') {
+                return response()->json(['status' => 'success', 'message' => 'Berita sudah disetujui'], 200);
+            }
+
+            $berita->update(['status' => 'pending']);
+
+            return response()->json(['status' => 'success', 'message' => 'Berita dikirim untuk persetujuan', 'data' => $berita], 200);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['status' => 'error', 'message' => 'Berita tidak ditemukan'], 404);
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'error', 'message' => 'Gagal mengirim approval: ' . $e->getMessage()], 500);
         }
     }
 

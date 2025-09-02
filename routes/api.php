@@ -117,6 +117,10 @@ Route::middleware(ApiTokenOwnerMiddleware::class)->group(function () {
         //berita desa
         Route::get('/berita-desa', [BeritaDesaController::class, 'index'])
             ->name('user.berita-desa.index');
+        Route::post('/berita-desa', [BeritaDesaController::class, 'store'])
+            ->name('user.berita-desa.store');
+        Route::post('/berita-desa/{id}/send-approval', [BeritaDesaController::class, 'sendApproval'])
+            ->name('user.berita-desa.send-approval');
         Route::get('/berita-desa/{id}', [BeritaDesaController::class, 'show'])
             ->name('user.berita-desa.show');
 
