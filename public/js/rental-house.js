@@ -32,14 +32,28 @@ document.addEventListener('DOMContentLoaded', function() {
         showSweetAlert('error', 'Gagal!', error);
     }
 
-    // Load all citizens first before initializing Select2
+    // Determine if this is admin desa text-input mode (NIK input field present and not a select)
+    function isAdminTextInputMode() {
+        const nikEl = document.getElementById('nikSelect');
+        return nikEl && nikEl.tagName && nikEl.tagName.toLowerCase() === 'input';
+    }
+
+    // Load all citizens first before initializing Select2 / inputs
+    // Determine admin village id (for admin desa) to filter citizens
+    const adminVillageIdEl = document.getElementById('admin_village_id');
+    const adminVillageId = adminVillageIdEl ? adminVillageIdEl.value : null;
+
+    // Build request data with optional village filter
+    const requestData = { limit: 10000 };
+    if (adminVillageId) {
+        requestData.village_id = adminVillageId;
+    }
+
     $.ajax({
         url: citizenApiRoute,
         type: 'GET',
         dataType: 'json',
-        data: {
-            limit: 10000 // Increase limit to load more citizens at once
-        },
+        data: requestData,
         headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
@@ -68,6 +82,12 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             setupOrganizerFields();
             setupResponsibleNameField();
+
+            // If admin desa uses text inputs for NIK/fullname, enable autofill and RF ID handling
+            if (isAdminTextInputMode()) {
+                setupTextInputAutofill(allCitizens);
+                setupRfIdHandling(allCitizens);
+            }
         },
         error: function(error) {
             console.error('Failed to load citizen data:', error);
@@ -77,6 +97,10 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             setupOrganizerFields();
             setupResponsibleNameField();
+            if (isAdminTextInputMode()) {
+                setupTextInputAutofill([]);
+                setupRfIdHandling([]);
+            }
         }
     });
 
@@ -221,6 +245,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Setup organizer fields (NIK, name, address) as a connected unit
     function setupOrganizerFields() {
+        // In admin text-input mode, we don't initialize Select2
+        if (isAdminTextInputMode()) {
+            setupAdminTextInputsSync();
+            return;
+        }
         // Process citizens for Select2
         function prepareCitizenOptions() {
             const nikOptions = [];
@@ -517,51 +546,178 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Setup responsible name field as an independent selection
     function setupResponsibleNameField() {
-        const responsibleSelect = document.getElementById('responsibleNameSelect');
+        const responsibleEl = document.getElementById('responsibleNameSelect');
 
-        if (!responsibleSelect) {
-            console.warn('Responsible name select element not found');
+        if (!responsibleEl) {
+            console.warn('Responsible name element not found');
             return;
         }
 
-        // Process citizens for Select2 - only names
-        function prepareNameOptions() {
-            const nameOptions = [];
-
-            allCitizens.forEach(citizen => {
-                // Only add if full_name is available
-                if (citizen.full_name) {
-                    nameOptions.push({
-                        id: citizen.full_name,
-                        text: citizen.full_name
-                    });
-                }
-            });
-
-            return nameOptions;
+        // If the element is an input (admin desa and guest), do nothing
+        if (responsibleEl.tagName && responsibleEl.tagName.toLowerCase() === 'input') {
+            return;
         }
 
-        const nameOptions = prepareNameOptions();
+        // Only initialize Select2 if it's a select element
+        if (responsibleEl.tagName && responsibleEl.tagName.toLowerCase() === 'select') {
+            // Process citizens for Select2 - only names
+            const nameOptions = allCitizens
+                .filter(citizen => !!citizen.full_name)
+                .map(citizen => ({ id: citizen.full_name, text: citizen.full_name }));
 
-        // Initialize Name Select2 with pre-loaded data
-        $(responsibleSelect).select2({
-            placeholder: 'Pilih Nama Penanggung Jawab',
-            width: '100%',
-            data: nameOptions,
-            language: {
-                noResults: function() {
-                    return 'Tidak ada data yang ditemukan';
+            $(responsibleEl).select2({
+                placeholder: 'Pilih Nama Penanggung Jawab',
+                width: '100%',
+                data: nameOptions,
+                language: {
+                    noResults: function() { return 'Tidak ada data yang ditemukan'; },
+                    searching: function() { return 'Mencari...'; }
                 },
-                searching: function() {
-                    return 'Mencari...';
+                escapeMarkup: function(markup) { return markup; }
+            }).on("select2:open", function() {
+                $('.select2-results__options').css('max-height', '400px');
+            });
+        }
+    }
+
+    // Admin text-input helpers (adapted from location-dropdowns.js)
+    function setupAdminTextInputsSync() {
+        const nikInput = document.getElementById('nikSelect');
+        const nameInput = document.getElementById('fullNameSelect');
+        if (!nikInput || !nameInput) return;
+
+        // Remove existing listeners by cloning
+        const newNikInput = nikInput.cloneNode(true);
+        nikInput.parentNode.replaceChild(newNikInput, nikInput);
+
+        newNikInput.addEventListener('input', function() {
+            const nikValue = this.value.trim();
+            if (nikValue.length === 16 && /^\d+$/.test(nikValue)) {
+                const matched = allCitizens.find(c => (c.nik ? c.nik.toString() : '') === nikValue);
+                if (matched) {
+                    populateCitizenDataForRental(matched);
+                    nameInput.value = matched.full_name || '';
+                    if (document.getElementById('province_code')) {
+                        populateLocationFields(matched);
+                    }
+                    $(newNikInput).addClass('border-green-500').removeClass('border-red-500 border-gray-300');
+                    setTimeout(() => { $(newNikInput).removeClass('border-green-500').addClass('border-gray-300'); }, 2000);
+                } else {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            title: 'Data Tidak Ditemukan',
+                            text: 'NIK tidak terdaftar atau bukan warga desa ini',
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                    $(newNikInput).addClass('border-red-500').removeClass('border-green-500 border-gray-300');
+                    setTimeout(() => { $(newNikInput).removeClass('border-red-500').addClass('border-gray-300'); }, 2000);
                 }
-            },
-            escapeMarkup: function(markup) {
-                return markup;
             }
-        }).on("select2:open", function() {
-            $('.select2-results__options').css('max-height', '400px');
         });
+    }
+
+    function setupTextInputAutofill(citizens) {
+        // Already handled in setupAdminTextInputsSync but keep placeholder for parity
+    }
+
+    function setupRfIdHandling(citizens) {
+        const rfIdInput = document.getElementById('rf_id_tag');
+        if (!rfIdInput) return;
+
+        const newRf = rfIdInput.cloneNode(true);
+        rfIdInput.parentNode.replaceChild(newRf, rfIdInput);
+
+        let inputTimeout;
+        newRf.addEventListener('keydown', function(e){ if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); }});
+        newRf.addEventListener('input', function(){
+            const v = this.value.trim();
+            clearTimeout(inputTimeout);
+            if (v.length > 0) {
+                inputTimeout = setTimeout(() => { processRfIdValue(v, citizens, newRf); }, 300);
+            }
+        });
+        newRf.addEventListener('paste', function(e){
+            e.preventDefault();
+            const t = (e.clipboardData || window.clipboardData).getData('text');
+            this.value = t;
+            setTimeout(() => { const v = this.value.trim(); if (v.length > 0) { processRfIdValue(v, citizens, newRf); } }, 100);
+        });
+        newRf.addEventListener('keyup', function(e){
+            if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); return; }
+            const v = this.value.trim();
+            if (v.length > 0) {
+                clearTimeout(inputTimeout);
+                inputTimeout = setTimeout(() => { processRfIdValue(v, citizens, newRf); }, 200);
+            }
+        });
+    }
+
+    function processRfIdValue(rfIdValue, citizens, inputElement) {
+        const matched = testRfIdSearch(rfIdValue, citizens);
+        if (matched) {
+            populateCitizenDataForRental(matched);
+            const nikEl = document.getElementById('nikSelect');
+            if (nikEl && nikEl.tagName.toLowerCase() === 'input') {
+                nikEl.value = matched.nik ? matched.nik.toString() : '';
+            }
+            const nameEl = document.getElementById('fullNameSelect');
+            if (nameEl && nameEl.tagName.toLowerCase() === 'input') {
+                nameEl.value = matched.full_name || '';
+            }
+            if (document.getElementById('province_code')) {
+                populateLocationFields(matched);
+            }
+            $(inputElement).addClass('border-green-500').removeClass('border-red-500 border-gray-300');
+            setTimeout(() => { $(inputElement).removeClass('border-green-500').addClass('border-gray-300'); }, 2000);
+        } else {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({ title: 'Data Tidak Ditemukan', text: 'RF ID tidak terdaftar', icon: 'error', confirmButtonText: 'OK' });
+            }
+            $(inputElement).addClass('border-red-500').removeClass('border-green-500 border-gray-300');
+            setTimeout(() => { $(inputElement).removeClass('border-red-500').addClass('border-gray-300'); }, 2000);
+        }
+    }
+
+    function testRfIdSearch(rfId, citizens) {
+        if (!citizens || !Array.isArray(citizens)) return null;
+        return citizens.find(citizen => {
+            if (!citizen.rf_id_tag) return false;
+            const normalizedInput = normalizeRfId(rfId);
+            const normalizedStored = normalizeRfId(citizen.rf_id_tag);
+            const exactMatch = normalizedInput === normalizedStored;
+            const partialMatch = normalizedStored.includes(normalizedInput) && normalizedInput.length >= 5;
+            const reverseMatch = normalizedInput.includes(normalizedStored) && normalizedStored.length >= 5;
+            return exactMatch || partialMatch || reverseMatch;
+        });
+    }
+
+    function normalizeRfId(rfId) {
+        if (!rfId) return '';
+        let normalized = rfId.toString();
+        normalized = normalized.replace(/^0+/, '');
+        normalized = normalized.replace(/[^0-9]/g, '');
+        normalized = normalized.trim();
+        return normalized;
+    }
+
+    function populateCitizenDataForRental(citizen) {
+        // Fill address field in this form context
+        const addressField = document.getElementById('address');
+        if (addressField) {
+            addressField.value = citizen.address || '';
+        }
+        // RT field in this form
+        const rtField = document.getElementById('rt');
+        if (rtField) {
+            rtField.value = citizen.rt ? citizen.rt.toString() : '';
+        }
+        // RF ID Tag field in this form
+        const rfIdField = document.getElementById('rf_id_tag');
+        if (rfIdField) {
+            rfIdField.value = citizen.rf_id_tag ? citizen.rf_id_tag.toString() : '';
+        }
     }
 
     // Form validation - only run if form exists
