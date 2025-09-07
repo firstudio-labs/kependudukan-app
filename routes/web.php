@@ -26,6 +26,7 @@ use App\Http\Controllers\Surat\KematianController;
 use App\Http\Controllers\Surat\IzinKeramaianController;
 use App\Http\Controllers\Surat\RumahSewaController;
 use App\Http\Controllers\Surat\PengantarKtpController;
+use App\Http\Controllers\adminDesa\AllLettersController;
 use App\Http\Controllers\PenandatangananController;
 use App\Http\Controllers\KlasifikasiController;
 use App\Http\Controllers\JenisAsetController;
@@ -567,6 +568,10 @@ Route::middleware(['auth:web', 'role:admin desa'])->group(function () {
         ->name('admin.desa.surat.administrasi.delete');
     Route::get('/admin/desa/surat/administrasi/{id}/pdf', [AdministrasiController::class, 'generatePDF'])
         ->name('admin.desa.surat.administrasi.pdf');
+
+    // Semua Surat (gabungan)
+    Route::get('/admin/desa/surat/index', [AllLettersController::class, 'index'])
+        ->name('admin.desa.surat.index');
 
     // Kehilangan routes
     Route::get('/admin/desa/surat/kehilangan/index', [KehilanganController::class, 'index'])
