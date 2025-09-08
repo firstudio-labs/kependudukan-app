@@ -293,10 +293,14 @@ class AdminBiodataApprovalController extends Controller
 	private function convertFormDataToApiFormat($formData, $requestModel)
 	{
 		try {
-			// Get existing citizen data from API
-			$existingData = $this->citizenService->getCitizenByNIK($requestModel->nik ?? '');
+			// Get existing citizen data from API (extract payload under 'data' if present)
+			$existing = $this->citizenService->getCitizenByNIK($requestModel->nik ?? '');
+			$existingData = [];
+			if (is_array($existing)) {
+				$existingData = $existing['data'] ?? $existing;
+			}
 			
-			if (!$existingData || !is_array($existingData)) {
+			if (empty($existingData) || !is_array($existingData)) {
 				Log::error('Could not fetch existing citizen data from API', [
 					'nik' => $requestModel->nik ?? 'unknown'
 				]);
@@ -398,6 +402,19 @@ class AdminBiodataApprovalController extends Controller
 
 			if (isset($formData['village_id']) && is_numeric($formData['village_id'])) {
 				$apiData['village_id'] = (int) $formData['village_id'];
+			}
+
+			// Include other selectable fields if provided (numeric IDs)
+			if (isset($formData['blood_type']) && is_numeric($formData['blood_type'])) {
+				$apiData['blood_type'] = (int) $formData['blood_type'];
+			}
+
+			if (isset($formData['education_status']) && is_numeric($formData['education_status'])) {
+				$apiData['education_status'] = (int) $formData['education_status'];
+			}
+
+			if (isset($formData['job_type_id']) && is_numeric($formData['job_type_id'])) {
+				$apiData['job_type_id'] = (int) $formData['job_type_id'];
 			}
 
 			// CRITICAL: Don't add any default values or make up data

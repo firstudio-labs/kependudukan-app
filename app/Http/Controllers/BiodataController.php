@@ -127,29 +127,10 @@ class BiodataController extends Controller
                 return null;
             }
 
+            // Sumber kebenaran adalah API. Jangan timpa dengan riwayat approved lokal,
+            // karena bisa jadi approval sebelumnya gagal tersinkron ke API.
+            // Kembalikan langsung data API agar form selalu konsisten dengan server.
             $data = $citizen['data'];
-            
-            // Ambil data perubahan yang sudah diapprove untuk NIK ini
-            $approvedChanges = \App\Models\ProfileChangeRequest::where('nik', $nik)
-                ->where('status', 'approved')
-                ->orderBy('reviewed_at', 'desc')
-                ->get();
-            
-            // Terapkan perubahan yang sudah diapprove ke data
-            foreach ($approvedChanges as $change) {
-                if (isset($change->requested_changes) && is_array($change->requested_changes)) {
-                    foreach ($change->requested_changes as $field => $value) {
-                        // Skip field yang tidak boleh diubah (readonly)
-                        if (in_array($field, ['full_name', 'gender', 'address', 'rt', 'rw'])) {
-                            continue;
-                        }
-                        
-                        // Terapkan perubahan yang sudah diapprove
-                        $data[$field] = $value;
-                    }
-                }
-            }
-            
             return $data;
         } catch (\Exception $e) {
             Log::error('getLatestDataForForm error: ' . $e->getMessage());

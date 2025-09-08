@@ -309,6 +309,9 @@ class CitizenService
                 }
             }
 
+            // Normalize mapped fields to API numeric values (e.g., blood_type 'B' -> 2)
+            $cleanData = $this->normalizeDataForApi($cleanData);
+
             // Log the data being sent
             Log::info('Updating citizen via API', [
                 'nik' => $nik,
