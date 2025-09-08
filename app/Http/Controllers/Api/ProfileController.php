@@ -274,10 +274,11 @@ class ProfileController extends Controller
     {
         try {
             $request->validate([
-                'tag_lokasi' => 'required|string'
+                'tag_lokasi' => 'required|string',
+                'alamat' => 'required|string|max:500'
             ]);
 
-            // Check for token authentication first
+            // Auth: token first, then penduduk guard
             if (auth('sanctum')->check()) {
                 $userData = auth('sanctum')->user();
             } else if (Auth::guard('penduduk')->check()) {
@@ -289,58 +290,124 @@ class ProfileController extends Controller
                 ], 401);
             }
 
-            $userData->tag_lokasi = $request->tag_lokasi;
-            $userData->save();
-
-            // If user is a citizen (penduduk) or penduduk via API and has a family card number
-            if (($userData instanceof Penduduk || Auth::guard('penduduk')->check()) && !empty($userData->no_kk)) {
-                // Update tag_lokasi for all family members including the current user
-                Penduduk::where('no_kk', $userData->no_kk)
-                    ->update(['tag_lokasi' => $request->tag_lokasi]);
-
-                Log::info('Location updated for all family members via API', [
-                    'no_kk' => $userData->no_kk,
-                    'tag_lokasi' => $request->tag_lokasi,
-                    'updater_nik' => $userData->nik,
-                    'total_updated' => Penduduk::where('no_kk', $userData->no_kk)->count()
-                ]);
-
-                // Get all family members to update in external API
-                $familyMembers = Penduduk::where('no_kk', $userData->no_kk)->get();
-
-                foreach ($familyMembers as $member) {
-                    if (!empty($member->nik)) {
-                        try {
-                            $response = $this->citizenService->updateCitizen((int) $member->nik, [
-                                'coordinate' => $request->tag_lokasi
-                            ]);
-
-                            Log::info('API coordinate update response for family member', [
-                                'nik' => $member->nik,
-                                'response' => $response
-                            ]);
-                        } catch (\Exception $e) {
-                            Log::error('Error updating coordinates in API for family member: ' . $e->getMessage(), [
-                                'nik' => $member->nik,
-                                'coordinate' => $request->tag_lokasi
-                            ]);
-                        }
+            // Ambil KK dari API berdasarkan NIK
+            $kk = null;
+            try {
+                if (!empty($userData->nik)) {
+                    $citizenData = $this->citizenService->getCitizenByNIK((int) $userData->nik);
+                    if ($citizenData && isset($citizenData['data'])) {
+                        $kk = $citizenData['data']['kk'] ?? ($citizenData['data']['no_kk'] ?? null);
                     }
+                }
+            } catch (\Exception $e) {
+                Log::warning('Failed to fetch citizen data for KK', [
+                    'nik' => $userData->nik ?? null,
+                    'error' => $e->getMessage()
+                ]);
+            }
+
+            if (!$kk) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Nomor KK tidak ditemukan untuk pengguna ini'
+                ], 400);
+            }
+
+            Log::info('API: updating location for family by KK', [
+                'kk' => $kk,
+                'coordinate' => $request->tag_lokasi,
+                'address' => $request->alamat,
+                'updater_nik' => $userData->nik ?? null
+            ]);
+
+            // Ambil anggota keluarga dari API
+            $familyMembers = [];
+            $apiFamily = $this->citizenService->getFamilyMembersByKK($kk);
+            if ($apiFamily && isset($apiFamily['data']) && is_array($apiFamily['data'])) {
+                $familyMembers = $apiFamily['data'];
+            }
+
+            $updatedMembers = [];
+            $failedUpdates = [];
+
+            foreach ($familyMembers as $member) {
+                if (empty($member['nik'])) {
+                    continue;
+                }
+                $memberNik = (int) $member['nik'];
+
+                // Update lokal DB (buat jika belum ada)
+                try {
+                    $penduduk = Penduduk::where('nik', $memberNik)->first();
+                    if ($penduduk) {
+                        $penduduk->tag_lokasi = $request->tag_lokasi;
+                        $penduduk->alamat = $request->alamat;
+                        $penduduk->save();
+                    } else {
+                        Penduduk::create([
+                            'nik' => $memberNik,
+                            'password' => Hash::make(Str::random(10)),
+                            'tag_lokasi' => $request->tag_lokasi,
+                            'alamat' => $request->alamat,
+                        ]);
+                    }
+                } catch (\Exception $e) {
+                    Log::error('API: failed updating local DB for member', [
+                        'nik' => $memberNik,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+
+                // Update ke API eksternal
+                try {
+                    $resp = $this->citizenService->updateCitizen($memberNik, [
+                        'coordinate' => $request->tag_lokasi,
+                        'address' => $request->alamat
+                    ]);
+
+                    if (isset($resp['status']) && $resp['status'] === 'ERROR') {
+                        $failedUpdates[] = [
+                            'nik' => $memberNik,
+                            'name' => $member['full_name'] ?? $member['nama'] ?? 'Unknown',
+                            'error' => $resp['message'] ?? 'Unknown error'
+                        ];
+                        Log::warning('API: external update failed for member', [
+                            'nik' => $memberNik,
+                            'error' => $resp['message'] ?? 'Unknown error'
+                        ]);
+                    } else {
+                        $updatedMembers[] = [
+                            'nik' => $memberNik,
+                            'name' => $member['full_name'] ?? $member['nama'] ?? 'Unknown'
+                        ];
+                    }
+                } catch (\Exception $e) {
+                    $failedUpdates[] = [
+                        'nik' => $memberNik,
+                        'name' => $member['full_name'] ?? $member['nama'] ?? 'Unknown',
+                        'error' => $e->getMessage()
+                    ];
+                    Log::error('API: exception updating external API for member', [
+                        'nik' => $memberNik,
+                        'error' => $e->getMessage()
+                    ]);
                 }
             }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Location updated successfully',
+                'message' => 'Lokasi dan alamat keluarga berhasil diperbarui',
                 'data' => [
-                    'tag_lokasi' => $userData->tag_lokasi
+                    'updated_members' => $updatedMembers,
+                    'failed_updates' => $failedUpdates,
+                    'total_members' => count($familyMembers)
                 ]
             ]);
         } catch (\Exception $e) {
-            Log::error('Error in updateLocation: ' . $e->getMessage());
+            Log::error('Error in API updateLocation (family): ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'An error occurred while updating the location',
+                'message' => 'Terjadi kesalahan saat memperbarui lokasi keluarga',
                 'error' => $e->getMessage()
             ], 500);
         }

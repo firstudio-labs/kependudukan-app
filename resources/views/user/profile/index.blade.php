@@ -725,7 +725,7 @@ if (Auth::guard('web')->check()) {
                                         </th>
                                         <th scope="col"
                                             class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Lokasi
+                                            Alamat
                                         </th>
                                     </tr>
                                 </thead>
@@ -737,6 +737,7 @@ if (Auth::guard('web')->check()) {
                     </div>
                 </div>
             </div>
+
 
             <!-- Lokasi -->
             <div class="bg-white p-6 rounded-lg shadow-md mt-6">
@@ -764,11 +765,12 @@ if (!empty($userData->tag_lokasi)) {
                     latitude="{{ $lat }}" longitudeId="tagLng" longitudeName="tag_lng" longitude="{{ $lng }}"
                     modalId="" />
 
-                <div class="mt-4">
+                <div class="mt-4 flex flex-col sm:flex-row gap-2">
                     <button type="button" id="saveLocationBtn"
                         class="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg">
                         Simpan Tag Lokasi
                     </button>
+                    
                     <span id="locationSaveStatus" class="ml-2 text-sm hidden"></span>
                 </div>
             </div>
@@ -1268,9 +1270,38 @@ if (!empty($userData->tag_lokasi)) {
                                     UI.container.classList.remove('hidden');
 
                                     if (familyMembersData.length > 0) {
-                                        renderFamilyMembersTable(familyMembersData);
+                                        // Ambil data alamat dari database lokal untuk setiap anggota keluarga
+                                        fetchFamilyMembersWithAddress(familyMembersData);
                                     } else {
                                         renderEmptyState();
+                                    }
+                                }
+
+                                async function fetchFamilyMembersWithAddress(familyMembers) {
+                                    try {
+                                        const membersWithAddress = [];
+                                        
+                                        for (const member of familyMembers) {
+                                            if (member.nik) {
+                                                try {
+                                                    const response = await fetch(`/user/family-member/${member.nik}/documents`);
+                                                    const data = await response.json();
+                                                    
+                                                    if (data.success) {
+                                                        member.alamat = data.address || member.alamat || member.address || '-';
+                                                    }
+                                                } catch (error) {
+                                                    console.warn('Failed to fetch address for member:', member.nik, error);
+                                                    member.alamat = member.alamat || member.address || '-';
+                                                }
+                                            }
+                                            membersWithAddress.push(member);
+                                        }
+                                        
+                                        renderFamilyMembersTable(membersWithAddress);
+                                    } catch (error) {
+                                        console.error('Error fetching family members with address:', error);
+                                        renderFamilyMembersTable(familyMembers);
                                     }
                                 }
 
@@ -1310,8 +1341,10 @@ if (!empty($userData->tag_lokasi)) {
                                          </button>`
                                         );
 
+                                        // Ambil alamat dari data lokal atau API
+                                        const memberAddress = member.alamat || member.address || member.location_address || '-';
                                         row.innerHTML += createTableCell(
-                                            `<div class="${CLASSES.text}">${member.tag_lokasi || '-'}</div>`
+                                            `<div class="${CLASSES.text}" title="${memberAddress}">${memberAddress}</div>`
                                         );
 
 
@@ -1861,52 +1894,31 @@ if (!empty($userData->tag_lokasi)) {
                                 const tagLngInput = document.getElementById('tagLng');
 
                                 function initializeExistingLocation() {
-
                                     const nik = "{{ $userData->nik ?? '' }}";
                                     if (!nik) {
                                         console.log('NIK pengguna tidak tersedia, tidak dapat memuat koordinat');
                                         return;
                                     }
 
+                                    // Coba ambil koordinat dari data user yang sudah ada
+                                    const existingLocation = "{{ $userData->tag_lokasi ?? '' }}";
+                                    if (existingLocation) {
+                                        const coordinates = existingLocation.split(',');
+                                        if (coordinates.length === 2) {
+                                            const lat = coordinates[0].trim();
+                                            const lng = coordinates[1].trim();
 
+                                            tagLatInput.value = lat;
+                                            tagLngInput.value = lng;
 
-                                    fetch(`https://api-kependudukan.desaverse.id/api/citizens/${nik}`, {
-                                        method: 'GET',
-                                        headers: {
-                                            'X-API-Key': '{{ config('services.kependudukan.key') }}',
-                                            'Accept': 'application/json'
+                                            if (window.map && window.marker) {
+                                                window.marker.setLatLng([lat, lng]);
+                                                window.map.setView([lat, lng], 15);
+                                            }
                                         }
-                                    })
-                                        .then(response => {
-                                            if (!response.ok) {
-                                                throw new Error(`HTTP error! Status: ${response.status}`);
-                                            }
-                                            return response.json();
-                                        })
-                                        .then(data => {
-                                            if (data.data && data.data.coordinate) {
-                                                const coordinates = data.data.coordinate.split(',');
-                                                if (coordinates.length === 2) {
-                                                    const lat = coordinates[0].trim();
-                                                    const lng = coordinates[1].trim();
-
-                                                    tagLatInput.value = lat;
-                                                    tagLngInput.value = lng;
-
-
-                                                    if (window.map && window.marker) {
-                                                        window.marker.setLatLng([lat, lng]);
-                                                        window.map.setView([lat, lng], 15);
-                                                    }
-
-                                                }
-                                            } else {
-                                                console.log('Tidak ada koordinat tersimpan untuk pengguna ini');
-                                            }
-                                        })
-                                        .catch(error => {
-                                            console.error('Error loading location:', error);
-                                        });
+                                    } else {
+                                        console.log('Tidak ada koordinat tersimpan untuk pengguna ini');
+                                    }
                                 }
 
 
@@ -1919,21 +1931,26 @@ if (!empty($userData->tag_lokasi)) {
                                     }
                                 }
 
+
                                 if (saveLocationBtn) {
                                     saveLocationBtn.addEventListener('click', function () {
 
                                         const lat = document.getElementById('tagLat').value;
                                         const lng = document.getElementById('tagLng').value;
+                                        const address = document.getElementById('user_address').value;
 
                                         if (!lat || !lng) {
                                             showLocationStatus('error', 'Pilih lokasi pada peta terlebih dahulu');
                                             return;
                                         }
 
+                                        if (!address || address.trim() === '') {
+                                            showLocationStatus('error', 'Alamat tidak boleh kosong. Silakan lengkapi alamat terlebih dahulu.');
+                                            return;
+                                        }
 
                                         const coordinate = `${lat},${lng}`;
-                                        console.log('Sending coordinate:', coordinate);
-
+                                        console.log('Sending coordinate and address:', { coordinate, address });
 
                                         saveLocationBtn.disabled = true;
                                         saveLocationBtn.innerHTML = `
@@ -1944,197 +1961,87 @@ if (!empty($userData->tag_lokasi)) {
                                         Menyimpan...
                                         `;
 
-
-                                        const nik = "{{ $userData->nik ?? '' }}";
-                                        if (!nik) {
-                                            showLocationStatus('error', 'NIK pengguna tidak ditemukan');
-                                            resetSaveButton();
-                                            return;
-                                        }
-
-
-                                        fetch(`https://api-kependudukan.desaverse.id/api/citizens/${nik}`, {
-                                            method: 'GET',
+                                        // Gunakan route internal aplikasi
+                                        fetch('{{ route("user.profile.updateLocation") }}', {
+                                            method: 'POST',
                                             headers: {
-                                                'X-API-Key': '{{ config('services.kependudukan.key') }}',
+                                                'Content-Type': 'application/json',
+                                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                                                 'Accept': 'application/json'
+                                            },
+                                            body: JSON.stringify({
+                                                tag_lokasi: coordinate,
+                                                alamat: address.trim()
+                                            })
+                                        })
+                                        .then(response => {
+                                            if (!response.ok) {
+                                                return response.text().then(text => {
+                                                    let errorMessage = `HTTP error! Status: ${response.status}`;
+                                                    try {
+                                                        const errorData = JSON.parse(text);
+                                                        console.error('Error details:', errorData);
+                                                        errorMessage += `, Message: ${errorData.message || 'Unknown error'}`;
+                                                    } catch (e) {
+                                                        console.error('Non-JSON error response:', text);
+                                                    }
+                                                    throw new Error(errorMessage);
+                                                });
+                                            }
+                                            return response.json();
+                                        })
+                                        .then(data => {
+                                            if (data.success) {
+                                                showLocationStatus('success', 'Lokasi berhasil disimpan');
+                                                
+                                                // Tampilkan pesan refresh
+                                                setTimeout(() => {
+                                                    showLocationStatus('info', 'Memperbarui data...');
+                                                }, 1000);
+                                                
+                                                // Auto refresh data setelah 2 detik
+                                                setTimeout(() => {
+                                                    window.location.reload();
+                                                }, 2000);
+                                            } else {
+                                                throw new Error(data.message || 'Gagal menyimpan lokasi');
                                             }
                                         })
-                                            .then(response => {
-                                                if (!response.ok) {
-                                                    throw new Error(`HTTP error! Status: ${response.status}`);
-                                                }
-                                                return response.json();
-                                            })
-                                            .then(data => {
-                                                if (!data.data) {
-                                                    throw new Error('Data tidak ditemukan');
-                                                }
-
-                                                const citizenData = convertDataToApiFormat(data.data);
-
-                                                citizenData.coordinate = coordinate;
-
-
-                                                // Update the citizen data
-                                                return fetch(`https://api-kependudukan.desaverse.id/api/citizens/${nik}`, {
-                                                    method: 'PUT',
-                                                    headers: {
-                                                        'X-API-Key': '{{ config('services.kependudukan.key') }}',
-                                                        'Content-Type': 'application/json',
-                                                        'Accept': 'application/json'
-                                                    },
-                                                    body: JSON.stringify(citizenData)
-                                                });
-                                            })
-                                            .then(response => {
-                                                if (!response.ok) {
-
-                                                    return response.text().then(text => {
-                                                        let errorMessage = `HTTP error! Status: ${response.status}`;
-                                                        try {
-                                                            const errorData = JSON.parse(text);
-                                                            console.error('Error details:', errorData);
-                                                            errorMessage += `, Message: ${errorData.message || 'Unknown error'}`;
-                                                        } catch (e) {
-                                                            console.error('Non-JSON error response:', text);
-                                                        }
-                                                        throw new Error(errorMessage);
-                                                    });
-                                                }
-                                                return response.json();
-                                            })
-                                            .then(data => {
-                                                if (data.status === 'OK') {
-                                                    showLocationStatus('success', 'Lokasi berhasil disimpan');
-                                                } else {
-                                                    throw new Error(data.message || 'Gagal menyimpan lokasi');
-                                                }
-                                            })
-                                            .catch(error => {
-                                                console.error('Error saving location:', error);
-                                                showLocationStatus('error', `Gagal menyimpan lokasi: ${error.message}`);
-                                            })
-                                            .finally(() => {
-                                                resetSaveButton();
-                                            });
+                                        .catch(error => {
+                                            console.error('Error saving location:', error);
+                                            showLocationStatus('error', `Gagal menyimpan lokasi: ${error.message}`);
+                                        })
+                                        .finally(() => {
+                                            resetSaveButton();
+                                        });
                                     });
                                 }
 
 
-                                function convertDataToApiFormat(data) {
-
-                                    const result = { ...data };
-
-
-                                    if (result.gender === 'Laki-Laki') result.gender = 1;
-                                    else if (result.gender === 'Perempuan') result.gender = 2;
-
-
-                                    if (result.citizen_status === 'WNI') result.citizen_status = 1;
-                                    else if (result.citizen_status === 'WNA') result.citizen_status = 2;
-
-
-                                    const familyStatusMap = {
-                                        'ANAK': 1, 'Anak': 1,
-                                        'KEPALA KELUARGA': 2, 'Kepala Keluarga': 2,
-                                        'ISTRI': 3, 'Istri': 3,
-                                        'ORANG TUA': 4, 'Orang Tua': 4,
-                                        'MERTUA': 5, 'Mertua': 5,
-                                        'CUCU': 6, 'Cucu': 6,
-                                        'FAMILI LAIN': 7, 'Famili Lain': 7
-                                    };
-                                    if (typeof result.family_status === 'string' && familyStatusMap[result.family_status]) {
-                                        result.family_status = familyStatusMap[result.family_status];
-                                    }
-
-                                    const bloodTypeMap = {
-                                        'A': 1, 'B': 2, 'AB': 3, 'O': 4,
-                                        'A+': 5, 'A-': 6, 'B+': 7, 'B-': 8,
-                                        'AB+': 9, 'AB-': 10, 'O+': 11, 'O-': 12,
-                                        'Tidak Tahu': 13
-                                    };
-                                    if (bloodTypeMap[result.blood_type]) result.blood_type = bloodTypeMap[result.blood_type];
-
-                                    const religionMap = {
-                                        'Islam': 1, 'Kristen': 2, 'Katolik': 3, 'Katholik': 3,
-                                        'Hindu': 4, 'Buddha': 5, 'Budha': 5, 'Kong Hu Cu': 6,
-                                        'Konghucu': 6, 'Lainnya': 7
-                                    };
-                                    if (religionMap[result.religion]) result.religion = religionMap[result.religion];
-
-                                    const maritalMap = {
-                                        'Belum Kawin': 1, 'Kawin Tercatat': 2, 'Kawin Belum Tercatat': 3,
-                                        'Cerai Hidup Tercatat': 4, 'Cerai Hidup Belum Tercatat': 5, 'Cerai Mati': 6
-                                    };
-                                    if (maritalMap[result.marital_status]) result.marital_status = maritalMap[result.marital_status];
-
-                                    if (result.birth_certificate === 'Ada') result.birth_certificate = 1;
-                                    else if (result.birth_certificate === 'Tidak Ada') result.birth_certificate = 2;
-
-                                    if (result.marital_certificate === 'Ada') result.marital_certificate = 1;
-                                    else if (result.marital_certificate === 'Tidak Ada') result.marital_certificate = 2;
-
-                                    if (result.divorce_certificate === 'Ada') result.divorce_certificate = 1;
-                                    else if (result.divorce_certificate === 'Tidak Ada') result.divorce_certificate = 2;
-
-                                    if (result.mental_disorders === 'Ada') result.mental_disorders = 1;
-                                    else if (result.mental_disorders === 'Tidak Ada') result.mental_disorders = 2;
-
-                                    const disabilitiesMap = {
-                                        'Fisik': 1, 'Netra/Buta': 2, 'Rungu/Wicara': 3,
-                                        'Mental/Jiwa': 4, 'Fisik dan Mental': 5, 'Lainnya': 6 //opsi tidak ada
-                                    };
-
-                                    if (typeof result.disabilities === 'string') {
-                                        if (result.disabilities === '' || result.disabilities === ' ') {
-                                            result.disabilities = null;
-                                        } else if (disabilitiesMap[result.disabilities]) {
-                                            result.disabilities = disabilitiesMap[result.disabilities];
-                                        }
-                                    }
-
-                                    const educationMap = {
-                                        'Tidak/Belum Sekolah': 1, 'Belum tamat SD/Sederajat': 2, 'Tamat SD': 3,
-                                        'SLTP/SMP/Sederajat': 4, 'SLTA/SMA/Sederajat': 5, 'Diploma I/II': 6,
-                                        'Akademi/Diploma III/ Sarjana Muda': 7, 'Diploma IV/ Strata I/ Strata II': 8,
-                                        'Strata III': 9, 'Lainnya': 10
-                                    };
-                                    if (educationMap[result.education_status]) result.education_status = educationMap[result.education_status];
-
-                                    if (result.birth_date && result.birth_date.includes('/')) {
-                                        const parts = result.birth_date.split('/');
-                                        if (parts.length === 3) {
-                                            result.birth_date = `${parts[2]}-${parts[1]}-${parts[0]}`;
-                                        }
-                                    }
-
-                                    if (result.marriage_date === '') result.marriage_date = ' ';
-                                    if (result.divorce_certificate_date === '') result.divorce_certificate_date = ' ';
-
-                                    if (result.birth_certificate_no === '') result.birth_certificate_no = ' ';
-                                    if (result.marital_certificate_no === '') result.marital_certificate_no = ' ';
-                                    if (result.divorce_certificate_no === '') result.divorce_certificate_no = ' ';
-
-                                    return result;
-                                }
-
                                 function showLocationStatus(type, message) {
                                     locationSaveStatus.textContent = message;
-                                    locationSaveStatus.classList.remove('hidden', 'text-green-600', 'text-red-600');
+                                    locationSaveStatus.classList.remove('hidden', 'text-green-600', 'text-red-600', 'text-blue-600');
 
                                     if (type === 'success') {
                                         locationSaveStatus.classList.add('text-green-600');
+                                    } else if (type === 'info') {
+                                        locationSaveStatus.classList.add('text-blue-600');
                                     } else {
                                         locationSaveStatus.classList.add('text-red-600');
                                     }
 
-                                    setTimeout(() => {
-                                        locationSaveStatus.classList.add('hidden');
-                                    }, 5000);
+                                    // Jangan auto-hide untuk info status (refresh)
+                                    if (type !== 'info') {
+                                        setTimeout(() => {
+                                            locationSaveStatus.classList.add('hidden');
+                                        }, 5000);
+                                    }
                                 }
+
+                                
                             });
                         </script>
+
 
                     </div>
                 </div>

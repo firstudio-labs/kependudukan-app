@@ -5,6 +5,7 @@ namespace App\Services;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use App\Models\Penduduk;
 
 class CitizenService
 {
@@ -169,12 +170,123 @@ class CitizenService
         try {
             $nik = (int) $nik;
 
+            // For coordinate-only or coordinate+address updates, we need to get existing data first
+            if ((count($data) === 1 && isset($data['coordinate'])) || 
+                (count($data) === 2 && isset($data['coordinate']) && isset($data['address']))) {
+                Log::info('Coordinate/address update - getting existing data first', [
+                    'nik' => $nik,
+                    'coordinate' => $data['coordinate'],
+                    'address' => $data['address'] ?? 'not_provided'
+                ]);
+
+                // Get existing citizen data first
+                $existingData = $this->getCitizenByNIK($nik);
+                if (!$existingData || !isset($existingData['data'])) {
+                    Log::error('Cannot update coordinate - citizen data not found', [
+                        'nik' => $nik
+                    ]);
+                    return [
+                        'status' => 'ERROR',
+                        'message' => 'Citizen data not found'
+                    ];
+                }
+
+                // Merge coordinate and address with existing data
+                $updateData = $existingData['data'];
+                $updateData['coordinate'] = $data['coordinate'];
+                if (isset($data['address'])) {
+                    $updateData['address'] = $data['address'];
+                }
+                
+                // Filter out problematic fields that might cause JSON parsing issues
+                $excludeFields = ['id', 'status', 'rf_id_tag', 'telephone', 'email', 'hamlet', 'foreign_address', 'city', 'state', 'country', 'foreign_postal_code', 'birth_certificate_no', 'marital_certificate_no', 'marriage_date', 'divorce_certificate_no', 'divorce_certificate_date', 'nik_mother', 'mother', 'nik_father', 'father', 'disabilities'];
+                foreach ($excludeFields as $field) {
+                    unset($updateData[$field]);
+                }
+                
+                // Normalize data to numeric format for API
+                $updateData = $this->normalizeDataForApi($updateData);
+
+                Log::info('Coordinate update with existing data', [
+                    'nik' => $nik,
+                    'coordinate' => $data['coordinate'],
+                    'has_existing_data' => !empty($updateData),
+                    'update_data_keys' => array_keys($updateData),
+                    'update_data_sample' => array_slice($updateData, 0, 5, true),
+                    'data_preservation_check' => [
+                        'original_gender' => $existingData['data']['gender'] ?? 'not_found',
+                        'normalized_gender' => $updateData['gender'] ?? 'not_found',
+                        'original_religion' => $existingData['data']['religion'] ?? 'not_found',
+                        'normalized_religion' => $updateData['religion'] ?? 'not_found',
+                        'original_marital_status' => $existingData['data']['marital_status'] ?? 'not_found',
+                        'normalized_marital_status' => $updateData['marital_status'] ?? 'not_found',
+                        'coordinate_updated' => $updateData['coordinate'] ?? 'not_found'
+                    ],
+                    'required_fields_check' => [
+                        'citizen_status' => $updateData['citizen_status'] ?? 'missing',
+                        'birth_certificate' => $updateData['birth_certificate'] ?? 'missing',
+                        'blood_type' => $updateData['blood_type'] ?? 'missing',
+                        'religion' => $updateData['religion'] ?? 'missing',
+                        'marital_status' => $updateData['marital_status'] ?? 'missing',
+                        'marital_certificate' => $updateData['marital_certificate'] ?? 'missing',
+                        'divorce_certificate' => $updateData['divorce_certificate'] ?? 'missing',
+                        'mental_disorders' => $updateData['mental_disorders'] ?? 'missing',
+                        'education_status' => $updateData['education_status'] ?? 'missing',
+                        'family_status' => $updateData['family_status'] ?? 'missing',
+                        'job_type_id' => $updateData['job_type_id'] ?? 'missing'
+                    ]
+                ]);
+
+                $response = Http::withHeaders([
+                    'X-API-Key' => $this->apiKey,
+                    'Content-Type' => 'application/json',
+                    'Accept' => 'application/json'
+                ])->put("{$this->baseUrl}/api/citizens/{$nik}", $updateData);
+
+                if ($response->successful()) {
+                    $result = $response->json();
+                    Log::info('Coordinate updated successfully', [
+                        'nik' => $nik,
+                        'result' => $result
+                    ]);
+                    return $result;
+                } else {
+                    $responseBody = $response->body();
+                    Log::error('Coordinate update failed', [
+                        'nik' => $nik,
+                        'status_code' => $response->status(),
+                        'response_body' => $responseBody,
+                        'response_headers' => $response->headers(),
+                        'request_data_size' => strlen(json_encode($updateData))
+                    ]);
+                    
+                    // Try to parse error message
+                    $errorMessage = 'Unknown error';
+                    try {
+                        $errorJson = json_decode($responseBody, true);
+                        if (json_last_error() === JSON_ERROR_NONE && isset($errorJson['message'])) {
+                            $errorMessage = $errorJson['message'];
+                        } else {
+                            $errorMessage = $responseBody;
+                        }
+                    } catch (\Exception $e) {
+                        $errorMessage = $responseBody;
+                    }
+                    
+                    return [
+                        'status' => 'ERROR',
+                        'message' => 'Failed to update coordinate: ' . $errorMessage
+                    ];
+                }
+            }
+
             // Filter out empty values and ensure data is clean
             $cleanData = array_filter($data, function($value) {
                 return $value !== null && $value !== '' && $value !== 'null';
             });
 
-            // Ensure required fields are present with valid values
+            // Only add required fields if they are completely missing
+            // This preserves existing citizen data
             $requiredFields = [
                 'citizen_status' => 1,
                 'birth_certificate' => 2,
@@ -189,10 +301,11 @@ class CitizenService
                 'job_type_id' => 1
             ];
 
-            // Add required fields if they don't exist
+            // Add required fields only if they don't exist at all
             foreach ($requiredFields as $field => $defaultValue) {
-                if (!isset($cleanData[$field])) {
+                if (!isset($cleanData[$field]) || $cleanData[$field] === null) {
                     $cleanData[$field] = $defaultValue;
+                    Log::info("Added missing required field for citizen update: {$field} = {$defaultValue}");
                 }
             }
 
@@ -742,6 +855,166 @@ class CitizenService
     }
 
     /**
+     * Normalize data for API format - using same mapping as BiodataController
+     */
+    private function normalizeDataForApi($data)
+    {
+        $normalized = $data;
+        
+        // Use the same mapping as BiodataController for consistency
+        $genderMap = [
+            'Laki-Laki' => 1, 'Laki-laki' => 1, 'Perempuan' => 2,
+            'laki-laki' => 1, 'laki-laki' => 1, 'perempuan' => 2,
+            'LAKI-LAKI' => 1, 'PEREMPUAN' => 2
+        ];
+        $citizenStatusMap = ['WNI' => 2, 'WNA' => 1, 'wni' => 2, 'wna' => 1];
+        $certificateMap = [
+            'Ada' => 1, 'Tidak Ada' => 2,
+            'ada' => 1, 'tidak ada' => 2,
+            'ADA' => 1, 'TIDAK ADA' => 2
+        ];
+        $bloodTypeMap = [
+            'A' => 1, 'B' => 2, 'AB' => 3, 'O' => 4,
+            'A+' => 5, 'A-' => 6, 'B+' => 7, 'B-' => 8,
+            'AB+' => 9, 'AB-' => 10, 'O+' => 11, 'O-' => 12, 'Tidak Tahu' => 13,
+            'a' => 1, 'b' => 2, 'ab' => 3, 'o' => 4,
+            'a+' => 5, 'a-' => 6, 'b+' => 7, 'b-' => 8,
+            'ab+' => 9, 'ab-' => 10, 'o+' => 11, 'o-' => 12, 'tidak tahu' => 13
+        ];
+        $religionMap = [
+            'Islam' => 1, 'Kristen' => 2, 'Katolik' => 3, 'Katholik' => 3,
+            'Hindu' => 4, 'Buddha' => 5, 'Budha' => 5,
+            'Kong Hu Cu' => 6, 'Konghucu' => 6, 'Lainnya' => 7,
+            'islam' => 1, 'kristen' => 2, 'katolik' => 3, 'katholik' => 3,
+            'hindu' => 4, 'buddha' => 5, 'budha' => 5,
+            'kong hu cu' => 6, 'konghucu' => 6, 'lainnya' => 7
+        ];
+        $maritalStatusMap = [
+            'Belum Kawin' => 1,
+            'Kawin Tercatat' => 2,
+            'Kawin Belum Tercatat' => 3,
+            'Cerai Hidup Tercatat' => 4,
+            'Cerai Hidup Belum Tercatat' => 5,
+            'Cerai Mati' => 6,
+            'BELUM KAWIN' => 1,
+            'KAWIN TERCATAT' => 2,
+            'KAWIN BELUM TERCATAT' => 3,
+            'CERAI HIDUP TERCATAT' => 4,
+            'CERAI HIDUP BELUM TERCATAT' => 5,
+            'CERAI MATI' => 6
+        ];
+        $familyStatusMap = [
+            'ANAK' => 1, 'Anak' => 1, 'anak' => 1,
+            'KEPALA KELUARGA' => 2, 'Kepala Keluarga' => 2, 'kepala keluarga' => 2,
+            'ISTRI' => 3, 'Istri' => 3, 'istri' => 3,
+            'ORANG TUA' => 4, 'Orang Tua' => 4, 'orang tua' => 4,
+            'MERTUA' => 5, 'Mertua' => 5, 'mertua' => 5,
+            'CUCU' => 6, 'Cucu' => 6, 'cucu' => 6,
+            'FAMILI LAIN' => 7, 'Famili Lain' => 7, 'famili lain' => 7,
+            'LAINNYA' => 7, 'Lainnya' => 7, 'lainnya' => 7
+        ];
+        $educationStatusMap = [
+            'Tidak/Belum Sekolah' => 1,
+            'Belum tamat SD/Sederajat' => 2,
+            'Tamat SD' => 3,
+            'Tamat SD/Sederajat' => 3,
+            'SLTP/SMP/Sederajat' => 4,
+            'SLTA/SMA/Sederajat' => 5,
+            'Diploma I/II' => 6,
+            'Akademi/Diploma III/ Sarjana Muda' => 7,
+            'Diploma IV/ Strata I/ Strata II' => 8,
+            'Strata III' => 9,
+            'Lainnya' => 10,
+            'tidak/belum sekolah' => 1,
+            'belum tamat sd/sederajat' => 2,
+            'tamat sd' => 3,
+            'tamat sd/sederajat' => 3,
+            'sltp/smp/sederajat' => 4,
+            'slta/sma/sederajat' => 5,
+            'diploma i/ii' => 6,
+            'akademi/diploma iii/ sarjana muda' => 7,
+            'diploma iv/ strata i/ strata ii' => 8,
+            'strata iii' => 9,
+            'lainnya' => 10
+        ];
+
+        $fieldsToNormalize = [
+            'gender' => $genderMap,
+            'citizen_status' => $citizenStatusMap,
+            'birth_certificate' => $certificateMap,
+            'blood_type' => $bloodTypeMap,
+            'religion' => $religionMap,
+            'marital_status' => $maritalStatusMap,
+            'marital_certificate' => $certificateMap,
+            'divorce_certificate' => $certificateMap,
+            'family_status' => $familyStatusMap,
+            'mental_disorders' => $certificateMap,
+            'education_status' => $educationStatusMap,
+        ];
+
+        // Normalize each field using the same logic as BiodataController
+        foreach ($fieldsToNormalize as $field => $mapping) {
+            if (isset($normalized[$field])) {
+                $value = trim($normalized[$field]);
+
+                // If it's already numeric, keep it as is
+                if (is_numeric($value)) {
+                    $normalized[$field] = (int)$value;
+                    continue;
+                }
+
+                // Try to map string values to numeric
+                if (array_key_exists($value, $mapping)) {
+                    $normalized[$field] = $mapping[$value];
+                    Log::info("Normalized {$field} from '{$value}' to {$normalized[$field]}");
+                } else if (!empty($value)) {
+                    Log::warning("Could not normalize {$field} value: '{$value}'");
+                    // Don't set default values - preserve original data
+                }
+            }
+        }
+        
+        // Convert KK to integer if exists
+        if (isset($normalized['kk'])) {
+            $normalized['kk'] = (int) $normalized['kk'];
+        }
+        
+        // Ensure numeric fields are properly typed
+        $numericFields = ['age', 'province_id', 'district_id', 'sub_district_id', 'village_id', 'job_type_id'];
+        foreach ($numericFields as $field) {
+            if (isset($normalized[$field]) && is_numeric($normalized[$field])) {
+                $normalized[$field] = (int) $normalized[$field];
+            }
+        }
+        
+        // Only add required fields if they are completely missing (not just empty)
+        // This preserves existing data and only adds truly missing fields
+        $requiredFields = [
+            'citizen_status' => 1,
+            'birth_certificate' => 2,
+            'blood_type' => 13,
+            'religion' => 1,
+            'marital_status' => 1,
+            'marital_certificate' => 2,
+            'divorce_certificate' => 2,
+            'mental_disorders' => 2,
+            'education_status' => 1,
+            'family_status' => 2,
+            'job_type_id' => 1
+        ];
+        
+        foreach ($requiredFields as $field => $defaultValue) {
+            // Only add default if field is completely missing or null
+            if (!isset($normalized[$field]) || $normalized[$field] === null) {
+                $normalized[$field] = $defaultValue;
+                Log::info("Added missing required field: {$field} = {$defaultValue}");
+            }
+        }
+        
+        return $normalized;
+    }
+
+    /**
      * Clear cache by pattern using Redis or file cache
      */
     private function clearCacheByPattern($pattern)
@@ -788,6 +1061,150 @@ class CitizenService
 
         } catch (\Exception $e) {
             Log::error('Error clearing cache by NIK: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Konversi koordinat menjadi alamat lengkap menggunakan reverse geocoding
+     */
+    public function getAddressFromCoordinates($latitude, $longitude)
+    {
+        try {
+            // Gunakan OpenStreetMap Nominatim API untuk reverse geocoding
+            $response = Http::timeout(10)->get('https://nominatim.openstreetmap.org/reverse', [
+                'format' => 'json',
+                'lat' => $latitude,
+                'lon' => $longitude,
+                'zoom' => 18,
+                'addressdetails' => 1,
+                'accept-language' => 'id'
+            ]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                
+                if (isset($data['display_name'])) {
+                    // Format alamat yang lebih mudah dibaca
+                    $address = $data['display_name'];
+                    
+                    // Coba ambil komponen alamat yang lebih spesifik
+                    $addressComponents = $data['address'] ?? [];
+                    $formattedAddress = '';
+                    
+                    // Bangun alamat dari komponen yang tersedia
+                    if (isset($addressComponents['house_number'])) {
+                        $formattedAddress .= $addressComponents['house_number'] . ', ';
+                    }
+                    if (isset($addressComponents['road'])) {
+                        $formattedAddress .= $addressComponents['road'] . ', ';
+                    }
+                    if (isset($addressComponents['suburb'])) {
+                        $formattedAddress .= $addressComponents['suburb'] . ', ';
+                    }
+                    if (isset($addressComponents['village'])) {
+                        $formattedAddress .= $addressComponents['village'] . ', ';
+                    }
+                    if (isset($addressComponents['city_district'])) {
+                        $formattedAddress .= $addressComponents['city_district'] . ', ';
+                    }
+                    if (isset($addressComponents['city'])) {
+                        $formattedAddress .= $addressComponents['city'] . ', ';
+                    }
+                    if (isset($addressComponents['state'])) {
+                        $formattedAddress .= $addressComponents['state'] . ', ';
+                    }
+                    if (isset($addressComponents['country'])) {
+                        $formattedAddress .= $addressComponents['country'];
+                    }
+                    
+                    // Bersihkan koma di akhir
+                    $formattedAddress = rtrim($formattedAddress, ', ');
+                    
+                    return $formattedAddress ?: $address;
+                }
+            }
+            
+            return "Koordinat: {$latitude}, {$longitude}";
+        } catch (\Exception $e) {
+            Log::error('Error getting address from coordinates: ' . $e->getMessage());
+            return "Koordinat: {$latitude}, {$longitude}";
+        }
+    }
+
+    /**
+     * Ambil data anggota keluarga dengan informasi lokasi
+     */
+    public function getFamilyMembersWithLocation($kk)
+    {
+        try {
+            // Ambil data keluarga dari API
+            $familyData = $this->getFamilyMembersByKK($kk);
+            
+            if (!$familyData || !isset($familyData['data'])) {
+                Log::warning('No family data found for KK: ' . $kk);
+                return [
+                    'status' => 'OK',
+                    'data' => []
+                ];
+            }
+
+            $members = $familyData['data'];
+            $membersWithLocation = [];
+
+            foreach ($members as $member) {
+                $memberData = $member;
+                
+                // Pastikan NIK ada
+                if (!isset($member['nik']) || empty($member['nik'])) {
+                    Log::warning('Member without NIK found: ' . json_encode($member));
+                    $memberData['location_address'] = 'NIK tidak valid';
+                    $memberData['coordinates'] = null;
+                    $membersWithLocation[] = $memberData;
+                    continue;
+                }
+                
+                // Ambil data lokasi dari database lokal jika ada
+                $penduduk = Penduduk::where('nik', $member['nik'])->first();
+                
+                if ($penduduk && $penduduk->tag_lokasi) {
+                    $coordinates = explode(',', $penduduk->tag_lokasi);
+                    if (count($coordinates) >= 2) {
+                        $lat = trim($coordinates[0]);
+                        $lng = trim($coordinates[1]);
+                        
+                        // Validasi koordinat
+                        if (is_numeric($lat) && is_numeric($lng)) {
+                            // Konversi koordinat ke alamat
+                            $address = $this->getAddressFromCoordinates($lat, $lng);
+                            $memberData['location_address'] = $address;
+                            $memberData['coordinates'] = $penduduk->tag_lokasi;
+                        } else {
+                            $memberData['location_address'] = 'Koordinat tidak valid';
+                            $memberData['coordinates'] = $penduduk->tag_lokasi;
+                        }
+                    } else {
+                        $memberData['location_address'] = 'Format koordinat tidak valid';
+                        $memberData['coordinates'] = $penduduk->tag_lokasi;
+                    }
+                } else {
+                    $memberData['location_address'] = 'Belum ada lokasi';
+                    $memberData['coordinates'] = null;
+                }
+                
+                $membersWithLocation[] = $memberData;
+            }
+
+            return [
+                'status' => 'OK',
+                'data' => $membersWithLocation
+            ];
+        } catch (\Exception $e) {
+            Log::error('Error getting family members with location: ' . $e->getMessage());
+            return [
+                'status' => 'ERROR',
+                'data' => [],
+                'message' => $e->getMessage()
+            ];
         }
     }
 }

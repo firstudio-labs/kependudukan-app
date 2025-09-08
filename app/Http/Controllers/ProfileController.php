@@ -310,6 +310,10 @@ class ProfileController extends Controller
                 $tagLokasi = $penduduk ? $penduduk->tag_lokasi : null;
             }
 
+            // Ambil data alamat dari database lokal
+            $penduduk = Penduduk::where('nik', $nik)->first();
+            $alamat = $penduduk ? $penduduk->alamat : null;
+
             return response()->json([
                 'success' => true,
                 'documents' => [
@@ -321,6 +325,7 @@ class ProfileController extends Controller
                     'foto_rumah' => $documents['foto_rumah'] ?? null,
                 ],
                 'tag_lokasi' => $tagLokasi,
+                'address' => $alamat,
             ]);
         } catch (\Exception $e) {
             Log::error('Error getting family member documents: ' . $e->getMessage());
@@ -549,7 +554,8 @@ class ProfileController extends Controller
     {
         try {
             $request->validate([
-                'tag_lokasi' => 'required|string'
+                'tag_lokasi' => 'required|string',
+                'alamat' => 'required|string|max:500'
             ]);
 
             if (Auth::guard('web')->check()) {
@@ -563,25 +569,155 @@ class ProfileController extends Controller
                 ], 401);
             }
 
-            $userData->tag_lokasi = $request->tag_lokasi;
-            $userData->save();
-
-
+            // Simpan ke database lokal dan update semua anggota keluarga
             if (Auth::guard('penduduk')->check() && !empty($userData->nik)) {
                 try {
-                    $response = $this->citizenService->updateCitizen((int) $userData->nik, [
-                        'coordinate' => $request->tag_lokasi
+                    // Ambil data KK dari user yang sedang login
+                    $citizenData = $this->citizenService->getCitizenByNIK((int) $userData->nik);
+                    $kk = null;
+                    
+                    if ($citizenData && isset($citizenData['data'])) {
+                        $kk = $citizenData['data']['kk'] ?? $citizenData['data']['no_kk'] ?? null;
+                    }
+                    
+                    if (!$kk) {
+                        Log::warning('No KK found for user', ['nik' => $userData->nik]);
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Nomor KK tidak ditemukan. Tidak dapat mengupdate lokasi keluarga.'
+                        ], 400);
+                    }
+
+                    Log::info('Updating location for family with KK', [
+                        'kk' => $kk,
+                        'coordinate' => $request->tag_lokasi,
+                        'address' => $request->alamat
                     ]);
 
-                    Log::info('API coordinate update response', [
-                        'nik' => $userData->nik,
-                        'response' => $response
+                    // Ambil data semua anggota keluarga berdasarkan KK
+                    $familyData = $this->citizenService->getFamilyMembersByKK($kk);
+                    $familyMembers = [];
+                    
+                    if ($familyData && isset($familyData['data']) && is_array($familyData['data'])) {
+                        $familyMembers = $familyData['data'];
+                    }
+
+                    $updatedMembers = [];
+                    $failedUpdates = [];
+
+                    // Update database lokal untuk semua anggota keluarga
+                    foreach ($familyMembers as $member) {
+                        if (!isset($member['nik']) || empty($member['nik'])) {
+                            continue;
+                        }
+
+                        $memberNik = (int) $member['nik'];
+                        
+                        try {
+                            // Update database lokal
+                            $penduduk = Penduduk::where('nik', $memberNik)->first();
+                            if ($penduduk) {
+                                $penduduk->tag_lokasi = $request->tag_lokasi;
+                                $penduduk->alamat = $request->alamat;
+                                $penduduk->save();
+                                
+                                Log::info('Local database updated for family member', [
+                                    'nik' => $memberNik,
+                                    'name' => $member['full_name'] ?? $member['nama'] ?? 'Unknown',
+                                    'coordinate' => $request->tag_lokasi,
+                                    'address' => $request->alamat
+                                ]);
+                            } else {
+                                // Buat record baru jika belum ada
+                                Penduduk::create([
+                                    'nik' => $memberNik,
+                                    'password' => \Hash::make(\Str::random(10)),
+                                    'tag_lokasi' => $request->tag_lokasi,
+                                    'alamat' => $request->alamat,
+                                ]);
+                                
+                                Log::info('Created new local record for family member', [
+                                    'nik' => $memberNik,
+                                    'name' => $member['full_name'] ?? $member['nama'] ?? 'Unknown'
+                                ]);
+                            }
+
+                            // Update ke API eksternal
+                            $apiResponse = $this->citizenService->updateCitizen($memberNik, [
+                                'coordinate' => $request->tag_lokasi,
+                                'address' => $request->alamat
+                            ]);
+
+                            if (isset($apiResponse['status']) && $apiResponse['status'] === 'ERROR') {
+                                $failedUpdates[] = [
+                                    'nik' => $memberNik,
+                                    'name' => $member['full_name'] ?? $member['nama'] ?? 'Unknown',
+                                    'error' => $apiResponse['message'] ?? 'Unknown error'
+                                ];
+                                Log::warning('API update failed for family member', [
+                                    'nik' => $memberNik,
+                                    'error' => $apiResponse['message'] ?? 'Unknown error'
+                                ]);
+                            } else {
+                                $updatedMembers[] = [
+                                    'nik' => $memberNik,
+                                    'name' => $member['full_name'] ?? $member['nama'] ?? 'Unknown'
+                                ];
+                                Log::info('API update successful for family member', [
+                                    'nik' => $memberNik,
+                                    'name' => $member['full_name'] ?? $member['nama'] ?? 'Unknown'
+                                ]);
+                            }
+
+                        } catch (\Exception $e) {
+                            $failedUpdates[] = [
+                                'nik' => $memberNik,
+                                'name' => $member['full_name'] ?? $member['nama'] ?? 'Unknown',
+                                'error' => $e->getMessage()
+                            ];
+                            Log::error('Error updating family member', [
+                                'nik' => $memberNik,
+                                'error' => $e->getMessage()
+                            ]);
+                        }
+                    }
+
+                    // Log hasil update
+                    Log::info('Family location update completed', [
+                        'kk' => $kk,
+                        'total_members' => count($familyMembers),
+                        'successful_updates' => count($updatedMembers),
+                        'failed_updates' => count($failedUpdates),
+                        'updated_members' => $updatedMembers,
+                        'failed_members' => $failedUpdates
                     ]);
+
+                    $message = "Lokasi berhasil disimpan untuk " . count($updatedMembers) . " anggota keluarga";
+                    if (count($failedUpdates) > 0) {
+                        $message .= ". " . count($failedUpdates) . " anggota gagal diupdate ke API eksternal.";
+                    }
+
+                    return response()->json([
+                        'success' => true,
+                        'message' => $message,
+                        'data' => [
+                            'updated_members' => $updatedMembers,
+                            'failed_updates' => $failedUpdates,
+                            'total_members' => count($familyMembers)
+                        ]
+                    ]);
+
                 } catch (\Exception $e) {
-                    Log::error('Error updating coordinates in API: ' . $e->getMessage(), [
+                    Log::error('Error updating family location: ' . $e->getMessage(), [
                         'nik' => $userData->nik,
-                        'coordinate' => $request->tag_lokasi
+                        'coordinate' => $request->tag_lokasi,
+                        'trace' => $e->getTraceAsString()
                     ]);
+                    
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Gagal mengupdate lokasi keluarga: ' . $e->getMessage()
+                    ], 500);
                 }
             }
 
@@ -598,4 +734,7 @@ class ProfileController extends Controller
             ], 500);
         }
     }
+
+    
+
 }

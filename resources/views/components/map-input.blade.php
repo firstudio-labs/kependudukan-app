@@ -48,6 +48,51 @@
                 const mapId = 'map-{{ $addressId }}';
                 const latInput = document.getElementById('{{ $latitudeId }}');
                 const lonInput = document.getElementById('{{ $longitudeId }}');
+                const addressInput = document.getElementById('{{ $addressId }}');
+                
+                // Fungsi reverse geocoding untuk mendapatkan alamat dari koordinat
+                function reverseGeocode(lat, lng) {
+                    if (!addressInput) {
+                        console.log('Address input tidak ditemukan');
+                        return;
+                    }
+                    
+                    // Tampilkan loading state
+                    const originalValue = addressInput.value;
+                    addressInput.value = 'Mengambil alamat...';
+                    addressInput.disabled = true;
+                    
+                    // Gunakan Nominatim API untuk reverse geocoding
+                    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data && data.display_name) {
+                                // Format alamat yang lebih bersih
+                                let address = data.display_name;
+                                
+                                // Hapus kode pos dan negara jika ada
+                                address = address.replace(/, \d{5}, Indonesia$/, '');
+                                address = address.replace(/, Indonesia$/, '');
+                                
+                                // Update alamat input
+                                addressInput.value = address;
+                                addressInput.disabled = false;
+                                
+                                console.log('Alamat berhasil diambil:', address);
+                            } else {
+                                // Fallback jika tidak ada data
+                                addressInput.value = originalValue || `Koordinat: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                                addressInput.disabled = false;
+                                console.log('Tidak dapat mengambil alamat, menggunakan koordinat');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error reverse geocoding:', error);
+                            // Fallback jika error
+                            addressInput.value = originalValue || `Koordinat: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                            addressInput.disabled = false;
+                        });
+                }
                 
                 function initMap() {
                     
@@ -99,6 +144,9 @@
                         const position = marker.getLatLng();
                         latInput.value = position.lat.toFixed(6);
                         lonInput.value = position.lng.toFixed(6);
+                        
+                        // Reverse geocoding untuk mendapatkan alamat
+                        reverseGeocode(position.lat, position.lng);
                     });
 
                     // Tambahkan Event Klik untuk Mendapatkan Koordinat
@@ -107,6 +155,9 @@
                         marker.setLatLng([lat, lng]);
                         latInput.value = lat.toFixed(6);
                         lonInput.value = lng.toFixed(6);
+                        
+                        // Reverse geocoding untuk mendapatkan alamat
+                        reverseGeocode(lat, lng);
                     });
 
                     // Tambahkan Fitur Search
@@ -127,6 +178,9 @@
                         latInput.value = lat.toFixed(6);
                         lonInput.value = lon.toFixed(6);
                         map.setView([lat, lon], 13);
+                        
+                        // Reverse geocoding untuk mendapatkan alamat
+                        reverseGeocode(lat, lon);
                     });
                     
                     // Perbarui ukuran peta setelah diinisialisasi
@@ -167,6 +221,9 @@
                             const position = window.marker.getLatLng();
                             latInput.value = position.lat.toFixed(6);
                             lonInput.value = position.lng.toFixed(6);
+                            
+                            // Reverse geocoding untuk mendapatkan alamat
+                            reverseGeocode(position.lat, position.lng);
                         });
                     }
                     

@@ -9,6 +9,10 @@ class LaporanDesa extends Model
 {
     use HasFactory;
 
+    protected $appends = [
+        'gambar_url'
+    ];
+
     protected $fillable = [
         'lapor_desa_id',
         'judul_laporan',

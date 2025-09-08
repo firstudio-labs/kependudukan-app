@@ -172,6 +172,10 @@
     </div>
 </div>
 
+    <!-- Leaflet for map rendering in detail modal -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+
     <script>
         function showDetailModal(id) {
             // Show loading state

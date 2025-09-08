@@ -1,5 +1,8 @@
 <x-layout>
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <!-- Leaflet for map rendering in detail modal -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
     <div class="p-4 mt-14">
         <h1 class="text-2xl font-bold text-gray-800 mb-6">Kelola Laporan Desa</h1>
 
@@ -375,7 +378,7 @@
                         if (laporan.gambar) {
                             const imgElement = document.createElement('div');
                             imgElement.innerHTML = `
-                <img src="/storage/${laporan.gambar}" alt="Foto Laporan" 
+                <img src="${laporan.gambar_url || ('/storage/' + laporan.gambar)}" alt="Foto Laporan" 
                      class="w-full h-auto max-h-[300px] object-contain rounded-lg shadow-sm">
             `;
                             imageContainer.appendChild(imgElement);

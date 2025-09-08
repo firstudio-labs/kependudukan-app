@@ -100,8 +100,8 @@
 
                     <!-- Tag Lokasi Map -->
                     <div class="col-span-1 md:col-span-2">
-                        <x-map-input label="Lokasi Laporan (opsional)" addressId="tag_lokasi" addressName="lokasi"
-                            address="{{ old('lokasi', $laporanDesa->lokasi ?? '') }}" latitudeId="tag_lat"
+                        <x-map-input label="Lokasi Laporan (opsional)" addressId="location_address" addressName="location_address"
+                            address="{{ old('location_address', $laporanDesa->lokasi ?? '') }}" latitudeId="tag_lat"
                             latitudeName="tag_lat" latitude="{{ old('tag_lat', $lat) }}" longitudeId="tag_lng"
                             longitudeName="tag_lng" longitude="{{ old('tag_lng', $lng) }}" modalId="" />
                         <input type="hidden" id="tag_lokasi" name="tag_lokasi"

@@ -27,7 +27,8 @@ class Penduduk extends Authenticatable
         'nik',
         'password',
         'no_hp',
-
+        'alamat',
+        'tag_lokasi',
     ];
 
     /**

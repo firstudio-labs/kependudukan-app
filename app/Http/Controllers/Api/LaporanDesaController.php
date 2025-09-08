@@ -115,6 +115,7 @@ class LaporanDesaController extends Controller
                 'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
                 'tag_lat' => 'nullable|numeric',
                 'tag_lng' => 'nullable|numeric',
+                'location_address' => 'nullable|string|max:500',
             ]);
 
             $data = $request->only([
@@ -122,6 +123,11 @@ class LaporanDesaController extends Controller
                 'judul_laporan',
                 'deskripsi_laporan',
             ]);
+
+            // Alamat dari peta (editable user sebelum submit)
+            if ($request->filled('location_address')) {
+                $data['lokasi'] = trim($request->input('location_address'));
+            }
 
             // Handle tag location from map coordinates
             $tag_lokasi = null;
@@ -305,6 +311,7 @@ class LaporanDesaController extends Controller
                 'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
                 'tag_lat' => 'nullable|numeric',
                 'tag_lng' => 'nullable|numeric',
+                'location_address' => 'nullable|string|max:500',
             ]);
 
             $data = $request->only([
@@ -312,6 +319,11 @@ class LaporanDesaController extends Controller
                 'judul_laporan',
                 'deskripsi_laporan',
             ]);
+
+            // Alamat dari peta (editable user)
+            if ($request->filled('location_address')) {
+                $data['lokasi'] = trim($request->input('location_address'));
+            }
 
             // Handle tag location from map coordinates
             $tag_lokasi = null;
