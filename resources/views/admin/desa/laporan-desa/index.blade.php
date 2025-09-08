@@ -91,7 +91,7 @@
                                 <td class="px-6 py-4">
                                     <div class="flex space-x-2">
                                         <a href="#" onclick="showDetailModal({{ $laporan->id }}); return false;"
-                                            class="inline-flex items-center px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded-md hover:bg-blue-600 transition-colors">
+                                            class="inline-flex items-center px-3 py-1 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 ring-1 ring-indigo-300/60 transition-colors">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none"
                                                 viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
