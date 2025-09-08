@@ -33,14 +33,20 @@ document.addEventListener('DOMContentLoaded', function() {
         showSweetAlert('error', 'Gagal!', errorMessage);
     }
 
+    // Determine admin village id (admin desa) to filter citizens
+    const adminVillageIdEl = document.getElementById('admin_village_id');
+    const adminVillageId = adminVillageIdEl ? adminVillageIdEl.value : null;
+
     // Load all citizens first before initializing heir rows
     $.ajax({
         url: citizenApiRoute,
         type: 'GET',
         dataType: 'json',
-        data: {
-            limit: 10000 // Increase limit to load more citizens at once
-        },
+        data: (function(){
+            const payload = { limit: 10000 };
+            if (adminVillageId) { payload.village_id = adminVillageId; }
+            return payload;
+        })(),
         headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
@@ -85,155 +91,124 @@ document.addEventListener('DOMContentLoaded', function() {
         // Remove the first heir row template
         heirsContainer.innerHTML = '';
 
-        // Process citizens for Select2
-        function prepareCitizenOptions() {
-            const nikOptions = [];
-            const nameOptions = [];
+        // Initialize one heir row with input listeners (NIK and RF ID)
+        function initializeHeirRowInputs(heirRow) {
+            const nikInput = heirRow.querySelector('.nik-select');
+            const nameInput = heirRow.querySelector('.fullname-select');
+            const rfIdInput = heirRow.querySelector('.rf-id-tag');
 
-            allCitizens.forEach(citizen => {
-                // Handle cases where NIK might be coming from various fields
-                let nikValue = null;
+            if (nikInput) {
+                // Replace to remove stale listeners
+                const newNik = nikInput.cloneNode(true);
+                nikInput.parentNode.replaceChild(newNik, nikInput);
 
-                if (typeof citizen.nik !== 'undefined' && citizen.nik !== null) {
-                    nikValue = citizen.nik;
-                } else if (typeof citizen.id !== 'undefined' && citizen.id !== null && !isNaN(citizen.id)) {
-                    nikValue = citizen.id;
-                }
+                newNik.addEventListener('input', function() {
+                    const val = this.value.trim();
+                    if (val.length === 16 && /^\d+$/.test(val)) {
+                        const citizen = allCitizens.find(c => (c.nik ? c.nik.toString() : '') === val);
+                        if (citizen) {
+                            populateHeirFieldsFromCitizen($(heirRow), citizen);
+                            if (nameInput) nameInput.value = citizen.full_name || '';
+                            if (rfIdInput) {
+                                const rfVal = (citizen.rf_id_tag ?? citizen.rfid ?? citizen.rf_id) || '';
+                                rfIdInput.value = rfVal ? rfVal.toString() : '';
+                                if (rfVal) {
+                                    $(rfIdInput).addClass('border-green-500').removeClass('border-red-500 border-gray-300');
+                                    setTimeout(() => { $(rfIdInput).removeClass('border-green-500').addClass('border-gray-300'); }, 2000);
+                                }
+                            }
+                            if (!$('#province_id').val() || !$('#district_id').val() || !$('#subdistrict_id').val() || !$('#village_id').val()) {
+                                populateLocationDropdowns(
+                                    citizen.province_id,
+                                    citizen.district_id,
+                                    citizen.subdistrict_id || citizen.sub_district_id,
+                                    citizen.village_id
+                                );
+                            }
+                            $(this).addClass('border-green-500').removeClass('border-red-500 border-gray-300');
+                            setTimeout(() => { $(this).removeClass('border-green-500').addClass('border-gray-300'); }, 2000);
+                        } else {
+                            if (typeof Swal !== 'undefined') {
+                                Swal.fire({ title: 'Data Tidak Ditemukan', text: 'NIK tidak terdaftar atau bukan warga desa ini', icon: 'error', confirmButtonText: 'OK' });
+                            }
+                            // Clear current row fields when not found
+                            clearHeirRowFields(heirRow, { keepNik: true });
+                            $(this).addClass('border-red-500').removeClass('border-green-500 border-gray-300');
+                            setTimeout(() => { $(this).removeClass('border-red-500').addClass('border-gray-300'); }, 2000);
+                        }
+                    } else if (val.length < 16) {
+                        // While editing/incomplete, avoid leftover data
+                        clearHeirRowFields(heirRow, { keepNik: true });
+                    }
+                });
+            }
 
-                if (nikValue !== null) {
-                    const nikString = nikValue.toString();
-                    nikOptions.push({
-                        id: nikString,
-                        text: nikString,
-                        citizen: citizen
-                    });
-                }
+            if (rfIdInput) {
+                const newRf = rfIdInput.cloneNode(true);
+                rfIdInput.parentNode.replaceChild(newRf, rfIdInput);
 
-                // Only add if full_name is available
-                if (citizen.full_name) {
-                    nameOptions.push({
-                        id: citizen.full_name,
-                        text: citizen.full_name,
-                        citizen: citizen
-                    });
-                }
-            });
-
-            return { nikOptions, nameOptions };
+                let inputTimeout;
+                newRf.addEventListener('keydown', function(e){ if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); }});
+                newRf.addEventListener('input', function(){
+                    const rf = this.value.trim();
+                    clearTimeout(inputTimeout);
+                    if (rf.length > 0) {
+                        inputTimeout = setTimeout(() => { processRfId(rf, heirRow, newRf); }, 300);
+                    }
+                });
+                newRf.addEventListener('paste', function(e){
+                    e.preventDefault();
+                    const t = (e.clipboardData || window.clipboardData).getData('text');
+                    this.value = t;
+                    setTimeout(() => { const rf = this.value.trim(); if (rf.length > 0) { processRfId(rf, heirRow, newRf); } }, 100);
+                });
+                newRf.addEventListener('keyup', function(e){
+                    if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); return; }
+                    const rf = this.value.trim();
+                    if (rf.length > 0) {
+                        clearTimeout(inputTimeout);
+                        inputTimeout = setTimeout(() => { processRfId(rf, heirRow, newRf); }, 200);
+                    }
+                });
+            }
         }
 
-        // Function to initialize Select2 on an heir row
-        function initializeHeirSelect2(heirRow) {
-            const { nikOptions, nameOptions } = prepareCitizenOptions();
-            const nikSelect = heirRow.querySelector('.nik-select');
-            const nameSelect = heirRow.querySelector('.fullname-select');
+        function normalizeRfId(rfId) {
+            if (!rfId) return '';
+            let v = rfId.toString();
+            v = v.replace(/^0+/, '');
+            v = v.replace(/[^0-9]/g, '');
+            return v.trim();
+        }
 
-            // Track if we're in the middle of an update to prevent recursion
-            let isUpdating = false;
-
-            // Initialize NIK Select2 with pre-loaded data
-            $(nikSelect).select2({
-                placeholder: 'Pilih NIK',
-                width: '100%',
-                data: nikOptions,
-                language: {
-                    noResults: function() {
-                        return 'Tidak ada data yang ditemukan';
-                    },
-                    searching: function() {
-                        return 'Mencari...';
-                    }
-                },
-                escapeMarkup: function(markup) {
-                    return markup;
-                }
-            }).on("select2:open", function() {
-                $('.select2-results__options').css('max-height', '400px');
+        function processRfId(rfIdValue, heirRow, inputEl) {
+            const matched = allCitizens.find(citizen => {
+                if (!citizen.rf_id_tag) return false;
+                const a = normalizeRfId(rfIdValue);
+                const b = normalizeRfId(citizen.rf_id_tag);
+                const exact = a === b;
+                const partial = b.includes(a) && a.length >= 5;
+                const reverse = a.includes(b) && b.length >= 5;
+                return exact || partial || reverse;
             });
 
-            // Initialize Name Select2 with pre-loaded data
-            $(nameSelect).select2({
-                placeholder: 'Pilih Nama',
-                width: '100%',
-                data: nameOptions,
-                language: {
-                    noResults: function() {
-                        return 'Tidak ada data yang ditemukan';
-                    },
-                    searching: function() {
-                        return 'Mencari...';
-                    }
-                },
-                escapeMarkup: function(markup) {
-                    return markup;
+            if (matched) {
+                populateHeirFieldsFromCitizen($(heirRow), matched);
+                const nikInput = heirRow.querySelector('.nik-select');
+                const nameInput = heirRow.querySelector('.fullname-select');
+                if (nikInput) nikInput.value = matched.nik ? matched.nik.toString() : '';
+                if (nameInput) nameInput.value = matched.full_name || '';
+                $(inputEl).addClass('border-green-500').removeClass('border-red-500 border-gray-300');
+                setTimeout(() => { $(inputEl).removeClass('border-green-500').addClass('border-gray-300'); }, 2000);
+            } else {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({ title: 'Data Tidak Ditemukan', text: 'RF ID tidak terdaftar', icon: 'error', confirmButtonText: 'OK' });
                 }
-            }).on("select2:open", function() {
-                $('.select2-results__options').css('max-height', '400px');
-            });
-
-            // NIK select change handler
-            $(nikSelect).on('select2:select', function(e) {
-                if (isUpdating) return;
-                isUpdating = true;
-
-                const citizen = e.params.data.citizen;
-                if (citizen) {
-                    const row = $(this).closest('.heir-row');
-
-                    // Update full name
-                    $(row).find('.fullname-select').val(citizen.full_name).trigger('change.select2');
-
-                    // Fill personal data fields - only personal info
-                    populateHeirFieldsFromCitizen(row, citizen);
-
-                    // Auto-fill location data if it's not already set
-                    if (!$('#province_id').val() || !$('#district_id').val() ||
-                        !$('#subdistrict_id').val() || !$('#village_id').val()) {
-                        // Use the function from location-dropdowns.js
-                        populateLocationDropdowns(
-                            citizen.province_id,
-                            citizen.district_id,
-                            citizen.subdistrict_id || citizen.sub_district_id,
-                            citizen.village_id
-                        );
-                    }
-                }
-
-                isUpdating = false;
-            });
-
-            // Full name select change handler
-            $(nameSelect).on('select2:select', function(e) {
-                if (isUpdating) return;
-                isUpdating = true;
-
-                const citizen = e.params.data.citizen;
-                if (citizen) {
-                    const row = $(this).closest('.heir-row');
-
-                    // Update NIK
-                    if (citizen.nik) {
-                        $(row).find('.nik-select').val(citizen.nik.toString()).trigger('change.select2');
-                    }
-
-                    // Fill personal data fields - only personal info
-                    populateHeirFieldsFromCitizen(row, citizen);
-
-                    // Auto-fill location data if it's not already set
-                    if (!$('#province_id').val() || !$('#district_id').val() ||
-                        !$('#subdistrict_id').val() || !$('#village_id').val()) {
-                        // Use the function from location-dropdowns.js
-                        populateLocationDropdowns(
-                            citizen.province_id,
-                            citizen.district_id,
-                            citizen.subdistrict_id || citizen.sub_district_id,
-                            citizen.village_id
-                        );
-                    }
-                }
-
-                isUpdating = false;
-            });
+                // Clear current row fields on RF not found (keep RFID typed value)
+                clearHeirRowFields(heirRow, { keepNik: false, keepRfId: true });
+                $(inputEl).addClass('border-red-500').removeClass('border-green-500 border-gray-300');
+                setTimeout(() => { $(inputEl).removeClass('border-red-500').addClass('border-gray-300'); }, 2000);
+            }
         }
 
         // Function to populate heir fields from citizen data
@@ -319,8 +294,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const heirRowClone = firstHeirRow.cloneNode(true);
             heirsContainer.appendChild(heirRowClone);
 
-            // Initialize Select2 on the new row
-            initializeHeirSelect2(heirRowClone);
+            // Initialize input listeners on the new row
+            initializeHeirRowInputs(heirRowClone);
 
             // Remove heir button functionality
             heirRowClone.querySelector('.remove-heir').addEventListener('click', function() {
@@ -334,6 +309,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Add first heir row by default
         addHeirRow();
+
+        // Helper to clear fields in a row
+        function clearHeirRowFields(heirRow, options = {}) {
+            const keepNik = options.keepNik || false;
+            const keepRfId = options.keepRfId || false;
+            const $row = $(heirRow);
+            if (!keepNik) { $row.find('.nik-select').val(''); }
+            if (!keepRfId) { $row.find('.rf-id-tag').val(''); }
+            $row.find('.fullname-select').val('');
+            $row.find('.birth-place').val('');
+            $row.find('.birth-date').val('');
+            $row.find('.gender').val('').trigger('change');
+            $row.find('.religion').val('').trigger('change');
+            $row.find('.address').val('');
+            $row.find('select[name="family_status[]"]').val('').trigger('change');
+        }
 
         // Add heir button click handler
         addHeirButton.addEventListener('click', addHeirRow);

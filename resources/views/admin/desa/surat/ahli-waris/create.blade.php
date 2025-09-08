@@ -8,6 +8,9 @@
 
         <form method="POST" action="{{ route('admin.desa.surat.ahli-waris.store') }}" class="bg-white p-6 rounded-lg shadow-md">
             @csrf
+            @if(auth()->user()->role === 'admin desa')
+            <input type="hidden" id="admin_village_id" name="admin_village_id" value="{{ auth()->user()->villages_id ?? '' }}">
+            @endif
 
             <!-- Daftar Ahli Waris Section (Moved to top) -->
             <div>
@@ -15,21 +18,23 @@
                 <div id="heirs-container">
                     <!-- Template for heir row, will be cloned by JavaScript -->
                     <div class="heir-row border p-4 rounded-md mb-4 bg-gray-50">
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <!-- RF ID Tag (standalone row) -->
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700">RF ID Tag</label>
+                            <input type="text" name="rf_id_tag[]" class="rf-id-tag mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" placeholder="Scan RF ID Tag">
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <!-- NIK -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">NIK <span class="text-red-500">*</span></label>
-                                <select name="nik[]" class="nik-select mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
-                                    <option value="">Pilih NIK</option>
-                                </select>
+                                <input type="text" name="nik[]" maxlength="16" pattern="\d{16}" class="nik-select mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" placeholder="Masukkan NIK (16 digit)" required>
                             </div>
 
                             <!-- Nama Lengkap -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Nama Lengkap <span class="text-red-500">*</span></label>
-                                <select name="full_name[]" class="fullname-select mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
-                                    <option value="">Pilih Nama</option>
-                                </select>
+                                <input type="text" name="full_name[]" class="fullname-select mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" placeholder="Nama Ahli Waris" required>
                             </div>
 
                             <!-- Hubungan Keluarga -->
@@ -48,7 +53,7 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
                             <!-- Tempat Lahir -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Tempat Lahir <span class="text-red-500">*</span></label>

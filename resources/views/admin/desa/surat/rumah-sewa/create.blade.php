@@ -8,6 +8,22 @@
         <form method="POST" action="{{ route('admin.desa.surat.rumah-sewa.store') }}" class="bg-white p-6 rounded-lg shadow-md">
             @csrf
 
+            <!-- Hidden admin village id for filtering citizens in JS -->
+            @if(auth()->user()->role === 'admin desa')
+            <input type="hidden" id="admin_village_id" name="admin_village_id" value="{{ auth()->user()->villages_id ?? '' }}">
+            @endif
+
+            <!-- RF ID Tag (Admin Desa) -->
+            @if(auth()->user()->role === 'admin desa')
+            <div class="mb-4">
+                <label for="rf_id_tag" class="block text-sm font-medium text-gray-700">RF ID Tag</label>
+                <input type="text" id="rf_id_tag" name="rf_id_tag"
+                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
+                       placeholder="Scan RF ID Tag">
+                <p class="text-xs text-gray-500 mt-1">Masukkan/scan RF ID untuk mengisi data otomatis</p>
+            </div>
+            @endif
+
             <!-- Organizer Information Section -->
             <div class="mt-8">
                 <h2 class="text-lg font-semibold text-gray-700 mb-3">Data Penyelenggara</h2>
@@ -16,17 +32,30 @@
                         <!-- NIK -->
                         <div>
                             <label for="nikSelect" class="block text-sm font-medium text-gray-700">NIK <span class="text-red-500">*</span></label>
-                            <select id="nikSelect" name="nik" class="nik-select mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
-                                <option value="">Pilih NIK</option>
-                            </select>
+                            @if(auth()->user()->role === 'admin desa')
+                                <input type="text" id="nikSelect" name="nik"
+                                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
+                                       placeholder="Masukkan NIK (16 digit)" maxlength="16" pattern="\d{16}" required>
+                                <small class="text-gray-500">Ketik 16 digit NIK untuk autofill data.</small>
+                            @else
+                                <select id="nikSelect" name="nik" class="nik-select mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                                    <option value="">Pilih NIK</option>
+                                </select>
+                            @endif
                         </div>
 
                         <!-- Nama Penyelenggara -->
                         <div>
                             <label for="fullNameSelect" class="block text-sm font-medium text-gray-700">Nama Penyelenggara <span class="text-red-500">*</span></label>
-                            <select id="fullNameSelect" name="full_name" class="fullname-select mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
-                                <option value="">Pilih Nama</option>
-                            </select>
+                            @if(auth()->user()->role === 'admin desa')
+                                <input type="text" id="fullNameSelect" name="full_name"
+                                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
+                                       placeholder="Nama lengkap" required>
+                            @else
+                                <select id="fullNameSelect" name="full_name" class="fullname-select mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                                    <option value="">Pilih Nama</option>
+                                </select>
+                            @endif
                         </div>
                     </div>
 
@@ -40,9 +69,7 @@
                         <!-- Nama Penanggung Jawab -->
                         <div>
                             <label for="responsibleNameSelect" class="block text-sm font-medium text-gray-700">Nama Penanggung Jawab <span class="text-red-500">*</span></label>
-                            <select id="responsibleNameSelect" name="responsible_name" class="responsiblename-select mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
-                                <option value="">Pilih Nama Penanggung Jawab</option>
-                            </select>
+                            <input type="text" id="responsibleNameSelect" name="responsible_name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" placeholder="Masukkan nama penanggung jawab" required>
                         </div>
                     </div>
                 </div>
