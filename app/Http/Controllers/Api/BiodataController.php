@@ -62,6 +62,14 @@ class BiodataController extends Controller
                 }
             }
 
+            // Get jobs for dropdown (optional list)
+            $jobs = [];
+            try {
+                $jobs = app(\App\Services\JobService::class)->getAllJobs();
+            } catch (\Exception $e) {
+                Log::warning('Failed to retrieve jobs list: ' . $e->getMessage());
+            }
+
             return response()->json([
                 'status' => 'SUCCESS',
                 'data' => [
@@ -73,6 +81,7 @@ class BiodataController extends Controller
                     ],
                     'biodata' => $citizenData,
                     'family_members' => $familyMembers,
+                    'jobs' => $jobs,
                     'village_id' => $villageId
                 ]
             ]);
