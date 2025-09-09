@@ -219,15 +219,15 @@ if (Auth::guard('web')->check()) {
                     </div>
                     <div>
                         <label class="block text-sm text-gray-700">Umur</label>
-                        <input name="age" value="{{ $userData->citizen_data['age'] ?? '' }}" class="mt-1 w-full border rounded p-2" />
+                        <input name="age" value="{{ $userData->citizen_data['age'] ?? '' }}" class="mt-1 w-full border rounded p-2 bg-gray-100" readonly />
                     </div>
                     <div>
                         <label class="block text-sm text-gray-700">Tempat Lahir</label>
-                        <input name="birth_place" value="{{ $userData->citizen_data['birth_place'] ?? '' }}" class="mt-1 w-full border rounded p-2" />
+                        <input name="birth_place" value="{{ $userData->citizen_data['birth_place'] ?? '' }}" class="mt-1 w-full border rounded p-2 bg-gray-100" readonly />
                     </div>
                     <div>
                         <label class="block text-sm text-gray-700">Tanggal Lahir</label>
-                        <input type="date" name="birth_date" value="{{ isset($userData->citizen_data['birth_date']) ? substr($userData->citizen_data['birth_date'],0,10) : '' }}" class="mt-1 w-full border rounded p-2" />
+                        <input type="date" name="birth_date" value="{{ isset($userData->citizen_data['birth_date']) ? substr($userData->citizen_data['birth_date'],0,10) : '' }}" class="mt-1 w-full border rounded p-2 bg-gray-100" readonly />
                     </div>
                     <div class="md:col-span-2">
                         <label class="block text-sm text-gray-700">Alamat</label>
