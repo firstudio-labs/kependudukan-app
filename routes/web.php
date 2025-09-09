@@ -795,6 +795,14 @@ Route::middleware(['auth:web', 'role:admin desa'])->group(function () {
         ->name('admin.desa.berita-desa.approve');
     Route::post('/admin/desa/berita-desa/{id}/reject', [AdminDesaBeritaDesaController::class, 'reject'])
         ->name('admin.desa.berita-desa.reject');
+
+    // Buku Tamu routes
+    Route::get('/admin/desa/buku-tamu', [BukuTamuController::class, 'adminIndex'])
+        ->name('admin.desa.buku-tamu.index');
+    Route::get('/admin/desa/buku-tamu/{id}', [BukuTamuController::class, 'show'])
+        ->name('admin.desa.buku-tamu.show');
+    Route::delete('/admin/desa/buku-tamu/{id}', [BukuTamuController::class, 'destroy'])
+        ->name('admin.desa.buku-tamu.delete');
 });
 
 // Route untuk operator - menggunakan web guard
@@ -1115,6 +1123,8 @@ Route::get('/clear-citizen-cache/{nik}', function($nik) {
 
     return response()->json(['success' => true, 'message' => 'Cache cleared for NIK: ' . $nik]);
 })->name('clear.citizen.cache');
+
+
 
 // Modifikasi route edit untuk menggunakan nomor KK
 Route::get('/admin/desa/datakk/{kk}/edit', [DataKKController::class, 'editByKK'])

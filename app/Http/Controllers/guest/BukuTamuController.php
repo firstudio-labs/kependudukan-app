@@ -29,6 +29,105 @@ class BukuTamuController extends Controller
     }
 
     /**
+     * Display a listing of buku tamu for admin desa
+     *
+     * @param Request $request
+     * @return \Illuminate\View\View
+     */
+    public function adminIndex(Request $request)
+    {
+        $query = BukuTamu::query();
+
+        // Search functionality
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('nama', 'like', "%{$search}%")
+                  ->orWhere('alamat', 'like', "%{$search}%")
+                  ->orWhere('no_telepon', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('keperluan', 'like', "%{$search}%")
+                  ->orWhere('pesan', 'like', "%{$search}%");
+            });
+        }
+
+        // Order by latest first
+        $query->orderBy('created_at', 'desc');
+
+        // Paginate results
+        $bukuTamus = $query->paginate(10);
+
+        return view('admin.desa.buku-tamu.index', compact('bukuTamus'));
+    }
+
+    /**
+     * Display the specified buku tamu entry
+     *
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function show($id)
+    {
+        $bukuTamu = BukuTamu::findOrFail($id);
+
+        // Handle foto data - check if it already has data URL prefix
+        $fotoData = null;
+        if ($bukuTamu->foto) {
+            if (str_starts_with($bukuTamu->foto, 'data:')) {
+                // Already has data URL prefix
+                $fotoData = $bukuTamu->foto;
+            } else {
+                // Add data URL prefix
+                $fotoData = 'data:image/jpeg;base64,' . $bukuTamu->foto;
+            }
+        }
+
+        // Handle tanda tangan data - check if it already has data URL prefix
+        $tandaTanganData = null;
+        if ($bukuTamu->tanda_tangan) {
+            if (str_starts_with($bukuTamu->tanda_tangan, 'data:')) {
+                // Already has data URL prefix
+                $tandaTanganData = $bukuTamu->tanda_tangan;
+            } else {
+                // Add data URL prefix
+                $tandaTanganData = 'data:image/png;base64,' . $bukuTamu->tanda_tangan;
+            }
+        }
+
+        return response()->json([
+            'nama' => $bukuTamu->nama,
+            'alamat' => $bukuTamu->alamat,
+            'no_telepon' => $bukuTamu->no_telepon,
+            'email' => $bukuTamu->email,
+            'keperluan' => $bukuTamu->keperluan,
+            'pesan' => $bukuTamu->pesan,
+            'tanggal_kunjungan' => \Carbon\Carbon::parse($bukuTamu->created_at)->setTimezone('Asia/Jakarta')->format('d-m-Y H:i'),
+            'foto' => $fotoData,
+            'tanda_tangan' => $tandaTanganData,
+        ]);
+    }
+
+    /**
+     * Remove the specified buku tamu entry
+     *
+     * @param int $id
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function destroy($id)
+    {
+        try {
+            $bukuTamu = BukuTamu::findOrFail($id);
+            $bukuTamu->delete();
+
+            return redirect()->route('admin.desa.buku-tamu.index')
+                ->with('success', 'Data buku tamu berhasil dihapus.');
+        } catch (\Exception $e) {
+            return redirect()->route('admin.desa.buku-tamu.index')
+                ->with('error', 'Terjadi kesalahan saat menghapus data: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Store a new buku tamu entry
      *
      * @param Request $request
