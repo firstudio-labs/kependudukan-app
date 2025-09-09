@@ -485,9 +485,9 @@
 
             <!-- Footer Buttons -->
             <div class="flex justify-between pt-1 mt-0">
-                <a href="{{ route('guest.pelayanan.index') }}" class="footer-button red px-5 py-2 rounded-3xl shadow-md transition-all duration-300">
+                {{-- <a href="{{ route('guest.pelayanan.index') }}" class="footer-button red px-5 py-2 rounded-3xl shadow-md transition-all duration-300">
                     <i class="fa fa-arrow-left mr-2"></i> Kembali
-                </a>
+                </a> --}}
                 <button class="footer-button green px-5 py-2 rounded-3xl shadow-md transition-all duration-300" style="background: rgba(255, 193, 7, 0.85); border-left: 4px solid #ffc107;">
                     <i class="fa fa-headset mr-2"></i> Tanya Petugas
                 </button>
