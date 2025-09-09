@@ -174,13 +174,46 @@
 
             // Hitung list perubahan saja (key yang ada di requested_changes)
             $changedKeys = array_keys($changes);
+
+            // Urutan field yang diinginkan (mulai dari Nama Lengkap dan seterusnya)
+            $fieldOrder = [
+                'full_name',
+                'gender',
+                'age',
+                'birth_place',
+                'birth_date',
+                'address',
+                'rt',
+                'rw',
+                'province_id',
+                'district_id',
+                'sub_district_id',
+                'village_id',
+                'blood_type',
+                'education_status',
+                'job_type_id',
+            ];
+
+            // Susun key yang berubah mengikuti urutan yang diinginkan
+            $orderedKeys = [];
+            foreach ($fieldOrder as $key) {
+                if (in_array($key, $changedKeys, true)) {
+                    $orderedKeys[] = $key;
+                }
+            }
+            // Tambahkan key lain yang tidak ada dalam fieldOrder di bagian akhir (tetap terlihat)
+            foreach ($changedKeys as $key) {
+                if (!in_array($key, $orderedKeys, true)) {
+                    $orderedKeys[] = $key;
+                }
+            }
         @endphp
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="bg-white rounded-lg shadow p-4">
                 <h2 class="font-semibold text-gray-700 mb-3">Data Saat Ini</h2>
                 <div class="text-sm text-gray-800 space-y-2">
-                    @forelse($changedKeys as $key)
+                    @forelse($orderedKeys as $key)
                         @php
                             $label = $fieldLabels[$key] ?? ucfirst(str_replace('_',' ',$key));
                             $currentVal = $valueFormatter($key, $current[$key] ?? ($current['data'][$key] ?? ''));
@@ -196,7 +229,7 @@
             <div class="bg-white rounded-lg shadow p-4">
                 <h2 class="font-semibold text-gray-700 mb-3">Perubahan Diminta</h2>
                 <div class="text-sm text-gray-800 space-y-2">
-                    @forelse($changedKeys as $key)
+                    @forelse($orderedKeys as $key)
                         @php
                             $label = $fieldLabels[$key] ?? ucfirst(str_replace('_',' ',$key));
                             $newVal = $valueFormatter($key, $changes[$key] ?? '');
