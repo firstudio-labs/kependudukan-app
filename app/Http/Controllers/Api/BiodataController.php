@@ -99,112 +99,115 @@ class BiodataController extends Controller
      * Request biodata update approval - MAIN FUNCTION FOR MOBILE APP
      */
     public function requestUpdate(Request $request)
-    {
-        try {
-            $user = Auth::user();
-            
-            if (!$user) {
-                return response()->json([
-                    'status' => 'ERROR',
-                    'message' => 'User tidak ditemukan'
-                ], 401);
-            }
-
-            // Validation rules - disamakan dengan form di BiodataController::requestApprovalFromProfile
-            $validator = Validator::make($request->all(), [
-                'full_name' => 'required|string|max:255',
-                'kk' => 'nullable|string',
-                'gender' => 'required|string|in:Laki-laki,Perempuan',
-                'age' => 'nullable|numeric',
-                'birth_place' => 'nullable|string|max:255',
-                'birth_date' => 'nullable|date',
-                'address' => 'nullable|string',
-                'rt' => 'nullable|string|max:3',
-                'rw' => 'nullable|string|max:3',
-                'province_id' => 'required|numeric',
-                'district_id' => 'required|numeric',
-                'sub_district_id' => 'required|numeric',
-                'village_id' => 'required|numeric',
-                'blood_type' => 'nullable|numeric',
-                'education_status' => 'nullable|numeric',
-                'job_type_id' => 'nullable|numeric',
-            ]);
-
-            if ($validator->fails()) {
-                return response()->json([
-                    'status' => 'ERROR',
-                    'message' => 'Validasi gagal',
-                    'errors' => $validator->errors()
-                ], 422);
-            }
-
-            // Get current citizen data - sama dengan ProfileController
-            $citizen = $this->citizenService->getCitizenByNIK((int) $user->nik);
-            if (!$citizen) {
-                return response()->json([
-                    'status' => 'ERROR',
-                    'message' => 'Data penduduk tidak ditemukan'
-                ], 404);
-            }
-
-            // Extract village_id dan current_data - sama dengan ProfileController
-            $villageId = $citizen['data']['village_id'] ?? $citizen['village_id'] ?? $citizen['data']['villages_id'] ?? $citizen['villages_id'] ?? null;
-            $currentData = $citizen['data'] ?? $citizen ?? [];
-
-            if (!$villageId) {
-                return response()->json([
-                    'status' => 'ERROR',
-                    'message' => 'Data desa tidak ditemukan'
-                ], 400);
-            }
-
-            // Check if there's already a pending request
-            $existingRequest = ProfileChangeRequest::where('nik', $user->nik)
-                ->where('status', 'pending')
-                ->first();
-
-            if ($existingRequest) {
-                return response()->json([
-                    'status' => 'ERROR',
-                    'message' => 'Anda masih memiliki permintaan perubahan yang sedang diproses'
-                ], 400);
-            }
-
-            // Get validated data
-            $validated = $validator->validated();
-
-            // Create profile change request - sama dengan ProfileController
-            $profileChangeRequest = ProfileChangeRequest::create([
-                'nik' => $user->nik,
-                'village_id' => $villageId,
-                'current_data' => $currentData,
-                'requested_changes' => $validated,
-                'status' => 'pending',
-                'requested_at' => now(),
-            ]);
-
-            return response()->json([
-                'status' => 'SUCCESS',
-                'message' => 'Permintaan perubahan biodata berhasil dikirim ke admin desa',
-                'data' => [
-                    'request_id' => $profileChangeRequest->id,
-                    'status' => 'pending',
-                    'requested_at' => $profileChangeRequest->requested_at,
-                    'requested_changes' => $validated,
-                    'village_id' => $villageId,
-                    'message' => 'Permintaan Anda sedang menunggu approval dari admin desa'
-                ]
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Error requesting biodata update: ' . $e->getMessage());
+{
+    try {
+        $user = Auth::user();
+        
+        if (!$user) {
             return response()->json([
                 'status' => 'ERROR',
-                'message' => 'Terjadi kesalahan saat mengirim permintaan perubahan'
-            ], 500);
+                'message' => 'User tidak ditemukan'
+            ], 401);
         }
-    }
 
+        // Validasi rules - tambahkan nik
+        $validator = Validator::make($request->all(), [
+            'nik' => 'required|string', // Tambahkan validasi NIK
+            'full_name' => 'required|string|max:255',
+            'kk' => 'nullable|string',
+            'gender' => 'required|string|in:Laki-laki,Perempuan',
+            'age' => 'nullable|numeric',
+            'birth_place' => 'nullable|string|max:255',
+            'birth_date' => 'nullable|date',
+            'address' => 'nullable|string',
+            'rt' => 'nullable|string|max:3',
+            'rw' => 'nullable|string|max:3',
+            'province_id' => 'required|numeric',
+            'district_id' => 'required|numeric',
+            'sub_district_id' => 'required|numeric',
+            'village_id' => 'required|numeric',
+            'blood_type' => 'nullable|numeric',
+            'education_status' => 'nullable|numeric',
+            'job_type_id' => 'nullable|numeric',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'ERROR',
+                'message' => 'Validasi gagal',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        // PERBAIKAN: Gunakan NIK yang dikirim dari mobile app
+        $requestedNik = $request->input('nik');
+        
+        // Get current citizen data berdasarkan NIK yang dikirim
+        $citizen = $this->citizenService->getCitizenByNIK((int) $requestedNik);
+        if (!$citizen) {
+            return response()->json([
+                'status' => 'ERROR',
+                'message' => 'Data penduduk tidak ditemukan'
+            ], 404);
+        }
+
+        // Extract village_id dan current_data berdasarkan NIK yang dikirim
+        $villageId = $citizen['data']['village_id'] ?? $citizen['village_id'] ?? $citizen['data']['villages_id'] ?? $citizen['villages_id'] ?? null;
+        $currentData = $citizen['data'] ?? $citizen ?? [];
+
+        if (!$villageId) {
+            return response()->json([
+                'status' => 'ERROR',
+                'message' => 'Data desa tidak ditemukan'
+            ], 400);
+        }
+
+        // Check if there's already a pending request untuk NIK yang dikirim
+        $existingRequest = ProfileChangeRequest::where('nik', $requestedNik)
+            ->where('status', 'pending')
+            ->first();
+
+        if ($existingRequest) {
+            return response()->json([
+                'status' => 'ERROR',
+                'message' => 'Anda masih memiliki permintaan perubahan yang sedang diproses'
+            ], 400);
+        }
+
+        // Get validated data
+        $validated = $validator->validated();
+
+        // Create profile change request dengan NIK yang dikirim
+        $profileChangeRequest = ProfileChangeRequest::create([
+            'nik' => $requestedNik, // PERBAIKAN: Gunakan NIK yang dikirim
+            'village_id' => $villageId,
+            'current_data' => $currentData, // Data asli dari NIK yang dikirim
+            'requested_changes' => $validated,
+            'status' => 'pending',
+            'requested_at' => now(),
+        ]);
+
+        return response()->json([
+            'status' => 'SUCCESS',
+            'message' => 'Permintaan perubahan biodata berhasil dikirim ke admin desa',
+            'data' => [
+                'request_id' => $profileChangeRequest->id,
+                'status' => 'pending',
+                'requested_at' => $profileChangeRequest->requested_at,
+                'requested_changes' => $validated,
+                'village_id' => $villageId,
+                'message' => 'Permintaan Anda sedang menunggu approval dari admin desa'
+            ]
+        ]);
+
+    } catch (\Exception $e) {
+        Log::error('Error requesting biodata update: ' . $e->getMessage());
+        return response()->json([
+            'status' => 'ERROR',
+            'message' => 'Terjadi kesalahan saat mengirim permintaan perubahan'
+        ], 500);
+    }
+}
     /**
      * Get user's biodata change history
      */
