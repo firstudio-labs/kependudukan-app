@@ -36,6 +36,12 @@
                 <label for="purpose" class="block text-sm font-medium text-gray-700">Tujuan <span class="text-red-500">*</span></label>
                 <textarea id="purpose" name="purpose" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>{{ $administration->purpose }}</textarea>
             </div>
+
+            <!-- Keperluan -->
+            <div class="col-span-2">
+                <label for="keperluan" class="block text-sm font-medium text-gray-700">Keperluan</label>
+                <textarea id="keperluan" name="keperluan" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">{{ $administration->keperluan }}</textarea>
+            </div>
         </x-slot>
 
         <x-slot name="scripts">

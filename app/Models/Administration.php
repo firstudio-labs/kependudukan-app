@@ -42,7 +42,8 @@ class Administration extends Model
         'letter_date',
         'statement_content',
         'purpose',
-        'is_accepted' // Add this field
+        'is_accepted', // Add this field
+        'keperluan'
     ];
 
     /**

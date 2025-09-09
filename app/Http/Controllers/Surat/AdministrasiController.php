@@ -139,6 +139,7 @@ class AdministrasiController extends Controller
             'village_id' => 'required|string',
             'letter_number' => 'nullable|string',
             'signing' => 'nullable|string', // Ensure signing is nullable
+            'keperluan' => 'nullable|string',
         ]);
 
         try {
@@ -268,6 +269,7 @@ class AdministrasiController extends Controller
             'village_id' => 'required|numeric',
             'letter_number' => 'nullable|string',
             'signing' => 'nullable|string', // Ensure signing is nullable
+            'keperluan' => 'nullable|string',
         ]);
 
         try {

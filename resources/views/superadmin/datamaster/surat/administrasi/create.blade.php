@@ -34,6 +34,12 @@
                 <label for="purpose" class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Tujuan <span class="text-red-500">*</span></label>
                 <textarea id="purpose" name="purpose" rows="3" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm sm:text-base p-1.5 sm:p-2" required></textarea>
             </div>
+
+            <!-- Keperluan -->
+            <div class="mb-4">
+                <label for="keperluan" class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Keperluan</label>
+                <textarea id="keperluan" name="keperluan" rows="3" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm sm:text-base p-1.5 sm:p-2"></textarea>
+            </div>
         </x-slot>
 
         <x-slot name="scripts">

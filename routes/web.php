@@ -826,7 +826,7 @@ Route::middleware(['auth:penduduk'])->group(function () {
         ->name('user.profile.updateLocation');
     Route::get('/user/profile/test-citizen-data', [ProfileController::class, 'testCitizenData'])
         ->name('user.profile.testCitizenData');
-    
+
 
     // Alur baru edit biodata via BiodataController
     Route::get('/user/profile/family-members', [\App\Http\Controllers\BiodataController::class, 'getProfileFamilyMembers'])
