@@ -57,14 +57,14 @@
                     <tr class="bg-white border-gray-300 border-b hover:bg-gray-50">
                         <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{{ ($items->currentPage() - 1) * $items->perPage() + $index + 1 }}</th>
                         <td class="px-6 py-4">{{ $item['type_label'] }}</td>
-                        <td class="px-6 py-4">{{ $item['nik'] ?? '-' }}</td>
-                        <td class="px-6 py-4">{{ $item['full_name'] ?? '-' }}</td>
+                        <td class="px-6 py-4">{{ is_array($item['nik'] ?? null) ? implode(', ', $item['nik']) : ($item['nik'] ?? '-') }}</td>
+                        <td class="px-6 py-4">{{ is_array($item['full_name'] ?? null) ? implode(', ', $item['full_name']) : ($item['full_name'] ?? '-') }}</td>
                         <td class="px-6 py-4">
-                            <div class="max-w-xs truncate" title="{{ $item['purpose'] }}">
-                                {{ \Illuminate\Support\Str::limit($item['purpose'] ?? '-', 50, '...') }}
+                            <div class="max-w-xs truncate" title="{{ is_array($item['purpose'] ?? null) ? implode(', ', $item['purpose']) : ($item['purpose'] ?? '-') }}">
+                                {{ \Illuminate\Support\Str::limit(is_array($item['purpose'] ?? null) ? implode(', ', $item['purpose']) : ($item['purpose'] ?? '-'), 50, '...') }}
                             </div>
                         </td>
-                        <td class="px-6 py-4">{{ \Carbon\Carbon::parse($item['letter_date'])->format('d-m-Y') }}</td>
+                        <td class="px-6 py-4">{{ !empty($item['letter_date']) && !is_array($item['letter_date']) ? \Carbon\Carbon::parse($item['letter_date'])->format('d-m-Y') : '-' }}</td>
                         <td class="flex items-center px-6 py-4 space-x-2">
                             @php
                                 $routes = [
