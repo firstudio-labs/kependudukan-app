@@ -74,6 +74,34 @@ class DataKKController extends Controller
                     'pagination' => isset($kk['data']['pagination']) ? $kk['data']['pagination'] : 'none'
                 ]);
             }
+
+            // Filter untuk admin desa: hanya tampilkan kepala keluarga
+            if (isset($kk['data']['citizens']) && is_array($kk['data']['citizens'])) {
+                $originalCount = count($kk['data']['citizens']);
+
+                // Filter hanya kepala keluarga
+                $kk['data']['citizens'] = array_filter($kk['data']['citizens'], function($citizen) {
+                    return isset($citizen['family_status']) &&
+                           (strtoupper($citizen['family_status']) === 'KEPALA KELUARGA' ||
+                            $citizen['family_status'] == 2);
+                });
+
+                // Re-index array setelah filter
+                $kk['data']['citizens'] = array_values($kk['data']['citizens']);
+                $filteredCount = count($kk['data']['citizens']);
+
+                // Update pagination info
+                if (isset($kk['data']['pagination'])) {
+                    $kk['data']['pagination']['total_items'] = $filteredCount;
+                    $kk['data']['pagination']['total_page'] = ceil($filteredCount / 10);
+                }
+
+                Log::info('Filtered citizens for admin desa - kepala keluarga only', [
+                    'village_id' => $villagesId,
+                    'original_count' => $originalCount,
+                    'filtered_count' => $filteredCount
+                ]);
+            }
         } else {
             // For superadmin or other roles, show all data with consistent search
             if ($search) {
@@ -402,12 +430,24 @@ class DataKKController extends Controller
 
             // Re-index array
             $citizens = array_values($citizens);
-            $filteredCount = count($citizens);
+            $villageFilteredCount = count($citizens);
+
+            // Filter hanya kepala keluarga untuk admin desa
+            $citizens = array_filter($citizens, function($citizen) {
+                return isset($citizen['family_status']) &&
+                       (strtoupper($citizen['family_status']) === 'KEPALA KELUARGA' ||
+                        $citizen['family_status'] == 2);
+            });
+
+            // Re-index array setelah filter kepala keluarga
+            $citizens = array_values($citizens);
+            $finalFilteredCount = count($citizens);
 
             Log::info('Filtered citizens for admin desa in fetchAllCitizens:', [
                 'villages_id' => $villagesId,
                 'original_count' => $originalCount,
-                'filtered_count' => $filteredCount
+                'village_filtered_count' => $villageFilteredCount,
+                'final_filtered_count' => $finalFilteredCount
             ]);
         }
 
@@ -984,13 +1024,24 @@ class DataKKController extends Controller
                 });
 
                 $citizens = array_values($citizens);
-                $filteredCount = count($citizens);
+                $villageFilteredCount = count($citizens);
+
+                // Filter hanya kepala keluarga untuk admin desa
+                $citizens = array_filter($citizens, function($citizen) {
+                    return isset($citizen['family_status']) &&
+                           (strtoupper($citizen['family_status']) === 'KEPALA KELUARGA' ||
+                            $citizen['family_status'] == 2);
+                });
+
+                $citizens = array_values($citizens);
+                $finalFilteredCount = count($citizens);
 
                 Log::info('Filtered export data:', [
                     'villages_id' => $villagesId,
                     'original_count' => $originalCount,
-                    'filtered_count' => $filteredCount,
-                    'filter_type' => 'village_id filter'
+                    'village_filtered_count' => $villageFilteredCount,
+                    'final_filtered_count' => $finalFilteredCount,
+                    'filter_type' => 'village_id + kepala keluarga filter'
                 ]);
             }
 
