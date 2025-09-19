@@ -143,8 +143,8 @@
                 <div>
                     <label for="province_code" class="block text-sm font-medium text-gray-700">Provinsi <span class="text-red-500">*</span></label>
                     <select id="province_code" name="province_code"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2 bg-gray-100"
-                        required disabled>
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
+                        required>
                         <option value="">Pilih Provinsi</option>
                         @foreach ($provinces as $province)
                             <option value="{{ $province['code'] }}" data-id="{{ $province['id'] }}" {{ $citizen['data']['province_id'] == $province['id'] ? 'selected' : '' }}>
@@ -158,8 +158,8 @@
                 <div>
                     <label for="district_code" class="block text-sm font-medium text-gray-700">Kabupaten <span class="text-red-500">*</span></label>
                     <select id="district_code" name="district_code"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2 bg-gray-100"
-                        required disabled>
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
+                        required>
                         <option value="">Pilih Kabupaten</option>
                         @foreach($districts as $district)
                             <option value="{{ $district['code'] }}" data-id="{{ $district['id'] }}" {{ $citizen['data']['district_id'] == $district['id'] ? 'selected' : '' }}>
@@ -173,8 +173,8 @@
                 <div>
                     <label for="sub_district_code" class="block text-sm font-medium text-gray-700">Kecamatan <span class="text-red-500">*</span></label>
                     <select id="sub_district_code" name="sub_district_code"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2 bg-gray-100"
-                        required disabled>
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
+                        required>
                         <option value="">Pilih Kecamatan</option>
                         @foreach($subDistricts as $subDistrict)
                             <option value="{{ $subDistrict['code'] }}" data-id="{{ $subDistrict['id'] }}" {{ $citizen['data']['sub_district_id'] == $subDistrict['id'] ? 'selected' : '' }}>
@@ -188,8 +188,8 @@
                 <div>
                     <label for="village_code" class="block text-sm font-medium text-gray-700">Desa <span class="text-red-500">*</span></label>
                     <select id="village_code" name="village_code"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2 bg-gray-100"
-                        required disabled>
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
+                        required>
                         <option value="">Pilih Desa</option>
                         @foreach($villages as $village)
                             <option value="{{ $village['code'] }}" data-id="{{ $village['id'] }}" {{ $citizen['data']['village_id'] == $village['id'] ? 'selected' : '' }}>
