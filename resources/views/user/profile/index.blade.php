@@ -114,10 +114,39 @@ if (Auth::guard('web')->check()) {
                 </div>
             </div>
 
+            @php
+                $informasiUsaha = null;
+                $usahaLat = '';
+                $usahaLng = '';
+                $usahaOwnerNik = '';
+                try {
+                    $informasiUsaha = \App\Models\InformasiUsaha::where('penduduk_id', $userData->id ?? null)->first();
+                    if (!$informasiUsaha && !empty($userData->citizen_data['kk'])) {
+                        // Coba cari berdasarkan KK untuk memastikan satu KK satu usaha
+                        $informasiUsaha = \App\Models\InformasiUsaha::where('kk', $userData->citizen_data['kk'])->first();
+                    }
+                    if ($informasiUsaha && !empty($informasiUsaha->tag_lokasi)) {
+                        $coords = explode(',', $informasiUsaha->tag_lokasi);
+                        if (count($coords) >= 2) {
+                            $usahaLat = trim($coords[0]);
+                            $usahaLng = trim($coords[1]);
+                        }
+                    }
+                    if ($informasiUsaha && $informasiUsaha->penduduk_id) {
+                        $o = \App\Models\Penduduk::find($informasiUsaha->penduduk_id);
+                        $usahaOwnerNik = $o->nik ?? '';
+                    }
+                } catch (\Exception $e) {
+                    $informasiUsaha = null;
+                }
+            @endphp
+
+            
+
             <!-- Form Edit Biodata (Request Approval) -->
             <div id="editBiodataForm" class="bg-white p-6 rounded-lg shadow-md mb-6 hidden">
                 <h2 class="text-xl font-semibold text-gray-700 mb-4">Edit Biodata</h2>
-                <form method="POST" action="{{ route('profile.biodata.request-approval') }}" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <form method="POST" action="{{ route('profile.biodata.request-approval') }}" enctype="multipart/form-data" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     @csrf
                     <input type="hidden" name="nik" id="selectedNik" value="{{ $userData->nik }}" />
                     <div class="md:col-span-2">
@@ -237,6 +266,8 @@ if (Auth::guard('web')->check()) {
                         <label class="block text-sm text-gray-700">RT</label>
                         <input name="rt" value="{{ $userData->citizen_data['rt'] ?? '' }}" class="mt-1 w-full border rounded p-2 bg-gray-100" readonly />
                     </div>
+
+                    
                     <div>
                         <label class="block text-sm text-gray-700">RW</label>
                         <input name="rw" value="{{ $userData->citizen_data['rw'] ?? '' }}" class="mt-1 w-full border rounded p-2 bg-gray-100" readonly />
@@ -276,6 +307,43 @@ if (Auth::guard('web')->check()) {
                         </select>
                         <input type="hidden" id="village_id" name="village_id" value="{{ $userData->citizen_data['village_id'] ?? ($userData->citizen_data['villages_id'] ?? ($userData->citizen_data['desa_id'] ?? '')) }}" />
                     </div>
+                    <!-- Informasi Usaha (dipindah ke bawah field wilayah) -->
+                    <div class="md:col-span-2 mt-8" id="informasiUsahaSection" data-owner-nik="{{ $usahaOwnerNik }}">
+                        <h3 class="text-lg font-semibold text-gray-700 mb-2">Informasi Usaha</h3>
+                        <p class="text-sm text-gray-500 mb-4">Isi informasi usaha Anda. Setelah disimpan, data akan diajukan untuk approval admin desa.</p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm text-gray-700">Nama Toko/Usaha</label>
+                                <input id="nama_usaha" name="nama_usaha" value="{{ old('nama_usaha', $informasiUsaha->nama_usaha ?? '') }}" class="mt-1 w-full border rounded p-2" placeholder="Contoh: Warung Sembako Ibu Ani" />
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-700">Kelompok Usaha</label>
+                                <select id="kelompok_usaha" name="kelompok_usaha" class="mt-1 w-full border rounded p-2">
+                                    <option value="">Pilih Kelompok Usaha</option>
+                                    @php $kel = old('kelompok_usaha', $informasiUsaha->kelompok_usaha ?? ''); @endphp
+                                    <option value="UMKM" {{ $kel==='UMKM' ? 'selected' : '' }}>UMKM</option>
+                                    <option value="BUMDES" {{ $kel==='BUMDES' ? 'selected' : '' }}>BUMDES</option>
+                                    <option value="Mandiri/Perseorangan" {{ $kel==='Mandiri/Perseorangan' ? 'selected' : '' }}>Mandiri/Perseorangan</option>
+                                    <option value="KUB (Kelompok Usaha Bersama)" {{ $kel==='KUB (Kelompok Usaha Bersama)' ? 'selected' : '' }}>KUB (Kelompok Usaha Bersama)</option>
+                                    <option value="Korporasi/Perusahaan" {{ $kel==='Korporasi/Perusahaan' ? 'selected' : '' }}>Korporasi/Perusahaan</option>
+                                </select>
+                            </div>
+                            <div class="md:col-span-2">
+                                <x-map-input label="Lokasi Usaha" addressId="usaha_address" addressName="usaha_address" address="{{ $informasiUsaha->alamat ?? '' }}" latitudeId="usahaLat" latitudeName="tag_lat" latitude="{{ $usahaLat }}" longitudeId="usahaLng" longitudeName="tag_lng" longitude="{{ $usahaLng }}" modalId="" />
+                            </div>
+
+                            <div class="md:col-span-2">
+                                <label class="block text-sm text-gray-700">Foto Tempat Usaha</label>
+                                <input type="file" id="foto_usaha" name="foto_usaha" accept="image/jpeg,image/png" class="mt-1 w-full border rounded p-2 bg-white" />
+                                <p class="text-xs text-gray-500 mt-1">Format: JPG/PNG, maksimal 2MB.</p>
+                                <div id="foto_usaha_preview_wrapper" class="mt-2 {{ isset($informasiUsaha) && $informasiUsaha->foto_url ? '' : 'hidden' }}">
+                                    <img id="foto_usaha_preview" src="{{ $informasiUsaha->foto_url ?? '' }}" alt="Preview Foto Usaha" class="h-32 rounded border" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="md:col-span-2 flex justify-end gap-3 mt-2">
                         <button type="button" onclick="toggleEditForm()" class="inline-flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-gray-50">
                             <i class="fa-solid fa-xmark"></i>
@@ -425,6 +493,56 @@ if (Auth::guard('web')->check()) {
                     </div>
                 </div>
             </div>
+
+            @if($informasiUsaha)
+                <div class="bg-white p-6 rounded-lg shadow-md mt-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h2 class="text-xl font-semibold text-gray-700">Informasi Usaha</h2>
+                            <p class="text-gray-500">Ringkasan usaha Anda</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <dl class="grid grid-cols-1 gap-x-4 gap-y-3">
+                                <div class="sm:col-span-1">
+                                    <dt class="text-sm font-medium text-gray-500">Nama Usaha</dt>
+                                    <dd class="mt-1 text-sm text-gray-900">{{ $informasiUsaha->nama_usaha }}</dd>
+                                </div>
+                                <div class="sm:col-span-1">
+                                    <dt class="text-sm font-medium text-gray-500">Kelompok Usaha</dt>
+                                    <dd class="mt-1 text-sm text-gray-900">{{ $informasiUsaha->kelompok_usaha }}</dd>
+                                </div>
+                                <div class="sm:col-span-1">
+                                    <dt class="text-sm font-medium text-gray-500">Alamat</dt>
+                                    <dd class="mt-1 text-sm text-gray-900">{{ $informasiUsaha->alamat ?? '-' }}</dd>
+                                </div>
+                                <div class="sm:col-span-1">
+                                    <dt class="text-sm font-medium text-gray-500">Tag Lokasi</dt>
+                                    <dd class="mt-1 text-sm text-gray-900">{{ $informasiUsaha->tag_lokasi ?? '-' }}</dd>
+                                </div>
+                            </dl>
+                        </div>
+                        <div>
+                            @php 
+                                $fotoUrl = $informasiUsaha->foto_url ?? ($informasiUsaha->foto ?? null);
+                                if ($fotoUrl && !preg_match('#^https?://#', $fotoUrl)) {
+                                    $fotoUrl = asset('storage/' . ltrim($fotoUrl, '/'));
+                                }
+                            @endphp
+                            @if(!empty($fotoUrl))
+                                <img src="{{ $fotoUrl }}" alt="Foto Usaha" class="max-h-48 rounded border" />
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            @else
+                <div class="bg-white p-6 rounded-lg shadow-md mt-6">
+                    <h2 class="text-xl font-semibold text-gray-700 mb-2">Informasi Usaha</h2>
+                    <p class="text-gray-500">Belum ada data informasi usaha.</p>
+                </div>
+            @endif
 
             {{--
             <!-- History Perubahan Biodata -->
@@ -2179,6 +2297,158 @@ if (!empty($userData->tag_lokasi)) {
                             }
                         }, 100);
                     }
+                });
+            </script>
+            <script>
+                // Set readonly Informasi Usaha jika usaha KK ada dan owner-nya bukan NIK yang dipilih di dropdown
+                document.addEventListener('DOMContentLoaded', function () {
+                    const section = document.getElementById('informasiUsahaSection');
+                    if (!section) return;
+                    const ownerNik = section.dataset.ownerNik || '';
+
+                    const inputs = [
+                        document.getElementById('nama_usaha'),
+                        document.getElementById('kelompok_usaha'),
+                        document.getElementById('usaha_address'),
+                        document.getElementById('usahaLat'),
+                        document.getElementById('usahaLng'),
+                        document.getElementById('foto_usaha')
+                    ];
+
+                    function setUsahaReadonly(readonly) {
+                        inputs.forEach(el => {
+                            if (!el) return;
+                            if (readonly) {
+                                el.setAttribute('disabled', 'disabled');
+                                el.classList.add('bg-gray-100','cursor-not-allowed');
+                            } else {
+                                el.removeAttribute('disabled');
+                                el.classList.remove('bg-gray-100','cursor-not-allowed');
+                            }
+                        });
+                        const existNote = section.querySelector('.usaha-readonly-note');
+                        if (readonly) {
+                            if (!existNote) {
+                                const note = document.createElement('p');
+                                note.className = 'usaha-readonly-note text-xs text-orange-600 mt-1';
+                                note.textContent = 'Informasi Usaha hanya dapat diubah oleh pemilik yang terdaftar.';
+                                section.appendChild(note);
+                            }
+                        } else if (existNote) {
+                            existNote.remove();
+                        }
+                    }
+
+                    function evaluateReadonly() {
+                        const nikSelect = document.getElementById('editNikSelect');
+                        const selectedNik = nikSelect ? nikSelect.value : '{{ $userData->nik ?? '' }}';
+                        // Jika tidak ada ownerNik (belum ada usaha), biarkan editable
+                        if (!ownerNik) { setUsahaReadonly(false); return; }
+                        // Jika ada ownerNik dan berbeda dengan nik yang dipilih → readonly
+                        setUsahaReadonly(selectedNik !== ownerNik);
+                    }
+
+                    evaluateReadonly();
+                    const nikSelect = document.getElementById('editNikSelect');
+                    if (nikSelect) nikSelect.addEventListener('change', evaluateReadonly);
+                });
+            </script>
+            <script>
+                // Kirim Informasi Usaha terlebih dahulu sebelum submit pengajuan biodata
+                document.addEventListener('DOMContentLoaded', function () {
+                    const form = document.querySelector('form[action*="request-approval"]');
+                    if (!form) return;
+                    form.addEventListener('submit', function (e) {
+                        // Kumpulkan field Informasi Usaha
+                        const namaUsaha = document.querySelector('input[name="nama_usaha"]')?.value?.trim();
+                        const kelompokUsaha = document.querySelector('select[name="kelompok_usaha"]')?.value?.trim();
+                        const alamatUsaha = document.getElementById('usaha_address')?.value?.trim();
+                        const lat = document.getElementById('usahaLat')?.value?.trim();
+                        const lng = document.getElementById('usahaLng')?.value?.trim();
+                        const foto = document.getElementById('foto_usaha')?.files?.[0] || null;
+
+                        const shouldSend = (namaUsaha || kelompokUsaha || alamatUsaha || (lat && lng) || foto);
+                        if (!shouldSend) return; // tidak ada data usaha, lanjut submit biasa
+
+                        e.preventDefault();
+
+                        const fd = new FormData();
+                        if (namaUsaha) fd.append('nama_usaha', namaUsaha);
+                        if (kelompokUsaha) fd.append('kelompok_usaha', kelompokUsaha);
+                        if (alamatUsaha) fd.append('alamat_usaha', alamatUsaha);
+                        if (lat) fd.append('tag_lat', lat);
+                        if (lng) fd.append('tag_lng', lng);
+                        if (foto) fd.append('foto_usaha', foto);
+
+                        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                        // Kirim bersamaan via BiodataController::requestApprovalFromProfile – tidak perlu endpoint terpisah
+                        fetch('{{ route('profile.biodata.request-approval') }}', {
+                            method: 'POST',
+                            headers: token ? { 'X-CSRF-TOKEN': token } : {},
+                            body: fd
+                        }).then(() => {
+                            form.submit();
+                        }).catch(() => {
+                            // Tetap lanjutkan submit biodata agar tidak menghalangi proses lain
+                            form.submit();
+                        });
+                    });
+                });
+            </script>
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    const fileInput = document.getElementById('foto_usaha');
+                    const previewImg = document.getElementById('foto_usaha_preview');
+                    const previewWrap = document.getElementById('foto_usaha_preview_wrapper');
+                    if (!fileInput || !previewImg || !previewWrap) return;
+                    fileInput.addEventListener('change', function () {
+                        const file = this.files && this.files[0] ? this.files[0] : null;
+                        if (!file) {
+                            previewWrap.classList.add('hidden');
+                            previewImg.src = '';
+                            return;
+                        }
+                        const reader = new FileReader();
+                        reader.onload = function (e) {
+                            previewImg.src = e.target.result;
+                            previewWrap.classList.remove('hidden');
+                        };
+                        reader.readAsDataURL(file);
+                    });
+                });
+            </script>
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    // Integrasi map untuk Informasi Usaha: auto-isi alamat dari koordinat
+                    const usahaLat = document.getElementById('usahaLat');
+                    const usahaLng = document.getElementById('usahaLng');
+                    const usahaAddr = document.getElementById('usaha_address');
+
+                    async function reverseGeocode(lat, lng) {
+                        try {
+                            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`);
+                            if (!res.ok) return;
+                            const data = await res.json();
+                            if (usahaAddr && data.display_name) {
+                                if (!usahaAddr.value || usahaAddr.dataset.autofill === 'true') {
+                                    usahaAddr.value = data.display_name;
+                                    usahaAddr.dataset.autofill = 'true';
+                                }
+                            }
+                        } catch (_) {}
+                    }
+
+                    function onUsahaCoordChange() {
+                        const lat = usahaLat ? usahaLat.value : '';
+                        const lng = usahaLng ? usahaLng.value : '';
+                        if (lat && lng) reverseGeocode(lat, lng);
+                    }
+
+                    if (usahaLat) usahaLat.addEventListener('change', onUsahaCoordChange);
+                    if (usahaLng) usahaLng.addEventListener('change', onUsahaCoordChange);
+
+                    // Initial populate if coordinates already exist
+                    onUsahaCoordChange();
                 });
             </script>
             <!-- Form Validation -->

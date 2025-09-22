@@ -22,6 +22,7 @@ class User extends Authenticatable
         'no_hp',
         'role',
         'alamat',
+        'tag_lokasi',
         'image',
         'foto_pengguna',
         'province_id',
@@ -67,6 +68,11 @@ class User extends Authenticatable
     public function kepalaDesa()
     {
         return $this->hasOne(KepalaDesa::class);
+    }
+
+    public function perangkatDesa()
+    {
+        return $this->hasMany(PerangkatDesa::class);
     }
 
 

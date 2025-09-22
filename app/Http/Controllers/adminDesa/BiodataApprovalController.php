@@ -4,6 +4,8 @@ namespace App\Http\Controllers\adminDesa;
 
 use App\Http\Controllers\Controller;
 use App\Models\ProfileChangeRequest;
+use App\Models\InformasiUsahaChangeRequest;
+use App\Models\InformasiUsaha;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Services\CitizenService;
@@ -79,6 +81,72 @@ class BiodataApprovalController extends Controller
             $requestModel->reviewer_note = $request->input('reviewer_note');
             $requestModel->save();
 
+            // Opsional: Approve juga Informasi Usaha dalam satu klik jika ada request pending
+            try {
+                $penduduk = \App\Models\Penduduk::where('nik', $requestModel->nik)->first();
+                if ($penduduk) {
+                    $usahaReq = \App\Models\InformasiUsahaChangeRequest::where('penduduk_id', $penduduk->id)
+                        ->where('status', 'pending')
+                        ->latest()
+                        ->first();
+                    if ($usahaReq) {
+                        $data = $usahaReq->requested_changes ?? [];
+                        $informasiUsaha = $usahaReq->informasi_usaha_id
+                            ? \App\Models\InformasiUsaha::find($usahaReq->informasi_usaha_id)
+                            : new \App\Models\InformasiUsaha(['penduduk_id' => $penduduk->id]);
+
+                        if (array_key_exists('nama_usaha', $data)) $informasiUsaha->nama_usaha = $data['nama_usaha'];
+                        if (array_key_exists('kelompok_usaha', $data)) $informasiUsaha->kelompok_usaha = $data['kelompok_usaha'];
+                        if (array_key_exists('alamat', $data)) $informasiUsaha->alamat = $data['alamat'];
+                        if (array_key_exists('tag_lokasi', $data)) $informasiUsaha->tag_lokasi = $data['tag_lokasi'];
+                        if (array_key_exists('province_id', $data) && $data['province_id']) $informasiUsaha->province_id = (int)$data['province_id'];
+                        if (array_key_exists('districts_id', $data) && $data['districts_id']) $informasiUsaha->districts_id = (int)$data['districts_id'];
+                        if (array_key_exists('sub_districts_id', $data) && $data['sub_districts_id']) $informasiUsaha->sub_districts_id = (int)$data['sub_districts_id'];
+                        if (array_key_exists('villages_id', $data) && $data['villages_id']) $informasiUsaha->villages_id = (int)$data['villages_id'];
+
+                        if (!empty($data['foto'])) {
+                            $path = $data['foto'];
+                            if (is_string($path) && str_contains($path, 'informasi_usaha_temp/')) {
+                                $filename = basename($path);
+                                $newPath = 'informasi_usaha/' . $filename;
+                                try { \Storage::disk('public')->move($path, $newPath); $informasiUsaha->foto = $newPath; }
+                                catch (\Exception $e) { $informasiUsaha->foto = $path; }
+                            } else {
+                                // Jika path bukan temp dan bukan URL, pastikan kita simpan relatif ke storage
+                                if (!preg_match('#^https?://#', $path) && !str_starts_with($path, 'informasi_usaha/')) {
+                                    $informasiUsaha->foto = 'informasi_usaha/' . ltrim($path, '/');
+                                } else {
+                                    $informasiUsaha->foto = $path;
+                                }
+                            }
+                        }
+
+                        // Pastikan simpan KK agar satu KK satu usaha
+                        if (empty($informasiUsaha->kk)) {
+                            // Ambil KK dari requested/current jika ada
+                            $kk = $usahaReq->current_data['kk'] ?? $usahaReq->requested_changes['kk'] ?? null;
+                            if (!$kk) {
+                                try {
+                                    $citizen = app(\App\Services\CitizenService::class)->getCitizenByNIK((int)($requestModel->nik ?? 0));
+                                    $kk = $citizen['data']['kk'] ?? ($citizen['kk'] ?? null);
+                                } catch (\Exception $e) { $kk = null; }
+                            }
+                            $informasiUsaha->kk = $kk;
+                        }
+                        $informasiUsaha->save();
+
+                        $usahaReq->status = 'approved';
+                        $usahaReq->reviewed_at = now();
+                        $usahaReq->reviewer_id = $user->id;
+                        $usahaReq->reviewer_note = $request->input('reviewer_note');
+                        $usahaReq->save();
+                    }
+                }
+            } catch (\Exception $e) {
+                \Log::error('Auto-approve Informasi Usaha gagal: '.$e->getMessage());
+                // tidak menggagalkan approval biodata
+            }
+
             return redirect()->route('admin.desa.biodata-approval.index')->with('success', 'Permintaan disetujui dan data diperbarui');
         } catch (\Exception $e) {
             Log::error('Error in approve method: ' . $e->getMessage(), [
@@ -103,6 +171,90 @@ class BiodataApprovalController extends Controller
         $requestModel->save();
 
         return redirect()->route('admin.desa.biodata-approval.index')->with('success', 'Permintaan ditolak');
+    }
+
+    // =====================
+    // Informasi Usaha Approval (gabung di controller ini)
+    // =====================
+    public function usahaIndex(Request $request)
+    {
+        $status = $request->query('status');
+        $query = InformasiUsahaChangeRequest::query();
+        if ($status) {
+            $query->where('status', $status);
+        }
+        $requests = $query->orderByDesc('created_at')->paginate(20);
+        return view('admin.desa.informasi-usaha-approval.index', ['items' => $requests]);
+    }
+
+    public function usahaShow($id)
+    {
+        $item = InformasiUsahaChangeRequest::findOrFail($id);
+        return view('admin.desa.informasi-usaha-approval.show', compact('item'));
+    }
+
+    public function usahaApprove(Request $request, $id)
+    {
+        $item = InformasiUsahaChangeRequest::findOrFail($id);
+        abort_unless($item->status === 'pending', 400, 'Status tidak valid');
+
+        try {
+            $data = $item->requested_changes ?? [];
+            $informasiUsaha = $item->informasi_usaha_id
+                ? InformasiUsaha::find($item->informasi_usaha_id)
+                : new InformasiUsaha(['penduduk_id' => $item->penduduk_id]);
+
+            if (array_key_exists('nama_usaha', $data)) $informasiUsaha->nama_usaha = $data['nama_usaha'];
+            $informasiUsaha->kelompok_usaha = $data['kelompok_usaha'] ?? $informasiUsaha->kelompok_usaha;
+            if (array_key_exists('alamat', $data)) $informasiUsaha->alamat = $data['alamat'];
+            if (array_key_exists('tag_lokasi', $data)) $informasiUsaha->tag_lokasi = $data['tag_lokasi'];
+            // Set data wilayah bila dikirim pada requested_changes
+            if (array_key_exists('province_id', $data)) $informasiUsaha->province_id = $data['province_id'];
+            if (array_key_exists('districts_id', $data)) $informasiUsaha->districts_id = $data['districts_id'];
+            if (array_key_exists('sub_districts_id', $data)) $informasiUsaha->sub_districts_id = $data['sub_districts_id'];
+            if (array_key_exists('villages_id', $data)) $informasiUsaha->villages_id = $data['villages_id'];
+            if (!empty($data['foto'])) {
+                // Jika file berada di folder temp, pindahkan ke folder permanen
+                $path = $data['foto'];
+                if (is_string($path) && str_contains($path, 'informasi_usaha_temp/')) {
+                    $filename = basename($path);
+                    $newPath = 'informasi_usaha/' . $filename;
+                    try {
+                        \Storage::disk('public')->move($path, $newPath);
+                        $informasiUsaha->foto = $newPath;
+                    } catch (\Exception $e) {
+                        // Jika gagal memindahkan, tetap gunakan path lama
+                        $informasiUsaha->foto = $path;
+                    }
+                } else {
+                    $informasiUsaha->foto = $path;
+                }
+            }
+            $informasiUsaha->save();
+
+        	$item->status = 'approved';
+        	$item->reviewed_at = now();
+        	$item->reviewed_by = Auth::id();
+        	$item->reviewer_note = $request->input('reviewer_note');
+        	$item->save();
+
+            return redirect()->route('admin.desa.informasi-usaha-approval.index')->with('success', 'Permintaan Informasi Usaha disetujui');
+        } catch (\Exception $e) {
+            Log::error('Approve Informasi Usaha gagal: '.$e->getMessage());
+            return back()->with('error', 'Gagal memproses approval: '.$e->getMessage());
+        }
+    }
+
+    public function usahaReject(Request $request, $id)
+    {
+        $item = InformasiUsahaChangeRequest::findOrFail($id);
+        abort_unless($item->status === 'pending', 400, 'Status tidak valid');
+        $item->status = 'rejected';
+        $item->reviewed_at = now();
+        $item->reviewed_by = Auth::id();
+        $item->reviewer_note = $request->input('reviewer_note');
+        $item->save();
+        return redirect()->route('admin.desa.informasi-usaha-approval.index')->with('success', 'Permintaan Informasi Usaha ditolak');
     }
 
     /**

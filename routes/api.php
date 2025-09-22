@@ -15,6 +15,9 @@ use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\BiodataController;
 use App\Http\Controllers\Api\AdminBiodataApprovalController;
 use App\Http\Controllers\Api\PengumumanController as ApiPengumumanController;
+use App\Http\Controllers\Api\AgendaDesaController;
+use App\Http\Controllers\Api\WarungkuController as ApiWarungkuController;
+use App\Http\Controllers\Api\PemerintahDesaController;
 
 /*
 |--------------------------------------------------------------------------
@@ -130,6 +133,23 @@ Route::middleware(ApiTokenOwnerMiddleware::class)->group(function () {
             ->name('user.pengumuman.index');
         Route::get('/pengumuman/{id}', [ApiPengumumanController::class, 'show'])
             ->name('user.pengumuman.show');
+
+        // agenda desa
+        Route::get('/agenda-desa', [AgendaDesaController::class, 'index'])
+            ->name('user.agenda-desa.index');
+        Route::get('/agenda-desa/{id}', [AgendaDesaController::class, 'show'])
+            ->name('user.agenda-desa.show');
+
+        // Warungku API
+        Route::get('/warungku', [ApiWarungkuController::class, 'index'])->name('user.api.warungku.index');
+        Route::get('/warungku/my', [ApiWarungkuController::class, 'my'])->name('user.api.warungku.my');
+        Route::post('/warungku', [ApiWarungkuController::class, 'store'])->name('user.api.warungku.store');
+        Route::get('/warungku/{barangWarungku}', [ApiWarungkuController::class, 'show'])->name('user.api.warungku.show');
+        Route::post('/warungku/{barangWarungku}', [ApiWarungkuController::class, 'update'])->name('user.api.warungku.update');
+        Route::delete('/warungku/{barangWarungku}', [ApiWarungkuController::class, 'destroy'])->name('user.api.warungku.destroy');
+
+        // Pemerintah Desa (berdasarkan desa user login)
+        Route::get('/pemerintah-desa', [PemerintahDesaController::class, 'show'])->name('user.api.pemerintah-desa.show');
 
 
         //riwayat surat

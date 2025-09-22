@@ -48,10 +48,12 @@ use App\Http\Controllers\adminKabupaten\ProfileKabController;
 use App\Http\Controllers\LaporanDesaController;
 use App\Http\Controllers\LaporDesaController;
 use App\Http\Controllers\adminDesa\LaporanDesaController as AdminDesaLaporanDesaController;
+use App\Http\Controllers\adminDesa\AgendaDesaController as AdminDesaAgendaDesaController;
 use App\Http\Controllers\guest\BukuTamuController;
 use App\Http\Controllers\superadmin\BeritaDesaController as SuperadminBeritaDesaController;
 use App\Http\Controllers\User\BeritaDesaController as UserBeritaDesaController;
 use App\Http\Controllers\User\PengumumanController as UserPengumumanController;
+use App\Http\Controllers\User\WarungkuController;
 use App\Http\Controllers\UsersController;
 use App\Http\Controllers\User\BiodataChangeController as UserBiodataChangeController;
 
@@ -146,6 +148,14 @@ Route::middleware(['auth:web', 'role:superadmin'])->group(function () {
     Route::get('/superadmin/datamaster/job/{id}/edit', [JobController::class, 'edit'])->name('jobs.edit');
     Route::put('/superadmin/datamaster/job/{id}', [JobController::class, 'update'])->name('jobs.update');
     Route::delete('/superadmin/datamaster/job/{id}', [JobController::class, 'destroy'])->name('superadmin.datamaster.job.destroy');
+
+    // Master Warungku
+    Route::get('/superadmin/datamaster/warungku', [\App\Http\Controllers\superadmin\WarungkuMasterController::class, 'index'])->name('superadmin.datamaster.warungku.index');
+    Route::get('/superadmin/datamaster/warungku/create', [\App\Http\Controllers\superadmin\WarungkuMasterController::class, 'create'])->name('superadmin.datamaster.warungku.create');
+    Route::post('/superadmin/datamaster/warungku', [\App\Http\Controllers\superadmin\WarungkuMasterController::class, 'store'])->name('superadmin.datamaster.warungku.store');
+    Route::get('/superadmin/datamaster/warungku/{warungku}/edit', [\App\Http\Controllers\superadmin\WarungkuMasterController::class, 'edit'])->name('superadmin.datamaster.warungku.edit');
+    Route::put('/superadmin/datamaster/warungku/{warungku}', [\App\Http\Controllers\superadmin\WarungkuMasterController::class, 'update'])->name('superadmin.datamaster.warungku.update');
+    Route::delete('/superadmin/datamaster/warungku/{warungku}', [\App\Http\Controllers\superadmin\WarungkuMasterController::class, 'destroy'])->name('superadmin.datamaster.warungku.destroy');
     Route::get('/superadmin/datamaster/wilayah/provinsi/index', [WilayahController::class, 'showProvinsi'])->name('superadmin.datamaster.wilayah.provinsi.index');
     Route::get('/superadmin/datamaster/wilayah/kabupaten/index', [WilayahController::class, 'showKabupaten'])->name('superadmin.datamaster.wilayah.kabupaten.index');
     Route::get('/superadmin/datamaster/wilayah/kecamatan/index', [WilayahController::class, 'showKecamatan'])->name('superadmin.datamaster.wilayah.kecamatan.index');
@@ -481,6 +491,16 @@ Route::middleware(['auth:web', 'role:admin desa'])->group(function () {
         ->name('admin.desa.profile.update');
     Route::post('/admin/desa/profile/update-photo', [ProfileDesaController::class, 'updatePhoto'])
         ->name('admin.desa.profile.update-photo');
+    Route::post('/admin/desa/profile/data-wilayah', [ProfileDesaController::class, 'updateDataWilayah'])
+        ->name('admin.desa.profile.data-wilayah.update');
+    Route::post('/admin/desa/profile/perangkat', [ProfileDesaController::class, 'updatePerangkat'])
+        ->name('admin.desa.profile.perangkat.update');
+    Route::post('/admin/desa/profile/perangkat/store', [ProfileDesaController::class, 'storePerangkat'])
+        ->name('admin.desa.profile.perangkat.store');
+    Route::put('/admin/desa/profile/perangkat/{id}', [ProfileDesaController::class, 'updatePerangkatItem'])
+        ->name('admin.desa.profile.perangkat.item.update');
+    Route::delete('/admin/desa/profile/perangkat/{id}', [ProfileDesaController::class, 'destroyPerangkat'])
+        ->name('admin.desa.profile.perangkat.destroy');
 
     // Routes for managing data related to citizens
     Route::get('/admin/desa/biodata/index', [BiodataController::class, 'index'])
@@ -803,6 +823,59 @@ Route::middleware(['auth:web', 'role:admin desa'])->group(function () {
         ->name('admin.desa.buku-tamu.show');
     Route::delete('/admin/desa/buku-tamu/{id}', [BukuTamuController::class, 'destroy'])
         ->name('admin.desa.buku-tamu.delete');
+
+    // Agenda Desa routes (Admin Desa)
+    Route::get('/admin/desa/agenda', [AdminDesaAgendaDesaController::class, 'index'])->name('admin.desa.agenda.index');
+    Route::get('/admin/desa/agenda/create', [AdminDesaAgendaDesaController::class, 'create'])->name('admin.desa.agenda.create');
+    Route::post('/admin/desa/agenda', [AdminDesaAgendaDesaController::class, 'store'])->name('admin.desa.agenda.store');
+    Route::get('/admin/desa/agenda/{id}', [AdminDesaAgendaDesaController::class, 'show'])->where('id','[0-9]+')->name('admin.desa.agenda.show');
+    Route::get('/admin/desa/agenda/{id}/edit', [AdminDesaAgendaDesaController::class, 'edit'])->where('id','[0-9]+')->name('admin.desa.agenda.edit');
+    Route::put('/admin/desa/agenda/{id}', [AdminDesaAgendaDesaController::class, 'update'])->where('id','[0-9]+')->name('admin.desa.agenda.update');
+    Route::delete('/admin/desa/agenda/{id}', [AdminDesaAgendaDesaController::class, 'destroy'])->where('id','[0-9]+')->name('admin.desa.agenda.destroy');
+
+    // Approval Informasi Usaha digabung ke halaman biodata-approval.
+
+    // Usaha Desa routes (Admin Desa)
+    Route::get('/admin/desa/usaha', [\App\Http\Controllers\adminDesa\UsahaDesaController::class, 'index'])->name('admin.desa.usaha.index');
+    Route::get('/admin/desa/usaha/create', [\App\Http\Controllers\adminDesa\UsahaDesaController::class, 'create'])->name('admin.desa.usaha.create');
+    Route::post('/admin/desa/usaha', [\App\Http\Controllers\adminDesa\UsahaDesaController::class, 'store'])->name('admin.desa.usaha.store');
+    Route::get('/admin/desa/usaha/{usaha}/edit', [\App\Http\Controllers\adminDesa\UsahaDesaController::class, 'edit'])->name('admin.desa.usaha.edit');
+    Route::put('/admin/desa/usaha/{usaha}', [\App\Http\Controllers\adminDesa\UsahaDesaController::class, 'update'])->name('admin.desa.usaha.update');
+    Route::delete('/admin/desa/usaha/{usaha}', [\App\Http\Controllers\adminDesa\UsahaDesaController::class, 'destroy'])->name('admin.desa.usaha.destroy');
+
+    // Kategori Sarana (Admin Desa)
+    Route::get('/admin/desa/kategori-sarana', [\App\Http\Controllers\adminDesa\KategoriSaranaController::class, 'index'])->name('admin.desa.kategori-sarana.index');
+    Route::get('/admin/desa/kategori-sarana/create', [\App\Http\Controllers\adminDesa\KategoriSaranaController::class, 'create'])->name('admin.desa.kategori-sarana.create');
+    Route::post('/admin/desa/kategori-sarana', [\App\Http\Controllers\adminDesa\KategoriSaranaController::class, 'store'])->name('admin.desa.kategori-sarana.store');
+    Route::get('/admin/desa/kategori-sarana/{kategoriSarana}/edit', [\App\Http\Controllers\adminDesa\KategoriSaranaController::class, 'edit'])->name('admin.desa.kategori-sarana.edit');
+    Route::put('/admin/desa/kategori-sarana/{kategoriSarana}', [\App\Http\Controllers\adminDesa\KategoriSaranaController::class, 'update'])->name('admin.desa.kategori-sarana.update');
+    Route::delete('/admin/desa/kategori-sarana/{kategoriSarana}', [\App\Http\Controllers\adminDesa\KategoriSaranaController::class, 'destroy'])->name('admin.desa.kategori-sarana.destroy');
+    // AJAX endpoint to fetch kategori by jenis
+    Route::get('/admin/desa/kategori-sarana/by-jenis', [\App\Http\Controllers\adminDesa\KategoriSaranaController::class, 'byJenis'])->name('admin.desa.kategori-sarana.by-jenis');
+
+    // Sarana Umum (Admin Desa)
+    Route::get('/admin/desa/sarana-umum', [\App\Http\Controllers\adminDesa\SaranaUmumController::class, 'index'])->name('admin.desa.sarana-umum.index');
+    Route::get('/admin/desa/sarana-umum/create', [\App\Http\Controllers\adminDesa\SaranaUmumController::class, 'create'])->name('admin.desa.sarana-umum.create');
+    Route::post('/admin/desa/sarana-umum', [\App\Http\Controllers\adminDesa\SaranaUmumController::class, 'store'])->name('admin.desa.sarana-umum.store');
+    Route::get('/admin/desa/sarana-umum/{saranaUmum}/edit', [\App\Http\Controllers\adminDesa\SaranaUmumController::class, 'edit'])->name('admin.desa.sarana-umum.edit');
+    Route::put('/admin/desa/sarana-umum/{saranaUmum}', [\App\Http\Controllers\adminDesa\SaranaUmumController::class, 'update'])->name('admin.desa.sarana-umum.update');
+    Route::delete('/admin/desa/sarana-umum/{saranaUmum}', [\App\Http\Controllers\adminDesa\SaranaUmumController::class, 'destroy'])->name('admin.desa.sarana-umum.destroy');
+
+    // Kesenian & Budaya (Admin Desa)
+    Route::get('/admin/desa/kesenian-budaya', [\App\Http\Controllers\adminDesa\KesenianBudayaController::class, 'index'])->name('admin.desa.kesenian-budaya.index');
+    Route::get('/admin/desa/kesenian-budaya/create', [\App\Http\Controllers\adminDesa\KesenianBudayaController::class, 'create'])->name('admin.desa.kesenian-budaya.create');
+    Route::post('/admin/desa/kesenian-budaya', [\App\Http\Controllers\adminDesa\KesenianBudayaController::class, 'store'])->name('admin.desa.kesenian-budaya.store');
+    Route::get('/admin/desa/kesenian-budaya/{kesenianBudaya}/edit', [\App\Http\Controllers\adminDesa\KesenianBudayaController::class, 'edit'])->name('admin.desa.kesenian-budaya.edit');
+    Route::put('/admin/desa/kesenian-budaya/{kesenianBudaya}', [\App\Http\Controllers\adminDesa\KesenianBudayaController::class, 'update'])->name('admin.desa.kesenian-budaya.update');
+    Route::delete('/admin/desa/kesenian-budaya/{kesenianBudaya}', [\App\Http\Controllers\adminDesa\KesenianBudayaController::class, 'destroy'])->name('admin.desa.kesenian-budaya.destroy');
+
+    // APBDes
+    Route::get('/admin/desa/abdes', [\App\Http\Controllers\adminDesa\AbdesController::class, 'index'])->name('admin.desa.abdes.index');
+    Route::get('/admin/desa/abdes/create', [\App\Http\Controllers\adminDesa\AbdesController::class, 'create'])->name('admin.desa.abdes.create');
+    Route::post('/admin/desa/abdes', [\App\Http\Controllers\adminDesa\AbdesController::class, 'store'])->name('admin.desa.abdes.store');
+    Route::get('/admin/desa/abdes/{abdes}/edit', [\App\Http\Controllers\adminDesa\AbdesController::class, 'edit'])->name('admin.desa.abdes.edit');
+    Route::put('/admin/desa/abdes/{abdes}', [\App\Http\Controllers\adminDesa\AbdesController::class, 'update'])->name('admin.desa.abdes.update');
+    Route::delete('/admin/desa/abdes/{abdes}', [\App\Http\Controllers\adminDesa\AbdesController::class, 'destroy'])->name('admin.desa.abdes.destroy');
 });
 
 // Route untuk operator - menggunakan web guard
@@ -847,6 +920,8 @@ Route::middleware(['auth:penduduk'])->group(function () {
         ->name('profile.citizen.by-nik');
     Route::post('/user/profile/request-biodata-approval', [\App\Http\Controllers\BiodataController::class, 'requestApprovalFromProfile'])
         ->name('profile.biodata.request-approval');
+
+    // Informasi Usaha kini digabung saat submit biodata (requestApprovalFromProfile)
 
     Route::get('/user/family-member/{nik}/documents', [ProfileController::class, 'getFamilyMemberDocuments'])
         ->name('user.family-member.documents');
@@ -963,6 +1038,16 @@ Route::middleware(['auth:penduduk'])->group(function () {
     // Pengumuman user
     Route::get('/user/pengumuman', [UserPengumumanController::class, 'index'])->name('user.pengumuman.index');
     Route::get('/user/pengumuman/{id}', [UserPengumumanController::class, 'show'])->name('user.pengumuman.show');
+
+    // Warungku
+    Route::get('/warungku', [WarungkuController::class, 'index'])->name('user.warungku.index');
+    Route::get('/warungku/my', [WarungkuController::class, 'my'])->name('user.warungku.my');
+    Route::get('/warungku/create', [WarungkuController::class, 'create'])->name('user.warungku.create');
+    Route::post('/warungku', [WarungkuController::class, 'store'])->name('user.warungku.store');
+    Route::get('/warungku/{barangWarungku}/edit', [WarungkuController::class, 'edit'])->name('user.warungku.edit');
+    Route::put('/warungku/{barangWarungku}', [WarungkuController::class, 'update'])->name('user.warungku.update');
+    Route::delete('/warungku/{barangWarungku}', [WarungkuController::class, 'destroy'])->name('user.warungku.destroy');
+    Route::get('/warungku/{barangWarungku}', [WarungkuController::class, 'show'])->name('user.warungku.show');
 
     Route::get('/profile/family-member/{nik}/document/{type}', [ProfileController::class, 'viewFamilyMemberDocument'])
         ->middleware(['auth:admin_desa']); // atau middleware yang sesuai

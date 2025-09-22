@@ -306,7 +306,14 @@
                     observeModal('{{ $modalId }}');
                 } else {
                     
-                    setTimeout(initMap, 300);
+                    // Invalidate size berkala untuk mencegah grey map saat container baru ditampilkan
+                    setTimeout(() => {
+                        const map = initMap();
+                        if (map) {
+                            setTimeout(() => map.invalidateSize(), 300);
+                            setTimeout(() => map.invalidateSize(), 800);
+                        }
+                    }, 200);
                 }
             });
         </script>

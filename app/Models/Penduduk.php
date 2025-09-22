@@ -29,6 +29,7 @@ class Penduduk extends Authenticatable
         'no_hp',
         'alamat',
         'tag_lokasi',
+        'informasi_usaha_id',
     ];
 
     /**
@@ -48,5 +49,10 @@ class Penduduk extends Authenticatable
     public function username()
     {
         return 'nik';
+    }
+
+    public function informasiUsaha()
+    {
+        return $this->belongsTo(InformasiUsaha::class, 'informasi_usaha_id');
     }
 }

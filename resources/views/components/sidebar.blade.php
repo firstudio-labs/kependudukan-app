@@ -67,6 +67,92 @@
                         </a>
                     </li>
 
+                    
+
+                    
+
+                    
+
+                    
+
+                    
+
+                    
+
+                    <!-- Warungku (User) -->
+                    <li class="-ml-5">
+                        <button type="button"
+                            class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
+                            onclick="toggleDropdown('userWarungkuDropdown')">
+                            <i class="fa-solid fa-store text-lg transition-all duration-300"></i>
+                            <span>Warungku</span>
+                            <i id="dropdown-icon-user-warungku" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
+                        </button>
+                        <ul id="userWarungkuDropdown" class="hidden space-y-2 pl-6">
+                            <li>
+                                <a href="{{ route('user.warungku.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                                                                                                        {{ request()->routeIs('user.warungku.index') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                    <span>Semua Produk</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('user.warungku.my') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                                                                                                        {{ request()->routeIs('user.warungku.my') || request()->routeIs('user.warungku.create') || request()->routeIs('user.warungku.edit') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                    <span>Produk Saya</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- Warungku (User) -->
+                    <li class="-ml-5">
+                        <button type="button"
+                            class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
+                            onclick="toggleDropdown('userWarungkuDropdown')">
+                            <i class="fa-solid fa-store text-lg transition-all duration-300"></i>
+                            <span>Warungku</span>
+                            <i id="dropdown-icon-user-warungku" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
+                        </button>
+                        <ul id="userWarungkuDropdown" class="hidden space-y-2 pl-6">
+                            <li>
+                                <a href="{{ route('user.warungku.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                                                                                                        {{ request()->routeIs('user.warungku.index') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                    <span>Semua Produk</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('user.warungku.my') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                                                                                                        {{ request()->routeIs('user.warungku.my') || request()->routeIs('user.warungku.create') || request()->routeIs('user.warungku.edit') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                    <span>Produk Saya</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <li class="-ml-5">
+                        <button type="button"
+                            class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
+                            onclick="toggleDropdown('userWarungkuDropdown')">
+                            <i class="fa-solid fa-store text-lg transition-all duration-300"></i>
+                            <span>Warungku</span>
+                            <i id="dropdown-icon-user-warungku" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
+                        </button>
+                        <ul id="userWarungkuDropdown" class="hidden space-y-2 pl-6">
+                            <li>
+                                <a href="{{ route('user.warungku.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                                                                                                        {{ request()->routeIs('user.warungku.index') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                    <span>Semua Produk</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('user.warungku.my') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                                                                                                        {{ request()->routeIs('user.warungku.my') || request()->routeIs('user.warungku.create') || request()->routeIs('user.warungku.edit') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                    <span>Produk Saya</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
                     <!-- Replace single Master User with Master Users dropdown -->
                     <li class="-ml-5">
                         <button type="button"
@@ -164,6 +250,8 @@
                             </li>
                         </ul>
                     </li>
+
+                    
 
                     <!-- In your sidebar component or layout -->
                     <li class="-ml-5">
@@ -596,6 +684,79 @@
                         </ul>
                     </li>
 
+                    <!-- Agenda Desa -->
+                    <li class="-ml-5">
+                        <a href="{{ route('admin.desa.agenda.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                                                                                                        {{ request()->routeIs('admin.desa.agenda.*')
+                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                            <i class="fa-solid fa-calendar-days text-lg transition-all duration-300"></i>
+                            <span>Agenda Desa</span>
+                        </a>
+                    </li>
+
+                    <!-- Usaha Desa -->
+                    <li class="-ml-5">
+                        <a href="{{ route('admin.desa.usaha.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                                                                                                        {{ request()->routeIs('admin.desa.usaha.*')
+                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                            <i class="fa-solid fa-store text-lg transition-all duration-300"></i>
+                            <span>Usaha Desa</span>
+                        </a>
+                    </li>
+
+                    <!-- Sarana Umum -->
+                    <li class="-ml-5">
+                        <button type="button"
+                            class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
+                            onclick="toggleDropdown('saranaUmumDropdown')">
+                            <i class="fa-solid fa-building text-lg transition-all duration-300"></i>
+                            <span>Sarana Umum</span>
+                            <i id="dropdown-icon-sarana-umum" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
+                        </button>
+                        <ul id="saranaUmumDropdown" class="hidden space-y-2 pl-6">
+                            <li>
+                                <a href="{{ route('admin.desa.kategori-sarana.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                                                                                                                                                    {{ request()->routeIs('admin.desa.kategori-sarana.*')
+                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                    <span>Kategori Sarana</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('admin.desa.sarana-umum.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                                                                                                                                                    {{ request()->routeIs('admin.desa.sarana-umum.*')
+                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                    <span>Sarana Umum</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- Kesenian & Budaya -->
+                    <li class="-ml-5">
+                        <a href="{{ route('admin.desa.kesenian-budaya.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                                                                                                        {{ request()->routeIs('admin.desa.kesenian-budaya.*')
+                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                            <i class="fa-solid fa-masks-theater text-lg transition-all duration-300"></i>
+                            <span>Kesenian & Budaya</span>
+                        </a>
+                    </li>
+
+                    <!-- APBDes -->
+                    <li class="-ml-5">
+                        <a href="{{ route('admin.desa.abdes.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                                                                                                        {{ request()->routeIs('admin.desa.abdes.*')
+                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                            <i class="fa-solid fa-sack-dollar text-lg transition-all duration-300"></i>
+                            <span>APBDES</span>
+                        </a>
+                    </li>
+
                     <!-- Pengumuman -->
                     <li class="-ml-5">
                         <a href="{{ route('admin.desa.pengumuman.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
@@ -751,6 +912,31 @@
                         </a>
                     </li>
 
+                    <!-- Warungku (User) - ditempatkan tepat di atas Logout -->
+                    <li class="-ml-5">
+                        <button type="button"
+                            class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
+                            onclick="toggleDropdown('userWarungkuDropdown')">
+                            <i class="fa-solid fa-store text-lg transition-all duration-300"></i>
+                            <span>Warungku</span>
+                            <i id="dropdown-icon-user-warungku" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
+                        </button>
+                        <ul id="userWarungkuDropdown" class="hidden space-y-2 pl-6">
+                            <li>
+                                <a href="{{ route('user.warungku.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                                                                                                        {{ request()->routeIs('user.warungku.index') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                    <span>Semua Produk</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('user.warungku.my') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                                                                                                        {{ request()->routeIs('user.warungku.my') || request()->routeIs('user.warungku.create') || request()->routeIs('user.warungku.edit') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                    <span>Produk Saya</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
                     <!-- Add Logout Button for User (Penduduk) -->
                     <li class="-ml-5 mt-8">
                         <form method="POST" action="{{ route('logout') }}">
@@ -853,5 +1039,11 @@
         checkDropdownForActiveItems('masterUsersDropdown', 'dropdown-icon-master-users');
         checkDropdownForActiveItems('kelolaAsetDropdown', 'dropdown-icon-kelola-aset');
         checkDropdownForActiveItems('masterKeperluanDropdown', 'dropdown-icon-master-keperluan');
+
+        // User Warungku dropdown auto-open
+        checkDropdownForActiveItems('userWarungkuDropdown', 'dropdown-icon-user-warungku');
+        checkDropdownForActiveItems('userWarungkuDropdownUser', 'dropdown-icon-user-warungku-user');
+        checkDropdownForActiveItems('userWarungkuDropdownUserBlock', 'dropdown-icon-user-warungku-user-block');
+        checkDropdownForActiveItems('userWarungkuUser', 'dropdown-icon-user-warungku-user2');
     });
 </script>

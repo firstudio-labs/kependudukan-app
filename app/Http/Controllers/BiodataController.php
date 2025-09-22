@@ -14,6 +14,9 @@ use Maatwebsite\Excel\Facades\Excel; // You'll need to install Laravel Excel pac
 use App\Imports\CitizensImport; // We'll create this import class
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache; // Added for cache invalidation
+use App\Models\InformasiUsahaChangeRequest;
+use App\Models\Penduduk;
+use App\Models\InformasiUsaha;
 
 class BiodataController extends Controller
 {
@@ -171,6 +174,7 @@ class BiodataController extends Controller
             $citizen = $this->citizenService->getCitizenByNIK((int) $validated['nik']);
             $villageId = $citizen['data']['village_id'] ?? $citizen['village_id'] ?? $citizen['data']['villages_id'] ?? $citizen['villages_id'] ?? null;
             $currentData = $citizen['data'] ?? $citizen ?? [];
+            $kkNumber = $currentData['kk'] ?? ($user->citizen_data['kk'] ?? $user->no_kk ?? null);
 
             \App\Models\ProfileChangeRequest::create([
                 'nik' => $validated['nik'],
@@ -180,6 +184,59 @@ class BiodataController extends Controller
                 'status' => 'pending',
                 'requested_at' => now(),
             ]);
+
+            // Jika ada data Informasi Usaha di form, kirim juga change request nya
+            $namaUsaha = trim((string) $request->input('nama_usaha', ''));
+            $kelompokUsaha = trim((string) $request->input('kelompok_usaha', ''));
+            $alamatUsaha = trim((string) $request->input('usaha_address', $request->input('alamat_usaha', '')));
+            $tagLat = trim((string) $request->input('tag_lat', ''));
+            $tagLng = trim((string) $request->input('tag_lng', ''));
+            $hasFoto = $request->hasFile('foto_usaha');
+
+            if ($namaUsaha || $kelompokUsaha || $alamatUsaha || ($tagLat && $tagLng) || $hasFoto) {
+                $penduduk = $user instanceof Penduduk ? $user : Penduduk::where('nik', $validated['nik'])->first();
+                // Cari usaha berdasarkan KK agar satu KK hanya satu Informasi Usaha
+                $existingUsaha = null;
+                if ($kkNumber) {
+                    $existingUsaha = InformasiUsaha::where('kk', $kkNumber)->first();
+                }
+                if (!$existingUsaha && $penduduk) {
+                    $existingUsaha = InformasiUsaha::where('penduduk_id', $penduduk->id)->first();
+                }
+                // Jika usaha sudah ada namun pengaju bukan pemiliknya, jangan buat change request
+                if ($existingUsaha && $existingUsaha->penduduk_id && $penduduk && (int)$existingUsaha->penduduk_id !== (int)$penduduk->id) {
+                    Log::info('Skip InformasiUsahaChangeRequest karena pengaju bukan pemilik usaha pada KK yang sama', [
+                        'nik_pengaju' => $validated['nik'],
+                        'penduduk_id_pengaju' => $penduduk->id ?? null,
+                        'penduduk_id_pemilik' => $existingUsaha->penduduk_id,
+                        'kk' => $kkNumber,
+                    ]);
+                } else {
+                $requested = [
+                    'nama_usaha' => $namaUsaha ?: null,
+                    'kelompok_usaha' => $kelompokUsaha ?: null,
+                    'alamat' => $alamatUsaha ?: null,
+                    'tag_lokasi' => ($tagLat && $tagLng) ? ($tagLat . ',' . $tagLng) : null,
+                    // Gunakan nilai wilayah dari form biodata yang sedang diajukan (paling akurat), fallback ke user bila perlu
+                    'province_id' => (int)($validated['province_id'] ?? ($user->province_id ?? 0)) ?: null,
+                    'districts_id' => (int)($validated['district_id'] ?? ($user->district_id ?? ($user->districts_id ?? 0))) ?: null,
+                    'sub_districts_id' => (int)($validated['sub_district_id'] ?? ($user->sub_district_id ?? ($user->sub_districts_id ?? 0))) ?: null,
+                    'villages_id' => (int)($validated['village_id'] ?? ($user->village_id ?? ($user->villages_id ?? 0))) ?: null,
+                ];
+                if ($hasFoto) {
+                    $path = $request->file('foto_usaha')->store('informasi_usaha_temp', 'public');
+                    $requested['foto'] = $path;
+                }
+
+                InformasiUsahaChangeRequest::create([
+                    'penduduk_id' => $penduduk?->id ?? 0,
+                    'informasi_usaha_id' => $existingUsaha?->id,
+                    'requested_changes' => $requested,
+                    'current_data' => $existingUsaha ? $existingUsaha->toArray() : ['kk' => $kkNumber],
+                    'status' => 'pending',
+                ]);
+                }
+            }
 
             return redirect()->route('user.profile.index')->with('success', 'Permintaan perubahan biodata dikirim. Menunggu persetujuan admin desa.');
         } catch (\Exception $e) {

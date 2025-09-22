@@ -91,7 +91,7 @@
 
                     <!-- Nama -->
                     <div>
-                        <label for="nama" class="block text-sm font-medium text-gray-700">Nama Lengkap <span class="text-red-500">*</span></label>
+                        <label for="nama" class="block text-sm font-medium text-gray-700">Nama Kepala Desa <span class="text-red-500">*</span></label>
                         <input type="text" id="nama" name="nama" value="{{ old('nama', $user->nama) }}" placeholder="Masukkan Nama Lengkap" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                         @error('nama')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                     </div>

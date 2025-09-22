@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\ProfileChangeRequest;
+use App\Models\InformasiUsahaChangeRequest;
+use App\Models\InformasiUsaha;
 use App\Models\User;
 use App\Services\CitizenService;
 use Illuminate\Http\Request;
@@ -186,6 +188,55 @@ class BiodataController extends Controller
             'status' => 'pending',
             'requested_at' => now(),
         ]);
+
+        // OPTIONAL: Tangani perubahan Informasi Usaha bila dikirim dari mobile
+        $usahaInput = $request->input('informasi_usaha', []);
+        $hasUsahaInput = is_array($usahaInput) && (count(array_filter($usahaInput, fn($v)=>$v!==null && $v!=='')) > 0);
+
+        if ($hasUsahaInput) {
+            // Ambil KK dan cari current usaha (berdasarkan KK prioritas)
+            $kkNumber = $validated['kk'] ?? ($currentData['kk'] ?? null);
+            $existingUsaha = null;
+            if ($kkNumber) {
+                $existingUsaha = InformasiUsaha::where('kk', $kkNumber)->first();
+            }
+
+            // Siapkan current_data untuk usaha
+            $usahaCurrent = $existingUsaha ? $existingUsaha->only([
+                'nama_usaha','kelompok_usaha','alamat','tag_lokasi','province_id','districts_id','sub_districts_id','villages_id','foto','kk'
+            ]) : [];
+
+            // Ambil foto jika diupload
+            $fotoPath = null;
+            if ($request->hasFile('informasi_usaha_foto')) {
+                $fotoPath = $request->file('informasi_usaha_foto')->store('informasi_usaha_tmp', 'public');
+            } elseif (!empty($usahaInput['foto'])) {
+                // Jika dikirim base64 (opsional), abaikan untuk simpel, atau simpan apa adanya sebagai placeholder
+                $fotoPath = $usahaInput['foto'];
+            }
+
+            $usahaRequested = [
+                'nama_usaha' => $usahaInput['nama_usaha'] ?? null,
+                'kelompok_usaha' => $usahaInput['kelompok_usaha'] ?? null,
+                'alamat' => $usahaInput['alamat'] ?? null,
+                'tag_lokasi' => $usahaInput['tag_lokasi'] ?? null,
+                'province_id' => $usahaInput['province_id'] ?? ($validated['province_id'] ?? null),
+                'districts_id' => $usahaInput['districts_id'] ?? ($validated['district_id'] ?? null),
+                'sub_districts_id' => $usahaInput['sub_districts_id'] ?? ($validated['sub_district_id'] ?? null),
+                'villages_id' => $usahaInput['villages_id'] ?? ($validated['village_id'] ?? null),
+                'foto' => $fotoPath,
+                'kk' => $kkNumber,
+            ];
+
+            InformasiUsahaChangeRequest::create([
+                'penduduk_id' => $currentData['id'] ?? null,
+                'informasi_usaha_id' => $existingUsaha->id ?? null,
+                'requested_changes' => $usahaRequested,
+                'current_data' => $usahaCurrent,
+                'status' => 'pending',
+                'requested_at' => now(),
+            ]);
+        }
 
         return response()->json([
             'status' => 'SUCCESS',

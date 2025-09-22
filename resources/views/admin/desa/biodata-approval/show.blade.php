@@ -244,6 +244,88 @@
             </div>
         </div>
 
+        {{-- Informasi Usaha terkait (jika ada pengajuan) --}}
+        @php
+            $usahaRequest = null;
+            try {
+                $penduduk = \App\Models\Penduduk::where('nik', $requestModel->nik)->first();
+                if ($penduduk) {
+                    $usahaRequest = \App\Models\InformasiUsahaChangeRequest::where('penduduk_id', $penduduk->id)
+                        ->orderByDesc('created_at')
+                        ->first();
+                }
+            } catch (\Exception $e) { $usahaRequest = null; }
+        @endphp
+
+        <div class="mt-6 bg-white rounded-lg shadow p-4">
+            <h2 class="font-semibold text-gray-700 mb-3">Informasi Usaha (Terkait Penduduk)</h2>
+            @if($usahaRequest)
+                <div class="text-sm text-gray-800 mb-3">
+                    <span class="mr-2"><strong>Status:</strong>
+                        @if($usahaRequest->status === 'pending')
+                            <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">Menunggu Review</span>
+                        @elseif($usahaRequest->status === 'approved')
+                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Disetujui</span>
+                        @else
+                            <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">Ditolak</span>
+                        @endif
+                    </span>
+                    <span><strong>Tanggal:</strong> {{ $usahaRequest->created_at->format('d M Y H:i') }}</span>
+                </div>
+
+                @php
+                    $uCur = $usahaRequest->current_data ?? [];
+                    $uReq = $usahaRequest->requested_changes ?? [];
+                    $curLat = $curLng = $newLat = $newLng = '';
+                    if (!empty($uCur['tag_lokasi'])) { $p = explode(',', $uCur['tag_lokasi']); if (count($p)>=2) { $curLat = trim($p[0]); $curLng = trim($p[1]); }}
+                    if (!empty($uReq['tag_lokasi'])) { $p = explode(',', $uReq['tag_lokasi']); if (count($p)>=2) { $newLat = trim($p[0]); $newLng = trim($p[1]); }}
+                @endphp
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="font-medium mb-2">Data Saat Ini</h3>
+                        <div class="text-sm text-gray-700 space-y-1">
+                            <div><strong>Nama Usaha:</strong> {{ $uCur['nama_usaha'] ?? '-' }}</div>
+                            <div><strong>Kelompok Usaha:</strong> {{ $uCur['kelompok_usaha'] ?? '-' }}</div>
+                            <div><strong>Alamat:</strong> {{ $uCur['alamat'] ?? '-' }}</div>
+                            <div><strong>Tag Lokasi:</strong> {{ $uCur['tag_lokasi'] ?? '-' }}
+                                @if($curLat && $curLng)
+                                    <a href="https://www.openstreetmap.org/?mlat={{ $curLat }}&mlon={{ $curLng }}#map=17/{{ $curLat }}/{{ $curLng }}" target="_blank" class="text-blue-600 underline ml-1">Lihat Peta</a>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="font-medium mb-2">Perubahan Diminta</h3>
+                        <div class="text-sm text-gray-700 space-y-1">
+                            <div><strong>Nama Usaha:</strong> {{ $uReq['nama_usaha'] ?? '-' }}</div>
+                            <div><strong>Kelompok Usaha:</strong> {{ $uReq['kelompok_usaha'] ?? '-' }}</div>
+                            <div><strong>Alamat:</strong> {{ $uReq['alamat'] ?? '-' }}</div>
+                            <div><strong>Tag Lokasi:</strong> {{ $uReq['tag_lokasi'] ?? '-' }}
+                                @if($newLat && $newLng)
+                                    <a href="https://www.openstreetmap.org/?mlat={{ $newLat }}&mlon={{ $newLng }}#map=17/{{ $newLat }}/{{ $newLng }}" target="_blank" class="text-blue-600 underline ml-1">Lihat Peta</a>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                @php 
+                    $previewFoto = $uReq['foto'] ?? ($uCur['foto'] ?? null); 
+                    if ($previewFoto && !preg_match('#^https?://#', $previewFoto)) {
+                        $previewFoto = asset('storage/' . ltrim($previewFoto, '/'));
+                    }
+                @endphp
+                @if($previewFoto)
+                    <div class="mt-4">
+                        <h3 class="font-medium mb-2">Foto Tempat Usaha</h3>
+                        <img src="{{ $previewFoto }}" class="h-40 rounded border" />
+                    </div>
+                @endif
+            @else
+                <div class="text-sm text-gray-500">Belum ada pengajuan Informasi Usaha terkait penduduk ini.</div>
+            @endif
+        </div>
         <div class="mt-6 bg-white rounded-lg shadow p-4">
             <h2 class="font-semibold text-gray-700 mb-3">Aksi Review</h2>
 
