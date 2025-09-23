@@ -305,15 +305,45 @@
                     console.log('Mengatur observer untuk modal: {{ $modalId }}');
                     observeModal('{{ $modalId }}');
                 } else {
+                    // Inisialisasi peta langsung
+                    initMap();
                     
-                    // Invalidate size berkala untuk mencegah grey map saat container baru ditampilkan
+                    // Force map resize after initialization and on window load
                     setTimeout(() => {
-                        const map = initMap();
+                        const map = window.mapInstance[mapId];
                         if (map) {
-                            setTimeout(() => map.invalidateSize(), 300);
-                            setTimeout(() => map.invalidateSize(), 800);
+                            map.invalidateSize();
                         }
-                    }, 200);
+                    }, 100); // Initial small delay
+                    
+                    window.addEventListener('load', () => {
+                        const map = window.mapInstance[mapId];
+                        if (map) {
+                            map.invalidateSize();
+                        }
+                    });
+
+                    // Wait for fonts to load
+                    if (document.fonts && document.fonts.ready) {
+                        document.fonts.ready.then(() => {
+                            const map = window.mapInstance[mapId];
+                            if (map) {
+                                map.invalidateSize();
+                            }
+                        });
+                    }
+
+                    // Observe map container for size changes
+                    const mapContainer = document.getElementById(mapId);
+                    if (mapContainer) {
+                        const resizeObserver = new ResizeObserver(() => {
+                            const map = window.mapInstance[mapId];
+                            if (map) {
+                                map.invalidateSize();
+                            }
+                        });
+                        resizeObserver.observe(mapContainer);
+                    }
                 }
             });
         </script>

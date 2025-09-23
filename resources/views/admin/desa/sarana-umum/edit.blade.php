@@ -40,10 +40,6 @@
                     <input type="text" id="tag_lokasi" name="tag_lokasi" value="{{ old('tag_lokasi', $item->tag_lokasi) }}" placeholder="Lat,Lng" readonly
                            class="mt-1 block w-full rounded-lg border border-gray-300 bg-gray-100 p-2.5" />
                     @error('tag_lokasi')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror
-                    <div class="mt-3 flex items-center gap-2">
-                        <input type="text" id="map-search" placeholder="Cari alamat/lokasi..." class="flex-1 rounded-lg border border-gray-300 p-2.5 text-sm focus:border-[#7886C7] focus:ring-2 focus:ring-[#7886C7]" />
-                        <button type="button" id="map-search-btn" class="px-4 py-2 text-sm rounded-lg bg-[#7886C7] text-white hover:bg-[#2D336B]">Cari Lokasi</button>
-                    </div>
                     <div class="mt-3">
                         <div class="flex items-center gap-2">
                             <input type="text" id="map-search" placeholder="Cari alamat/lokasi..." class="flex-1 rounded-lg border border-gray-300 p-2.5 text-sm focus:border-[#7886C7] focus:ring-2 focus:ring-[#7886C7]" />
@@ -97,10 +93,17 @@
             // Peta
             const tagLokasiInput = document.getElementById('tag_lokasi');
             const alamatInput = document.getElementById('alamat');
+            const mapContainer = document.getElementById('map');
             const defaultLatLng = (tagLokasiInput.value && tagLokasiInput.value.includes(',')) ? tagLokasiInput.value.split(',').map(function(x){return parseFloat(x.trim());}) : [-6.1753924,106.8271528];
             const map = L.map('map').setView(defaultLatLng, 15);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(map);
             let marker = L.marker(defaultLatLng).addTo(map);
+            // Paksa render penuh untuk menghindari peta kecil/abu-abu saat di server
+            setTimeout(function(){ map.invalidateSize(); }, 300);
+            setTimeout(function(){ map.invalidateSize(); }, 800);
+            window.addEventListener('load', function(){ map.invalidateSize(); });
+            if (document.fonts && document.fonts.ready) { document.fonts.ready.then(function(){ map.invalidateSize(); }); }
+            if (window.ResizeObserver && mapContainer) { const ro = new ResizeObserver(function(){ map.invalidateSize(); }); ro.observe(mapContainer); }
             async function reverseGeocode(lat, lng){
                 try { const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`); const data = await res.json(); return data.display_name || ''; } catch(e){ return ''; }
             }

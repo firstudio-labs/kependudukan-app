@@ -92,12 +92,24 @@
             });
 
             // Inisialisasi peta leaflet
+            const mapContainer = document.getElementById('map');
             const map = L.map('map').setView([-6.1753924, 106.8271528], 13); // default Monas
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
                 attribution: '&copy; OpenStreetMap'
             }).addTo(map);
             let marker;
+            // Pastikan peta merender penuh setelah layout/tailwind selesai menghitung ukuran
+            setTimeout(function(){ map.invalidateSize(); }, 300);
+            setTimeout(function(){ map.invalidateSize(); }, 800);
+            window.addEventListener('load', function(){ map.invalidateSize(); });
+            if (document.fonts && document.fonts.ready) {
+                document.fonts.ready.then(function(){ map.invalidateSize(); });
+            }
+            if (window.ResizeObserver && mapContainer) {
+                const ro = new ResizeObserver(function(){ map.invalidateSize(); });
+                ro.observe(mapContainer);
+            }
             async function reverseGeocode(lat, lng){
                 try {
                     const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`;

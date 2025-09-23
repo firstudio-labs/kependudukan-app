@@ -2181,6 +2181,16 @@ if (!empty($userData->tag_lokasi)) {
                         btn.classList.add('hover:bg-red-700');
                         btnText.textContent = 'Tutup Form Edit';
                         el.scrollIntoView({ behavior: 'smooth' });
+                        
+                        // Fix map display when form is opened
+                        setTimeout(() => {
+                            const mapId = 'map-usaha_address';
+                            const map = window.mapInstance && window.mapInstance[mapId];
+                            if (map) {
+                                map.invalidateSize();
+                                console.log('Map invalidated after form opened');
+                            }
+                        }, 300);
                     } else {
                         el.classList.add('hidden');
                         btn.classList.remove('bg-red-600');
@@ -2449,6 +2459,34 @@ if (!empty($userData->tag_lokasi)) {
 
                     // Initial populate if coordinates already exist
                     onUsahaCoordChange();
+
+                    // Observer untuk mendeteksi ketika form edit biodata dibuka
+                    const editForm = document.getElementById('editBiodataForm');
+                    if (editForm) {
+                        const observer = new MutationObserver(function(mutations) {
+                            mutations.forEach(function(mutation) {
+                                if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                                    const isVisible = !editForm.classList.contains('hidden');
+                                    if (isVisible) {
+                                        // Form dibuka, invalidate map setelah delay
+                                        setTimeout(() => {
+                                            const mapId = 'map-usaha_address';
+                                            const map = window.mapInstance && window.mapInstance[mapId];
+                                            if (map) {
+                                                map.invalidateSize();
+                                                console.log('Map invalidated after form became visible');
+                                            }
+                                        }, 500);
+                                    }
+                                }
+                            });
+                        });
+                        
+                        observer.observe(editForm, { 
+                            attributes: true, 
+                            attributeFilter: ['class'] 
+                        });
+                    }
                 });
             </script>
             <!-- Form Validation -->
