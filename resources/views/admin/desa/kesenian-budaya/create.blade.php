@@ -35,19 +35,22 @@
                     @error('kontak')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror
                 </div>
                 <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 md:col-span-2">
-                    <label class="block text-sm font-medium text-gray-700">Tag Lokasi (Koordinat)</label>
-                    <input type="text" id="tag_lokasi" name="tag_lokasi" value="{{ old('tag_lokasi') }}" placeholder="Lat,Lng" readonly
-                           class="mt-1 block w-full rounded-lg border border-gray-300 bg-gray-100 p-2.5" />
-                    @error('tag_lokasi')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror
-                    <div class="mt-3">
-                        <div class="flex items-center gap-2">
-                            <input type="text" id="map-search" placeholder="Cari alamat/lokasi..." class="flex-1 rounded-lg border border-gray-300 p-2.5 text-sm focus:border-[#7886C7] focus:ring-2 focus:ring-[#7886C7]" />
-                            <button type="button" id="map-search-btn" class="px-4 py-2 text-sm rounded-lg bg-[#7886C7] text-white hover:bg-[#2D336B]">Cari Lokasi</button>
-                        </div>
-                        <div id="map-search-results" class="mt-2 hidden border border-gray-200 rounded-lg bg-white max-h-48 overflow-y-auto text-sm"></div>
-                    </div>
-                    <div id="map" class="mt-3 h-56 w-full rounded border"></div>
-                    <p class="text-xs text-gray-500 mt-2">Klik peta atau pilih hasil pencarian. Koordinat dan alamat akan terisi otomatis.</p>
+                    <x-map-input 
+                        label="Lokasi Kesenian Budaya" 
+                        addressId="alamat" 
+                        addressName="alamat" 
+                        address="{{ old('alamat') }}" 
+                        latitudeId="tag_lat" 
+                        latitudeName="tag_lat" 
+                        latitude="{{ old('tag_lat') }}" 
+                        longitudeId="tag_lng" 
+                        longitudeName="tag_lng" 
+                        longitude="{{ old('tag_lng') }}" 
+                        modalId="" 
+                    />
+                    @error('alamat')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror
+                    @error('tag_lat')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror
+                    @error('tag_lng')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror
                 </div>
             </div>
 
@@ -58,30 +61,6 @@
         </form>
     </div>
 
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function(){
-            const tagLokasiInput = document.getElementById('tag_lokasi');
-            const alamatInput = document.getElementById('alamat');
-            const map = L.map('map').setView([-6.1753924, 106.8271528], 13);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(map);
-            let marker;
-            async function reverseGeocode(lat,lng){ try { const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`); const d = await r.json(); return d.display_name || ''; } catch(e){ return ''; } }
-            async function forwardGeocode(q){ try { const r = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURIComponent(q)}`); const d = await r.json(); return Array.isArray(d) ? d : []; } catch(e){ return []; } }
-            function renderResults(results){
-                const box = document.getElementById('map-search-results');
-                if (!results || results.length===0) { box.classList.add('hidden'); box.innerHTML=''; return; }
-                box.innerHTML = results.slice(0,8).map(function(r){ const name=r.display_name || `${r.lat},${r.lon}`; return `<button type=\"button\" data-lat=\"${r.lat}\" data-lon=\"${r.lon}\" data-name=\"${name.replace(/\"/g,'&quot;')}\" class=\"w-full text-left px-3 py-2 hover:bg-gray-50 border-b last:border-b-0\">${name}</button>`; }).join('');
-                box.classList.remove('hidden');
-                box.querySelectorAll('button').forEach(function(btn){ btn.addEventListener('click', function(){ const lat=parseFloat(this.getAttribute('data-lat')); const lon=parseFloat(this.getAttribute('data-lon')); const name=this.getAttribute('data-name'); map.setView([lat,lon],16); if (marker){marker.setLatLng([lat,lon]);} else { marker=L.marker([lat,lon]).addTo(map);} tagLokasiInput.value=`${lat.toFixed(6)},${lon.toFixed(6)}`; alamatInput.value=name; box.classList.add('hidden'); }); });
-            }
-            map.on('click', async function(e){ const lat=e.latlng.lat.toFixed(6); const lng=e.latlng.lng.toFixed(6); if (marker){marker.setLatLng(e.latlng);} else { marker=L.marker(e.latlng).addTo(map);} tagLokasiInput.value=`${lat},${lng}`; const addr=await reverseGeocode(lat,lng); if (addr) alamatInput.value=addr; });
-            const input = document.getElementById('map-search'); const btn = document.getElementById('map-search-btn');
-            btn.addEventListener('click', async function(){ const q=(input.value||'').trim(); if(!q) return; const results=await forwardGeocode(q); renderResults(results); });
-            input.addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); btn.click(); }});
-        });
-    </script>
 </x-layout>
 
 

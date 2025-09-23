@@ -49,10 +49,17 @@ class SaranaUmumController extends Controller
         $validated = $request->validate([
             'kategori_sarana_id' => 'required|exists:kategori_saranas,id',
             'nama_sarana' => 'required|string|max:255',
-            'tag_lokasi' => 'nullable|string|max:100',
             'alamat' => 'nullable|string|max:255',
+            'tag_lat' => 'nullable|numeric',
+            'tag_lng' => 'nullable|numeric',
             'kontak' => 'nullable|string|max:255',
         ]);
+        
+        // Gabungkan lat dan lng menjadi tag_lokasi
+        if ($validated['tag_lat'] && $validated['tag_lng']) {
+            $validated['tag_lokasi'] = $validated['tag_lat'] . ',' . $validated['tag_lng'];
+        }
+        
         $validated['user_id'] = Auth::guard('web')->id();
         SaranaUmum::create($validated);
         return redirect()->route('admin.desa.sarana-umum.index')->with('success','Sarana umum ditambahkan');
@@ -77,10 +84,17 @@ class SaranaUmumController extends Controller
         $validated = $request->validate([
             'kategori_sarana_id' => 'required|exists:kategori_saranas,id',
             'nama_sarana' => 'required|string|max:255',
-            'tag_lokasi' => 'nullable|string|max:100',
             'alamat' => 'nullable|string|max:255',
+            'tag_lat' => 'nullable|numeric',
+            'tag_lng' => 'nullable|numeric',
             'kontak' => 'nullable|string|max:255',
         ]);
+        
+        // Gabungkan lat dan lng menjadi tag_lokasi
+        if ($validated['tag_lat'] && $validated['tag_lng']) {
+            $validated['tag_lokasi'] = $validated['tag_lat'] . ',' . $validated['tag_lng'];
+        }
+        
         $saranaUmum->update($validated);
         return redirect()->route('admin.desa.sarana-umum.index')->with('success','Sarana umum diperbarui');
     }

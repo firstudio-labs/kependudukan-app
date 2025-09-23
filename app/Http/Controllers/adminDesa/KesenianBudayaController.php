@@ -46,10 +46,17 @@ class KesenianBudayaController extends Controller
         $validated = $request->validate([
             'jenis' => 'required|in:Kuda Lumping,Kobrosiswo,Warokan,Topeng ireng,Wayang,Janen/Sholawatan,Kosidah/Nasyidariyah,Dolilak,Rebana,Lainnya',
             'nama' => 'required|string|max:255',
-            'tag_lokasi' => 'nullable|string|max:100',
             'alamat' => 'nullable|string|max:255',
+            'tag_lat' => 'nullable|numeric',
+            'tag_lng' => 'nullable|numeric',
             'kontak' => 'nullable|string|max:255',
         ]);
+        
+        // Gabungkan lat dan lng menjadi tag_lokasi
+        if ($validated['tag_lat'] && $validated['tag_lng']) {
+            $validated['tag_lokasi'] = $validated['tag_lat'] . ',' . $validated['tag_lng'];
+        }
+        
         $validated['user_id'] = Auth::guard('web')->id();
         KesenianBudaya::create($validated);
         return redirect()->route('admin.desa.kesenian-budaya.index')->with('success','Data kesenian & budaya ditambahkan');
@@ -68,10 +75,17 @@ class KesenianBudayaController extends Controller
         $validated = $request->validate([
             'jenis' => 'required|in:Kuda Lumping,Kobrosiswo,Warokan,Topeng ireng,Wayang,Janen/Sholawatan,Kosidah/Nasyidariyah,Dolilak,Rebana,Lainnya',
             'nama' => 'required|string|max:255',
-            'tag_lokasi' => 'nullable|string|max:100',
             'alamat' => 'nullable|string|max:255',
+            'tag_lat' => 'nullable|numeric',
+            'tag_lng' => 'nullable|numeric',
             'kontak' => 'nullable|string|max:255',
         ]);
+        
+        // Gabungkan lat dan lng menjadi tag_lokasi
+        if ($validated['tag_lat'] && $validated['tag_lng']) {
+            $validated['tag_lokasi'] = $validated['tag_lat'] . ',' . $validated['tag_lng'];
+        }
+        
         $kesenianBudaya->update($validated);
         return redirect()->route('admin.desa.kesenian-budaya.index')->with('success','Data kesenian & budaya diperbarui');
     }
