@@ -72,6 +72,45 @@ class BiodataController extends Controller
                 Log::warning('Failed to retrieve jobs list: ' . $e->getMessage());
             }
 
+            // Informasi Usaha: cari milik user atau satu KK
+            $informasiUsaha = null;
+            try {
+                $informasiUsaha = \App\Models\InformasiUsaha::where('penduduk_id', $user->id)->first();
+                if (!$informasiUsaha && !empty($citizenData['kk'])) {
+                    $informasiUsaha = \App\Models\InformasiUsaha::where('kk', $citizenData['kk'])->first();
+                }
+            } catch (\Exception $e) {
+                $informasiUsaha = null;
+            }
+
+            $informasiUsahaPayload = null;
+            if ($informasiUsaha) {
+                $lat = null; $lng = null;
+                if (!empty($informasiUsaha->tag_lokasi) && strpos($informasiUsaha->tag_lokasi, ',') !== false) {
+                    [$latStr, $lngStr] = array_map('trim', explode(',', $informasiUsaha->tag_lokasi));
+                    $lat = $latStr !== '' ? (float) $latStr : null;
+                    $lng = $lngStr !== '' ? (float) $lngStr : null;
+                }
+
+                $fotoUrl = $informasiUsaha->foto_url ?? $informasiUsaha->foto ?? null;
+                if ($fotoUrl && !preg_match('#^https?://#', $fotoUrl)) {
+                    $fotoUrl = asset('storage/' . ltrim($fotoUrl, '/'));
+                }
+
+                $informasiUsahaPayload = [
+                    'id' => $informasiUsaha->id,
+                    'nama_usaha' => $informasiUsaha->nama_usaha,
+                    'kelompok_usaha' => $informasiUsaha->kelompok_usaha,
+                    'alamat' => $informasiUsaha->alamat,
+                    'tag_lokasi' => $informasiUsaha->tag_lokasi,
+                    'tag_lat' => $lat,
+                    'tag_lng' => $lng,
+                    'foto_url' => $fotoUrl,
+                    'kk' => $informasiUsaha->kk ?? null,
+                    'is_owner' => $informasiUsaha->penduduk_id ? ((string)$informasiUsaha->penduduk_id === (string)$user->id) : false,
+                ];
+            }
+
             return response()->json([
                 'status' => 'SUCCESS',
                 'data' => [
@@ -82,6 +121,7 @@ class BiodataController extends Controller
                         'no_hp' => $user->no_hp ?? null,
                     ],
                     'biodata' => $citizenData,
+                    'informasi_usaha' => $informasiUsahaPayload,
                     'family_members' => $familyMembers,
                     'jobs' => $jobs,
                     'village_id' => $villageId
