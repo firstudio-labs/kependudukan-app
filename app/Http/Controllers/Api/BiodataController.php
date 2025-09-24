@@ -246,36 +246,72 @@ class BiodataController extends Controller
                 'nama_usaha','kelompok_usaha','alamat','tag_lokasi','province_id','districts_id','sub_districts_id','villages_id','foto','kk'
             ]) : [];
 
-            // Ambil foto jika diupload
-            $fotoPath = null;
-            if ($request->hasFile('informasi_usaha_foto')) {
-                $fotoPath = $request->file('informasi_usaha_foto')->store('informasi_usaha_tmp', 'public');
-            } elseif (!empty($usahaInput['foto'])) {
-                // Jika dikirim base64 (opsional), abaikan untuk simpel, atau simpan apa adanya sebagai placeholder
-                $fotoPath = $usahaInput['foto'];
+            // Bangun diff dari seluruh field yang dikirim (client boleh kirim semua field)
+            $fields = ['nama_usaha','kelompok_usaha','alamat','province_id','districts_id','sub_districts_id','villages_id','kk'];
+            $usahaRequested = [];
+            foreach ($fields as $key) {
+                if (array_key_exists($key, $usahaInput)) {
+                    $newVal = $usahaInput[$key];
+                    $oldVal = $usahaCurrent[$key] ?? null;
+                    // Normalisasi string untuk perbandingan
+                    $normNew = is_string($newVal) ? trim((string)$newVal) : $newVal;
+                    $normOld = is_string($oldVal) ? trim((string)$oldVal) : $oldVal;
+                    if ($normNew !== $normOld) {
+                        $usahaRequested[$key] = $newVal;
+                    }
+                }
             }
 
-            $usahaRequested = [
-                'nama_usaha' => $usahaInput['nama_usaha'] ?? null,
-                'kelompok_usaha' => $usahaInput['kelompok_usaha'] ?? null,
-                'alamat' => $usahaInput['alamat'] ?? null,
-                'tag_lokasi' => $usahaInput['tag_lokasi'] ?? null,
-                'province_id' => $usahaInput['province_id'] ?? ($validated['province_id'] ?? null),
-                'districts_id' => $usahaInput['districts_id'] ?? ($validated['district_id'] ?? null),
-                'sub_districts_id' => $usahaInput['sub_districts_id'] ?? ($validated['sub_district_id'] ?? null),
-                'villages_id' => $usahaInput['villages_id'] ?? ($validated['village_id'] ?? null),
-                'foto' => $fotoPath,
-                'kk' => $kkNumber,
-            ];
+            // Tag lokasi: dukung 'tag_lokasi' atau kombinasi 'tag_lat'+'tag_lng'
+            $incomingTagLokasi = null;
+            if (array_key_exists('tag_lokasi', $usahaInput)) {
+                $incomingTagLokasi = $usahaInput['tag_lokasi'];
+            } else {
+                $hasLat = array_key_exists('tag_lat', $usahaInput);
+                $hasLng = array_key_exists('tag_lng', $usahaInput);
+                if ($hasLat || $hasLng) {
+                    $currLat = null; $currLng = null;
+                    if (!empty($usahaCurrent['tag_lokasi']) && strpos($usahaCurrent['tag_lokasi'], ',') !== false) {
+                        [$currLat, $currLng] = array_map('trim', explode(',', $usahaCurrent['tag_lokasi']));
+                    }
+                    $lat = $hasLat ? $usahaInput['tag_lat'] : $currLat;
+                    $lng = $hasLng ? $usahaInput['tag_lng'] : $currLng;
+                    if ($lat !== null && $lng !== null) {
+                        $incomingTagLokasi = $lat . ',' . $lng;
+                    }
+                }
+            }
+            if ($incomingTagLokasi !== null) {
+                $oldTag = $usahaCurrent['tag_lokasi'] ?? null;
+                if (trim((string)$incomingTagLokasi) !== trim((string)$oldTag)) {
+                    $usahaRequested['tag_lokasi'] = $incomingTagLokasi;
+                }
+            }
 
-            InformasiUsahaChangeRequest::create([
+            // Foto: hanya dianggap berubah jika ada file baru/field baru dikirim
+            if ($request->hasFile('informasi_usaha_foto')) {
+                $fotoPath = $request->file('informasi_usaha_foto')->store('informasi_usaha_tmp', 'public');
+                if ($fotoPath) {
+                    $usahaRequested['foto'] = $fotoPath;
+                }
+            } elseif (array_key_exists('foto', $usahaInput)) {
+                $oldFoto = $usahaCurrent['foto'] ?? null;
+                if ($usahaInput['foto'] !== $oldFoto) {
+                    $usahaRequested['foto'] = $usahaInput['foto'];
+                }
+            }
+
+            // Hanya buat change request jika ada perbedaan minimal 1 field
+            if (!empty($usahaRequested)) {
+                InformasiUsahaChangeRequest::create([
                 'penduduk_id' => $currentData['id'] ?? null,
-                'informasi_usaha_id' => $existingUsaha->id ?? null,
-                'requested_changes' => $usahaRequested,
-                'current_data' => $usahaCurrent,
-                'status' => 'pending',
-                'requested_at' => now(),
-            ]);
+                    'informasi_usaha_id' => $existingUsaha->id ?? null,
+                    'requested_changes' => $usahaRequested,
+                    'current_data' => $usahaCurrent,
+                    'status' => 'pending',
+                    'requested_at' => now(),
+                ]);
+            }
         }
 
         return response()->json([

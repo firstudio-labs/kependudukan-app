@@ -919,7 +919,6 @@ class CitizenService
         $educationStatusMap = [
             'Tidak/Belum Sekolah' => 1,
             'Belum tamat SD/Sederajat' => 2,
-            'Tamat SD' => 3,
             'Tamat SD/Sederajat' => 3,
             'SLTP/SMP/Sederajat' => 4,
             'SLTA/SMA/Sederajat' => 5,
@@ -930,7 +929,6 @@ class CitizenService
             'Lainnya' => 10,
             'tidak/belum sekolah' => 1,
             'belum tamat sd/sederajat' => 2,
-            'tamat sd' => 3,
             'tamat sd/sederajat' => 3,
             'sltp/smp/sederajat' => 4,
             'slta/sma/sederajat' => 5,
