@@ -294,12 +294,37 @@ class BiodataController extends Controller
 
             // Foto: hanya dianggap berubah jika ada file baru/field baru dikirim
             if ($request->hasFile('informasi_usaha_foto')) {
-                $fotoPath = $request->file('informasi_usaha_foto')->store('informasi_usaha_tmp', 'public');
+                // Simpan di folder temp yang konsisten dengan proses approval
+                $fotoPath = $request->file('informasi_usaha_foto')->store('informasi_usaha_temp', 'public');
                 if ($fotoPath) {
                     $usahaRequestedAll['foto'] = $fotoPath;
                 }
             } elseif (array_key_exists('foto', $usahaInput)) {
-                $usahaRequestedAll['foto'] = $usahaInput['foto'];
+                $rawFoto = $usahaInput['foto'];
+                if (is_string($rawFoto)) {
+                    if (str_starts_with($rawFoto, 'data:')) {
+                        // Base64 data URL → simpan ke temp
+                        try {
+                            [$meta, $content] = explode(',', $rawFoto, 2);
+                            $ext = 'jpg';
+                            if (preg_match('#^data:image/(\w+);base64$#', $meta, $m)) { $ext = strtolower($m[1]); }
+                            $binary = base64_decode($content);
+                            $filename = 'informasi_usaha_temp/'.uniqid('iu_').'.'.$ext;
+                            \Storage::disk('public')->put($filename, $binary);
+                            $usahaRequestedAll['foto'] = $filename;
+                        } catch (\Exception $e) {
+                            // abaikan jika gagal decode
+                        }
+                    } elseif (preg_match('#^https?://#', $rawFoto)) {
+                        // URL penuh → gunakan apa adanya
+                        $usahaRequestedAll['foto'] = $rawFoto;
+                    } elseif (str_starts_with($rawFoto, 'informasi_usaha/') || str_starts_with($rawFoto, 'informasi_usaha_temp/')) {
+                        // Path lokal valid → gunakan
+                        $usahaRequestedAll['foto'] = $rawFoto;
+                    } else {
+                        // Nama file polos tanpa path → abaikan agar tidak 404
+                    }
+                }
             }
 
             // Deteksi apakah ADA perubahan dibanding current
