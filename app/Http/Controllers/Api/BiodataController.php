@@ -258,19 +258,13 @@ class BiodataController extends Controller
                 'nama_usaha','kelompok_usaha','alamat','tag_lokasi','province_id','districts_id','sub_districts_id','villages_id','foto','kk'
             ]) : [];
 
-            // Bangun diff dari seluruh field yang dikirim (client boleh kirim semua field)
+            // Daftar field yang ditrack
             $fields = ['nama_usaha','kelompok_usaha','alamat','province_id','districts_id','sub_districts_id','villages_id','kk'];
-            $usahaRequested = [];
+            // Bangun requested_changes PENUH (isi semua field, termasuk yang tidak berubah)
+            $usahaRequestedAll = $usahaCurrent; // mulai dari current supaya field lengkap
             foreach ($fields as $key) {
                 if (array_key_exists($key, $usahaInput)) {
-                    $newVal = $usahaInput[$key];
-                    $oldVal = $usahaCurrent[$key] ?? null;
-                    // Normalisasi string untuk perbandingan
-                    $normNew = is_string($newVal) ? trim((string)$newVal) : $newVal;
-                    $normOld = is_string($oldVal) ? trim((string)$oldVal) : $oldVal;
-                    if ($normNew !== $normOld) {
-                        $usahaRequested[$key] = $newVal;
-                    }
+                    $usahaRequestedAll[$key] = $usahaInput[$key];
                 }
             }
 
@@ -294,27 +288,33 @@ class BiodataController extends Controller
                 }
             }
             if ($incomingTagLokasi !== null) {
-                $oldTag = $usahaCurrent['tag_lokasi'] ?? null;
-                if (trim((string)$incomingTagLokasi) !== trim((string)$oldTag)) {
-                    $usahaRequested['tag_lokasi'] = $incomingTagLokasi;
-                }
+                // Simpan ke requested_changes penuh
+                $usahaRequestedAll['tag_lokasi'] = $incomingTagLokasi;
             }
 
             // Foto: hanya dianggap berubah jika ada file baru/field baru dikirim
             if ($request->hasFile('informasi_usaha_foto')) {
                 $fotoPath = $request->file('informasi_usaha_foto')->store('informasi_usaha_tmp', 'public');
                 if ($fotoPath) {
-                    $usahaRequested['foto'] = $fotoPath;
+                    $usahaRequestedAll['foto'] = $fotoPath;
                 }
             } elseif (array_key_exists('foto', $usahaInput)) {
-                $oldFoto = $usahaCurrent['foto'] ?? null;
-                if ($usahaInput['foto'] !== $oldFoto) {
-                    $usahaRequested['foto'] = $usahaInput['foto'];
-                }
+                $usahaRequestedAll['foto'] = $usahaInput['foto'];
             }
 
-            // Hanya buat change request jika ada perbedaan minimal 1 field
-            if (!empty($usahaRequested)) {
+            // Deteksi apakah ADA perubahan dibanding current
+            $hasChange = false;
+            $keysToCompare = array_unique(array_merge($fields, ['tag_lokasi','foto']));
+            foreach ($keysToCompare as $k) {
+                $newVal = $usahaRequestedAll[$k] ?? null;
+                $oldVal = $usahaCurrent[$k] ?? null;
+                $normNew = is_string($newVal) ? trim((string)$newVal) : $newVal;
+                $normOld = is_string($oldVal) ? trim((string)$oldVal) : $oldVal;
+                if ($normNew !== $normOld) { $hasChange = true; break; }
+            }
+
+            // Buat change request jika ada beda minimal satu field
+            if ($hasChange) {
                 // Pastikan penduduk_id mengacu ke model Penduduk lokal, bukan ID dari API
                 $pendudukLocalId = null;
                 try {
@@ -328,7 +328,7 @@ class BiodataController extends Controller
                 InformasiUsahaChangeRequest::create([
                     'penduduk_id' => $pendudukLocalId,
                     'informasi_usaha_id' => $existingUsaha->id ?? null,
-                    'requested_changes' => $usahaRequested,
+                    'requested_changes' => $usahaRequestedAll,
                     'current_data' => $usahaCurrent,
                     'status' => 'pending',
                     'requested_at' => now(),

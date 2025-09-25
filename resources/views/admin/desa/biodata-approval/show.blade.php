@@ -311,15 +311,45 @@
                 </div>
 
                 @php 
-                    $previewFoto = $uReq['foto'] ?? ($uCur['foto'] ?? null); 
-                    if ($previewFoto && !preg_match('#^https?://#', $previewFoto)) {
-                        $previewFoto = asset('storage/' . ltrim($previewFoto, '/'));
+                    $curFoto = $uCur['foto'] ?? null;
+                    $newFoto = $uReq['foto'] ?? null;
+
+                    $curFotoUrl = null;
+                    if ($curFoto) {
+                        if (preg_match('#^https?://#', $curFoto) || str_starts_with($curFoto, 'data:')) {
+                            $curFotoUrl = $curFoto;
+                        } else {
+                            $curFotoUrl = asset('storage/' . ltrim($curFoto, '/'));
+                        }
+                    }
+
+                    $newFotoUrl = null;
+                    if ($newFoto) {
+                        if (preg_match('#^https?://#', $newFoto) || str_starts_with($newFoto, 'data:')) {
+                            $newFotoUrl = $newFoto;
+                        } else {
+                            $newFotoUrl = asset('storage/' . ltrim($newFoto, '/'));
+                        }
                     }
                 @endphp
-                @if($previewFoto)
+
+                @if($newFotoUrl || $curFotoUrl)
                     <div class="mt-4">
                         <h3 class="font-medium mb-2">Foto Tempat Usaha</h3>
-                        <img src="{{ $previewFoto }}" class="h-40 rounded border" />
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            @if($curFotoUrl)
+                                <div>
+                                    <div class="text-sm text-gray-600 mb-1">Foto Saat Ini</div>
+                                    <img src="{{ $curFotoUrl }}" class="h-40 rounded border" />
+                                </div>
+                            @endif
+                            @if($newFotoUrl)
+                                <div>
+                                    <div class="text-sm text-gray-600 mb-1">Foto Baru Diajukan</div>
+                                    <img src="{{ $newFotoUrl }}" class="h-40 rounded border" />
+                                </div>
+                            @endif
+                        </div>
                     </div>
                 @endif
             @else
