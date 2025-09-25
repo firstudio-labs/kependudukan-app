@@ -233,12 +233,24 @@ class BiodataController extends Controller
         $usahaInput = $request->input('informasi_usaha', []);
         $hasUsahaInput = is_array($usahaInput) && (count(array_filter($usahaInput, fn($v)=>$v!==null && $v!=='')) > 0);
 
-        if ($hasUsahaInput) {
+        // Proses Informasi Usaha: juga lanjut jika hanya ada upload foto
+        if ($hasUsahaInput || $request->hasFile('informasi_usaha_foto')) {
             // Ambil KK dan cari current usaha (berdasarkan KK prioritas)
             $kkNumber = $validated['kk'] ?? ($currentData['kk'] ?? null);
             $existingUsaha = null;
             if ($kkNumber) {
                 $existingUsaha = InformasiUsaha::where('kk', $kkNumber)->first();
+            }
+            // Fallback: cari berdasarkan penduduk_id jika KK tidak ada atau tidak ketemu
+            if (!$existingUsaha) {
+                try {
+                    $penduduk = \App\Models\Penduduk::where('nik', $requestedNik)->first();
+                    if ($penduduk) {
+                        $existingUsaha = InformasiUsaha::where('penduduk_id', $penduduk->id)->first();
+                    }
+                } catch (\Exception $e) {
+                    // ignore
+                }
             }
 
             // Siapkan current_data untuk usaha
@@ -303,8 +315,18 @@ class BiodataController extends Controller
 
             // Hanya buat change request jika ada perbedaan minimal 1 field
             if (!empty($usahaRequested)) {
+                // Pastikan penduduk_id mengacu ke model Penduduk lokal, bukan ID dari API
+                $pendudukLocalId = null;
+                try {
+                    $pendudukLocal = \App\Models\Penduduk::where('nik', $requestedNik)->first();
+                    if ($pendudukLocal) {
+                        $pendudukLocalId = $pendudukLocal->id;
+                    }
+                } catch (\Exception $e) {
+                    $pendudukLocalId = null;
+                }
                 InformasiUsahaChangeRequest::create([
-                'penduduk_id' => $currentData['id'] ?? null,
+                    'penduduk_id' => $pendudukLocalId,
                     'informasi_usaha_id' => $existingUsaha->id ?? null,
                     'requested_changes' => $usahaRequested,
                     'current_data' => $usahaCurrent,
