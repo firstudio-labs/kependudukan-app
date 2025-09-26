@@ -150,6 +150,8 @@ Route::middleware(ApiTokenOwnerMiddleware::class)->group(function () {
 
         // Warungku dropdown filters
         Route::get('/warungku/filters', [ApiWarungkuController::class, 'filters'])->name('user.api.warungku.filters');
+        Route::get('/warungku/filters/klasifikasi', [ApiWarungkuController::class, 'klasifikasiList'])->name('user.api.warungku.filters.klasifikasi');
+        Route::get('/warungku/filters/jenis', [ApiWarungkuController::class, 'jenisByKlasifikasi'])->name('user.api.warungku.filters.jenis');
 
         // Wilayah options for filters
         Route::get('/warungku/wilayah/provinces', [ApiWarungkuController::class, 'wilayahProvinces'])->name('user.api.warungku.wilayah.provinces');

@@ -252,4 +252,26 @@ class WarungkuController extends Controller
     {
         return response()->json(['data' => $wilayahService->getDesa($subDistrictCode)]);
     }
+
+    // Dropdown khusus form: klasifikasi list
+    public function klasifikasiList()
+    {
+        $klass = WarungkuMaster::select('klasifikasi')->distinct()->pluck('klasifikasi');
+        return response()->json(['data' => $klass]);
+    }
+
+    // Dropdown khusus form: jenis by klasifikasi
+    public function jenisByKlasifikasi(Request $request)
+    {
+        $request->validate([
+            'klasifikasi' => 'required|in:barang,jasa',
+        ]);
+
+        $items = WarungkuMaster::select('id','jenis','klasifikasi')
+            ->where('klasifikasi', $request->klasifikasi)
+            ->orderBy('jenis')
+            ->get();
+
+        return response()->json(['data' => $items]);
+    }
 }
