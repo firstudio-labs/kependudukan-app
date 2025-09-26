@@ -145,6 +145,7 @@ Route::middleware(ApiTokenOwnerMiddleware::class)->group(function () {
         Route::get('/warungku/my', [ApiWarungkuController::class, 'my'])->name('user.api.warungku.my');
         Route::post('/warungku', [ApiWarungkuController::class, 'store'])->name('user.api.warungku.store');
         Route::get('/warungku/{barangWarungku}', [ApiWarungkuController::class, 'show'])->name('user.api.warungku.show');
+        Route::get('/warungku/{barangWarungku}/edit', [ApiWarungkuController::class, 'edit'])->name('user.api.warungku.edit');
         Route::post('/warungku/{barangWarungku}', [ApiWarungkuController::class, 'update'])->name('user.api.warungku.update');
         Route::delete('/warungku/{barangWarungku}', [ApiWarungkuController::class, 'destroy'])->name('user.api.warungku.destroy');
 

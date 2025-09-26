@@ -69,6 +69,43 @@ class WarungkuController extends Controller
         ]);
     }
 
+    // Edit payload (owner only): data produk + opsi dropdown
+    public function edit(Request $request, BarangWarungku $barangWarungku)
+    {
+        $user = $request->attributes->get('token_owner') ?? (Auth::guard('penduduk')->user() ?? Auth::user());
+        if (!$user) return response()->json(['message' => 'Unauthorized'], 401);
+
+        $informasiUsaha = InformasiUsaha::where('penduduk_id', $user->id)->first();
+        if (!$informasiUsaha || $barangWarungku->informasi_usaha_id !== $informasiUsaha->id) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        $barangWarungku->load('informasiUsaha');
+        $jenisMaster = WarungkuMaster::select('id','jenis','klasifikasi')->find($barangWarungku->jenis_master_id);
+
+        // Opsi dropdown
+        $klasifikasiOptions = WarungkuMaster::select('klasifikasi')->distinct()->pluck('klasifikasi');
+        $jenisOptions = WarungkuMaster::select('id','jenis','klasifikasi')->orderBy('klasifikasi')->orderBy('jenis')->get();
+
+        return response()->json([
+            'data' => [
+                'id' => $barangWarungku->id,
+                'nama_produk' => $barangWarungku->nama_produk,
+                'harga' => $barangWarungku->harga,
+                'stok' => $barangWarungku->stok,
+                'deskripsi' => $barangWarungku->deskripsi,
+                'foto_url' => $barangWarungku->foto_url,
+                'jenis_master_id' => $barangWarungku->jenis_master_id,
+                'jenis' => $jenisMaster?->jenis,
+                'klasifikasi' => $jenisMaster?->klasifikasi,
+            ],
+            'filters' => [
+                'klasifikasi' => $klasifikasiOptions,
+                'jenis' => $jenisOptions,
+            ]
+        ]);
+    }
+
     // Show one product detail
     public function show(BarangWarungku $barangWarungku)
     {
@@ -156,7 +193,7 @@ class WarungkuController extends Controller
 
         $validated = $request->validate([
             'nama_produk' => 'required|string|max:255',
-            'jenis_master_id' => 'nullable|integer',
+            'jenis_master_id' => 'nullable|integer|exists:warungku_masters,id',
             'deskripsi' => 'nullable|string',
             'harga' => 'required|numeric|min:0',
             'stok' => 'required|integer|min:0',
@@ -187,8 +224,7 @@ class WarungkuController extends Controller
 
         $validated = $request->validate([
             'nama_produk' => 'required|string|max:255',
-            'klasifikasi_master_id' => 'nullable|integer',
-            'jenis_master_id' => 'nullable|integer',
+            'jenis_master_id' => 'nullable|integer|exists:warungku_masters,id',
             'deskripsi' => 'nullable|string',
             'harga' => 'required|numeric|min:0',
             'stok' => 'required|integer|min:0',
