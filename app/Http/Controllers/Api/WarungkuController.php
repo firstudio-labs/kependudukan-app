@@ -11,16 +11,39 @@ use Illuminate\Support\Facades\Auth;
 
 class WarungkuController extends Controller
 {
-    // Global listing with filters
+    // Global listing with filters - sama dengan User controller
     public function index(Request $request)
     {
-        $query = BarangWarungku::query()->with(['informasiUsaha:id,nama_usaha,province_id,districts_id,sub_districts_id,villages_id,alamat,penduduk_id']);
+        $query = BarangWarungku::query()->with(['informasiUsaha.penduduk']);
 
         if ($request->filled('search')) {
-            $query->where('nama_produk', 'like', '%' . $request->search . '%');
+            $s = $request->search;
+            $query->where('nama_produk', 'like', "%{$s}%");
+        }
+
+        if ($request->filled('province_id')) {
+            $query->whereHas('informasiUsaha', function ($q) use ($request) {
+                $q->where('province_id', $request->province_id);
+            });
+        }
+        if ($request->filled('district_id')) {
+            $query->whereHas('informasiUsaha', function ($q) use ($request) {
+                $q->where('districts_id', $request->district_id);
+            });
+        }
+        if ($request->filled('sub_district_id')) {
+            $query->whereHas('informasiUsaha', function ($q) use ($request) {
+                $q->where('sub_districts_id', $request->sub_district_id);
+            });
+        }
+        if ($request->filled('village_id')) {
+            $query->whereHas('informasiUsaha', function ($q) use ($request) {
+                $q->where('villages_id', $request->village_id);
+            });
         }
 
         if ($request->filled('klasifikasi')) {
+            // Filter berdasarkan nilai enum klasifikasi (barang/jasa) di tabel master
             $query->whereIn('jenis_master_id', function($sub) use ($request){
                 $sub->select('id')->from('warungku_masters')->where('klasifikasi', $request->klasifikasi);
             });
@@ -29,16 +52,20 @@ class WarungkuController extends Controller
             $query->where('jenis_master_id', $request->jenis_id);
         }
 
-        // wilayah
-        $query->when($request->filled('province_id'), fn($q)=>$q->whereHas('informasiUsaha', fn($s)=>$s->where('province_id', $request->province_id)));
-        $query->when($request->filled('district_id'), fn($q)=>$q->whereHas('informasiUsaha', fn($s)=>$s->where('districts_id', $request->district_id)));
-        $query->when($request->filled('sub_district_id'), fn($q)=>$q->whereHas('informasiUsaha', fn($s)=>$s->where('sub_districts_id', $request->sub_district_id)));
-        $query->when($request->filled('village_id'), fn($q)=>$q->whereHas('informasiUsaha', fn($s)=>$s->where('villages_id', $request->village_id)));
-
         $perPage = (int) $request->input('per_page', 12);
         $items = $query->latest()->paginate($perPage)->withQueryString();
 
-        return response()->json($items);
+        // Tambahkan data klasifikasi dan jenis untuk filter
+        $klass = WarungkuMaster::select('klasifikasi')->distinct()->pluck('klasifikasi');
+        $jenis = WarungkuMaster::select('id', 'jenis', 'klasifikasi')->get();
+
+        return response()->json([
+            'data' => $items,
+            'filters' => [
+                'klasifikasi' => $klass,
+                'jenis' => $jenis
+            ]
+        ]);
     }
 
     // Show one product detail
@@ -75,7 +102,7 @@ class WarungkuController extends Controller
         ]);
     }
 
-    // My items (auth penduduk token)
+    // My items (auth penduduk token) - sama dengan User controller
     public function my(Request $request)
     {
         $user = $request->attributes->get('token_owner') ?? (Auth::guard('penduduk')->user() ?? Auth::user());
@@ -85,19 +112,38 @@ class WarungkuController extends Controller
         if (!$informasiUsaha) return response()->json(['data' => [], 'message' => 'Belum ada informasi usaha'], 200);
 
         $query = BarangWarungku::where('informasi_usaha_id', $informasiUsaha->id);
-        if ($request->filled('search')) $query->where('nama_produk', 'like', '%' . $request->search . '%');
+
+        if ($request->filled('search')) {
+            $s = $request->search;
+            $query->where('nama_produk', 'like', "%{$s}%");
+        }
+
         if ($request->filled('klasifikasi')) {
             $query->whereIn('jenis_master_id', function($sub) use ($request){
                 $sub->select('id')->from('warungku_masters')->where('klasifikasi', $request->klasifikasi);
             });
         }
-        if ($request->filled('jenis_id')) $query->where('jenis_master_id', $request->jenis_id);
+        if ($request->filled('jenis_id')) {
+            $query->where('jenis_master_id', $request->jenis_id);
+        }
 
         $items = $query->latest()->paginate((int)$request->input('per_page', 12))->withQueryString();
-        return response()->json($items);
+        
+        // Tambahkan data klasifikasi dan jenis untuk filter
+        $klass = WarungkuMaster::select('klasifikasi')->distinct()->pluck('klasifikasi');
+        $jenis = WarungkuMaster::select('id', 'jenis', 'klasifikasi')->get();
+
+        return response()->json([
+            'data' => $items,
+            'informasi_usaha' => $informasiUsaha,
+            'filters' => [
+                'klasifikasi' => $klass,
+                'jenis' => $jenis
+            ]
+        ]);
     }
 
-    // Create product (owner only)
+    // Create product (owner only) - sama dengan User controller
     public function store(Request $request)
     {
         $user = $request->attributes->get('token_owner') ?? (Auth::guard('penduduk')->user() ?? Auth::user());
@@ -108,7 +154,7 @@ class WarungkuController extends Controller
 
         $validated = $request->validate([
             'nama_produk' => 'required|string|max:255',
-            'jenis_master_id' => 'nullable|integer|exists:warungku_masters,id',
+            'jenis_master_id' => 'nullable|integer',
             'deskripsi' => 'nullable|string',
             'harga' => 'required|numeric|min:0',
             'stok' => 'required|integer|min:0',
@@ -126,7 +172,7 @@ class WarungkuController extends Controller
         return response()->json(['message' => 'Produk berhasil dibuat', 'data' => $item], 201);
     }
 
-    // Update product (owner only)
+    // Update product (owner only) - sama dengan User controller
     public function update(Request $request, BarangWarungku $barangWarungku)
     {
         $user = $request->attributes->get('token_owner') ?? (Auth::guard('penduduk')->user() ?? Auth::user());
@@ -139,7 +185,8 @@ class WarungkuController extends Controller
 
         $validated = $request->validate([
             'nama_produk' => 'required|string|max:255',
-            'jenis_master_id' => 'nullable|integer|exists:warungku_masters,id',
+            'klasifikasi_master_id' => 'nullable|integer',
+            'jenis_master_id' => 'nullable|integer',
             'deskripsi' => 'nullable|string',
             'harga' => 'required|numeric|min:0',
             'stok' => 'required|integer|min:0',
@@ -156,8 +203,8 @@ class WarungkuController extends Controller
         return response()->json(['message' => 'Produk berhasil diperbarui', 'data' => $barangWarungku]);
     }
 
-    // Delete product (owner only)
-    public function destroy(BarangWarungku $barangWarungku)
+    // Delete product (owner only) - sama dengan User controller
+    public function destroy(Request $request, BarangWarungku $barangWarungku)
     {
         $user = $request->attributes->get('token_owner') ?? (Auth::guard('penduduk')->user() ?? Auth::user());
         if (!$user) return response()->json(['message' => 'Unauthorized'], 401);
@@ -171,5 +218,3 @@ class WarungkuController extends Controller
         return response()->json(['message' => 'Produk berhasil dihapus']);
     }
 }
-
-
