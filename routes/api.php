@@ -148,6 +148,15 @@ Route::middleware(ApiTokenOwnerMiddleware::class)->group(function () {
         Route::post('/warungku/{barangWarungku}', [ApiWarungkuController::class, 'update'])->name('user.api.warungku.update');
         Route::delete('/warungku/{barangWarungku}', [ApiWarungkuController::class, 'destroy'])->name('user.api.warungku.destroy');
 
+        // Warungku dropdown filters
+        Route::get('/warungku/filters', [ApiWarungkuController::class, 'filters'])->name('user.api.warungku.filters');
+
+        // Wilayah options for filters
+        Route::get('/warungku/wilayah/provinces', [ApiWarungkuController::class, 'wilayahProvinces'])->name('user.api.warungku.wilayah.provinces');
+        Route::get('/warungku/wilayah/districts/{provinceCode}', [ApiWarungkuController::class, 'wilayahDistricts'])->name('user.api.warungku.wilayah.districts');
+        Route::get('/warungku/wilayah/sub-districts/{districtCode}', [ApiWarungkuController::class, 'wilayahSubDistricts'])->name('user.api.warungku.wilayah.sub_districts');
+        Route::get('/warungku/wilayah/villages/{subDistrictCode}', [ApiWarungkuController::class, 'wilayahVillages'])->name('user.api.warungku.wilayah.villages');
+
         // Pemerintah Desa (berdasarkan desa user login)
         Route::get('/pemerintah-desa', [PemerintahDesaController::class, 'show'])->name('user.api.pemerintah-desa.show');
 

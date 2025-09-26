@@ -8,6 +8,7 @@ use App\Models\InformasiUsaha;
 use App\Models\WarungkuMaster;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Services\WilayahService;
 
 class WarungkuController extends Controller
 {
@@ -88,6 +89,7 @@ class WarungkuController extends Controller
                     'nama_usaha' => $barangWarungku->informasiUsaha?->nama_usaha,
                     'alamat' => $barangWarungku->informasiUsaha?->alamat,
                     'tag_lokasi' => $barangWarungku->informasiUsaha?->tag_lokasi,
+                    'foto_url' => $barangWarungku->informasiUsaha?->foto_url,
                     'province_id' => $barangWarungku->informasiUsaha?->province_id,
                     'districts_id' => $barangWarungku->informasiUsaha?->districts_id,
                     'sub_districts_id' => $barangWarungku->informasiUsaha?->sub_districts_id,
@@ -216,5 +218,38 @@ class WarungkuController extends Controller
 
         $barangWarungku->delete();
         return response()->json(['message' => 'Produk berhasil dihapus']);
+    }
+
+    // Dropdown filters: klasifikasi & jenis
+    public function filters()
+    {
+        $klass = WarungkuMaster::select('klasifikasi')->distinct()->pluck('klasifikasi');
+        $jenis = WarungkuMaster::select('id', 'jenis', 'klasifikasi')->orderBy('klasifikasi')->orderBy('jenis')->get();
+
+        return response()->json([
+            'klasifikasi' => $klass,
+            'jenis' => $jenis,
+        ]);
+    }
+
+    // Wilayah options via WilayahService
+    public function wilayahProvinces(WilayahService $wilayahService)
+    {
+        return response()->json(['data' => $wilayahService->getProvinces()]);
+    }
+
+    public function wilayahDistricts(WilayahService $wilayahService, $provinceCode)
+    {
+        return response()->json(['data' => $wilayahService->getKabupaten($provinceCode)]);
+    }
+
+    public function wilayahSubDistricts(WilayahService $wilayahService, $districtCode)
+    {
+        return response()->json(['data' => $wilayahService->getKecamatan($districtCode)]);
+    }
+
+    public function wilayahVillages(WilayahService $wilayahService, $subDistrictCode)
+    {
+        return response()->json(['data' => $wilayahService->getDesa($subDistrictCode)]);
     }
 }
