@@ -17,19 +17,23 @@ use Illuminate\Support\Facades\Cache; // Added for cache invalidation
 use App\Models\InformasiUsahaChangeRequest;
 use App\Models\Penduduk;
 use App\Models\InformasiUsaha;
+use App\Services\CitizenServiceV2;
 
 class BiodataController extends Controller
 {
     protected $citizenService;
+    protected $citizenServiceV2;
     protected $jobService;
     protected $wilayahService;
 
     public function __construct(
         CitizenService $citizenService,
+        CitizenServiceV2 $citizenServiceV2,
         JobService $jobService,
         WilayahService $wilayahService
     ) {
         $this->citizenService = $citizenService;
+        $this->citizenServiceV2 = $citizenServiceV2;
         $this->jobService = $jobService;
         $this->wilayahService = $wilayahService;
     }
@@ -108,7 +112,7 @@ class BiodataController extends Controller
             if (!$data) {
                 return response()->json(['success' => false, 'message' => 'Data tidak ditemukan'], 404);
             }
-            
+
             $this->normalizeSelectValues($data);
             $this->formatDatesForView($data);
 
@@ -212,29 +216,29 @@ class BiodataController extends Controller
                         'kk' => $kkNumber,
                     ]);
                 } else {
-                $requested = [
-                    'nama_usaha' => $namaUsaha ?: null,
-                    'kelompok_usaha' => $kelompokUsaha ?: null,
-                    'alamat' => $alamatUsaha ?: null,
-                    'tag_lokasi' => ($tagLat && $tagLng) ? ($tagLat . ',' . $tagLng) : null,
-                    // Gunakan nilai wilayah dari form biodata yang sedang diajukan (paling akurat), fallback ke user bila perlu
-                    'province_id' => (int)($validated['province_id'] ?? ($user->province_id ?? 0)) ?: null,
-                    'districts_id' => (int)($validated['district_id'] ?? ($user->district_id ?? ($user->districts_id ?? 0))) ?: null,
-                    'sub_districts_id' => (int)($validated['sub_district_id'] ?? ($user->sub_district_id ?? ($user->sub_districts_id ?? 0))) ?: null,
-                    'villages_id' => (int)($validated['village_id'] ?? ($user->village_id ?? ($user->villages_id ?? 0))) ?: null,
-                ];
-                if ($hasFoto) {
-                    $path = $request->file('foto_usaha')->store('informasi_usaha_temp', 'public');
-                    $requested['foto'] = $path;
-                }
+                    $requested = [
+                        'nama_usaha' => $namaUsaha ?: null,
+                        'kelompok_usaha' => $kelompokUsaha ?: null,
+                        'alamat' => $alamatUsaha ?: null,
+                        'tag_lokasi' => ($tagLat && $tagLng) ? ($tagLat . ',' . $tagLng) : null,
+                        // Gunakan nilai wilayah dari form biodata yang sedang diajukan (paling akurat), fallback ke user bila perlu
+                        'province_id' => (int)($validated['province_id'] ?? ($user->province_id ?? 0)) ?: null,
+                        'districts_id' => (int)($validated['district_id'] ?? ($user->district_id ?? ($user->districts_id ?? 0))) ?: null,
+                        'sub_districts_id' => (int)($validated['sub_district_id'] ?? ($user->sub_district_id ?? ($user->sub_districts_id ?? 0))) ?: null,
+                        'villages_id' => (int)($validated['village_id'] ?? ($user->village_id ?? ($user->villages_id ?? 0))) ?: null,
+                    ];
+                    if ($hasFoto) {
+                        $path = $request->file('foto_usaha')->store('informasi_usaha_temp', 'public');
+                        $requested['foto'] = $path;
+                    }
 
-                InformasiUsahaChangeRequest::create([
-                    'penduduk_id' => $penduduk?->id ?? 0,
-                    'informasi_usaha_id' => $existingUsaha?->id,
-                    'requested_changes' => $requested,
-                    'current_data' => $existingUsaha ? $existingUsaha->toArray() : ['kk' => $kkNumber],
-                    'status' => 'pending',
-                ]);
+                    InformasiUsahaChangeRequest::create([
+                        'penduduk_id' => $penduduk?->id ?? 0,
+                        'informasi_usaha_id' => $existingUsaha?->id,
+                        'requested_changes' => $requested,
+                        'current_data' => $existingUsaha ? $existingUsaha->toArray() : ['kk' => $kkNumber],
+                        'status' => 'pending',
+                    ]);
                 }
             }
 
@@ -259,47 +263,11 @@ class BiodataController extends Controller
         // Jika user adalah admin desa, ambil data warga berdasarkan village_id admin
         if (Auth::user()->role == 'admin desa') {
             $villageId = Auth::user()->villages_id;
-
-            if ($search) {
-                $citizens = $this->citizenService->getCitizensByVillageId($villageId, $page, $limit, $search);
-            } else {
-                // Ambil warga berdasarkan village_id admin desa dengan parameter page
-                $citizens = $this->citizenService->getCitizensByVillageId($villageId, $page);
-            }
-
-            // Siapkan data paginasi untuk view
-            $paginationData = [];
-            if (isset($citizens['data']['pagination'])) {
-                $paginationData = [
-                    'current_page' => $citizens['data']['pagination']['current_page'],
-                    'total_page' => $citizens['data']['pagination']['total_page'],
-                    'base_url' => route('admin.desa.biodata.index') . '?',
-                    'search' => $search
-                ];
-            }
-
-            return view('admin.desa.biodata.index', compact('citizens', 'search', 'paginationData'));
+            $citizens = $this->citizenServiceV2->getAllCitizensWithSearch($page, $limit, $search, $villageId);
+            return view('admin.desa.biodata.index', compact('citizens', 'search'));
         } else {
-            // Untuk superadmin tampilkan semua data dengan search yang konsisten
-            if ($search) {
-                // Gunakan method baru yang melakukan filtering lokal seperti admin desa
-                $citizens = $this->citizenService->getAllCitizensWithSearch($page, $limit, $search);
-            } else {
-                $citizens = $this->citizenService->getAllCitizensWithSearch($page, $limit);
-            }
-
-            // Siapkan data paginasi untuk view superadmin
-            $paginationData = [];
-            if (isset($citizens['data']['pagination'])) {
-                $paginationData = [
-                    'current_page' => $citizens['data']['pagination']['current_page'],
-                    'total_page' => $citizens['data']['pagination']['total_page'],
-                    'base_url' => route('superadmin.biodata.index') . '?',
-                    'search' => $search
-                ];
-            }
-
-            return view('superadmin.biodata.index', compact('citizens', 'search', 'paginationData'));
+            $citizens = $this->citizenServiceV2->getAllCitizensWithSearch($page, $limit, $search);
+            return view('superadmin.biodata.index', compact('citizens', 'search'));
         }
     }
 
@@ -696,31 +664,73 @@ class BiodataController extends Controller
     private function normalizeSelectValues(&$data)
     {
         $genderMap = [
-            'Laki-Laki' => 1, 'Laki-laki' => 1, 'Perempuan' => 2,
-            'laki-laki' => 1, 'laki-laki' => 1, 'perempuan' => 2,
-            'LAKI-LAKI' => 1, 'PEREMPUAN' => 2
+            'Laki-Laki' => 1,
+            'Laki-laki' => 1,
+            'Perempuan' => 2,
+            'laki-laki' => 1,
+            'laki-laki' => 1,
+            'perempuan' => 2,
+            'LAKI-LAKI' => 1,
+            'PEREMPUAN' => 2
         ];
         $citizenStatusMap = ['WNI' => 2, 'WNA' => 1, 'wni' => 2, 'wna' => 1];
         $certificateMap = [
-            'Ada' => 1, 'Tidak Ada' => 2,
-            'ada' => 1, 'tidak ada' => 2,
-            'ADA' => 1, 'TIDAK ADA' => 2
+            'Ada' => 1,
+            'Tidak Ada' => 2,
+            'ada' => 1,
+            'tidak ada' => 2,
+            'ADA' => 1,
+            'TIDAK ADA' => 2
         ];
         $bloodTypeMap = [
-            'A' => 1, 'B' => 2, 'AB' => 3, 'O' => 4,
-            'A+' => 5, 'A-' => 6, 'B+' => 7, 'B-' => 8,
-            'AB+' => 9, 'AB-' => 10, 'O+' => 11, 'O-' => 12, 'Tidak Tahu' => 13,
-            'a' => 1, 'b' => 2, 'ab' => 3, 'o' => 4,
-            'a+' => 5, 'a-' => 6, 'b+' => 7, 'b-' => 8,
-            'ab+' => 9, 'ab-' => 10, 'o+' => 11, 'o-' => 12, 'tidak tahu' => 13
+            'A' => 1,
+            'B' => 2,
+            'AB' => 3,
+            'O' => 4,
+            'A+' => 5,
+            'A-' => 6,
+            'B+' => 7,
+            'B-' => 8,
+            'AB+' => 9,
+            'AB-' => 10,
+            'O+' => 11,
+            'O-' => 12,
+            'Tidak Tahu' => 13,
+            'a' => 1,
+            'b' => 2,
+            'ab' => 3,
+            'o' => 4,
+            'a+' => 5,
+            'a-' => 6,
+            'b+' => 7,
+            'b-' => 8,
+            'ab+' => 9,
+            'ab-' => 10,
+            'o+' => 11,
+            'o-' => 12,
+            'tidak tahu' => 13
         ];
         $religionMap = [
-            'Islam' => 1, 'Kristen' => 2, 'Katolik' => 3, 'Katholik' => 3,
-            'Hindu' => 4, 'Buddha' => 5, 'Budha' => 5,
-            'Kong Hu Cu' => 6, 'Konghucu' => 6, 'Lainnya' => 7,
-            'islam' => 1, 'kristen' => 2, 'katolik' => 3, 'katholik' => 3,
-            'hindu' => 4, 'buddha' => 5, 'budha' => 5,
-            'kong hu cu' => 6, 'konghucu' => 6, 'lainnya' => 7
+            'Islam' => 1,
+            'Kristen' => 2,
+            'Katolik' => 3,
+            'Katholik' => 3,
+            'Hindu' => 4,
+            'Buddha' => 5,
+            'Budha' => 5,
+            'Kong Hu Cu' => 6,
+            'Konghucu' => 6,
+            'Lainnya' => 7,
+            'islam' => 1,
+            'kristen' => 2,
+            'katolik' => 3,
+            'katholik' => 3,
+            'hindu' => 4,
+            'buddha' => 5,
+            'budha' => 5,
+            'kong hu cu' => 6,
+            'konghucu' => 6,
+            'lainnya' => 7
         ];
         $maritalStatusMap = [
             'Belum Kawin' => 1,
@@ -737,13 +747,27 @@ class BiodataController extends Controller
             'CERAI MATI' => 6
         ];
         $familyStatusMap = [
-            'ANAK' => 1, 'Anak' => 1, 'anak' => 1,
-            'KEPALA KELUARGA' => 2, 'Kepala Keluarga' => 2, 'kepala keluarga' => 2,
-            'ISTRI' => 3, 'Istri' => 3, 'istri' => 3,
-            'ORANG TUA' => 4, 'Orang Tua' => 4, 'orang tua' => 4,
-            'MERTUA' => 5, 'Mertua' => 5, 'mertua' => 5,
-            'CUCU' => 6, 'Cucu' => 6, 'cucu' => 6,
-            'FAMILI LAIN' => 7, 'Famili Lain' => 7, 'famili lain' => 7
+            'ANAK' => 1,
+            'Anak' => 1,
+            'anak' => 1,
+            'KEPALA KELUARGA' => 2,
+            'Kepala Keluarga' => 2,
+            'kepala keluarga' => 2,
+            'ISTRI' => 3,
+            'Istri' => 3,
+            'istri' => 3,
+            'ORANG TUA' => 4,
+            'Orang Tua' => 4,
+            'orang tua' => 4,
+            'MERTUA' => 5,
+            'Mertua' => 5,
+            'mertua' => 5,
+            'CUCU' => 6,
+            'Cucu' => 6,
+            'cucu' => 6,
+            'FAMILI LAIN' => 7,
+            'Famili Lain' => 7,
+            'famili lain' => 7
         ];
         $disabilitiesMap = [
             'Fisik' => 1,
@@ -930,9 +954,29 @@ class BiodataController extends Controller
         try {
             $exportData = [];
             $exportData[] = [
-                'NIK', 'Nomor KK', 'Nama Lengkap', 'Jenis Kelamin', 'Tanggal Lahir', 'Tempat Lahir', 'Usia', 'Alamat', 'RT', 'RW',
-                'Provinsi', 'Kabupaten', 'Kecamatan', 'Desa', 'Kode Pos', 'Status Kewarganegaraan', 'Agama', 'Golongan Darah',
-                'Status Dalam Keluarga', 'Nama Ayah', 'Nama Ibu', 'NIK Ayah', 'NIK Ibu',
+                'NIK',
+                'Nomor KK',
+                'Nama Lengkap',
+                'Jenis Kelamin',
+                'Tanggal Lahir',
+                'Tempat Lahir',
+                'Usia',
+                'Alamat',
+                'RT',
+                'RW',
+                'Provinsi',
+                'Kabupaten',
+                'Kecamatan',
+                'Desa',
+                'Kode Pos',
+                'Status Kewarganegaraan',
+                'Agama',
+                'Golongan Darah',
+                'Status Dalam Keluarga',
+                'Nama Ayah',
+                'Nama Ibu',
+                'NIK Ayah',
+                'NIK Ibu',
             ];
 
             if (Auth::user()->role == 'admin desa') {
@@ -948,9 +992,9 @@ class BiodataController extends Controller
                     $citizens = $response['data'];
                 }
                 // Filter hanya untuk desa admin
-                $citizens = array_filter($citizens, function($c) use ($villageId) {
+                $citizens = array_filter($citizens, function ($c) use ($villageId) {
                     return (isset($c['village_id']) && $c['village_id'] == $villageId) ||
-                           (isset($c['villages_id']) && $c['villages_id'] == $villageId);
+                        (isset($c['villages_id']) && $c['villages_id'] == $villageId);
                 });
             } else {
                 // Superadmin: ambil semua data
@@ -1007,16 +1051,78 @@ class BiodataController extends Controller
             // Create template data with correct field names for Excel
             $templateData = [
                 [
-                    'nik', 'no_kk', 'nama_lgkp', 'jenis_kelamin', 'tanggal_lahir', 'umur', 'tempat_lahir', 'alamat', 'no_rt', 'no_rw',
-                    'kode_pos', 'no_prop', 'nama_prop', 'no_kab', 'nama_kab', 'no_kec', 'nama_kec', 'no_kel', 'kelurahan',
-                    'shdk', 'status_kawin', 'pendidikan', 'agama', 'pekerjaan', 'golongan_darah', 'akta_lahir', 'no_akta_lahir',
-                    'akta_kawin', 'no_akta_kawin', 'akta_cerai', 'no_akta_cerai', 'nama_ayah', 'nama_ibu', 'nik_ayah', 'nik_ibu'
+                    'nik',
+                    'no_kk',
+                    'nama_lgkp',
+                    'jenis_kelamin',
+                    'tanggal_lahir',
+                    'umur',
+                    'tempat_lahir',
+                    'alamat',
+                    'no_rt',
+                    'no_rw',
+                    'kode_pos',
+                    'no_prop',
+                    'nama_prop',
+                    'no_kab',
+                    'nama_kab',
+                    'no_kec',
+                    'nama_kec',
+                    'no_kel',
+                    'kelurahan',
+                    'shdk',
+                    'status_kawin',
+                    'pendidikan',
+                    'agama',
+                    'pekerjaan',
+                    'golongan_darah',
+                    'akta_lahir',
+                    'no_akta_lahir',
+                    'akta_kawin',
+                    'no_akta_kawin',
+                    'akta_cerai',
+                    'no_akta_cerai',
+                    'nama_ayah',
+                    'nama_ibu',
+                    'nik_ayah',
+                    'nik_ibu'
                 ],
                 [
-                    '1234567890123456', '1234567890123456', 'John Doe', 'Laki-laki', '1990-01-01', '33', 'Jakarta',
-                    'Jl. Contoh No. 123', '001', '001', '12345', '31', 'DKI Jakarta', '3171', 'Jakarta Pusat', '317101', 'Gambir', '31710101', 'Gambir',
-                    'Kepala Keluarga', 'Kawin Tercatat', 'SLTA/SMA/Sederajat', 'Islam', 'Pegawai Negeri Sipil', 'A',
-                    'Ada', '1234567890123456', 'Ada', '1234567890123457', 'Tidak Ada', '', 'John Father', 'Jane Mother', '1234567890123456', '1234567890123457'
+                    '1234567890123456',
+                    '1234567890123456',
+                    'John Doe',
+                    'Laki-laki',
+                    '1990-01-01',
+                    '33',
+                    'Jakarta',
+                    'Jl. Contoh No. 123',
+                    '001',
+                    '001',
+                    '12345',
+                    '31',
+                    'DKI Jakarta',
+                    '3171',
+                    'Jakarta Pusat',
+                    '317101',
+                    'Gambir',
+                    '31710101',
+                    'Gambir',
+                    'Kepala Keluarga',
+                    'Kawin Tercatat',
+                    'SLTA/SMA/Sederajat',
+                    'Islam',
+                    'Pegawai Negeri Sipil',
+                    'A',
+                    'Ada',
+                    '1234567890123456',
+                    'Ada',
+                    '1234567890123457',
+                    'Tidak Ada',
+                    '',
+                    'John Father',
+                    'Jane Mother',
+                    '1234567890123456',
+                    '1234567890123457'
                 ]
             ];
 
@@ -1132,7 +1238,6 @@ class BiodataController extends Controller
             Cache::forget('citizens_all_1_100');
             Cache::forget('citizens_all_1_1000');
             Cache::forget('citizens_all_1_10000');
-
         } catch (\Exception $e) {
             Log::error('Error clearing guest form caches: ' . $e->getMessage());
         }
