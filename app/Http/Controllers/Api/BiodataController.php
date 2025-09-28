@@ -108,6 +108,11 @@ class BiodataController extends Controller
                     'foto_url' => $fotoUrl,
                     'kk' => $informasiUsaha->kk ?? null,
                     'is_owner' => $informasiUsaha->penduduk_id ? ((string)$informasiUsaha->penduduk_id === (string)$user->id) : false,
+                    // Tambahkan data wilayah untuk konsistensi dengan WarungkuController
+                    'province_id' => $informasiUsaha->province_id,
+                    'districts_id' => $informasiUsaha->districts_id,
+                    'sub_districts_id' => $informasiUsaha->sub_districts_id,
+                    'villages_id' => $informasiUsaha->villages_id,
                 ];
             }
 
