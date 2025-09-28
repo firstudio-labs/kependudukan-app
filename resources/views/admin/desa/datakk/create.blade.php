@@ -11,40 +11,40 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <!-- Kolom 1: Data Utama -->
                 <div class="col-span-1 sm:col-span-2 md:col-span-1">
-                    <label for="kk" class="block text-sm font-medium text-gray-700">No KK</label>
+                    <label for="kk" class="block text-sm font-medium text-gray-700">No KK <span class="text-red-500">*</span></label>
                     <input type="text" id="kk" name="kk" autocomplete="off" maxlength="16" pattern="\d{16}"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-lg p-2">
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-lg p-2" required>
                 </div>
 
                 <div class="col-span-1 sm:col-span-2">
-                    <label for="address" class="block text-sm font-medium text-gray-700">Alamat</label>
+                    <label for="address" class="block text-sm font-medium text-gray-700">Alamat <span class="text-red-500">*</span></label>
                     <textarea id="address" name="address" autocomplete="street-address"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-lg p-2"></textarea>
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-lg p-2" required></textarea>
                 </div>
 
                 <div>
                     <label for="postal_code" class="block text-sm font-medium text-gray-700">Kode Pos</label>
-                    <input type="text" id="postal_code" name="postal_code" autocomplete="postal-code"
+                    <input type="text" id="postal_code" name="postal_code" autocomplete="postal-code" maxlength="5"
                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-lg p-2">
                 </div>
 
                 <div>
-                    <label for="rt" class="block text-sm font-medium text-gray-700">RT</label>
-                    <input type="text" id="rt" name="rt" autocomplete="address-line1"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-lg p-2">
+                    <label for="rt" class="block text-sm font-medium text-gray-700">RT <span class="text-red-500">*</span></label>
+                    <input type="text" id="rt" name="rt" autocomplete="address-line1" maxlength="3"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-lg p-2" required>
                 </div>
 
                 <div>
-                    <label for="rw" class="block text-sm font-medium text-gray-700">RW</label>
-                    <input type="text" id="rw" name="rw" autocomplete="address-line2"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-lg p-2">
+                    <label for="rw" class="block text-sm font-medium text-gray-700">RW <span class="text-red-500">*</span></label>
+                    <input type="text" id="rw" name="rw" autocomplete="address-line2" maxlength="3"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-lg p-2" required>
                 </div>
 
                 <!-- Wilayah -->
                 <div>
-                    <label for="province_code" class="block text-sm font-medium text-gray-700">Provinsi</label>
+                    <label for="province_code" class="block text-sm font-medium text-gray-700">Provinsi <span class="text-red-500">*</span></label>
                     <select id="province_code" name="province_code"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-lg p-2">
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-lg p-2" required>
                         <option value="">Pilih Provinsi</option>
                         @foreach($provinces as $province)
                             <option value="{{ $province['code'] }}">{{ $province['name'] }}</option>
@@ -54,30 +54,30 @@
                 </div>
 
                 <div>
-                    <label for="district_code" class="block text-sm font-medium text-gray-700">Kabupaten</label>
+                    <label for="district_code" class="block text-sm font-medium text-gray-700">Kabupaten <span class="text-red-500">*</span></label>
                     <select id="district_code" name="district_code"
                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-lg p-2"
-                        disabled>
+                        disabled required>
                         <option value="">Pilih Kabupaten</option>
                     </select>
                     <input type="hidden" name="district_id" id="district_id">
                 </div>
 
                 <div>
-                    <label for="sub_district_code" class="block text-sm font-medium text-gray-700">Kecamatan</label>
+                    <label for="sub_district_code" class="block text-sm font-medium text-gray-700">Kecamatan <span class="text-red-500">*</span></label>
                     <select id="sub_district_code" name="sub_district_code"
                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-lg p-2"
-                        disabled>
+                        disabled required>
                         <option value="">Pilih Kecamatan</option>
                     </select>
                     <input type="hidden" name="sub_district_id" id="sub_district_id">
                 </div>
 
                 <div>
-                    <label for="village_code" class="block text-sm font-medium text-gray-700">Desa/Kelurahan</label>
+                    <label for="village_code" class="block text-sm font-medium text-gray-700">Desa/Kelurahan <span class="text-red-500">*</span></label>
                     <select id="village_code" name="village_code"
                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-lg p-2"
-                        disabled>
+                        disabled required>
                         <option value="">Pilih Desa/Kelurahan</option>
                     </select>
                     <input type="hidden" name="village_id" id="village_id">
@@ -86,6 +86,12 @@
                 <div>
                     <label for="dusun" class="block text-sm font-medium text-gray-700">Dusun/Dukuh/Kampung</label>
                     <input type="text" name="dusun" id="dusun" autocomplete="address-level5"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-lg p-2">
+                </div>
+
+                <div>
+                    <label for="rf_id_tag" class="block text-sm font-medium text-gray-700">RF ID Tag</label>
+                    <input type="text" name="rf_id_tag" id="rf_id_tag" autocomplete="off"
                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-lg p-2">
                 </div>
             </div>
@@ -179,21 +185,21 @@
 
                     <!-- NIK -->
                     <div>
-                        <label for="nik" class="block text-sm font-medium text-gray-700">NIK</label>
+                        <label for="nik" class="block text-sm font-medium text-gray-700">NIK <span class="text-red-500">*</span></label>
                         <input type="text" id="nik" name="nik" pattern="\d{16}" maxlength="16"
                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                     </div>
 
                     <!-- Nama Lengkap -->
                     <div>
-                        <label for="member_full_name" class="block text-sm font-medium text-gray-700">Nama Lengkap</label>
+                        <label for="member_full_name" class="block text-sm font-medium text-gray-700">Nama Lengkap <span class="text-red-500">*</span></label>
                         <input type="text" id="member_full_name" name="full_name"
                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                     </div>
 
                     <!-- Jenis Kelamin -->
                     <div>
-                        <label for="gender" class="block text-sm font-medium text-gray-700">Jenis Kelamin</label>
+                        <label for="gender" class="block text-sm font-medium text-gray-700">Jenis Kelamin <span class="text-red-500">*</span></label>
                         <select id="gender" name="gender"
                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                             <option value="">Pilih Jenis Kelamin</option>
@@ -204,21 +210,21 @@
 
                     <!-- Tanggal Lahir -->
                     <div>
-                        <label for="birth_date" class="block text-sm font-medium text-gray-700">Tanggal Lahir</label>
+                        <label for="birth_date" class="block text-sm font-medium text-gray-700">Tanggal Lahir <span class="text-red-500">*</span></label>
                         <input type="date" id="birth_date" name="birth_date"
                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                     </div>
 
                     <!-- Umur -->
                     <div>
-                        <label for="age" class="block text-sm font-medium text-gray-700">Umur</label>
+                        <label for="age" class="block text-sm font-medium text-gray-700">Umur <span class="text-red-500">*</span></label>
                         <input type="number" id="age" name="age"
                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                     </div>
 
                     <!-- Tempat Lahir -->
                     <div>
-                        <label for="birth_place" class="block text-sm font-medium text-gray-700">Tempat Lahir</label>
+                        <label for="birth_place" class="block text-sm font-medium text-gray-700">Tempat Lahir <span class="text-red-500">*</span></label>
                         <input type="text" id="birth_place" name="birth_place"
                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                     </div>
@@ -240,10 +246,10 @@
                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
                     </div>
 
-                    <!-- Akta Perkawinan -->
+                    <!-- Akta Kawin -->
                     <div>
-                        <label for="marital_certificate" class="block text-sm font-medium text-gray-700">Akta Perkawinan</label>
-                        <select id="marital_certificate" name="marital_certificate" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                        <label for="marital_certificate" class="block text-sm font-medium text-gray-700">Akta Kawin <span class="text-red-500">*</span></label>
+                        <select id="marital_certificate" name="marital_certificate" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                             <option value="">Pilih Status</option>
                             <option value="1">Ada</option>
                             <option value="2" selected>Tidak Ada</option>
@@ -290,16 +296,31 @@
 
                     <!-- Status Hubungan Dalam Keluarga -->
                     <div>
-                        <label for="family_status" class="block text-sm font-medium text-gray-700">Status Hubungan Dalam Keluarga</label>
+                        <label for="family_status" class="block text-sm font-medium text-gray-700">Status Hubungan Dalam Keluarga <span class="text-red-500">*</span></label>
                         <select id="family_status" name="family_status"
                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                             <option value="">Pilih Status</option>
                             <option value="1">ANAK</option>
+                            <option value="2">KEPALA KELUARGA</option>
                             <option value="3">ISTRI</option>
                             <option value="4">ORANG TUA</option>
                             <option value="5">MERTUA</option>
                             <option value="6">CUCU</option>
                             <option value="7">FAMILI LAIN</option>
+                        </select>
+                    </div>
+
+                    <!-- Status Perkawinan -->
+                    <div>
+                        <label for="marital_status" class="block text-sm font-medium text-gray-700">Status Perkawinan</label>
+                        <select id="marital_status" name="marital_status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                            <option value="">Pilih Status</option>
+                            <option value="1" selected>Belum Kawin</option>
+                            <option value="2">Kawin Tercatat</option>
+                            <option value="3">Kawin Belum Tercatat</option>
+                            <option value="4">Cerai Hidup Tercatat</option>
+                            <option value="5">Cerai Hidup Belum Tercatat</option>
+                            <option value="6">Cerai Mati</option>
                         </select>
                     </div>
 
@@ -321,18 +342,18 @@
 
                     <!-- Pendidikan Terakhir -->
                     <div>
-                        <label for="education_status" class="block text-sm font-medium text-gray-700">Pendidikan Terakhir</label>
+                        <label for="education_status" class="block text-sm font-medium text-gray-700">Pendidikan Terakhir <span class="text-red-500">*</span></label>
                         <select id="education_status" name="education_status"
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                             <option value="">Pilih Pendidikan</option>
                             <option value="1">Tidak/Belum Sekolah</option>
                             <option value="2">Belum tamat SD/Sederajat</option>
-                            <option value="3">Tamat SD</option>
+                            <option value="3">Tamat SD/Sederajat</option>
                             <option value="4">SLTP/SMP/Sederajat</option>
                             <option value="5">SLTA/SMA/Sederajat</option>
                             <option value="6">Diploma I/II</option>
-                            <option value="7">Akademi/Diploma III/ Sarjana Muda</option>
-                            <option value="8">Diploma IV/ Strata I/ Strata II</option>
+                            <option value="7">Akademi/Diploma III/Sarjana Muda</option>
+                            <option value="8">Diploma IV/Strata I/Strata II</option>
                             <option value="9">Strata III</option>
                             <option value="10">Lainnya</option>
                         </select>
@@ -340,7 +361,7 @@
 
                     <!-- Jenis Pekerjaan -->
                     <div>
-                        <label for="job_type_id" class="block text-sm font-medium text-gray-700">Jenis Pekerjaan</label>
+                        <label for="job_type_id" class="block text-sm font-medium text-gray-700">Jenis Pekerjaan <span class="text-red-500">*</span></label>
                         <select id="job_type_id" name="job_type_id"
                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                             <option value="">Pilih Jenis Pekerjaan</option>
@@ -404,8 +425,8 @@
                     <!-- Convert hidden fields to visible form controls -->
                     <!-- Kewarganegaraan -->
                     <div>
-                        <label for="citizen_status" class="block text-sm font-medium text-gray-700">Kewarganegaraan</label>
-                        <select id="citizen_status" name="citizen_status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                        <label for="citizen_status" class="block text-sm font-medium text-gray-700">Kewarganegaraan <span class="text-red-500">*</span></label>
+                        <select id="citizen_status" name="citizen_status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                             <option value="">Pilih Kewarganegaraan</option>
                             <option value="1">WNA</option>
                             <option value="2" selected>WNI</option>
@@ -414,8 +435,8 @@
 
                     <!-- Golongan Darah -->
                     <div>
-                        <label for="blood_type" class="block text-sm font-medium text-gray-700">Golongan Darah</label>
-                        <select id="blood_type" name="blood_type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                        <label for="blood_type" class="block text-sm font-medium text-gray-700">Golongan Darah <span class="text-red-500">*</span></label>
+                        <select id="blood_type" name="blood_type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
                             <option value="">Pilih Golongan Darah</option>
                             <option value="1">A</option>
                             <option value="2">B</option>
@@ -447,12 +468,13 @@
                         </select>
                     </div>
 
-                    <!-- Kelainan Fisik dan Mental -->
+                    <!-- Kelainan Fisik & Mental -->
                     <div>
-                        <label for="mental_disorders" class="block text-sm font-medium text-gray-700">Kelainan Fisik dan Mental</label>
-                        <select id="mental_disorders" name="mental_disorders" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
-                            <option value="1">Ada</option>
-                            <option value="2" selected>Tidak Ada</option>
+                        <label for="mental_disorders" class="block text-sm font-medium text-gray-700">Kelainan Fisik & Mental <span class="text-red-500">*</span></label>
+                        <select id="mental_disorders" name="mental_disorders" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2" required>
+                            <option value="">Pilih Status</option>
+                            <option value="1">Ya</option>
+                            <option value="2" selected>Tidak</option>
                         </select>
                     </div>
 
