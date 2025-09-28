@@ -224,9 +224,9 @@
                     </select>
                 </div>
 
-                <!-- Gangguan Jiwa -->
+                <!-- Kelainan Fisik & Mental -->
                 <div>
-                    <label for="mental_disorders" class="block text-sm font-medium text-gray-700">Gangguan Jiwa <span class="text-red-500">*</span></label>
+                    <label for="mental_disorders" class="block text-sm font-medium text-gray-700">Kelainan Fisik & Mental <span class="text-red-500">*</span></label>
                     <select id="mental_disorders" name="mental_disorders"
                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
                         required>
