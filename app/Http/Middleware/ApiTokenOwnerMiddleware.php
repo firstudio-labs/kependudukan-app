@@ -26,7 +26,9 @@ class ApiTokenOwnerMiddleware
 
         try {
             // Find the token hash in the database
-            $tokenHash = hash('sha256', $bearerToken);
+            // Laravel Sanctum stores hash of token without the prefix
+            $tokenWithoutPrefix = strpos($bearerToken, '|') !== false ? substr($bearerToken, strpos($bearerToken, '|') + 1) : $bearerToken;
+            $tokenHash = hash('sha256', $tokenWithoutPrefix);
             $token = PersonalAccessToken::where('token', $tokenHash)->first();
 
             if (!$token) {

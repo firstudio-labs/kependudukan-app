@@ -1208,5 +1208,82 @@ class CitizenService
             ];
         }
     }
+
+    public function getGenderStatsByVillage($villageId)
+    {
+        try {
+            $response = Http::withHeaders([
+                'X-API-Key' => $this->apiKey,
+            ])->get("{$this->baseUrl}/api/all-citizens");
+
+            if ($response->successful()) {
+                $data = $response->json();
+                
+                $citizens = collect($data['data'])
+                    ->where('village_id', $villageId);
+
+                // Count male with various gender formats
+                $maleCount = $citizens->filter(function ($citizen) {
+                    $gender = strtolower(trim($citizen['gender'] ?? ''));
+                return in_array($gender, ['l', 'laki-laki', 'Laki-laki', 'LAKI-LAKI, laki laki','LAKI LAKI','Laki laki', 'male', 'm']);
+                })->count();
+
+                // Count female with various gender formats
+                $femaleCount = $citizens->filter(function ($citizen) {
+                    $gender = strtolower(trim($citizen['gender'] ?? ''));
+                    return in_array($gender, ['p', 'perempuan', 'female', 'f']);
+                })->count();
+
+                return [
+                    'male' => $maleCount,
+                    'female' => $femaleCount,
+                    'total' => $citizens->count()
+                ];
+            } else {
+                Log::error('API request failed when fetching gender stats by village ID', [
+                    'status_code' => $response->status(),
+                    'village_id' => $villageId
+                ]);
+                
+                // Fallback to local database if API fails
+                return $this->getGenderStatsByVillageFromLocal($villageId);
+            }
+        } catch (\Exception $e) {
+            Log::error('Error getting gender stats by village: ' . $e->getMessage());
+            return $this->getGenderStatsByVillageFromLocal($villageId);
+        }
+    }
+
+    private function getGenderStatsByVillageFromLocal($villageId)
+    {
+        try {
+            $citizens = Penduduk::where('villages_id', $villageId)->get();
+            
+            // Count male with various gender formats
+            $maleCount = $citizens->filter(function ($citizen) {
+                $gender = strtolower(trim($citizen->gender ?? ''));
+                return in_array($gender, ['l', 'laki-laki', 'Laki-laki', 'LAKI-LAKI, laki laki','LAKI LAKI','Laki laki', 'male', 'm']);
+            })->count();
+
+            // Count female with various gender formats
+            $femaleCount = $citizens->filter(function ($citizen) {
+                $gender = strtolower(trim($citizen->gender ?? ''));
+                return in_array($gender, ['p', 'perempuan','Perempuan','PEREMPUAN', 'female', 'f']);
+            })->count();
+
+            return [
+                'male' => $maleCount,
+                'female' => $femaleCount,
+                'total' => $citizens->count()
+            ];
+        } catch (\Exception $e) {
+            Log::error('Error getting gender stats from local database: ' . $e->getMessage());
+            return [
+                'male' => 0,
+                'female' => 0,
+                'total' => 0
+            ];
+        }
+    }
 }
 
