@@ -57,15 +57,6 @@
                         </a>
                     </li>
 
-                    <li class="-ml-5">
-                        <a href="{{ route('user.pengumuman.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                {{ request()->routeIs('user.pengumuman*')
-                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
-                            <i class="fa-solid fa-bullhorn text-lg transition-all duration-300"></i>
-                            <span>Pengumuman</span>
-                        </a>
-                    </li>
 
                    
 
@@ -103,16 +94,6 @@
                                 </a>
                             </li>
                         </ul>
-                    </li>
-
-                    <li class="-ml-5">
-                        <a href="{{ route('user.pengumuman.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                {{ request()->routeIs('user.pengumuman*')
-                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
-                            <i class="fa-solid fa-bullhorn text-lg transition-all duration-300"></i>
-                            <span>Pengumuman</span>
-                        </a>
                     </li>
 
                     <!-- Keep Master Penduduk as a separate dropdown -->
@@ -374,14 +355,6 @@
                         </ul>
                     </li>
 
-                    <li>
-                        <a href="{{ route('superadmin.berita-desa.index') }}"
-                            class="flex items-center p-2 text-gray-900 rounded-lg hover:bg-gray-100 group {{ request()->routeIs('superadmin.berita-desa.*') ? 'bg-gray-100' : '' }}">
-                            <i
-                                class="fa-solid fa-newspaper w-5 h-5 text-gray-500 transition duration-75 group-hover:text-gray-900"></i>
-                            <span class="ms-3">Berita Desa</span>
-                        </a>
-                    </li>
                      <!-- Master Warungku (Superadmin) -->
                     <li class="-ml-5">
                         <a href="{{ route('superadmin.datamaster.warungku.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
