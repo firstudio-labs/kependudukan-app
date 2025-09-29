@@ -428,12 +428,8 @@
                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2 bg-gray-100">
                 </div>
 
-                <!-- Koordinat -->
-                <div>
-                    <label for="coordinate" class="block text-sm font-medium text-gray-700">Koordinat</label>
-                    <input type="text" id="coordinate" name="coordinate" value="{{ $citizen['data']['coordinate'] ?? '' }}"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
-                </div>
+                <!-- Koordinat (Hidden) -->
+                <input type="hidden" id="coordinate" name="coordinate" value="{{ $citizen['data']['coordinate'] ?? '' }}">
 
                 <!-- Hidden fields untuk data yang tidak ditampilkan tapi tetap dikirim -->
                 <input type="hidden" name="foreign_address" value="{{ $citizen['data']['foreign_address'] ?? '' }}">
