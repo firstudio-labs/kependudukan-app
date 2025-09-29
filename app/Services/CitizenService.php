@@ -1254,6 +1254,380 @@ class CitizenService
         }
     }
 
+    public function getAgeGroupStatsByVillage($villageId)
+    {
+        try {
+            $response = Http::withHeaders([
+                'X-API-Key' => $this->apiKey,
+            ])->get("{$this->baseUrl}/api/all-citizens");
+
+            if ($response->successful()) {
+                $data = $response->json();
+
+                $citizens = collect($data['data'])
+                    ->where('village_id', $villageId);
+
+                $now = now();
+                $groups = [
+                    '0_17' => 0,
+                    '18_30' => 0,
+                    '31_45' => 0,
+                    '46_60' => 0,
+                    '61_plus' => 0,
+                ];
+
+                foreach ($citizens as $citizen) {
+                    $age = null;
+
+                    // Try multiple possible keys for date of birth or age
+                    $dob = $citizen['birth_date'] ?? $citizen['tanggal_lahir'] ?? $citizen['tgl_lahir'] ?? $citizen['date_of_birth'] ?? null;
+                    if ($dob) {
+                        try {
+                            $age = \Carbon\Carbon::parse($dob)->diffInYears($now);
+                        } catch (\Exception $e) {
+                            $age = null;
+                        }
+                    }
+                    if ($age === null) {
+                        $age = $citizen['age'] ?? $citizen['umur'] ?? null;
+                        if (is_string($age)) {
+                            $age = (int) preg_replace('/[^0-9]/', '', $age);
+                        }
+                    }
+
+                    if ($age === null || $age < 0 || $age > 130) {
+                        continue;
+                    }
+
+                    if ($age <= 17) {
+                        $groups['0_17']++;
+                    } elseif ($age <= 30) {
+                        $groups['18_30']++;
+                    } elseif ($age <= 45) {
+                        $groups['31_45']++;
+                    } elseif ($age <= 60) {
+                        $groups['46_60']++;
+                    } else {
+                        $groups['61_plus']++;
+                    }
+                }
+
+                $total = array_sum($groups);
+
+                return [
+                    'groups' => $groups,
+                    'total_with_age' => $total,
+                ];
+            }
+
+            // fallback to local
+            return $this->getAgeGroupStatsByVillageFromLocal($villageId);
+        } catch (\Exception $e) {
+            return $this->getAgeGroupStatsByVillageFromLocal($villageId);
+        }
+    }
+
+    private function getAgeGroupStatsByVillageFromLocal($villageId)
+    {
+        try {
+            $citizens = Penduduk::where('villages_id', $villageId)->get();
+
+            $now = now();
+            $groups = [
+                '0_17' => 0,
+                '18_30' => 0,
+                '31_45' => 0,
+                '46_60' => 0,
+                '61_plus' => 0,
+            ];
+
+            foreach ($citizens as $citizen) {
+                $age = null;
+                $dob = $citizen->tanggal_lahir ?? $citizen->tgl_lahir ?? $citizen->birth_date ?? null;
+                if ($dob) {
+                    try {
+                        $age = \Carbon\Carbon::parse($dob)->diffInYears($now);
+                    } catch (\Exception $e) {
+                        $age = null;
+                    }
+                }
+                if ($age === null) {
+                    $age = $citizen->umur ?? null;
+                    if (is_string($age)) {
+                        $age = (int) preg_replace('/[^0-9]/', '', $age);
+                    }
+                }
+
+                if ($age === null || $age < 0 || $age > 130) {
+                    continue;
+                }
+
+                if ($age <= 17) {
+                    $groups['0_17']++;
+                } elseif ($age <= 30) {
+                    $groups['18_30']++;
+                } elseif ($age <= 45) {
+                    $groups['31_45']++;
+                } elseif ($age <= 60) {
+                    $groups['46_60']++;
+                } else {
+                    $groups['61_plus']++;
+                }
+            }
+
+            $total = array_sum($groups);
+
+            return [
+                'groups' => $groups,
+                'total_with_age' => $total,
+            ];
+        } catch (\Exception $e) {
+            return [
+                'groups' => [
+                    '0_17' => 0,
+                    '18_30' => 0,
+                    '31_45' => 0,
+                    '46_60' => 0,
+                    '61_plus' => 0,
+                ],
+                'total_with_age' => 0,
+            ];
+        }
+    }
+
+    public function getEducationStatsByVillage($villageId)
+    {
+        try {
+            $response = Http::withHeaders([
+                'X-API-Key' => $this->apiKey,
+            ])->get("{$this->baseUrl}/api/all-citizens");
+
+            if ($response->successful()) {
+                $data = $response->json();
+
+                $citizens = collect($data['data'])
+                    ->where('village_id', $villageId);
+
+                $groups = [];
+
+                foreach ($citizens as $citizen) {
+                    // Hanya gunakan kolom education_status dari Citizen Service
+                    $edu = $citizen['education_status'] ?? null;
+
+                    if (!$edu || (is_string($edu) && trim($edu) === '')) {
+                        $key = 'unknown';
+                    } else {
+                        $key = $this->normalizeEducation((string) $edu);
+                    }
+
+                    $groups[$key] = ($groups[$key] ?? 0) + 1;
+                }
+
+                $total = array_sum($groups);
+
+                return [
+                    'groups' => $groups,
+                    'total_with_education' => $total,
+                ];
+            }
+
+            return $this->getEducationStatsByVillageFromLocal($villageId);
+        } catch (\Exception $e) {
+            return $this->getEducationStatsByVillageFromLocal($villageId);
+        }
+    }
+
+    private function getEducationStatsByVillageFromLocal($villageId)
+    {
+        try {
+            $citizens = Penduduk::where('villages_id', $villageId)->get();
+
+            $groups = [];
+            foreach ($citizens as $citizen) {
+                // Fallback lokal: gunakan kolom education_status jika tersedia, jika tidak anggap unknown
+                $edu = $citizen->education_status ?? null;
+                if (!$edu || (is_string($edu) && trim($edu) === '')) {
+                    $key = 'unknown';
+                } else {
+                    $key = $this->normalizeEducation((string) $edu);
+                }
+
+                $groups[$key] = ($groups[$key] ?? 0) + 1;
+            }
+
+            $total = array_sum($groups);
+            return [
+                'groups' => $groups,
+                'total_with_education' => $total,
+            ];
+        } catch (\Exception $e) {
+            return [
+                'groups' => [],
+                'total_with_education' => 0,
+            ];
+        }
+    }
+
+    private function normalizeEducation(string $raw): string
+    {
+        $v = strtolower(trim($raw));
+        $v = str_replace(['.', '  '], [' ', ' '], $v);
+
+        // Pemetaan umum ke kategori standar
+        $map = [
+            'tidak sekolah' => 'tidak_sekolah',
+            'belum sekolah' => 'tidak_sekolah',
+            'paud' => 'paud_tk',
+            'tk' => 'paud_tk',
+            'ra' => 'paud_tk',
+            'sd' => 'sd',
+            'mi' => 'sd',
+            'smp' => 'smp',
+            'mts' => 'smp',
+            'sma' => 'sma_smk',
+            'smk' => 'sma_smk',
+            'ma' => 'sma_smk',
+            'd1' => 'd1_d3',
+            'd2' => 'd1_d3',
+            'd3' => 'd1_d3',
+            'd4' => 'sarjana',
+            's1' => 'sarjana',
+            'sarjana' => 'sarjana',
+            's2' => 'magister',
+            'magister' => 'magister',
+            's3' => 'doktor',
+            'doktor' => 'doktor',
+            'non formal' => 'non_formal',
+            'kursus' => 'non_formal',
+        ];
+
+        // Normalisasi varian lazim
+        $aliases = [
+            'sd/sederajat' => 'sd',
+            'smp/sederajat' => 'smp',
+            'sma/sederajat' => 'sma_smk',
+            'smu' => 'sma_smk',
+            'stm' => 'sma_smk',
+            'stm/smk' => 'sma_smk',
+            'diploma i' => 'd1_d3',
+            'diploma ii' => 'd1_d3',
+            'diploma iii' => 'd1_d3',
+            'diploma iv' => 'sarjana',
+            'strata 1' => 'sarjana',
+            'strata 2' => 'magister',
+            'strata 3' => 'doktor',
+        ];
+
+        if (isset($aliases[$v])) {
+            return $aliases[$v];
+        }
+
+        if (isset($map[$v])) {
+            return $map[$v];
+        }
+
+        // Heuristik sederhana
+        if (preg_match('/^sma|^smk|^ma/', $v)) return 'sma_smk';
+        if (preg_match('/^sd| madrasah ibtida/', $v)) return 'sd';
+        if (preg_match('/^smp| madrasah tsanawi/', $v)) return 'smp';
+        if (preg_match('/^d[1-3]/', $v)) return 'd1_d3';
+        if (preg_match('/^(s1|sarjana|d4)/', $v)) return 'sarjana';
+        if (preg_match('/^(s2|magister)/', $v)) return 'magister';
+        if (preg_match('/^(s3|doktor)/', $v)) return 'doktor';
+
+        return $v !== '' ? $v : 'unknown';
+    }
+
+    public function getReligionStatsByVillage($villageId)
+    {
+        try {
+            $response = Http::withHeaders([
+                'X-API-Key' => $this->apiKey,
+            ])->get("{$this->baseUrl}/api/all-citizens");
+
+            if ($response->successful()) {
+                $data = $response->json();
+                $citizens = collect($data['data'])->where('village_id', $villageId);
+
+                $groups = [];
+                foreach ($citizens as $citizen) {
+                    $rel = $citizen['religion'] ?? $citizen['agama'] ?? null;
+                    $key = $this->normalizeReligion((string) ($rel ?? ''));
+                    $groups[$key] = ($groups[$key] ?? 0) + 1;
+                }
+
+                $total = array_sum($groups);
+                return [
+                    'groups' => $groups,
+                    'total_with_religion' => $total,
+                ];
+            }
+
+            return $this->getReligionStatsByVillageFromLocal($villageId);
+        } catch (\Exception $e) {
+            return $this->getReligionStatsByVillageFromLocal($villageId);
+        }
+    }
+
+    private function getReligionStatsByVillageFromLocal($villageId)
+    {
+        try {
+            $citizens = Penduduk::where('villages_id', $villageId)->get();
+            $groups = [];
+            foreach ($citizens as $citizen) {
+                $rel = $citizen->religion ?? $citizen->agama ?? null;
+                $key = $this->normalizeReligion((string) ($rel ?? ''));
+                $groups[$key] = ($groups[$key] ?? 0) + 1;
+            }
+            $total = array_sum($groups);
+            return [
+                'groups' => $groups,
+                'total_with_religion' => $total,
+            ];
+        } catch (\Exception $e) {
+            return [
+                'groups' => [],
+                'total_with_religion' => 0,
+            ];
+        }
+    }
+
+    private function normalizeReligion(string $raw): string
+    {
+        $v = strtolower(trim($raw));
+        if ($v === '' || $v === 'null' || $v === '-') return 'unknown';
+
+        // normalisasi umum untuk agama di Indonesia
+        $map = [
+            'islam' => 'islam',
+            'moslem' => 'islam',
+            'muslim' => 'islam',
+            'kristen' => 'kristen',
+            'protestan' => 'kristen',
+            'katholik' => 'katolik',
+            'katolik' => 'katolik',
+            'catholic' => 'katolik',
+            'hindu' => 'hindu',
+            'budha' => 'buddha',
+            'buddha' => 'buddha',
+            'konghucu' => 'konghucu',
+            'confucian' => 'konghucu',
+            'kepercayaan' => 'kepercayaan',
+            'lainnya' => 'lainnya',
+        ];
+
+        if (isset($map[$v])) return $map[$v];
+
+        // heuristik sederhana untuk variasi ejaan
+        if (str_contains($v, 'islam') || str_contains($v, 'muslim')) return 'islam';
+        if (str_contains($v, 'krist') || str_contains($v, 'protest')) return 'kristen';
+        if (str_contains($v, 'katol') || str_contains($v, 'cath')) return 'katolik';
+        if (str_contains($v, 'hind')) return 'hindu';
+        if (str_contains($v, 'bud')) return 'buddha';
+        if (str_contains($v, 'kong') || str_contains($v, 'confuc')) return 'konghucu';
+
+        return $v !== '' ? $v : 'unknown';
+    }
     private function getGenderStatsByVillageFromLocal($villageId)
     {
         try {

@@ -71,6 +71,9 @@ class PemerintahDesaController extends Controller
         // Statistik penduduk desa dari CitizenService
         $citizenService = app(CitizenService::class);
         $genderStats = $citizenService->getGenderStatsByVillage($villageId); // harapkan ['male' => x, 'female' => y]
+        $ageGroupStats = $citizenService->getAgeGroupStatsByVillage($villageId); // statistik umur
+        $educationStats = $citizenService->getEducationStatsByVillage($villageId); // statistik pendidikan
+        $religionStats = $citizenService->getReligionStatsByVillage($villageId); // statistik agama
         
         // Klasifikasi & jenis dari barang warungku milik penduduk di desa tersebut
         $informasiUsahaIds = InformasiUsaha::where('villages_id', $villageId)->pluck('id');
@@ -149,6 +152,9 @@ class PemerintahDesaController extends Controller
             'kesenian_budaya' => $kesenianBudaya,
             'abdes' => $abdes,
             'statistik_penduduk' => $genderStats,
+            'statistik_umur' => $ageGroupStats,
+            'statistik_pendidikan' => $educationStats,
+            'statistik_agama' => $religionStats,
             'warungku_klasifikasi_jenis' => $jenisMasters,
         ]);
     }
