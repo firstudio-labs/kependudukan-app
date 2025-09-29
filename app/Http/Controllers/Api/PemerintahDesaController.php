@@ -18,6 +18,7 @@ use App\Models\WarungkuMaster;
 use App\Services\CitizenService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class PemerintahDesaController extends Controller
 {
@@ -47,7 +48,10 @@ class PemerintahDesaController extends Controller
         $perangkatDesa = PerangkatDesa::whereIn('user_id', $pemerintah->pluck('id'))->get();
         $dataWilayah = DataWilayah::whereIn('user_id', $pemerintah->pluck('id'))->get();
         $usahaDesa = UsahaDesa::whereIn('user_id', $pemerintah->pluck('id'))->get();
-        $saranaUmum = SaranaUmum::whereIn('user_id', $pemerintah->pluck('id'))->get();
+        // sertakan kategori agar bisa dipakai di response
+        $saranaUmum = SaranaUmum::with('kategori')
+            ->whereIn('user_id', $pemerintah->pluck('id'))
+            ->get();
         $kesenianBudaya = KesenianBudaya::whereIn('user_id', $pemerintah->pluck('id'))->get();
         $abdes = Abdes::whereIn('user_id', $pemerintah->pluck('id'))->get();
 
@@ -57,8 +61,50 @@ class PemerintahDesaController extends Controller
         
         // Klasifikasi & jenis dari barang warungku milik penduduk di desa tersebut
         $informasiUsahaIds = InformasiUsaha::where('villages_id', $villageId)->pluck('id');
-        $jenisIds = BarangWarungku::whereIn('informasi_usaha_id', $informasiUsahaIds)->distinct()->pluck('jenis_master_id');
-        $jenisMasters = WarungkuMaster::whereIn('id', $jenisIds)->get(['id','jenis','klasifikasi']);
+
+        // Hitung total barang per jenis (jenis_master_id) untuk seluruh InformasiUsaha di desa
+        $barangCountsByJenis = BarangWarungku::whereIn('informasi_usaha_id', $informasiUsahaIds)
+            ->select('jenis_master_id', DB::raw('COUNT(*) as total_barang'))
+            ->groupBy('jenis_master_id')
+            ->pluck('total_barang', 'jenis_master_id');
+
+        // Ambil master jenis yang hanya muncul pada data barang
+        $jenisMasters = WarungkuMaster::whereIn('id', $barangCountsByJenis->keys())
+            ->get(['id','jenis','klasifikasi'])
+            ->map(function ($master) use ($barangCountsByJenis) {
+                return [
+                    'id' => $master->id,
+                    'jenis' => $master->jenis,
+                    'klasifikasi' => $master->klasifikasi,
+                    'total_barang' => (int) ($barangCountsByJenis[$master->id] ?? 0),
+                ];
+            })
+            ->values();
+
+        // bangun struktur pengelompokan sarana umum per kategori
+        $saranaUmumByKategori = $saranaUmum
+            ->groupBy('kategori_sarana_id')
+            ->map(function ($items) {
+                $first = $items->first();
+                $kategori = optional($first->kategori);
+                return [
+                    'kategori' => [
+                        'id' => $kategori->id,
+                        'jenis_sarana' => $kategori->jenis_sarana ?? null,
+                        'kategori' => $kategori->kategori ?? null,
+                    ],
+                    'sarana' => $items->map(function ($s) {
+                        return [
+                            'id' => $s->id,
+                            'nama_sarana' => $s->nama_sarana,
+                            'tag_lokasi' => $s->tag_lokasi,
+                            'alamat' => $s->alamat,
+                            'kontak' => $s->kontak,
+                        ];
+                    })->values(),
+                ];
+            })
+            ->values();
 
         return response()->json([
             'desa' => [
@@ -69,7 +115,24 @@ class PemerintahDesaController extends Controller
             'perangkat_desa' => $perangkatDesa,
             'data_wilayah' => $dataWilayah,
             'usaha_desa' => $usahaDesa,
-            'sarana_umum' => $saranaUmum,
+            // sertakan kategori di tiap item untuk kemudahan konsumsi
+            'sarana_umum' => $saranaUmum->map(function ($s) {
+                return [
+                    'id' => $s->id,
+                    'user_id' => $s->user_id,
+                    'kategori_sarana_id' => $s->kategori_sarana_id,
+                    'nama_sarana' => $s->nama_sarana,
+                    'tag_lokasi' => $s->tag_lokasi,
+                    'alamat' => $s->alamat,
+                    'kontak' => $s->kontak,
+                    'kategori' => $s->kategori ? [
+                        'id' => $s->kategori->id,
+                        'jenis_sarana' => $s->kategori->jenis_sarana,
+                        'kategori' => $s->kategori->kategori,
+                    ] : null,
+                ];
+            }),
+            'sarana_umum_by_kategori' => $saranaUmumByKategori,
             'kesenian_budaya' => $kesenianBudaya,
             'abdes' => $abdes,
             'statistik_penduduk' => $genderStats,
