@@ -88,12 +88,6 @@
                     <input type="text" name="dusun" id="dusun" autocomplete="address-level5"
                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-lg p-2">
                 </div>
-
-                <div>
-                    <label for="rf_id_tag" class="block text-sm font-medium text-gray-700">RF ID Tag</label>
-                    <input type="text" name="rf_id_tag" id="rf_id_tag" autocomplete="off"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-lg p-2">
-                </div>
             </div>
 
             <!-- Daftar anggota keluarga yang sudah ada -->
@@ -668,8 +662,6 @@
                     country: document.getElementById('country').value,
                     foreign_postal_code: document.getElementById('foreign_postal_code').value,
 
-                    // RF ID Tag data
-                    rf_id_tag: document.getElementById('rf_id_tag').value,
                 };
             }
 
@@ -834,8 +826,6 @@
                         country: kkFormData.country,
                         foreign_postal_code: kkFormData.foreign_postal_code,
 
-                        // RF ID Tag (copied from KK data)
-                        rf_id_tag: kkFormData.rf_id_tag,
                     };
 
                     // Add to array and update JSON
@@ -879,8 +869,6 @@
                     country: document.getElementById('country').value,
                     foreign_postal_code: document.getElementById('foreign_postal_code').value,
 
-                    // RF ID Tag data
-                    rf_id_tag: document.getElementById('rf_id_tag').value,
                 };
 
                 localStorage.setItem('kkDetailData', JSON.stringify(kkData));
@@ -1050,8 +1038,6 @@
                             country: kkFormData.country,
                             foreign_postal_code: kkFormData.foreign_postal_code,
 
-                            // RF ID Tag data
-                            rf_id_tag: kkFormData.rf_id_tag,
                         };
 
                         // Check if this NIK is already in the array to avoid duplicates
@@ -1094,7 +1080,6 @@
                             state: kkFormData.state,
                             country: kkFormData.country,
                             foreign_postal_code: kkFormData.foreign_postal_code,
-                            rf_id_tag: kkFormData.rf_id_tag, // Tambahkan RF ID Tag
                         };
                     });
 

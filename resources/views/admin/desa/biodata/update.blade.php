@@ -289,16 +289,16 @@
                 <!-- Alamat -->
                 <div class="md:col-span-2">
                     <label for="address" class="block text-sm font-medium text-gray-700">Alamat <span class="text-red-500">*</span></label>
-                    <textarea id="address" name="address" autocomplete="off"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
+                    <textarea id="address" name="address" autocomplete="off" disabled
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2 bg-gray-100"
                         required>{{ $citizen['data']['address'] }}</textarea>
                 </div>
 
                 <!-- Provinsi -->
                 <div>
                     <label for="province_code" class="block text-sm font-medium text-gray-700">Provinsi <span class="text-red-500">*</span></label>
-                    <select id="province_code" name="province_code"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
+                    <select id="province_code" name="province_code" disabled
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2 bg-gray-100"
                         required>
                         <option value="">Pilih Provinsi</option>
                         @foreach ($provinces as $province)
@@ -312,8 +312,8 @@
                 <!-- Kabupaten -->
                 <div>
                     <label for="district_code" class="block text-sm font-medium text-gray-700">Kabupaten <span class="text-red-500">*</span></label>
-                    <select id="district_code" name="district_code"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
+                    <select id="district_code" name="district_code" disabled
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2 bg-gray-100"
                         required>
                         <option value="">Pilih Kabupaten</option>
                         @foreach($districts as $district)
@@ -327,8 +327,8 @@
                 <!-- Kecamatan -->
                 <div>
                     <label for="sub_district_code" class="block text-sm font-medium text-gray-700">Kecamatan <span class="text-red-500">*</span></label>
-                    <select id="sub_district_code" name="sub_district_code"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
+                    <select id="sub_district_code" name="sub_district_code" disabled
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2 bg-gray-100"
                         required>
                         <option value="">Pilih Kecamatan</option>
                         @foreach($subDistricts as $subDistrict)
@@ -342,8 +342,8 @@
                 <!-- Desa -->
                 <div>
                     <label for="village_code" class="block text-sm font-medium text-gray-700">Desa <span class="text-red-500">*</span></label>
-                    <select id="village_code" name="village_code"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
+                    <select id="village_code" name="village_code" disabled
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2 bg-gray-100"
                         required>
                         <option value="">Pilih Desa</option>
                         @foreach($villages as $village)
@@ -357,26 +357,26 @@
                 <!-- RT -->
                 <div>
                     <label for="rt" class="block text-sm font-medium text-gray-700">RT <span class="text-red-500">*</span></label>
-                    <input type="text" id="rt" name="rt" value="{{ $citizen['data']['rt'] }}"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
+                    <input type="text" id="rt" name="rt" value="{{ $citizen['data']['rt'] }}" disabled
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2 bg-gray-100"
                         required>
                 </div>
 
                 <!-- RW -->
                 <div>
                     <label for="rw" class="block text-sm font-medium text-gray-700">RW <span class="text-red-500">*</span></label>
-                    <input type="text" id="rw" name="rw" value="{{ $citizen['data']['rw'] }}"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
+                    <input type="text" id="rw" name="rw" value="{{ $citizen['data']['rw'] }}" disabled
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2 bg-gray-100"
                         required>
                 </div>
 
                 <!-- Kode Pos -->
                 <div>
                     <label for="postal_code" class="block text-sm font-medium text-gray-700">Kode Pos</label>
-                    <input type="text" id="postal_code" name="postal_code" maxlength="5"
+                    <input type="text" id="postal_code" name="postal_code" maxlength="5" disabled
                         value="{{ empty($citizen['data']['postal_code']) || $citizen['data']['postal_code'] == 0 ? '' : $citizen['data']['postal_code'] }}"
                         autocomplete="off"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2 bg-gray-100">
                 </div>
 
                 <!-- Nama Ayah -->
@@ -424,8 +424,8 @@
                 <!-- Dusun -->
                 <div>
                     <label for="hamlet" class="block text-sm font-medium text-gray-700">Dusun</label>
-                    <input type="text" id="hamlet" name="hamlet" value="{{ $citizen['data']['hamlet'] ?? '' }}"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
+                    <input type="text" id="hamlet" name="hamlet" value="{{ $citizen['data']['hamlet'] ?? '' }}" disabled
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2 bg-gray-100">
                 </div>
 
                 <!-- Koordinat -->
