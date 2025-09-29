@@ -41,7 +41,20 @@ class PemerintahDesaController extends Controller
         }
 
         // user pemerintah desa (tabel users) pada desa yang sama
-        $pemerintah = User::query()->where('villages_id', $villageId)->get(['id','nama','username','role','no_hp','foto_pengguna','province_id','districts_id','sub_districts_id','villages_id']);
+        $pemerintah = User::query()->where('villages_id', $villageId)->get([
+            'id',
+            'nama',
+            'username',
+            'role',
+            'no_hp',
+            'foto_pengguna',
+            'alamat',
+            'tag_lokasi',
+            'province_id',
+            'districts_id',
+            'sub_districts_id',
+            'villages_id'
+        ]);
 
         // entitas terkait user_id
         $kepalaDesa = KepalaDesa::whereIn('user_id', $pemerintah->pluck('id'))->get();
