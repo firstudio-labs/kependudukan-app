@@ -1397,6 +1397,20 @@ class CitizenService
 
     public function getEducationStatsByVillage($villageId)
     {
+        // Define all possible education categories based on the form options
+        $allEducationCategories = [
+            'tidak/belum sekolah',
+            'belum tamat sd/sederajat', 
+            'tamat sd/sederajat',
+            'sltp/smp/sederajat',
+            'slta/sma/sederajat',
+            'diploma i/ii',
+            'akademi/diploma iii/ sarjana muda',
+            'diploma iv/ strata i/ strata ii',
+            'strata iii',
+            'lainnya'
+        ];
+
         try {
             $response = Http::withHeaders([
                 'X-API-Key' => $this->apiKey,
@@ -1408,19 +1422,25 @@ class CitizenService
                 $citizens = collect($data['data'])
                     ->where('village_id', $villageId);
 
+                // Initialize all categories with 0
                 $groups = [];
+                foreach ($allEducationCategories as $category) {
+                    $groups[$category] = 0;
+                }
 
                 foreach ($citizens as $citizen) {
                     // Hanya gunakan kolom education_status dari Citizen Service
                     $edu = $citizen['education_status'] ?? null;
 
                     if (!$edu || (is_string($edu) && trim($edu) === '')) {
-                        $key = 'unknown';
+                        $key = 'tidak/belum sekolah'; // Default to first category instead of unknown
                     } else {
                         $key = $this->normalizeEducation((string) $edu);
                     }
 
-                    $groups[$key] = ($groups[$key] ?? 0) + 1;
+                    if (isset($groups[$key])) {
+                        $groups[$key]++;
+                    }
                 }
 
                 $total = array_sum($groups);
@@ -1439,20 +1459,41 @@ class CitizenService
 
     private function getEducationStatsByVillageFromLocal($villageId)
     {
+        // Define all possible education categories based on the form options
+        $allEducationCategories = [
+            'tidak/belum sekolah',
+            'belum tamat sd/sederajat', 
+            'tamat sd/sederajat',
+            'sltp/smp/sederajat',
+            'slta/sma/sederajat',
+            'diploma i/ii',
+            'akademi/diploma iii/ sarjana muda',
+            'diploma iv/ strata i/ strata ii',
+            'strata iii',
+            'lainnya'
+        ];
+
         try {
             $citizens = Penduduk::where('villages_id', $villageId)->get();
 
+            // Initialize all categories with 0
             $groups = [];
+            foreach ($allEducationCategories as $category) {
+                $groups[$category] = 0;
+            }
+
             foreach ($citizens as $citizen) {
-                // Fallback lokal: gunakan kolom education_status jika tersedia, jika tidak anggap unknown
+                // Fallback lokal: gunakan kolom education_status jika tersedia, jika tidak anggap tidak/belum sekolah
                 $edu = $citizen->education_status ?? null;
                 if (!$edu || (is_string($edu) && trim($edu) === '')) {
-                    $key = 'unknown';
+                    $key = 'tidak/belum sekolah'; // Default to first category instead of unknown
                 } else {
                     $key = $this->normalizeEducation((string) $edu);
                 }
 
-                $groups[$key] = ($groups[$key] ?? 0) + 1;
+                if (isset($groups[$key])) {
+                    $groups[$key]++;
+                }
             }
 
             $total = array_sum($groups);
@@ -1461,8 +1502,13 @@ class CitizenService
                 'total_with_education' => $total,
             ];
         } catch (\Exception $e) {
+            // Return all categories with 0 values even on error
+            $groups = [];
+            foreach ($allEducationCategories as $category) {
+                $groups[$category] = 0;
+            }
             return [
-                'groups' => [],
+                'groups' => $groups,
                 'total_with_education' => 0,
             ];
         }
@@ -1473,73 +1519,69 @@ class CitizenService
         $v = strtolower(trim($raw));
         $v = str_replace(['.', '  '], [' ', ' '], $v);
 
-        // Pemetaan umum ke kategori standar
+        // Pemetaan ke kategori yang sesuai dengan form options
         $map = [
-            'tidak sekolah' => 'tidak_sekolah',
-            'belum sekolah' => 'tidak_sekolah',
-            'paud' => 'paud_tk',
-            'tk' => 'paud_tk',
-            'ra' => 'paud_tk',
-            'sd' => 'sd',
-            'mi' => 'sd',
-            'smp' => 'smp',
-            'mts' => 'smp',
-            'sma' => 'sma_smk',
-            'smk' => 'sma_smk',
-            'ma' => 'sma_smk',
-            'd1' => 'd1_d3',
-            'd2' => 'd1_d3',
-            'd3' => 'd1_d3',
-            'd4' => 'sarjana',
-            's1' => 'sarjana',
-            'sarjana' => 'sarjana',
-            's2' => 'magister',
-            'magister' => 'magister',
-            's3' => 'doktor',
-            'doktor' => 'doktor',
-            'non formal' => 'non_formal',
-            'kursus' => 'non_formal',
+            'tidak/belum sekolah' => 'tidak/belum sekolah',
+            'tidak sekolah' => 'tidak/belum sekolah',
+            'belum sekolah' => 'tidak/belum sekolah',
+            'belum tamat sd/sederajat' => 'belum tamat sd/sederajat',
+            'belum tamat sd' => 'belum tamat sd/sederajat',
+            'tamat sd/sederajat' => 'tamat sd/sederajat',
+            'tamat sd' => 'tamat sd/sederajat',
+            'sltp/smp/sederajat' => 'sltp/smp/sederajat',
+            'smp' => 'sltp/smp/sederajat',
+            'mts' => 'sltp/smp/sederajat',
+            'slta/sma/sederajat' => 'slta/sma/sederajat',
+            'sma' => 'slta/sma/sederajat',
+            'smk' => 'slta/sma/sederajat',
+            'ma' => 'slta/sma/sederajat',
+            'diploma i/ii' => 'diploma i/ii',
+            'd1' => 'diploma i/ii',
+            'd2' => 'diploma i/ii',
+            'akademi/diploma iii/ sarjana muda' => 'akademi/diploma iii/ sarjana muda',
+            'd3' => 'akademi/diploma iii/ sarjana muda',
+            'akademi' => 'akademi/diploma iii/ sarjana muda',
+            'diploma iv/ strata i/ strata ii' => 'diploma iv/ strata i/ strata ii',
+            'd4' => 'diploma iv/ strata i/ strata ii',
+            's1' => 'diploma iv/ strata i/ strata ii',
+            'sarjana' => 'diploma iv/ strata i/ strata ii',
+            'strata iii' => 'strata iii',
+            's2' => 'strata iii',
+            's3' => 'strata iii',
+            'magister' => 'strata iii',
+            'doktor' => 'strata iii',
+            'lainnya' => 'lainnya',
         ];
 
-        // Normalisasi varian lazim
-        $aliases = [
-            'sd/sederajat' => 'sd',
-            'smp/sederajat' => 'smp',
-            'sma/sederajat' => 'sma_smk',
-            'smu' => 'sma_smk',
-            'stm' => 'sma_smk',
-            'stm/smk' => 'sma_smk',
-            'diploma i' => 'd1_d3',
-            'diploma ii' => 'd1_d3',
-            'diploma iii' => 'd1_d3',
-            'diploma iv' => 'sarjana',
-            'strata 1' => 'sarjana',
-            'strata 2' => 'magister',
-            'strata 3' => 'doktor',
-        ];
+        if (isset($map[$v])) return $map[$v];
 
-        if (isset($aliases[$v])) {
-            return $aliases[$v];
-        }
+        // Heuristik untuk variasi ejaan
+        if (str_contains($v, 'tidak') || str_contains($v, 'belum')) return 'tidak/belum sekolah';
+        if (str_contains($v, 'sd') && str_contains($v, 'belum')) return 'belum tamat sd/sederajat';
+        if (str_contains($v, 'sd') && !str_contains($v, 'belum')) return 'tamat sd/sederajat';
+        if (str_contains($v, 'smp') || str_contains($v, 'mts') || str_contains($v, 'sltp')) return 'sltp/smp/sederajat';
+        if (str_contains($v, 'sma') || str_contains($v, 'smk') || str_contains($v, 'ma') || str_contains($v, 'slta')) return 'slta/sma/sederajat';
+        if (str_contains($v, 'd1') || str_contains($v, 'd2')) return 'diploma i/ii';
+        if (str_contains($v, 'd3') || str_contains($v, 'akademi')) return 'akademi/diploma iii/ sarjana muda';
+        if (str_contains($v, 'd4') || str_contains($v, 's1') || str_contains($v, 'sarjana')) return 'diploma iv/ strata i/ strata ii';
+        if (str_contains($v, 's2') || str_contains($v, 's3') || str_contains($v, 'magister') || str_contains($v, 'doktor')) return 'strata iii';
 
-        if (isset($map[$v])) {
-            return $map[$v];
-        }
-
-        // Heuristik sederhana
-        if (preg_match('/^sma|^smk|^ma/', $v)) return 'sma_smk';
-        if (preg_match('/^sd| madrasah ibtida/', $v)) return 'sd';
-        if (preg_match('/^smp| madrasah tsanawi/', $v)) return 'smp';
-        if (preg_match('/^d[1-3]/', $v)) return 'd1_d3';
-        if (preg_match('/^(s1|sarjana|d4)/', $v)) return 'sarjana';
-        if (preg_match('/^(s2|magister)/', $v)) return 'magister';
-        if (preg_match('/^(s3|doktor)/', $v)) return 'doktor';
-
-        return $v !== '' ? $v : 'unknown';
+        return 'lainnya';
     }
 
     public function getReligionStatsByVillage($villageId)
     {
+        // Define all possible religion categories based on the form options
+        $allReligionCategories = [
+            'islam',
+            'kristen',
+            'katolik',
+            'hindu',
+            'buddha',
+            'konghucu',
+            'lainnya'
+        ];
+
         try {
             $response = Http::withHeaders([
                 'X-API-Key' => $this->apiKey,
@@ -1549,11 +1591,18 @@ class CitizenService
                 $data = $response->json();
                 $citizens = collect($data['data'])->where('village_id', $villageId);
 
+                // Initialize all categories with 0
                 $groups = [];
+                foreach ($allReligionCategories as $category) {
+                    $groups[$category] = 0;
+                }
+
                 foreach ($citizens as $citizen) {
                     $rel = $citizen['religion'] ?? $citizen['agama'] ?? null;
                     $key = $this->normalizeReligion((string) ($rel ?? ''));
-                    $groups[$key] = ($groups[$key] ?? 0) + 1;
+                    if (isset($groups[$key])) {
+                        $groups[$key]++;
+                    }
                 }
 
                 $total = array_sum($groups);
@@ -1571,13 +1620,32 @@ class CitizenService
 
     private function getReligionStatsByVillageFromLocal($villageId)
     {
+        // Define all possible religion categories based on the form options
+        $allReligionCategories = [
+            'islam',
+            'kristen',
+            'katolik',
+            'hindu',
+            'buddha',
+            'konghucu',
+            'lainnya'
+        ];
+
         try {
             $citizens = Penduduk::where('villages_id', $villageId)->get();
+            
+            // Initialize all categories with 0
             $groups = [];
+            foreach ($allReligionCategories as $category) {
+                $groups[$category] = 0;
+            }
+
             foreach ($citizens as $citizen) {
                 $rel = $citizen->religion ?? $citizen->agama ?? null;
                 $key = $this->normalizeReligion((string) ($rel ?? ''));
-                $groups[$key] = ($groups[$key] ?? 0) + 1;
+                if (isset($groups[$key])) {
+                    $groups[$key]++;
+                }
             }
             $total = array_sum($groups);
             return [
@@ -1585,8 +1653,13 @@ class CitizenService
                 'total_with_religion' => $total,
             ];
         } catch (\Exception $e) {
+            // Return all categories with 0 values even on error
+            $groups = [];
+            foreach ($allReligionCategories as $category) {
+                $groups[$category] = 0;
+            }
             return [
-                'groups' => [],
+                'groups' => $groups,
                 'total_with_religion' => 0,
             ];
         }
@@ -1595,7 +1668,7 @@ class CitizenService
     private function normalizeReligion(string $raw): string
     {
         $v = strtolower(trim($raw));
-        if ($v === '' || $v === 'null' || $v === '-') return 'unknown';
+        if ($v === '' || $v === 'null' || $v === '-') return 'lainnya';
 
         // normalisasi umum untuk agama di Indonesia
         $map = [
@@ -1611,6 +1684,7 @@ class CitizenService
             'budha' => 'buddha',
             'buddha' => 'buddha',
             'konghucu' => 'konghucu',
+            'kong hu cu' => 'konghucu',
             'confucian' => 'konghucu',
             'kepercayaan' => 'kepercayaan',
             'lainnya' => 'lainnya',
@@ -1626,7 +1700,7 @@ class CitizenService
         if (str_contains($v, 'bud')) return 'buddha';
         if (str_contains($v, 'kong') || str_contains($v, 'confuc')) return 'konghucu';
 
-        return $v !== '' ? $v : 'unknown';
+        return 'lainnya';
     }
     private function getGenderStatsByVillageFromLocal($villageId)
     {
