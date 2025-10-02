@@ -289,7 +289,7 @@
                 <!-- Alamat -->
                 <div class="md:col-span-2">
                     <label for="address" class="block text-sm font-medium text-gray-700">Alamat <span class="text-red-500">*</span></label>
-                    <textarea id="address" name="address" autocomplete="off" disabled
+                    <textarea id="address" name="address" autocomplete="off" readonly
                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2 bg-gray-100"
                         required>{{ $citizen['data']['address'] }}</textarea>
                 </div>
@@ -357,7 +357,7 @@
                 <!-- RT -->
                 <div>
                     <label for="rt" class="block text-sm font-medium text-gray-700">RT <span class="text-red-500">*</span></label>
-                    <input type="text" id="rt" name="rt" value="{{ $citizen['data']['rt'] }}" disabled
+                    <input type="text" id="rt" name="rt" value="{{ $citizen['data']['rt'] }}" readonly
                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2 bg-gray-100"
                         required>
                 </div>
@@ -365,7 +365,7 @@
                 <!-- RW -->
                 <div>
                     <label for="rw" class="block text-sm font-medium text-gray-700">RW <span class="text-red-500">*</span></label>
-                    <input type="text" id="rw" name="rw" value="{{ $citizen['data']['rw'] }}" disabled
+                    <input type="text" id="rw" name="rw" value="{{ $citizen['data']['rw'] }}" readonly
                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2 bg-gray-100"
                         required>
                 </div>
@@ -459,6 +459,7 @@
     <!-- Pass citizen data to JavaScript -->
     <script>
         window.citizenData = @json($citizen['data']);
+        window.allCitizens = @json($allCitizens ?? []);
     </script>
 
     <!-- Include JavaScript files -->

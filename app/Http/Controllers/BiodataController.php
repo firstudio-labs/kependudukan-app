@@ -424,6 +424,27 @@ class BiodataController extends Controller
         $subDistricts = $this->wilayahService->getKecamatan($citizen['data']['district_id']);
         $villages = $this->wilayahService->getDesa($citizen['data']['sub_district_id']);
 
+        // Get all citizens data for RFID scanning
+        $allCitizens = [];
+        try {
+            if (Auth::user()->role == 'admin desa') {
+                $villageId = Auth::user()->villages_id;
+                $response = $this->citizenServiceV2->getAllCitizensWithSearch(1, 10000, '', $villageId);
+            } else {
+                $response = $this->citizenServiceV2->getAllCitizensWithSearch(1, 10000, '');
+            }
+
+            if (isset($response['data']['citizens']) && is_array($response['data']['citizens'])) {
+                $allCitizens = $response['data']['citizens'];
+            } elseif (isset($response['citizens']) && is_array($response['citizens'])) {
+                $allCitizens = $response['citizens'];
+            } elseif (isset($response['data']) && is_array($response['data'])) {
+                $allCitizens = $response['data'];
+            }
+        } catch (\Exception $e) {
+            Log::error('Error loading citizens for RFID scanning: ' . $e->getMessage());
+        }
+
         if (Auth::user()->role == 'admin desa') {
             return view('admin.desa.biodata.update', compact(
                 'citizen',
@@ -431,7 +452,8 @@ class BiodataController extends Controller
                 'jobs',
                 'districts',
                 'subDistricts',
-                'villages'
+                'villages',
+                'allCitizens'
             ));
         }
 
@@ -441,7 +463,8 @@ class BiodataController extends Controller
             'jobs',
             'districts',
             'subDistricts',
-            'villages'
+            'villages',
+            'allCitizens'
         ));
     }
 

@@ -358,6 +358,285 @@ function setupLocationListeners(elements, fixedIds) {
     // All region selects will remain disabled and readonly
 }
 
+// Function to setup RF ID Tag listener for biodata update
+function setupRfIdTagListener() {
+    const rfIdInput = document.getElementById('rf_id_tag');
+    if (!rfIdInput) {
+        return;
+    }
+
+    // Remove any existing event listeners by cloning the element
+    const newRfIdInput = rfIdInput.cloneNode(true);
+    rfIdInput.parentNode.replaceChild(newRfIdInput, rfIdInput);
+
+    // Prevent form submission when Enter is pressed on RF ID input
+    newRfIdInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+    });
+
+    // Add input event listener with debouncing
+    let inputTimeout;
+    newRfIdInput.addEventListener('input', function() {
+        const rfIdValue = this.value.trim();
+
+        // Clear previous timeout
+        clearTimeout(inputTimeout);
+
+        if (rfIdValue.length > 0) {
+            // Set a timeout to process the RF ID after a short delay
+            inputTimeout = setTimeout(() => {
+                processRfIdValue(rfIdValue, newRfIdInput);
+            }, 300); // 300ms delay to prevent immediate processing
+        }
+    });
+
+    // Handle paste events with immediate processing
+    newRfIdInput.addEventListener('paste', function(e) {
+        e.preventDefault();
+        const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+        this.value = pastedText;
+
+        // Process immediately after paste
+        setTimeout(() => {
+            const rfIdValue = this.value.trim();
+            if (rfIdValue.length > 0) {
+                processRfIdValue(rfIdValue, newRfIdInput);
+            }
+        }, 100);
+    });
+
+    // Handle keyup events for RF ID scanner
+    newRfIdInput.addEventListener('keyup', function(e) {
+        // Prevent form submission on Enter
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+
+        const rfIdValue = this.value.trim();
+        if (rfIdValue.length > 0) {
+            // Clear previous timeout
+            clearTimeout(inputTimeout);
+
+            // Set a timeout to process the RF ID
+            inputTimeout = setTimeout(() => {
+                processRfIdValue(rfIdValue, newRfIdInput);
+            }, 200); // 200ms delay for keyup events
+        }
+    });
+}
+
+// Function to process RF ID value for biodata update
+function processRfIdValue(rfIdValue, inputElement) {
+    // Get all citizens data from the page
+    let allCitizens = [];
+
+    // Try to get citizens data from various sources
+    if (typeof window.allCitizens !== 'undefined' && Array.isArray(window.allCitizens)) {
+        allCitizens = window.allCitizens;
+    } else if (typeof window.citizens !== 'undefined' && Array.isArray(window.citizens)) {
+        allCitizens = window.citizens;
+    } else {
+        console.warn('Data citizens tidak tersedia untuk pencarian RF ID');
+        return;
+    }
+
+    // Cari data warga dengan RF ID Tag yang sama
+    const matchedCitizen = allCitizens.find(citizen => {
+        // Jika citizen tidak memiliki rf_id_tag, lewati
+        if (citizen.rf_id_tag === undefined || citizen.rf_id_tag === null) {
+            return false;
+        }
+
+        // Konversi ke string dan normalisasi
+        const normalizedInput = rfIdValue.toString().replace(/^0+/, '').trim();
+        const normalizedStored = citizen.rf_id_tag.toString().replace(/^0+/, '').trim();
+
+        // Cek kecocokan persis
+        const exactMatch = normalizedInput === normalizedStored;
+
+        // Cek kecocokan sebagian (jika input adalah bagian dari rf_id_tag)
+        const partialMatch = normalizedStored.includes(normalizedInput) && normalizedInput.length >= 5;
+
+        // Kembalikan true jika ada kecocokan persis atau sebagian
+        return exactMatch || partialMatch;
+    });
+
+    // Jika ditemukan, isi form
+    if (matchedCitizen) {
+        populateCitizenDataForUpdate(matchedCitizen);
+
+        // Feedback visual berhasil
+        $(inputElement).addClass('border-green-500').removeClass('border-red-500 border-gray-300');
+        setTimeout(() => {
+            $(inputElement).removeClass('border-green-500').addClass('border-gray-300');
+        }, 2000);
+    } else if (rfIdValue.length >= 5) {
+        // Feedback visual tidak ditemukan (hanya untuk input yang cukup panjang)
+        $(inputElement).addClass('border-red-500').removeClass('border-green-500 border-gray-300');
+        setTimeout(() => {
+            $(inputElement).removeClass('border-red-500').addClass('border-gray-300');
+        }, 2000);
+    }
+}
+
+// Function to populate citizen data for biodata update form
+function populateCitizenDataForUpdate(citizen) {
+    // Set NIK field
+    if (citizen.nik) {
+        const nikValue = citizen.nik.toString();
+        $('#nik').val(nikValue);
+    }
+
+    // Set full name field
+    if (citizen.full_name) {
+        $('#full_name').val(citizen.full_name);
+    }
+
+    // Set KK field
+    if (citizen.kk) {
+        $('#kk').val(citizen.kk.toString());
+    }
+
+    // Set address field
+    if (citizen.address) {
+        $('#address').val(citizen.address);
+    }
+
+    // Set RT field
+    if (citizen.rt) {
+        $('#rt').val(citizen.rt.toString());
+    }
+
+    // Set RW field
+    if (citizen.rw) {
+        $('#rw').val(citizen.rw.toString());
+    }
+
+    // Set birth place
+    if (citizen.birth_place) {
+        $('#birth_place').val(citizen.birth_place);
+    }
+
+    // Handle birth_date - reformatting if needed
+    if (citizen.birth_date) {
+        // Check if birth_date is in DD/MM/YYYY format and convert it
+        if (citizen.birth_date.includes('/')) {
+            const [day, month, year] = citizen.birth_date.split('/');
+            const formattedDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+            $('#birth_date').val(formattedDate);
+        } else {
+            $('#birth_date').val(citizen.birth_date);
+        }
+    }
+
+    // Set age
+    if (citizen.age) {
+        $('#age').val(citizen.age);
+    }
+
+    // Handle gender selection - convert string to numeric value
+    let gender = citizen.gender;
+    if (typeof gender === 'string') {
+        if (gender.toLowerCase() === 'laki-laki') {
+            gender = 1;
+        } else if (gender.toLowerCase() === 'perempuan') {
+            gender = 2;
+        }
+    }
+    if (gender) {
+        $('#gender').val(gender).trigger('change');
+    }
+
+    // Handle religion selection - convert string to numeric value
+    let religion = citizen.religion;
+    if (typeof religion === 'string') {
+        const religionMap = {
+            'islam': 1,
+            'kristen': 2,
+            'katholik': 3,
+            'hindu': 4,
+            'buddha': 5,
+            'kong hu cu': 6,
+            'lainnya': 7
+        };
+        religion = religionMap[religion.toLowerCase()] || '';
+    }
+    if (religion) {
+        $('#religion').val(religion).trigger('change');
+    }
+
+    // Handle citizen status conversion
+    let citizenStatus = citizen.citizen_status;
+    if (typeof citizenStatus === 'string') {
+        if (citizenStatus.toLowerCase() === 'wna') {
+            citizenStatus = 1;
+        } else if (citizenStatus.toLowerCase() === 'wni') {
+            citizenStatus = 2;
+        }
+    }
+    if (citizenStatus) {
+        $('#citizen_status').val(citizenStatus).trigger('change');
+    }
+
+    // Handle blood type
+    if (citizen.blood_type) {
+        $('#blood_type').val(citizen.blood_type).trigger('change');
+    }
+
+    // Handle family status
+    if (citizen.family_status) {
+        $('#family_status').val(citizen.family_status).trigger('change');
+    }
+
+    // Handle education status
+    if (citizen.education_status) {
+        $('#education_status').val(citizen.education_status).trigger('change');
+    }
+
+    // Handle job type
+    if (citizen.job_type_id) {
+        $('#job_type_id').val(citizen.job_type_id).trigger('change');
+    }
+
+    // Set parent information
+    if (citizen.father) {
+        $('#father').val(citizen.father);
+    }
+    if (citizen.mother) {
+        $('#mother').val(citizen.mother);
+    }
+    if (citizen.nik_father) {
+        $('#nik_father').val(citizen.nik_father);
+    }
+    if (citizen.nik_mother) {
+        $('#nik_mother').val(citizen.nik_mother);
+    }
+
+    // Set contact information
+    if (citizen.telephone) {
+        $('#telephone').val(citizen.telephone);
+    }
+    if (citizen.email) {
+        $('#email').val(citizen.email);
+    }
+
+    // Set hamlet
+    if (citizen.hamlet) {
+        $('#hamlet').val(citizen.hamlet);
+    }
+
+    // Set RF ID Tag field
+    if (citizen.rf_id_tag) {
+        $('#rf_id_tag').val(citizen.rf_id_tag.toString());
+    }
+}
+
 // Initialize the update page
 document.addEventListener('DOMContentLoaded', function() {
     // Get citizen data from hidden input or page variable
@@ -385,6 +664,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Set up location dropdown listeners (disabled for region fields)
     setupLocationListeners(elements, fixedIds);
+
+    // Setup RF ID Tag listener
+    setupRfIdTagListener();
 
     // Apply date formatting and force select values
     setTimeout(function() {
