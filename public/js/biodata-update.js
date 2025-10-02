@@ -231,14 +231,14 @@ function setSelectValueDirectly(selectId, value) {
     const valueMappings = {
         'gender': { 'Laki-Laki': '1', 'laki-laki': '1', 'Perempuan': '2', 'perempuan': '2' },
         'citizen_status': { 'WNA': '1', 'wna': '1', 'WNI': '2', 'wni': '2' },
-        'birth_certificate': { 'Ada': '1', 'ada': '1', 'Tidak Ada': '2', 'tidak ada': '2' },
+        'birth_certificate': { 'Ada': '1', 'ada': '1', 'Tidak Ada': '2', 'tidak ada': '2', 'ADA': '1', 'TIDAK ADA': '2' },
         'blood_type': { 'A': '1', 'B': '2', 'AB': '3', 'O': '4', 'A+': '5', 'A-': '6', 'B+': '7', 'B-': '8', 'AB+': '9', 'AB-': '10', 'O+': '11', 'O-': '12', 'Tidak Tahu': '13' },
         'religion': { 'Islam': '1', 'islam': '1', 'Kristen': '2', 'kristen': '2', 'Katholik': '3', 'katholik': '3', 'katolik': '3', 'Hindu': '4', 'hindu': '4', 'Buddha': '5', 'buddha': '5', 'Budha': '5', 'budha': '5', 'Kong Hu Cu': '6', 'kong hu cu': '6', 'konghucu': '6', 'Lainnya': '7', 'lainnya': '7' },
-        'marital_status': { 'Belum Kawin': '1', 'belum kawin': '1', 'Kawin Tercatat': '2', 'kawin tercatat': '2', 'Kawin Belum Tercatat': '3', 'kawin belum tercatat': '3', 'Cerai Hidup Tercatat': '4', 'cerai hidup tercatat': '4', 'Cerai Hidup Belum Tercatat': '5', 'cerai hidup belum tercatat': '5', 'Cerai Mati': '6', 'cerai mati': '6' },
-        'marital_certificate': { 'Ada': '1', 'ada': '1', 'Tidak Ada': '2', 'tidak ada': '2' },
-        'divorce_certificate': { 'Ada': '1', 'ada': '1', 'Tidak Ada': '2', 'tidak ada': '2' },
+        'marital_status': { 'Belum Kawin': '1', 'belum kawin': '1', 'Kawin Tercatat': '2', 'kawin tercatat': '2', 'Kawin Belum Tercatat': '3', 'kawin belum tercatat': '3', 'Cerai Hidup Tercatat': '4', 'cerai hidup tercatat': '4', 'Cerai Hidup Belum Tercatat': '5', 'cerai hidup belum tercatat': '5', 'Cerai Mati': '6', 'cerai mati': '6', 'BELUM KAWIN': '1', 'KAWIN TERCATAT': '2', 'KAWIN BELUM TERCATAT': '3', 'CERAI HIDUP TERCATAT': '4', 'CERAI HIDUP BELUM TERCATAT': '5', 'CERAI MATI': '6' },
+        'marital_certificate': { 'Ada': '1', 'ada': '1', 'Tidak Ada': '2', 'tidak ada': '2', 'ADA': '1', 'TIDAK ADA': '2' },
+        'divorce_certificate': { 'Ada': '1', 'ada': '1', 'Tidak Ada': '2', 'tidak ada': '2', 'ADA': '1', 'TIDAK ADA': '2' },
         'family_status': { 'ANAK': '1', 'Anak': '1', 'anak': '1', 'KEPALA KELUARGA': '2', 'Kepala Keluarga': '2', 'kepala keluarga': '2', 'ISTRI': '3', 'Istri': '3', 'istri': '3', 'ORANG TUA': '4', 'Orang Tua': '4', 'orang tua': '4', 'MERTUA': '5', 'Mertua': '5', 'mertua': '5', 'CUCU': '6', 'Cucu': '6', 'cucu': '6', 'FAMILI LAIN': '7', 'Famili Lain': '7', 'famili lain': '7' },
-        'mental_disorders': { 'Ada': '1', 'ada': '1', 'Tidak Ada': '2', 'tidak ada': '2' },
+        'mental_disorders': { 'Ada': '1', 'ada': '1', 'Tidak Ada': '2', 'tidak ada': '2', 'ADA': '1', 'TIDAK ADA': '2' },
         'disabilities': { 'Fisik': '1', 'fisik': '1', 'Netra/Buta': '2', 'netra/buta': '2', 'Rungu/Wicara': '3', 'rungu/wicara': '3', 'Mental/Jiwa': '4', 'mental/jiwa': '4', 'Fisik dan Mental': '5', 'fisik dan mental': '5', 'Lainnya': '6', 'lainnya': '6' },
         'education_status': { 'Tidak/Belum Sekolah': '1', 'tidak/belum sekolah': '1', 'Belum tamat SD/Sederajat': '2', 'belum tamat sd/sederajat': '2', 'Tamat SD': '3', 'tamat sd': '3', 'SLTP/SMP/Sederajat': '4', 'sltp/smp/sederajat': '4', 'SLTA/SMA/Sederajat': '5', 'slta/sma/sederajat': '5', 'Diploma I/II': '6', 'diploma i/ii': '6', 'Akademi/Diploma III/ Sarjana Muda': '7', 'akademi/diploma iii/ sarjana muda': '7', 'Diploma IV/ Strata I/ Strata II': '8', 'diploma iv/ strata i/ strata ii': '8', 'Strata III': '9', 'strata iii': '9', 'Lainnya': '10', 'lainnya': '10' }
     };
@@ -540,68 +540,39 @@ function populateCitizenDataForUpdate(citizen) {
         $('#age').val(citizen.age);
     }
 
-    // Handle gender selection - convert string to numeric value
-    let gender = citizen.gender;
-    if (typeof gender === 'string') {
-        if (gender.toLowerCase() === 'laki-laki') {
-            gender = 1;
-        } else if (gender.toLowerCase() === 'perempuan') {
-            gender = 2;
-        }
-    }
-    if (gender) {
-        $('#gender').val(gender).trigger('change');
+    // Handle gender selection
+    if (citizen.gender) {
+        setSelectValueDirectly('gender', citizen.gender);
     }
 
-    // Handle religion selection - convert string to numeric value
-    let religion = citizen.religion;
-    if (typeof religion === 'string') {
-        const religionMap = {
-            'islam': 1,
-            'kristen': 2,
-            'katholik': 3,
-            'hindu': 4,
-            'buddha': 5,
-            'kong hu cu': 6,
-            'lainnya': 7
-        };
-        religion = religionMap[religion.toLowerCase()] || '';
-    }
-    if (religion) {
-        $('#religion').val(religion).trigger('change');
+    // Handle religion selection
+    if (citizen.religion) {
+        setSelectValueDirectly('religion', citizen.religion);
     }
 
-    // Handle citizen status conversion
-    let citizenStatus = citizen.citizen_status;
-    if (typeof citizenStatus === 'string') {
-        if (citizenStatus.toLowerCase() === 'wna') {
-            citizenStatus = 1;
-        } else if (citizenStatus.toLowerCase() === 'wni') {
-            citizenStatus = 2;
-        }
-    }
-    if (citizenStatus) {
-        $('#citizen_status').val(citizenStatus).trigger('change');
+    // Handle citizen status
+    if (citizen.citizen_status) {
+        setSelectValueDirectly('citizen_status', citizen.citizen_status);
     }
 
     // Handle blood type
     if (citizen.blood_type) {
-        $('#blood_type').val(citizen.blood_type).trigger('change');
+        setSelectValueDirectly('blood_type', citizen.blood_type);
     }
 
     // Handle family status
     if (citizen.family_status) {
-        $('#family_status').val(citizen.family_status).trigger('change');
+        setSelectValueDirectly('family_status', citizen.family_status);
     }
 
     // Handle education status
     if (citizen.education_status) {
-        $('#education_status').val(citizen.education_status).trigger('change');
+        setSelectValueDirectly('education_status', citizen.education_status);
     }
 
     // Handle job type
     if (citizen.job_type_id) {
-        $('#job_type_id').val(citizen.job_type_id).trigger('change');
+        setSelectValueDirectly('job_type_id', citizen.job_type_id);
     }
 
     // Set parent information
@@ -634,6 +605,80 @@ function populateCitizenDataForUpdate(citizen) {
     // Set RF ID Tag field
     if (citizen.rf_id_tag) {
         $('#rf_id_tag').val(citizen.rf_id_tag.toString());
+    }
+
+    // Handle birth certificate
+    if (citizen.birth_certificate) {
+        setSelectValueDirectly('birth_certificate', citizen.birth_certificate);
+    }
+
+    // Set birth certificate number
+    if (citizen.birth_certificate_no) {
+        $('#birth_certificate_no').val(citizen.birth_certificate_no);
+    }
+
+    // Handle marital status
+    if (citizen.marital_status) {
+        setSelectValueDirectly('marital_status', citizen.marital_status);
+    }
+
+    // Handle marital certificate
+    if (citizen.marital_certificate) {
+        setSelectValueDirectly('marital_certificate', citizen.marital_certificate);
+    }
+
+    // Set marital certificate number
+    if (citizen.marital_certificate_no) {
+        $('#marital_certificate_no').val(citizen.marital_certificate_no);
+    }
+
+    // Handle marriage date
+    if (citizen.marriage_date) {
+        // Check if marriage_date is in DD/MM/YYYY format and convert it
+        if (citizen.marriage_date.includes('/')) {
+            const [day, month, year] = citizen.marriage_date.split('/');
+            const formattedDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+            $('#marriage_date').val(formattedDate);
+        } else {
+            $('#marriage_date').val(citizen.marriage_date);
+        }
+    }
+
+    // Handle divorce certificate
+    if (citizen.divorce_certificate) {
+        setSelectValueDirectly('divorce_certificate', citizen.divorce_certificate);
+    }
+
+    // Set divorce certificate number
+    if (citizen.divorce_certificate_no) {
+        $('#divorce_certificate_no').val(citizen.divorce_certificate_no);
+    }
+
+    // Handle divorce certificate date
+    if (citizen.divorce_certificate_date) {
+        // Check if divorce_certificate_date is in DD/MM/YYYY format and convert it
+        if (citizen.divorce_certificate_date.includes('/')) {
+            const [day, month, year] = citizen.divorce_certificate_date.split('/');
+            const formattedDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+            $('#divorce_certificate_date').val(formattedDate);
+        } else {
+            $('#divorce_certificate_date').val(citizen.divorce_certificate_date);
+        }
+    }
+
+    // Handle mental disorders
+    if (citizen.mental_disorders) {
+        setSelectValueDirectly('mental_disorders', citizen.mental_disorders);
+    }
+
+    // Handle disabilities
+    if (citizen.disabilities !== undefined && citizen.disabilities !== null) {
+        setSelectValueDirectly('disabilities', citizen.disabilities);
+    }
+
+    // Set postal code
+    if (citizen.postal_code) {
+        $('#postal_code').val(citizen.postal_code);
     }
 }
 
