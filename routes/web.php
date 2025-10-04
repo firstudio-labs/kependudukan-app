@@ -139,8 +139,8 @@ Route::middleware(['auth:web', 'role:superadmin'])->group(function () {
     Route::get('/superadmin/masterdata/kk', [DataKKController::class, 'masterdata'])->name('superadmin.masterdata.kk');
     Route::get('/superadmin/datakk/create', [DataKKController::class, 'create'])->name('superadmin.datakk.create');
     Route::post('/kk', [DataKKController::class, 'store'])->name('kk.store');
-    Route::get('/superadmin/datakk/{id}/edit', [DataKKController::class, 'edit'])->name('superadmin.datakk.update');
-    Route::put('/kk/{id}', [DataKKController::class, 'update'])->name('kk.update');
+    Route::get('/superadmin/datakk/{kk}/edit', [DataKKController::class, 'edit'])->name('superadmin.datakk.update');
+    Route::put('/kk/{kk}', [DataKKController::class, 'update'])->name('kk.update');
     Route::delete('/datakk/{id}', [DataKKController::class, 'destroy'])->name('superadmin.destroy');
     Route::get('/superadmin/datamaster/job/index', [JobController::class, 'index'])->name('superadmin.datamaster.job.index');
     Route::get('/superadmin/datamaster/job/create', [JobController::class, 'create'])->name('superadmin.datamaster.job.create');

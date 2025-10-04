@@ -171,8 +171,9 @@ class CitizenService
             $nik = (int) $nik;
 
             // For coordinate-only or coordinate+address updates, we need to get existing data first
-            if ((count($data) === 1 && isset($data['coordinate'])) || 
-                (count($data) === 2 && isset($data['coordinate']) && isset($data['address']))) {
+            if ((count($data) === 1 && isset($data['coordinate'])) ||
+                (count($data) === 2 && isset($data['coordinate']) && isset($data['address']))
+            ) {
                 Log::info('Coordinate/address update - getting existing data first', [
                     'nik' => $nik,
                     'coordinate' => $data['coordinate'],
@@ -197,13 +198,13 @@ class CitizenService
                 if (isset($data['address'])) {
                     $updateData['address'] = $data['address'];
                 }
-                
+
                 // Filter out problematic fields that might cause JSON parsing issues
                 $excludeFields = ['id', 'status', 'rf_id_tag', 'telephone', 'email', 'hamlet', 'foreign_address', 'city', 'state', 'country', 'foreign_postal_code', 'birth_certificate_no', 'marital_certificate_no', 'marriage_date', 'divorce_certificate_no', 'divorce_certificate_date', 'nik_mother', 'mother', 'nik_father', 'father', 'disabilities'];
                 foreach ($excludeFields as $field) {
                     unset($updateData[$field]);
                 }
-                
+
                 // Normalize data to numeric format for API
                 $updateData = $this->normalizeDataForApi($updateData);
 
@@ -259,7 +260,7 @@ class CitizenService
                         'response_headers' => $response->headers(),
                         'request_data_size' => strlen(json_encode($updateData))
                     ]);
-                    
+
                     // Try to parse error message
                     $errorMessage = 'Unknown error';
                     try {
@@ -272,7 +273,7 @@ class CitizenService
                     } catch (\Exception $e) {
                         $errorMessage = $responseBody;
                     }
-                    
+
                     return [
                         'status' => 'ERROR',
                         'message' => 'Failed to update coordinate: ' . $errorMessage
@@ -281,7 +282,7 @@ class CitizenService
             }
 
             // Filter out empty values and ensure data is clean
-            $cleanData = array_filter($data, function($value) {
+            $cleanData = array_filter($data, function ($value) {
                 return $value !== null && $value !== '' && $value !== 'null';
             });
 
@@ -353,7 +354,7 @@ class CitizenService
             } else {
                 $errorBody = $response->body();
                 $statusCode = $response->status();
-                
+
                 Log::error('API request failed when updating citizen', [
                     'nik' => $nik,
                     'status_code' => $statusCode,
@@ -376,7 +377,7 @@ class CitizenService
                 }
 
                 return [
-                    'status' => 'ERROR', 
+                    'status' => 'ERROR',
                     'message' => "API request failed with status {$statusCode}: {$errorMessage}"
                 ];
             }
@@ -386,9 +387,9 @@ class CitizenService
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             return [
-                'status' => 'ERROR', 
+                'status' => 'ERROR',
                 'message' => 'Error updating citizen: ' . $e->getMessage()
             ];
         }
@@ -562,8 +563,8 @@ class CitizenService
                     $searchLower = strtolower($search);
                     $allCitizens = collect($allCitizens)->filter(function ($citizen) use ($searchLower) {
                         return str_contains(strtolower($citizen['full_name'] ?? ''), $searchLower) ||
-                               str_contains((string) ($citizen['nik'] ?? ''), $searchLower) ||
-                               str_contains((string) ($citizen['kk'] ?? ''), $searchLower);
+                            str_contains((string) ($citizen['nik'] ?? ''), $searchLower) ||
+                            str_contains((string) ($citizen['kk'] ?? ''), $searchLower);
                     })->values()->all();
                 }
 
@@ -632,8 +633,8 @@ class CitizenService
                     $searchLower = strtolower($search);
                     $filtered = $filtered->filter(function ($citizen) use ($searchLower) {
                         return str_contains(strtolower($citizen['full_name']), $searchLower) ||
-                               str_contains((string) $citizen['nik'], $searchLower) ||
-                               str_contains((string) $citizen['kk'], $searchLower); // Tambahkan search KK
+                            str_contains((string) $citizen['nik'], $searchLower) ||
+                            str_contains((string) $citizen['kk'], $searchLower); // Tambahkan search KK
                     });
                 }
 
@@ -657,7 +658,6 @@ class CitizenService
                         ],
                     ]
                 ];
-
             } else {
                 Log::error('API request failed when fetching citizens by village ID', [
                     'status_code' => $response->status(),
@@ -696,19 +696,19 @@ class CitizenService
         }
 
         // Filter warga berdasarkan village_id atau villages_id
-        $filteredCitizens = array_filter($allCitizens, function($citizen) use ($villageId) {
+        $filteredCitizens = array_filter($allCitizens, function ($citizen) use ($villageId) {
             // Cek kedua kolom yang mungkin ada
             return (isset($citizen['villages_id']) && $citizen['villages_id'] == $villageId) ||
-                   (isset($citizen['village_id']) && $citizen['village_id'] == $villageId);
+                (isset($citizen['village_id']) && $citizen['village_id'] == $villageId);
         });
 
         // Tambahkan filter pencarian jika parameter search diisi
         if ($search) {
             $searchLower = strtolower($search);
-            $filteredCitizens = array_filter($filteredCitizens, function($citizen) use ($searchLower) {
+            $filteredCitizens = array_filter($filteredCitizens, function ($citizen) use ($searchLower) {
                 return str_contains(strtolower($citizen['full_name'] ?? ''), $searchLower) ||
-                       str_contains((string) ($citizen['nik'] ?? ''), $searchLower) ||
-                       str_contains((string) ($citizen['kk'] ?? ''), $searchLower); // Tambahkan search KK
+                    str_contains((string) ($citizen['nik'] ?? ''), $searchLower) ||
+                    str_contains((string) ($citizen['kk'] ?? ''), $searchLower); // Tambahkan search KK
             });
         }
 
@@ -794,7 +794,7 @@ class CitizenService
         }
 
         // Filter warga berdasarkan village_name
-        $filteredCitizens = array_filter($allCitizens, function($citizen) use ($villageName) {
+        $filteredCitizens = array_filter($allCitizens, function ($citizen) use ($villageName) {
             // Pencocokan nama desa
             if (isset($citizen['village_name'])) {
                 return strtolower($citizen['village_name']) == strtolower($villageName);
@@ -851,7 +851,6 @@ class CitizenService
             foreach ($cachePatterns as $pattern) {
                 $this->clearCacheByPattern($pattern);
             }
-
         } catch (\Exception $e) {
             Log::error('Error clearing citizen caches: ' . $e->getMessage());
         }
@@ -863,34 +862,76 @@ class CitizenService
     private function normalizeDataForApi($data)
     {
         $normalized = $data;
-        
+
         // Use the same mapping as BiodataController for consistency
         $genderMap = [
-            'Laki-Laki' => 1, 'Laki-laki' => 1, 'Perempuan' => 2,
-            'laki-laki' => 1, 'laki-laki' => 1, 'perempuan' => 2,
-            'LAKI-LAKI' => 1, 'PEREMPUAN' => 2
+            'Laki-Laki' => 1,
+            'Laki-laki' => 1,
+            'Perempuan' => 2,
+            'laki-laki' => 1,
+            'laki-laki' => 1,
+            'perempuan' => 2,
+            'LAKI-LAKI' => 1,
+            'PEREMPUAN' => 2
         ];
         $citizenStatusMap = ['WNI' => 2, 'WNA' => 1, 'wni' => 2, 'wna' => 1];
         $certificateMap = [
-            'Ada' => 1, 'Tidak Ada' => 2,
-            'ada' => 1, 'tidak ada' => 2,
-            'ADA' => 1, 'TIDAK ADA' => 2
+            'Ada' => 1,
+            'Tidak Ada' => 2,
+            'ada' => 1,
+            'tidak ada' => 2,
+            'ADA' => 1,
+            'TIDAK ADA' => 2
         ];
         $bloodTypeMap = [
-            'A' => 1, 'B' => 2, 'AB' => 3, 'O' => 4,
-            'A+' => 5, 'A-' => 6, 'B+' => 7, 'B-' => 8,
-            'AB+' => 9, 'AB-' => 10, 'O+' => 11, 'O-' => 12, 'Tidak Tahu' => 13,
-            'a' => 1, 'b' => 2, 'ab' => 3, 'o' => 4,
-            'a+' => 5, 'a-' => 6, 'b+' => 7, 'b-' => 8,
-            'ab+' => 9, 'ab-' => 10, 'o+' => 11, 'o-' => 12, 'tidak tahu' => 13
+            'A' => 1,
+            'B' => 2,
+            'AB' => 3,
+            'O' => 4,
+            'A+' => 5,
+            'A-' => 6,
+            'B+' => 7,
+            'B-' => 8,
+            'AB+' => 9,
+            'AB-' => 10,
+            'O+' => 11,
+            'O-' => 12,
+            'Tidak Tahu' => 13,
+            'a' => 1,
+            'b' => 2,
+            'ab' => 3,
+            'o' => 4,
+            'a+' => 5,
+            'a-' => 6,
+            'b+' => 7,
+            'b-' => 8,
+            'ab+' => 9,
+            'ab-' => 10,
+            'o+' => 11,
+            'o-' => 12,
+            'tidak tahu' => 13
         ];
         $religionMap = [
-            'Islam' => 1, 'Kristen' => 2, 'Katolik' => 3, 'Katholik' => 3,
-            'Hindu' => 4, 'Buddha' => 5, 'Budha' => 5,
-            'Kong Hu Cu' => 6, 'Konghucu' => 6, 'Lainnya' => 7,
-            'islam' => 1, 'kristen' => 2, 'katolik' => 3, 'katholik' => 3,
-            'hindu' => 4, 'buddha' => 5, 'budha' => 5,
-            'kong hu cu' => 6, 'konghucu' => 6, 'lainnya' => 7
+            'Islam' => 1,
+            'Kristen' => 2,
+            'Katolik' => 3,
+            'Katholik' => 3,
+            'Hindu' => 4,
+            'Buddha' => 5,
+            'Budha' => 5,
+            'Kong Hu Cu' => 6,
+            'Konghucu' => 6,
+            'Lainnya' => 7,
+            'islam' => 1,
+            'kristen' => 2,
+            'katolik' => 3,
+            'katholik' => 3,
+            'hindu' => 4,
+            'buddha' => 5,
+            'budha' => 5,
+            'kong hu cu' => 6,
+            'konghucu' => 6,
+            'lainnya' => 7
         ];
         $maritalStatusMap = [
             'Belum Kawin' => 1,
@@ -907,14 +948,30 @@ class CitizenService
             'CERAI MATI' => 6
         ];
         $familyStatusMap = [
-            'ANAK' => 1, 'Anak' => 1, 'anak' => 1,
-            'KEPALA KELUARGA' => 2, 'Kepala Keluarga' => 2, 'kepala keluarga' => 2,
-            'ISTRI' => 3, 'Istri' => 3, 'istri' => 3,
-            'ORANG TUA' => 4, 'Orang Tua' => 4, 'orang tua' => 4,
-            'MERTUA' => 5, 'Mertua' => 5, 'mertua' => 5,
-            'CUCU' => 6, 'Cucu' => 6, 'cucu' => 6,
-            'FAMILI LAIN' => 7, 'Famili Lain' => 7, 'famili lain' => 7,
-            'LAINNYA' => 7, 'Lainnya' => 7, 'lainnya' => 7
+            'ANAK' => 1,
+            'Anak' => 1,
+            'anak' => 1,
+            'KEPALA KELUARGA' => 2,
+            'Kepala Keluarga' => 2,
+            'kepala keluarga' => 2,
+            'ISTRI' => 3,
+            'Istri' => 3,
+            'istri' => 3,
+            'ORANG TUA' => 4,
+            'Orang Tua' => 4,
+            'orang tua' => 4,
+            'MERTUA' => 5,
+            'Mertua' => 5,
+            'mertua' => 5,
+            'CUCU' => 6,
+            'Cucu' => 6,
+            'cucu' => 6,
+            'FAMILI LAIN' => 7,
+            'Famili Lain' => 7,
+            'famili lain' => 7,
+            'LAINNYA' => 7,
+            'Lainnya' => 7,
+            'lainnya' => 7
         ];
         $educationStatusMap = [
             'Tidak/Belum Sekolah' => 1,
@@ -974,12 +1031,12 @@ class CitizenService
                 }
             }
         }
-        
+
         // Convert KK to integer if exists
         if (isset($normalized['kk'])) {
             $normalized['kk'] = (int) $normalized['kk'];
         }
-        
+
         // Ensure numeric fields are properly typed
         $numericFields = ['age', 'province_id', 'district_id', 'sub_district_id', 'village_id', 'job_type_id'];
         foreach ($numericFields as $field) {
@@ -987,7 +1044,7 @@ class CitizenService
                 $normalized[$field] = (int) $normalized[$field];
             }
         }
-        
+
         // Only add required fields if they are completely missing (not just empty)
         // This preserves existing data and only adds truly missing fields
         $requiredFields = [
@@ -1003,7 +1060,7 @@ class CitizenService
             'family_status' => 2,
             'job_type_id' => 1
         ];
-        
+
         foreach ($requiredFields as $field => $defaultValue) {
             // Only add default if field is completely missing or null
             if (!isset($normalized[$field]) || $normalized[$field] === null) {
@@ -1011,7 +1068,7 @@ class CitizenService
                 Log::info("Added missing required field: {$field} = {$defaultValue}");
             }
         }
-        
+
         return $normalized;
     }
 
@@ -1037,7 +1094,6 @@ class CitizenService
             Cache::forget('citizens_all_1_100');
             Cache::forget('citizens_all_1_1000');
             Cache::forget('citizens_all_1_10000');
-
         } catch (\Exception $e) {
             Log::error('Error clearing cache pattern: ' . $e->getMessage());
         }
@@ -1059,7 +1115,6 @@ class CitizenService
             foreach ($cacheKeys as $key) {
                 Cache::forget($key);
             }
-
         } catch (\Exception $e) {
             Log::error('Error clearing cache by NIK: ' . $e->getMessage());
         }
@@ -1083,15 +1138,15 @@ class CitizenService
 
             if ($response->successful()) {
                 $data = $response->json();
-                
+
                 if (isset($data['display_name'])) {
                     // Format alamat yang lebih mudah dibaca
                     $address = $data['display_name'];
-                    
+
                     // Coba ambil komponen alamat yang lebih spesifik
                     $addressComponents = $data['address'] ?? [];
                     $formattedAddress = '';
-                    
+
                     // Bangun alamat dari komponen yang tersedia
                     if (isset($addressComponents['house_number'])) {
                         $formattedAddress .= $addressComponents['house_number'] . ', ';
@@ -1117,14 +1172,14 @@ class CitizenService
                     if (isset($addressComponents['country'])) {
                         $formattedAddress .= $addressComponents['country'];
                     }
-                    
+
                     // Bersihkan koma di akhir
                     $formattedAddress = rtrim($formattedAddress, ', ');
-                    
+
                     return $formattedAddress ?: $address;
                 }
             }
-            
+
             return "Koordinat: {$latitude}, {$longitude}";
         } catch (\Exception $e) {
             Log::error('Error getting address from coordinates: ' . $e->getMessage());
@@ -1140,7 +1195,7 @@ class CitizenService
         try {
             // Ambil data keluarga dari API
             $familyData = $this->getFamilyMembersByKK($kk);
-            
+
             if (!$familyData || !isset($familyData['data'])) {
                 Log::warning('No family data found for KK: ' . $kk);
                 return [
@@ -1154,7 +1209,7 @@ class CitizenService
 
             foreach ($members as $member) {
                 $memberData = $member;
-                
+
                 // Pastikan NIK ada
                 if (!isset($member['nik']) || empty($member['nik'])) {
                     Log::warning('Member without NIK found: ' . json_encode($member));
@@ -1163,16 +1218,16 @@ class CitizenService
                     $membersWithLocation[] = $memberData;
                     continue;
                 }
-                
+
                 // Ambil data lokasi dari database lokal jika ada
                 $penduduk = Penduduk::where('nik', $member['nik'])->first();
-                
+
                 if ($penduduk && $penduduk->tag_lokasi) {
                     $coordinates = explode(',', $penduduk->tag_lokasi);
                     if (count($coordinates) >= 2) {
                         $lat = trim($coordinates[0]);
                         $lng = trim($coordinates[1]);
-                        
+
                         // Validasi koordinat
                         if (is_numeric($lat) && is_numeric($lng)) {
                             // Konversi koordinat ke alamat
@@ -1191,7 +1246,7 @@ class CitizenService
                     $memberData['location_address'] = 'Belum ada lokasi';
                     $memberData['coordinates'] = null;
                 }
-                
+
                 $membersWithLocation[] = $memberData;
             }
 
@@ -1218,14 +1273,14 @@ class CitizenService
 
             if ($response->successful()) {
                 $data = $response->json();
-                
+
                 $citizens = collect($data['data'])
                     ->where('village_id', $villageId);
 
                 // Count male with various gender formats
                 $maleCount = $citizens->filter(function ($citizen) {
                     $gender = strtolower(trim($citizen['gender'] ?? ''));
-                return in_array($gender, ['l', 'laki-laki', 'Laki-laki', 'LAKI-LAKI, laki laki','LAKI LAKI','Laki laki', 'male', 'm']);
+                    return in_array($gender, ['l', 'laki-laki', 'Laki-laki', 'LAKI-LAKI, laki laki', 'LAKI LAKI', 'Laki laki', 'male', 'm']);
                 })->count();
 
                 // Count female with various gender formats
@@ -1244,7 +1299,7 @@ class CitizenService
                     'status_code' => $response->status(),
                     'village_id' => $villageId
                 ]);
-                
+
                 // Fallback to local database if API fails
                 return $this->getGenderStatsByVillageFromLocal($villageId);
             }
@@ -1400,7 +1455,7 @@ class CitizenService
         // Define all possible education categories based on the form options
         $allEducationCategories = [
             'tidak/belum sekolah',
-            'belum tamat sd/sederajat', 
+            'belum tamat sd/sederajat',
             'tamat sd/sederajat',
             'sltp/smp/sederajat',
             'slta/sma/sederajat',
@@ -1462,7 +1517,7 @@ class CitizenService
         // Define all possible education categories based on the form options
         $allEducationCategories = [
             'tidak/belum sekolah',
-            'belum tamat sd/sederajat', 
+            'belum tamat sd/sederajat',
             'tamat sd/sederajat',
             'sltp/smp/sederajat',
             'slta/sma/sederajat',
@@ -1633,7 +1688,7 @@ class CitizenService
 
         try {
             $citizens = Penduduk::where('villages_id', $villageId)->get();
-            
+
             // Initialize all categories with 0
             $groups = [];
             foreach ($allReligionCategories as $category) {
@@ -1706,17 +1761,17 @@ class CitizenService
     {
         try {
             $citizens = Penduduk::where('villages_id', $villageId)->get();
-            
+
             // Count male with various gender formats
             $maleCount = $citizens->filter(function ($citizen) {
                 $gender = strtolower(trim($citizen->gender ?? ''));
-                return in_array($gender, ['l', 'laki-laki', 'Laki-laki', 'LAKI-LAKI, laki laki','LAKI LAKI','Laki laki', 'male', 'm']);
+                return in_array($gender, ['l', 'laki-laki', 'Laki-laki', 'LAKI-LAKI, laki laki', 'LAKI LAKI', 'Laki laki', 'male', 'm']);
             })->count();
 
             // Count female with various gender formats
             $femaleCount = $citizens->filter(function ($citizen) {
                 $gender = strtolower(trim($citizen->gender ?? ''));
-                return in_array($gender, ['p', 'perempuan','Perempuan','PEREMPUAN', 'female', 'f']);
+                return in_array($gender, ['p', 'perempuan', 'Perempuan', 'PEREMPUAN', 'female', 'f']);
             })->count();
 
             return [
@@ -1734,4 +1789,3 @@ class CitizenService
         }
     }
 }
-

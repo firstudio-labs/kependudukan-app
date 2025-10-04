@@ -59,7 +59,7 @@ class CitizenServiceV2
             $url = "{$this->baseUrl}/api/v2/family-heads?page={$page}&items_per_page={$limit}&search={$search}";
             if ($vilage_id) {
                 $url .= "&village_id={$vilage_id}";
-            }   
+            }
             $response = Http::withHeaders([
                 'X-API-Key' => $this->apiKey,
             ])->get($url);
@@ -88,4 +88,90 @@ class CitizenServiceV2
         }
     }
 
+    public function getHeadOfFamilyByKk($kk)
+    {
+        try {
+            $response = Http::withHeaders([
+                'X-API-Key' => $this->apiKey,
+            ])->get("{$this->baseUrl}/api/v2/family-heads-by-kk/{$kk}");
+
+            if ($response->successful()) {
+                return $response->json();
+            } else {
+                Log::error('API request failed: ' . $response->status());
+                return null;
+            }
+
+            Log::error('API request failed: ' . $response->status());
+            return null;
+        } catch (\Illuminate\Http\Client\RequestException $e) {
+            Log::error('HTTP request exception in getHeadOfFamilyByKk: ' . $e->getMessage());
+            return null;
+        } catch (\Exception $e) {
+            Log::error('Error fetching head of family by KK: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    public function updateCitizenByKK(string $kk, $data): array
+    {
+        try {
+            $url = "{$this->baseUrl}/api/v2/citizen-by-kk/{$kk}";
+
+            $numericFields = ['province_id', 'district_id', 'sub_district_id', 'village_id', 'postal_code'];
+            foreach ($numericFields as $field) {
+                if (isset($data[$field])) {
+                    $data[$field] = is_numeric($data[$field]) ? (int) $data[$field] : null;
+                }
+            }
+
+            $response = Http::withHeaders([
+                'Accept' => 'application/json',
+                'X-API-Key' => $this->apiKey,
+            ])->timeout(10)
+                ->put($url, $data);
+
+            if ($response->successful()) {
+                return [
+                    'status' => 'SUCCESS',
+                    'message' => 'Citizen updated successfully',
+                    'data' => $response->json(),
+                ];
+            }
+
+            Log::warning('Failed to update citizen by KK', [
+                'kk' => $kk,
+                'status' => $response->status(),
+                'response' => $response->body(),
+            ]);
+
+            return [
+                'status' => 'ERROR',
+                'message' => "Failed to update citizen (HTTP {$response->status()})",
+                'data' => $response->json() ?? [],
+            ];
+        } catch (\Illuminate\Http\Client\RequestException $e) {
+            Log::error('HTTP request exception in updateCitizenByKK', [
+                'kk' => $kk,
+                'error' => $e->getMessage(),
+            ]);
+
+            return [
+                'status' => 'ERROR',
+                'message' => 'Request failed: ' . $e->getMessage(),
+                'data' => [],
+            ];
+        } catch (\Exception $e) {
+            Log::error('Exception in updateCitizenByKK', [
+                'kk' => $kk,
+                'error' => $e->getMessage(),
+            ]);
+
+            return [
+                'status' => 'ERROR',
+                'message' => 'Unexpected error: ' . $e->getMessage(),
+                'data' => [],
+            ];
+        }
+    }
 }

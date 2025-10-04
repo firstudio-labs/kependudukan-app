@@ -72,7 +72,7 @@ class DataKKController extends Controller
 
         return view('superadmin.datakk.index', compact('kk', 'search'));
     }
-    
+
 
     public function create()
     {
@@ -159,9 +159,11 @@ class DataKKController extends Controller
         return redirect()->route('superadmin.datakk.index')->with('success', 'Data KK berhasil disimpan');
     }
 
-    public function edit($id)
+    public function edit($kk)
     {
-        $kk = KK::findOrFail($id);
+        $resKk = $this->citizenServiceV2->getHeadOfFamilyByKk($kk);
+
+        $kk = (object) $resKk['data'];
 
         // Get provinces data with caching
         $provinces = Cache::remember('provinces', 3600, function () {
@@ -186,7 +188,7 @@ class DataKKController extends Controller
             'villages_count' => count($villages),
         ]);
 
-        if (Auth::user()->role === 'admin') {
+        if (Auth::user()->role === 'admin' || Auth::user()->role === 'admin desa') {
             return view('admin.desa.datakk.update', compact(
                 'kk',
                 'provinces',
@@ -205,16 +207,9 @@ class DataKKController extends Controller
         ));
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, $kk)
     {
-        // Validasi input tanpa kk dan full_name
         $validatedData = $request->validate([
-            'kk' => 'required|size:16',
-            'full_name' => 'required|string|max:255',
-            'gender' => 'required|integer|in:1,2',
-            'birth_date' => 'required|date',
-            'age' => 'required|integer',
-            'birth_place' => 'required|string|max:255',
             'address' => 'required|string',
             'province_id' => 'required|integer',
             'district_id' => 'required|integer',
@@ -222,51 +217,20 @@ class DataKKController extends Controller
             'village_id' => 'required|integer',
             'rt' => 'required|string|max:3',
             'rw' => 'required|string|max:3',
-            'postal_code' => 'nullable|digits:5',
-            'citizen_status' => 'required|integer|in:1,2',
-            'birth_certificate' => 'integer|in:1,2',
-            'birth_certificate_no' => 'nullable|string',
-            'blood_type' => 'required|integer|in:1,2,3,4,5,6,7,8,9,10,11,12,13',
-            'religion' => 'required|integer|in:1,2,3,4,5,6,7',
-            'marital_status' => 'nullable|integer|in:1,2,3,4,5,6',
-            'marital_certificate' => 'required|in:1,2',
-            'marital_certificate_no' => 'nullable|string',
-            'marriage_date' => 'nullable|date',
-            'divorce_certificate' => 'nullable|integer|in:1,2',
-            'divorce_certificate_no' => 'nullable|string',
-            'divorce_certificate_date' => 'nullable|date',
-            'family_status' => 'required|integer|in:1,2,3,4,5,6,7',
-            'mental_disorders' => 'required|integer|in:1,2',
-            'disabilities' => 'nullable|integer|in:0,1,2,3,4,5,6',
-            'education_status' => 'required|integer|in:1,2,3,4,5,6,7,8,9,10',
-            'job_type_id' => 'required|integer',
-            'nik_mother' => 'nullable|string|size:16',
-            'mother' => 'nullable|string|max:255',
-            'nik_father' => 'nullable|string|size:16',
-            'father' => 'nullable|string|max:255',
-            'coordinate' => 'nullable|string|max:255',
-            // New fields
-            'telephone' => 'nullable|string|max:20',
-            'email' => 'nullable|email|max:255',
+            'postal_code' => 'nullable|string|max:5',
             'hamlet' => 'nullable|string|max:100',
-            'foreign_address' => 'nullable|string',
-            'city' => 'nullable|string|max:100',
-            'state' => 'nullable|string|max:100',
-            'country' => 'nullable|string|max:100',
-            'foreign_postal_code' => 'nullable|string|max:20',
-            'status' => 'nullable|string|in:Active,Inactive,Deceased,Moved',
-            'rf_id_tag' => 'nullable|string',
         ]);
 
-        $kk = KK::findOrFail($id);
-        $kk->fill($validatedData);
-        $kk->save();
+        $response = $this->citizenServiceV2->updateCitizenByKK($kk, $validatedData);
 
-        if (Auth::user()->role === 'admin') {
-            return redirect()->route('admin.desa.datakk.index')->with('success', 'Data KK berhasil diperbarui!');
+        if ($response['status'] === 'SUCCESS') {
+            if (Auth::user()->role === 'admin' || Auth::user()->role === 'admin desa') {
+                return redirect()->route('admin.desa.datakk.index')->with('success', 'Data KK berhasil diperbarui!');
+            }
+            return redirect()->route('superadmin.datakk.index')->with('success', 'Data KK berhasil diperbarui!');
+        }else { 
+            return redirect()->back()->with('error', $response['message']);
         }
-
-        return redirect()->route('superadmin.datakk.index')->with('success', 'Data KK berhasil diperbarui!');
     }
 
     public function destroy($id)
@@ -1127,6 +1091,7 @@ class DataKKController extends Controller
 
     public function updateByKK(Request $request, $kk)
     {
+        dd($request->all());
         // Validasi input
         $validatedData = $request->validate([
             'kk' => 'required|size:16',

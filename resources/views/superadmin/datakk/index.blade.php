@@ -60,7 +60,7 @@
                             <button onclick="showDetailModal({{ json_encode($k) }})" class="text-blue-600 hover:text-blue-800" aria-label="Detail">
                                 <i class="fa-solid fa-eye"></i>
                             </button>
-                            <a href="{{ route('superadmin.datakk.update', $k['id']) }}" class="text-yellow-600 hover:text-yellow-800" aria-label="Edit">
+                            <a href="{{ route('superadmin.datakk.update', $k['kk']) }}" class="text-yellow-600 hover:text-yellow-800" aria-label="Edit">
                                 <i class="fa-solid fa-pen-to-square"></i>
                             </a>
                         </td>
