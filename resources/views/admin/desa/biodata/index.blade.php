@@ -448,7 +448,7 @@
                             <h4 class="text-lg font-semibold mb-3 text-[#7886C7]">Domisili</h4>
                             <div>
                                 <div class="text-sm text-gray-700 mb-2">Lokasi Domisili</div>
-                                <div id="domisiliMap" class="w-full h-80 md:h-96 rounded-lg border"></div>
+                                <div id="domisiliMap" class="w-full h-80 md:h-96 rounded-lg border" style="height:24rem; min-height:20rem;"></div>
                                 <div class="mt-3 text-sm text-gray-700 flex flex-col md:flex-row md:items-center md:space-x-6 space-y-1 md:space-y-0">
                                     <div>Alamat: <span id="domisiliAlamat">-</span></div>
                                     <div>Koordinat: <span id="domisiliKoordinat">-</span></div>
@@ -1465,7 +1465,9 @@
                     L.marker([lat, lng], { draggable: false, keyboard: false }).addTo(map);
 
                     // Perbaiki layout saat container awalnya tersembunyi (mis. di dalam modal)
-                    setTimeout(function () { try { map.invalidateSize(true); } catch (e) {} }, 300);
+                    setTimeout(function () { try { map.invalidateSize(true); } catch (e) {} }, 200);
+                    setTimeout(function () { try { map.invalidateSize(true); } catch (e) {} }, 600);
+                    setTimeout(function () { try { map.invalidateSize(true); } catch (e) {} }, 1200);
 
                     if (alamatEl) alamatEl.textContent = alamat || '-';
                     if (coordEl) coordEl.textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
