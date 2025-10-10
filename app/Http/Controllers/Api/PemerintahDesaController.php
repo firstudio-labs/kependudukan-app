@@ -68,6 +68,13 @@ class PemerintahDesaController extends Controller
         $kesenianBudaya = KesenianBudaya::whereIn('user_id', $pemerintah->pluck('id'))->get();
         $abdes = Abdes::whereIn('user_id', $pemerintah->pluck('id'))->get();
 
+        // helper sederhana untuk bangun URL publik foto
+        $toUrl = function ($path) {
+            if (!$path) return null;
+            if (preg_match('#^https?://#', $path)) return $path;
+            return asset('storage/' . ltrim($path, '/'));
+        };
+
         // Statistik penduduk desa dari CitizenService
         $citizenService = app(CitizenService::class);
         $genderStats = $citizenService->getGenderStatsByVillage($villageId); // harapkan ['male' => x, 'female' => y]
@@ -100,7 +107,7 @@ class PemerintahDesaController extends Controller
         // bangun struktur pengelompokan sarana umum per kategori
         $saranaUmumByKategori = $saranaUmum
             ->groupBy('kategori_sarana_id')
-            ->map(function ($items) {
+            ->map(function ($items) use ($toUrl) {
                 $first = $items->first();
                 $kategori = optional($first->kategori);
                 return [
@@ -109,25 +116,20 @@ class PemerintahDesaController extends Controller
                         'jenis_sarana' => $kategori->jenis_sarana ?? null,
                         'kategori' => $kategori->kategori ?? null,
                     ],
-                    'sarana' => $items->map(function ($s) {
+                    'sarana' => $items->map(function ($s) use ($toUrl) {
                         return [
                             'id' => $s->id,
                             'nama_sarana' => $s->nama_sarana,
                             'tag_lokasi' => $s->tag_lokasi,
                             'alamat' => $s->alamat,
                             'kontak' => $s->kontak,
+                            'foto' => $s->foto,
+                            'foto_url' => $toUrl($s->foto),
                         ];
                     })->values(),
                 ];
             })
             ->values();
-
-        // helper sederhana untuk bangun URL publik foto
-        $toUrl = function ($path) {
-            if (!$path) return null;
-            if (preg_match('#^https?://#', $path)) return $path;
-            return asset('storage/' . ltrim($path, '/'));
-        };
 
         return response()->json([
             'desa' => [
@@ -159,7 +161,7 @@ class PemerintahDesaController extends Controller
                 ];
             }),
             // sertakan kategori di tiap item untuk kemudahan konsumsi
-            'sarana_umum' => $saranaUmum->map(function ($s) {
+            'sarana_umum' => $saranaUmum->map(function ($s) use ($toUrl) {
                 return [
                     'id' => $s->id,
                     'user_id' => $s->user_id,
@@ -169,7 +171,7 @@ class PemerintahDesaController extends Controller
                     'alamat' => $s->alamat,
                     'kontak' => $s->kontak,
                     'foto' => $s->foto,
-                    'foto_url' => preg_match('#^https?://#', (string)$s->foto) ? $s->foto : ($s->foto ? asset('storage/' . ltrim($s->foto, '/')) : null),
+                    'foto_url' => $toUrl($s->foto),
                     'kategori' => $s->kategori ? [
                         'id' => $s->kategori->id,
                         'jenis_sarana' => $s->kategori->jenis_sarana,
