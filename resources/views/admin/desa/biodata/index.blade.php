@@ -441,13 +441,7 @@
                             </div>
                         </div>
 
-                        <!-- Data Surat (Readonly) -->
-                        <div class="bg-gray-50 p-4 rounded-lg col-span-2">
-                            <h4 class="text-lg font-semibold mb-2 text-[#7886C7]">Data Surat</h4>
-                            <div id="lettersSection" class="text-sm text-gray-600">
-                                <span class="text-gray-500">Tidak ada surat.</span>
-                            </div>
-                        </div>
+                        
 
                         <!-- Domisili -->
                         <div class="bg-gray-50 p-4 rounded-lg col-span-2">
@@ -1439,6 +1433,9 @@
                     }).addTo(map);
                     L.marker([lat, lng]).addTo(map);
 
+                    // Perbaiki layout saat container awalnya tersembunyi (mis. di dalam modal)
+                    setTimeout(function () { try { map.invalidateSize(true); } catch (e) {} }, 300);
+
                     if (alamatEl) alamatEl.textContent = alamat || '-';
                     if (coordEl) coordEl.textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
                 }
@@ -1585,9 +1582,10 @@
         }
 
         function renderLetters(resp) {
-            const el = document.getElementById('lettersSection');
+            const el = document.getElementById('suratInputSection');
             const items = (resp && resp.success && Array.isArray(resp.data)) ? resp.data : [];
-            if (items.length === 0) { el.innerHTML = '<span class="text-gray-500">Tidak ada surat.</span>'; return; }
+            if (!el) return;
+            if (items.length === 0) { el.innerHTML = '<span class="text-gray-500">Tidak ada riwayat surat.</span>'; return; }
 
             const rows = items.map((it, i) => `
                 <tr class="border-b">
