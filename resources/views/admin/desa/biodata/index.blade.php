@@ -1391,11 +1391,35 @@
                 const coordEl = document.getElementById('domisiliKoordinat');
                 if (!mapEl) return;
 
+                // Pastikan Leaflet termuat di produksi: jika belum, coba muat dari CDN alternatif
                 if (!window.L) {
-                    // Leaflet belum termuat; biarkan saja (resource disertakan statis di bawah)
-                    return;
+                    const loadLeaflet = () => new Promise((resolve, reject) => {
+                        const existing = document.querySelector('script[data-leaflet-loader]');
+                        if (existing) {
+                            existing.addEventListener('load', () => resolve());
+                            existing.addEventListener('error', () => reject());
+                            return;
+                        }
+                        const linkCss = document.createElement('link');
+                        linkCss.rel = 'stylesheet';
+                        linkCss.href = 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css';
+                        document.head.appendChild(linkCss);
+
+                        const script = document.createElement('script');
+                        script.src = 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js';
+                        script.async = true;
+                        script.setAttribute('data-leaflet-loader', '1');
+                        script.onload = () => resolve();
+                        script.onerror = () => reject();
+                        document.head.appendChild(script);
+                    });
+
+                    loadLeaflet()
+                        .then(() => initMapDom(data))
+                        .catch(() => {/* diamkan jika gagal memuat */});
+                } else {
+                    initMapDom(data);
                 }
-                initMapDom(data);
 
                 function initMapDom(d) {
                     let lat = -6.1753924; // default Monas
