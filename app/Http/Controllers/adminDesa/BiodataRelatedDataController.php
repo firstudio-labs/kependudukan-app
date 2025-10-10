@@ -406,83 +406,94 @@ class BiodataRelatedDataController extends Controller
     {
         try {
             $items = collect();
+            $nik = trim((string) $nik);
+            $nikClean = str_replace(' ', '', $nik);
 
             // Administrasi Umum
-            $admin = Administration::query()
-                ->where(function ($q) use ($nik) {
-                    $q->where('nik', $nik)
-                      ->orWhereRaw("REPLACE(nik,' ','') = ?", [$nik])
-                      ->orWhere('nik', 'like', "%$nik%");
-                })
-                ->latest()
-                ->limit(50)
-                ->get()
-                ->map(function ($row) {
-                    return [
-                        'type' => 'administrasi',
-                        'type_label' => 'Administrasi Umum',
-                        'id' => $row->id,
-                        'nik' => $row->nik,
-                        'full_name' => $row->full_name,
-                        'purpose' => $row->purpose ?? $row->statement_content,
-                        'letter_date' => optional($row->letter_date ?: $row->created_at)->format('Y-m-d'),
-                        'is_accepted' => $row->is_accepted,
-                    ];
-                });
-            $items = $items->merge($admin);
+            try {
+                $admin = Administration::query()
+                    ->where(function ($q) use ($nik, $nikClean) {
+                        $q->where('nik', $nik)
+                          ->orWhereRaw("REPLACE(nik,' ','') = ?", [$nikClean])
+                          ->orWhere('nik', 'like', "%$nik%");
+                    })
+                    ->latest()
+                    ->limit(50)
+                    ->get()
+                    ->map(function ($row) {
+                        return [
+                            'type' => 'administrasi',
+                            'type_label' => 'Administrasi Umum',
+                            'id' => $row->id,
+                            'nik' => $row->nik,
+                            'full_name' => $row->full_name,
+                            'purpose' => $row->purpose ?? $row->statement_content,
+                            'letter_date' => optional($row->letter_date ?: $row->created_at)->format('Y-m-d'),
+                            'is_accepted' => $row->is_accepted,
+                        ];
+                    });
+                $items = $items->merge($admin);
+            } catch (\Throwable $e) { Log::error('lettersByNik admin err: '.$e->getMessage()); }
 
             // Kehilangan
-            $kehilangan = Kehilangan::query()
-                ->where(function ($q) use ($nik) {
-                    $q->where('nik', $nik)
-                      ->orWhereRaw("REPLACE(nik,' ','') = ?", [$nik])
-                      ->orWhere('nik', 'like', "%$nik%");
-                })
-                ->latest()
-                ->limit(50)
-                ->get()
-                ->map(function ($row) {
-                    return [
-                        'type' => 'kehilangan',
-                        'type_label' => 'Kehilangan',
-                        'id' => $row->id,
-                        'nik' => $row->nik,
-                        'full_name' => $row->full_name,
-                        'purpose' => $row->lost_items,
-                        'letter_date' => optional($row->letter_date ?: $row->created_at)->format('Y-m-d'),
-                        'is_accepted' => $row->is_accepted,
-                    ];
-                });
-            $items = $items->merge($kehilangan);
+            try {
+                $kehilangan = Kehilangan::query()
+                    ->where(function ($q) use ($nik, $nikClean) {
+                        $q->where('nik', $nik)
+                          ->orWhereRaw("REPLACE(nik,' ','') = ?", [$nikClean])
+                          ->orWhere('nik', 'like', "%$nik%");
+                    })
+                    ->latest()
+                    ->limit(50)
+                    ->get()
+                    ->map(function ($row) {
+                        return [
+                            'type' => 'kehilangan',
+                            'type_label' => 'Kehilangan',
+                            'id' => $row->id,
+                            'nik' => $row->nik,
+                            'full_name' => $row->full_name,
+                            'purpose' => $row->lost_items,
+                            'letter_date' => optional($row->letter_date ?: $row->created_at)->format('Y-m-d'),
+                            'is_accepted' => $row->is_accepted,
+                        ];
+                    });
+                $items = $items->merge($kehilangan);
+            } catch (\Throwable $e) { Log::error('lettersByNik kehilangan err: '.$e->getMessage()); }
 
             // SKCK
-            $skck = SKCK::query()
-                ->where(function ($q) use ($nik) {
-                    $q->where('nik', $nik)
-                      ->orWhereRaw("REPLACE(nik,' ','') = ?", [$nik])
-                      ->orWhere('nik', 'like', "%$nik%");
-                })
-                ->latest()
-                ->limit(50)
-                ->get()
-                ->map(function ($row) {
-                    return [
-                        'type' => 'skck',
-                        'type_label' => 'SKCK',
-                        'id' => $row->id,
-                        'nik' => $row->nik,
-                        'full_name' => $row->full_name,
-                        'purpose' => $row->purpose,
-                        'letter_date' => optional($row->letter_date ?: $row->created_at)->format('Y-m-d'),
-                        'is_accepted' => $row->is_accepted,
-                    ];
-                });
-            $items = $items->merge($skck);
+            try {
+                $skck = SKCK::query()
+                    ->where(function ($q) use ($nik, $nikClean) {
+                        $q->where('nik', $nik)
+                          ->orWhereRaw("REPLACE(nik,' ','') = ?", [$nikClean])
+                          ->orWhere('nik', 'like', "%$nik%");
+                    })
+                    ->latest()
+                    ->limit(50)
+                    ->get()
+                    ->map(function ($row) {
+                        return [
+                            'type' => 'skck',
+                            'type_label' => 'SKCK',
+                            'id' => $row->id,
+                            'nik' => $row->nik,
+                            'full_name' => $row->full_name,
+                            'purpose' => $row->purpose,
+                            'letter_date' => optional($row->letter_date ?: $row->created_at)->format('Y-m-d'),
+                            'is_accepted' => $row->is_accepted,
+                        ];
+                    });
+                $items = $items->merge($skck);
+            } catch (\Throwable $e) { Log::error('lettersByNik skck err: '.$e->getMessage()); }
 
             // Domisili (cek dua kolom nik)
             $domisili = Domisili::query()
-                ->where(function ($q) use ($nik) {
-                    $q->where('nik', $nik)->orWhere('nik_pemohon', $nik);
+                ->where(function ($q) use ($nik, $nikClean) {
+                    $q->where('nik', $nik)
+                      ->orWhere('nik_pemohon', $nik)
+                      ->orWhereRaw("REPLACE(nik,' ','') = ?", [$nikClean])
+                      ->orWhereRaw("REPLACE(nik_pemohon,' ','') = ?", [$nikClean]);
                 })
                 ->latest()
                 ->limit(50)
@@ -503,8 +514,11 @@ class BiodataRelatedDataController extends Controller
 
             // Domisili Usaha (cek dua kolom nik)
             $domUsaha = DomisiliUsaha::query()
-                ->where(function ($q) use ($nik) {
-                    $q->where('nik', $nik)->orWhere('nik_pemohon', $nik);
+                ->where(function ($q) use ($nik, $nikClean) {
+                    $q->where('nik', $nik)
+                      ->orWhere('nik_pemohon', $nik)
+                      ->orWhereRaw("REPLACE(nik,' ','') = ?", [$nikClean])
+                      ->orWhereRaw("REPLACE(nik_pemohon,' ','') = ?", [$nikClean]);
                 })
                 ->latest()
                 ->limit(50)
