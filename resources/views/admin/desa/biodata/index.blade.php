@@ -1391,22 +1391,11 @@
                 const coordEl = document.getElementById('domisiliKoordinat');
                 if (!mapEl) return;
 
-                // Pastikan Leaflet tersedia (dipakai di project lain)
-                // Inject CSS jika belum ada
-                if (!document.querySelector('link[href*="leaflet.css"]')) {
-                    const lcss = document.createElement('link');
-                    lcss.rel = 'stylesheet';
-                    lcss.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-                    document.head.appendChild(lcss);
-                }
                 if (!window.L) {
-                    const script = document.createElement('script');
-                    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-                    script.onload = () => initMapDom(data);
-                    document.body.appendChild(script);
-                } else {
-                    initMapDom(data);
+                    // Leaflet belum termuat; biarkan saja (resource disertakan statis di bawah)
+                    return;
                 }
+                initMapDom(data);
 
                 function initMapDom(d) {
                     let lat = -6.1753924; // default Monas
@@ -1426,12 +1415,12 @@
                         mapEl.replaceWith(mapEl.cloneNode(true));
                     }
                     const mapTarget = document.getElementById('domisiliMap');
-                    const map = L.map(mapTarget).setView([lat, lng], 15);
+                    const map = L.map(mapTarget, { zoomControl: true, scrollWheelZoom: false, dragging: true }).setView([lat, lng], 15);
                     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                         maxZoom: 19,
                         attribution: '&copy; OpenStreetMap'
                     }).addTo(map);
-                    L.marker([lat, lng]).addTo(map);
+                    L.marker([lat, lng], { draggable: false, keyboard: false }).addTo(map);
 
                     // Perbaiki layout saat container awalnya tersembunyi (mis. di dalam modal)
                     setTimeout(function () { try { map.invalidateSize(true); } catch (e) {} }, 300);

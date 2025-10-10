@@ -537,6 +537,117 @@ class BiodataRelatedDataController extends Controller
                 }
             }
 
+            // Rumah Sewa
+            try {
+                $rumahSewa = RumahSewa::query()
+                    ->where('nik', $nik)
+                    ->latest()
+                    ->limit(50)
+                    ->get()
+                    ->map(function ($row) {
+                        return [
+                            'type' => 'rumah_sewa',
+                            'type_label' => 'Rumah Sewa',
+                            'id' => $row->id,
+                            'nik' => $row->nik,
+                            'full_name' => $row->full_name,
+                            'purpose' => $row->rental_address,
+                            'letter_date' => optional($row->valid_until ?: $row->created_at)->format('Y-m-d'),
+                            'is_accepted' => $row->is_accepted ?? null,
+                        ];
+                    });
+                $items = $items->merge($rumahSewa);
+            } catch (\Throwable $e) {}
+
+            // Izin Keramaian
+            try {
+                $keramaian = IzinKeramaian::query()
+                    ->where('nik', $nik)
+                    ->latest()
+                    ->limit(50)
+                    ->get()
+                    ->map(function ($row) {
+                        return [
+                            'type' => 'keramaian',
+                            'type_label' => 'Izin Keramaian',
+                            'id' => $row->id,
+                            'nik' => $row->nik,
+                            'full_name' => $row->full_name,
+                            'purpose' => $row->event ?? $row->entertainment,
+                            'letter_date' => optional($row->event_date ?: $row->created_at)->format('Y-m-d'),
+                            'is_accepted' => $row->is_accepted ?? null,
+                        ];
+                    });
+                $items = $items->merge($keramaian);
+            } catch (\Throwable $e) {}
+
+            // Kematian
+            try {
+                $kematian = Kematian::query()
+                    ->where('nik', $nik)
+                    ->latest()
+                    ->limit(50)
+                    ->get()
+                    ->map(function ($row) {
+                        return [
+                            'type' => 'kematian',
+                            'type_label' => 'Kematian',
+                            'id' => $row->id,
+                            'nik' => $row->nik,
+                            'full_name' => $row->full_name,
+                            'purpose' => $row->death_cause ?? 'Surat Keterangan Kematian',
+                            'letter_date' => optional($row->death_date ?: $row->created_at)->format('Y-m-d'),
+                            'is_accepted' => $row->is_accepted ?? null,
+                        ];
+                    });
+                $items = $items->merge($kematian);
+            } catch (\Throwable $e) {}
+
+            // Kelahiran: cocokkan father_nik / mother_nik
+            try {
+                $kelahiran = Kelahiran::query()
+                    ->where('father_nik', $nik)
+                    ->orWhere('mother_nik', $nik)
+                    ->latest()
+                    ->limit(50)
+                    ->get()
+                    ->map(function ($row) use ($nik) {
+                        $nama = $row->father_full_name ?? $row->mother_full_name ?? null;
+                        return [
+                            'type' => 'kelahiran',
+                            'type_label' => 'Kelahiran',
+                            'id' => $row->id,
+                            'nik' => $nik,
+                            'full_name' => $nama,
+                            'purpose' => $row->child_name ? ('Kelahiran: ' . $row->child_name) : 'Surat Keterangan Kelahiran',
+                            'letter_date' => optional($row->child_birth_date ?: $row->created_at)->format('Y-m-d'),
+                            'is_accepted' => $row->is_accepted ?? null,
+                        ];
+                    });
+                $items = $items->merge($kelahiran);
+            } catch (\Throwable $e) {}
+
+            // Ahli Waris: kolom bisa array/json -> gunakan whereJsonContains bila ada
+            try {
+                $ahliWarisQ = AhliWaris::query();
+                try { $ahliWarisQ->orWhereJsonContains('nik', $nik); } catch (\Throwable $e) {}
+                $ahliWarisQ->orWhere('nik', $nik);
+                $ahliWaris = $ahliWarisQ->latest()->limit(50)->get()->map(function ($row) use ($nik) {
+                    $fullName = is_array($row->full_name) ? implode(', ', array_filter($row->full_name)) : ($row->full_name ?? null);
+                    return [
+                        'type' => 'ahli_waris',
+                        'type_label' => 'Ahli Waris',
+                        'id' => $row->id,
+                        'nik' => $nik,
+                        'full_name' => $fullName,
+                        'purpose' => $row->inheritance_type ?? 'Surat Keterangan Ahli Waris',
+                        'letter_date' => optional($row->inheritance_letter_date ?: $row->created_at)->format('Y-m-d'),
+                        'is_accepted' => $row->is_accepted ?? null,
+                    ];
+                });
+                $items = $items->merge($ahliWaris);
+            } catch (\Throwable $e) {}
+
             // Urutkan dan batasi
             $items = $items->sortByDesc('letter_date')->values()->take(100);
 
