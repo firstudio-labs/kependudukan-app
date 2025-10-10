@@ -487,13 +487,12 @@ class BiodataRelatedDataController extends Controller
                 $items = $items->merge($skck);
             } catch (\Throwable $e) { Log::error('lettersByNik skck err: '.$e->getMessage()); }
 
-            // Domisili (cek dua kolom nik)
+            // Domisili
             $domisili = Domisili::query()
                 ->where(function ($q) use ($nik, $nikClean) {
                     $q->where('nik', $nik)
-                      ->orWhere('nik_pemohon', $nik)
                       ->orWhereRaw("REPLACE(nik,' ','') = ?", [$nikClean])
-                      ->orWhereRaw("REPLACE(nik_pemohon,' ','') = ?", [$nikClean]);
+                      ->orWhere('nik', 'like', "%$nik%");
                 })
                 ->latest()
                 ->limit(50)
@@ -512,13 +511,12 @@ class BiodataRelatedDataController extends Controller
                 });
             $items = $items->merge($domisili);
 
-            // Domisili Usaha (cek dua kolom nik)
+            // Domisili Usaha
             $domUsaha = DomisiliUsaha::query()
                 ->where(function ($q) use ($nik, $nikClean) {
                     $q->where('nik', $nik)
-                      ->orWhere('nik_pemohon', $nik)
                       ->orWhereRaw("REPLACE(nik,' ','') = ?", [$nikClean])
-                      ->orWhereRaw("REPLACE(nik_pemohon,' ','') = ?", [$nikClean]);
+                      ->orWhere('nik', 'like', "%$nik%");
                 })
                 ->latest()
                 ->limit(50)
