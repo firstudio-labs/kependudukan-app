@@ -487,7 +487,10 @@ class BiodataRelatedDataController extends Controller
             // Domisili
             try {
                 $domisili = Domisili::query()
-                    ->where(function ($q) use ($whereNik) { $whereNik($q, 'nik'); })
+                    ->where(function ($q) use ($whereNik) {
+                        $whereNik($q, 'nik');
+                        $q->orWhere(function ($qq) use ($whereNik) { $whereNik($qq, 'nik_pemohon'); });
+                    })
                     ->latest()
                     ->limit(50)
                     ->get()
@@ -509,7 +512,10 @@ class BiodataRelatedDataController extends Controller
             // Domisili Usaha
             try {
                 $domUsaha = DomisiliUsaha::query()
-                    ->where(function ($q) use ($whereNik) { $whereNik($q, 'nik'); })
+                    ->where(function ($q) use ($whereNik) {
+                        $whereNik($q, 'nik');
+                        $q->orWhere(function ($qq) use ($whereNik) { $whereNik($qq, 'nik_pemohon'); });
+                    })
                     ->latest()
                     ->limit(50)
                     ->get()
@@ -532,7 +538,7 @@ class BiodataRelatedDataController extends Controller
             if (class_exists(PengantarKtp::class)) {
                 try {
                     $pengantar = PengantarKtp::query()
-                        ->where('nik', $nik)
+                        ->where(function ($q) use ($whereNik) { $whereNik($q, 'nik'); })
                         ->latest()
                         ->limit(50)
                         ->get()
@@ -676,7 +682,7 @@ class BiodataRelatedDataController extends Controller
 
             Log::info('lettersByNik debug', [
                 'nik' => $nik,
-                'total' => $items->count(),
+                'total' => is_array($items) ? count($items) : 0,
             ]);
 
             return response()->json([
