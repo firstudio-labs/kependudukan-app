@@ -171,6 +171,7 @@ Route::middleware(ApiTokenOwnerMiddleware::class)->group(function () {
         // Tagihan penduduk (berdasarkan NIK user)
         Route::get('/tagihan', [ApiTagihanController::class, 'index'])->name('user.api.tagihan.index');
         Route::get('/tagihan/{tagihan}', [ApiTagihanController::class, 'show'])->name('user.api.tagihan.show');
+        Route::get('/tagihan-kategori', [ApiTagihanController::class, 'kategori'])->name('user.api.tagihan.kategori');
 
 
         //riwayat surat
