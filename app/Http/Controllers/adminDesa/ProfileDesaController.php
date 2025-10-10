@@ -65,6 +65,7 @@ class ProfileDesaController extends Controller
             'alamat' => 'nullable|string',
             'tag_lokasi' => 'nullable|string',
             'nama_kepala_desa' => 'nullable|string|max:255',
+            'foto_kepala_desa' => 'nullable|image|max:2048',
             'tanda_tangan' => 'nullable|image|max:2048',
             'current_password' => 'nullable|required_with:new_password',
             'new_password' => 'nullable|min:6|confirmed',
@@ -121,6 +122,17 @@ class ProfileDesaController extends Controller
         // Handle kepala desa data
         $kepalaDesa = KepalaDesa::firstOrNew(['user_id' => $user->id]);
         $kepalaDesa->nama = $request->nama_kepala_desa;
+
+        // Handle foto kepala desa upload
+        if ($request->hasFile('foto_kepala_desa')) {
+            if ($kepalaDesa->foto && Storage::disk('public')->exists($kepalaDesa->foto)) {
+                Storage::disk('public')->delete($kepalaDesa->foto);
+            }
+            $file = $request->file('foto_kepala_desa');
+            $filename = 'kepala_desa_' . $user->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('images/kepala_desa', $filename, 'public');
+            $kepalaDesa->foto = $path;
+        }
 
         // Handle tanda tangan upload
         if ($request->hasFile('tanda_tangan')) {

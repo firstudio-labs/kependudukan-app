@@ -381,6 +381,87 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Data Anggota Keluarga (Readonly) -->
+                        <div class="bg-gray-50 p-4 rounded-lg col-span-2">
+                            <h4 class="text-lg font-semibold mb-4 text-[#7886C7]">Data Anggota Keluarga</h4>
+                            <div id="familyMembersSection">
+                                <div class="flex items-center space-x-2 text-sm text-gray-500">
+                                    <div class="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-[#7886C7]"></div>
+                                    <span>Memuat data anggota keluarga...</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Data Warung → Produk (Readonly) -->
+                        <div class="bg-gray-50 p-4 rounded-lg col-span-2">
+                            <h4 class="text-lg font-semibold mb-2 text-[#7886C7]">Data Warung → Produk</h4>
+                            <div id="warungProdukSection" class="text-sm text-gray-600">
+                                <span class="text-gray-500">Tidak ada data warung.</span>
+                            </div>
+                        </div>
+
+                        <!-- Data Input Laporan (Readonly) -->
+                        <div class="bg-gray-50 p-4 rounded-lg col-span-2">
+                            <h4 class="text-lg font-semibold mb-2 text-[#7886C7]">Data Input Laporan</h4>
+                            <div id="laporanInputSection" class="text-sm text-gray-600">
+                                <span class="text-gray-500">Tidak ada laporan.</span>
+                            </div>
+                        </div>
+
+                        <!-- Data Input Surat (Readonly) -->
+                        <div class="bg-gray-50 p-4 rounded-lg col-span-2">
+                            <h4 class="text-lg font-semibold mb-2 text-[#7886C7]">Data Input Surat</h4>
+                            <div id="suratInputSection" class="text-sm text-gray-600">
+                                <span class="text-gray-500">Tidak ada riwayat surat.</span>
+                            </div>
+                        </div>
+
+                        <!-- Data Input Berita (Readonly) -->
+                        <div class="bg-gray-50 p-4 rounded-lg col-span-2">
+                            <h4 class="text-lg font-semibold mb-2 text-[#7886C7]">Data Input Berita</h4>
+                            <div id="beritaInputSection" class="text-sm text-gray-600">
+                                <span class="text-gray-500">Tidak ada berita.</span>
+                            </div>
+                        </div>
+
+                        <!-- Data Tagihan (Readonly) -->
+                        <div class="bg-gray-50 p-4 rounded-lg col-span-2">
+                            <h4 class="text-lg font-semibold mb-2 text-[#7886C7]">Data Tagihan</h4>
+                            <div id="tagihanSection" class="text-sm text-gray-600">
+                                <span class="text-gray-500">Tidak ada tagihan.</span>
+                            </div>
+                        </div>
+
+                        <!-- Data Aset (Readonly) -->
+                        <div class="bg-gray-50 p-4 rounded-lg col-span-2">
+                            <h4 class="text-lg font-semibold mb-2 text-[#7886C7]">Data Aset</h4>
+                            <div id="asetSection" class="text-sm text-gray-600">
+                                <span class="text-gray-500">Tidak ada aset.</span>
+                            </div>
+                        </div>
+
+                        <!-- Data Surat (Readonly) -->
+                        <div class="bg-gray-50 p-4 rounded-lg col-span-2">
+                            <h4 class="text-lg font-semibold mb-2 text-[#7886C7]">Data Surat</h4>
+                            <div id="lettersSection" class="text-sm text-gray-600">
+                                <span class="text-gray-500">Tidak ada surat.</span>
+                            </div>
+                        </div>
+
+                        <!-- Domisili -->
+                        <div class="bg-gray-50 p-4 rounded-lg col-span-2">
+                            <h4 class="text-lg font-semibold mb-3 text-[#7886C7]">Domisili</h4>
+                            <div>
+                                <div class="text-sm text-gray-700 mb-2">Lokasi Domisili</div>
+                                <div id="domisiliMap" class="w-full h-80 md:h-96 rounded-lg border"></div>
+                                <div class="mt-3 text-sm text-gray-700 flex flex-col md:flex-row md:items-center md:space-x-6 space-y-1 md:space-y-0">
+                                    <div>Alamat: <span id="domisiliAlamat">-</span></div>
+                                    <div>Koordinat: <span id="domisiliKoordinat">-</span></div>
+                                </div>
+                            </div>
+                            <div id="domisiliSection" class="text-sm text-gray-600 mt-4"></div>
+                        </div>
                     </div>
                 </div>
 
@@ -995,6 +1076,18 @@
                     }
                 }
 
+                // Muat Data Anggota Keluarga (berdasarkan KK)
+                if (biodata.kk) {
+                    loadFamilyMembersByKK(biodata.kk);
+                } else {
+                    setFamilyMembersEmpty('Nomor KK tidak tersedia');
+                }
+
+                // Muat data lain berbasis NIK secara paralel
+                if (biodata.nik) {
+                    loadAllRelatedByNik(biodata.nik);
+                }
+
             } catch (error) {
                 modalBody.innerHTML = originalContent;
                 Swal.fire({
@@ -1068,6 +1161,486 @@
                 </div>
                 <span class="text-xs text-gray-400 mt-1 block">-</span>
             `;
+        }
+
+        // ====== Anggota Keluarga ======
+        function setFamilyMembersEmpty(reason = '') {
+            const container = document.getElementById('familyMembersSection');
+            container.innerHTML = `
+                <div class="text-sm text-gray-500">Tidak ada data anggota keluarga${reason ? ` (${reason})` : ''}.</div>
+            `;
+        }
+
+        function renderFamilyMembersTable(members) {
+            if (!Array.isArray(members) || members.length === 0) {
+                setFamilyMembersEmpty();
+                return;
+            }
+
+            const rows = members.map((m, i) => `
+                <tr class="border-b">
+                    <td class="px-3 py-2 text-gray-700">${i + 1}</td>
+                    <td class="px-3 py-2 font-medium text-gray-900">${m.full_name || '-'}</td>
+                    <td class="px-3 py-2 text-gray-700">${m.nik || '-'}</td>
+                    <td class="px-3 py-2 text-gray-700">${m.family_status || '-'}</td>
+                </tr>
+            `).join('');
+
+            const html = `
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-600">
+                        <thead class="text-xs uppercase bg-[#e6e8ed] text-gray-700">
+                            <tr>
+                                <th class="px-3 py-2">No</th>
+                                <th class="px-3 py-2">Nama</th>
+                                <th class="px-3 py-2">NIK</th>
+                                <th class="px-3 py-2">SHDK</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white">
+                            ${rows}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            document.getElementById('familyMembersSection').innerHTML = html;
+        }
+
+        function loadFamilyMembersByKK(kkNumber) {
+            const container = document.getElementById('familyMembersSection');
+            container.innerHTML = `
+                <div class="flex items-center space-x-2 text-sm text-gray-500">
+                    <div class="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-[#7886C7]"></div>
+                    <span>Memuat data anggota keluarga...</span>
+                </div>
+            `;
+
+            fetch(`/getFamilyMembers?kk=${encodeURIComponent(kkNumber)}`)
+                .then(r => r.json())
+                .then(resp => {
+                    if (resp && (resp.status === 'OK' || resp.success === true)) {
+                        const data = resp.data || [];
+                        renderFamilyMembersTable(data);
+                    } else {
+                        setFamilyMembersEmpty('tidak ditemukan');
+                    }
+                })
+                .catch(() => setFamilyMembersEmpty('gagal memuat'));
+        }
+
+        // ====== Loader Paralel Data Terkait (by NIK) ======
+        function loadAllRelatedByNik(nik) {
+            const timeoutMs = 7000;
+            const withTimeout = (p) => Promise.race([
+                p, new Promise(resolve => setTimeout(() => resolve({ success: false, data: [] }), timeoutMs))
+            ]);
+
+            Promise.all([
+                withTimeout(fetch(`/admin/biodata/warung-produk/${nik}`).then(r => r.json()).catch(() => ({ success:false }))),
+                withTimeout(fetch(`/admin/biodata/laporan/${nik}`).then(r => r.json()).catch(() => ({ success:false }))),
+                withTimeout(fetch(`/admin/biodata/domisili/${nik}`).then(r => r.json()).catch(() => ({ success:false }))),
+                withTimeout(fetch(`/admin/biodata/berita/${nik}`).then(r => r.json()).catch(() => ({ success:false }))),
+                withTimeout(fetch(`/admin/biodata/tagihan/${nik}`).then(r => r.json()).catch(() => ({ success:false }))),
+                withTimeout(fetch(`/admin/biodata/aset/${nik}`).then(r => r.json()).catch(() => ({ success:false }))),
+                withTimeout(fetch(`/admin/biodata/penduduk-location/${nik}`).then(r => r.json()).catch(() => ({ success:false }))),
+                withTimeout(fetch(`/admin/biodata/surat/${nik}`).then(r => r.json()).catch(() => ({ success:false })))
+            ]).then(([warungRes, laporanRes, domisiliRes, beritaRes, tagihanRes, asetRes, lokasiRes, lettersRes]) => {
+                renderWarungProduk(warungRes);
+                renderLaporan(laporanRes);
+                renderDomisili(domisiliRes);
+                renderBerita(beritaRes);
+                renderTagihan(tagihanRes);
+                renderAset(asetRes);
+                renderDomisiliMap(lokasiRes);
+                renderLetters(lettersRes);
+            });
+        }
+
+        // ====== Renderers ======
+        function renderWarungProduk(resp) {
+            const el = document.getElementById('warungProdukSection');
+            const info = (resp && resp.success) ? (resp.informasi_usaha || null) : null;
+            const items = (resp && resp.success && Array.isArray(resp.data)) ? resp.data : [];
+
+            // Kartu informasi usaha (jika ada)
+            const infoHtml = info ? `
+                ${info.foto_url ? `
+                <div class="mb-3">
+                    <div class="text-sm text-gray-500 mb-1">Foto Usaha</div>
+                    <img src="${info.foto_url}" alt="Foto Usaha" class="w-32 h-32 object-cover rounded border" />
+                </div>` : ''}
+                <div class="mb-4 grid grid-cols-1 md:grid-cols-2 gap-3 text-gray-700">
+                    <div><span class="text-gray-500 text-xs">Nama Usaha</span><div class="font-medium">${info.nama_usaha || '-'}</div></div>
+                    <div><span class="text-gray-500 text-xs">Nomor KK</span><div class="font-medium">${info.kk || '-'}</div></div>
+                    <div class="md:col-span-2"><span class="text-gray-500 text-xs">Alamat</span><div class="font-medium">${info.alamat || '-'}</div></div>
+                    <div><span class="text-gray-500 text-xs">Kelompok Usaha</span><div class="font-medium">${info.kelompok_usaha || '-'}</div></div>
+                    <div><span class="text-gray-500 text-xs">Tag Lokasi</span><div class="font-medium">${info.tag_lokasi || '-'}</div></div>
+                    <div><span class="text-gray-500 text-xs">Pemilik (NIK)</span><div class="font-medium">${(info.pemilik && info.pemilik.nik) ? info.pemilik.nik : '-'}</div></div>
+                    <div><span class="text-gray-500 text-xs">Pemilik (Nama)</span><div class="font-medium">${(info.pemilik && info.pemilik.nama) ? info.pemilik.nama : '-'}</div></div>
+                </div>
+            ` : '';
+
+            if (items.length === 0) {
+                el.innerHTML = infoHtml + '<span class="text-gray-500">Tidak ada data warung.</span>';
+                return;
+            }
+
+            // Format harga ke Rupiah
+            const formatRupiah = (harga) => {
+                if (!harga || harga === '-') return '-';
+                return 'Rp ' + Number(harga).toLocaleString('id-ID');
+            };
+            
+            const rows = items.map((it, i) => `
+                <tr class="border-b">
+                    <td class="px-3 py-2">${i + 1}</td>
+                    <td class="px-3 py-2">${it.foto_url ? `<img src=\"${it.foto_url}\" alt=\"Foto Produk\" class=\"h-12 w-12 object-cover rounded border\" />` : '-'}</td>
+                    <td class="px-3 py-2 font-medium">${it.nama_produk || '-'}</td>
+                    <td class="px-3 py-2">
+                        <span class="px-2 py-1 text-xs font-medium rounded-full ${
+                            it.klasifikasi === 'barang' ? 'bg-blue-100 text-blue-800' :
+                            it.klasifikasi === 'jasa' ? 'bg-green-100 text-green-800' :
+                            'bg-gray-100 text-gray-800'
+                        }">
+                            ${it.klasifikasi === 'barang' ? 'Barang' :
+                              it.klasifikasi === 'jasa' ? 'Jasa' :
+                              it.klasifikasi || '-'}
+                        </span>
+                    </td>
+                    <td class="px-3 py-2">${it.jenis || '-'}</td>
+                    <td class="px-3 py-2 font-medium">${formatRupiah(it.harga)}</td>
+                    <td class="px-3 py-2">${it.stok ?? '-'}</td>
+                </tr>
+            `).join('');
+
+            el.innerHTML = `
+                ${infoHtml}
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-600">
+                        <thead class="text-xs uppercase bg-[#e6e8ed] text-gray-700">
+                            <tr>
+                                <th class="px-3 py-2">No</th>
+                                <th class="px-3 py-2">Foto</th>
+                                <th class="px-3 py-2">Produk</th>
+                                <th class="px-3 py-2">Klasifikasi</th>
+                                <th class="px-3 py-2">Jenis</th>
+                                <th class="px-3 py-2">Harga</th>
+                                <th class="px-3 py-2">Stok</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white">${rows}</tbody>
+                    </table>
+                </div>`;
+        }
+
+        function renderLaporan(resp) {
+            const el = document.getElementById('laporanInputSection');
+            const items = (resp && resp.success && Array.isArray(resp.data)) ? resp.data : [];
+            if (items.length === 0) { el.innerHTML = '<span class="text-gray-500">Tidak ada laporan.</span>'; return; }
+            const rows = items.map((it, i) => `
+                <tr class="border-b">
+                    <td class="px-3 py-2">${i + 1}</td>
+                    <td class="px-3 py-2 font-medium">${it.judul_laporan || '-'}</td>
+                    <td class="px-3 py-2">${it.status || '-'}</td>
+                    <td class="px-3 py-2">${(it.created_at || '').toString().substring(0,10)}</td>
+                </tr>
+            `).join('');
+            el.innerHTML = `
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-600">
+                        <thead class="text-xs uppercase bg-[#e6e8ed] text-gray-700">
+                            <tr>
+                                <th class="px-3 py-2">No</th>
+                                <th class="px-3 py-2">Judul</th>
+                                <th class="px-3 py-2">Status</th>
+                                <th class="px-3 py-2">Tanggal</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white">${rows}</tbody>
+                    </table>
+                </div>`;
+        }
+
+        function renderDomisili(resp) {
+            const el = document.getElementById('domisiliSection');
+            const dom = (resp && resp.success && Array.isArray(resp.domisili)) ? resp.domisili : [];
+            const domUsaha = (resp && resp.success && Array.isArray(resp.domisili_usaha)) ? resp.domisili_usaha : [];
+            if (dom.length === 0 && domUsaha.length === 0) { el.innerHTML = ''; return; }
+            const rows1 = dom.map((it, i) => `
+                <tr class="border-b"><td class="px-3 py-2">${i + 1}</td><td class="px-3 py-2">${it.full_name || '-'}</td><td class="px-3 py-2">Domisili</td><td class="px-3 py-2">${(it.created_at||'').toString().substring(0,10)}</td></tr>
+            `).join('');
+            const rows2 = domUsaha.map((it, i) => `
+                <tr class="border-b"><td class="px-3 py-2">${dom.length + i + 1}</td><td class="px-3 py-2">${it.full_name || '-'}</td><td class="px-3 py-2">Domisili Usaha</td><td class="px-3 py-2">${(it.created_at||'').toString().substring(0,10)}</td></tr>
+            `).join('');
+            el.innerHTML = `
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-600">
+                        <thead class="text-xs uppercase bg-[#e6e8ed] text-gray-700">
+                            <tr>
+                                <th class="px-3 py-2">No</th>
+                                <th class="px-3 py-2">Nama</th>
+                                <th class="px-3 py-2">Jenis</th>
+                                <th class="px-3 py-2">Tanggal</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white">${rows1}${rows2}</tbody>
+                    </table>
+                </div>`;
+        }
+
+        // Peta domisili readonly dari tabel penduduk (tag_lokasi + alamat)
+        function renderDomisiliMap(resp) {
+            try {
+                const data = resp && resp.success ? resp.data : null;
+                const mapEl = document.getElementById('domisiliMap');
+                const alamatEl = document.getElementById('domisiliAlamat');
+                const coordEl = document.getElementById('domisiliKoordinat');
+                if (!mapEl) return;
+
+                // Pastikan Leaflet tersedia (dipakai di project lain)
+                // Inject CSS jika belum ada
+                if (!document.querySelector('link[href*="leaflet.css"]')) {
+                    const lcss = document.createElement('link');
+                    lcss.rel = 'stylesheet';
+                    lcss.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+                    document.head.appendChild(lcss);
+                }
+                if (!window.L) {
+                    const script = document.createElement('script');
+                    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+                    script.onload = () => initMapDom(data);
+                    document.body.appendChild(script);
+                } else {
+                    initMapDom(data);
+                }
+
+                function initMapDom(d) {
+                    let lat = -6.1753924; // default Monas
+                    let lng = 106.8271528;
+                    let alamat = '-';
+                    if (d && d.tag_lokasi) {
+                        const parts = d.tag_lokasi.split(',').map(function (v) { return parseFloat(v.trim()); });
+                        if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+                            lat = parts[0];
+                            lng = parts[1];
+                        }
+                    }
+                    if (d && d.alamat) alamat = d.alamat;
+
+                    // Reset container jika peta sudah ada
+                    if (mapEl._leaflet_id) {
+                        mapEl.replaceWith(mapEl.cloneNode(true));
+                    }
+                    const mapTarget = document.getElementById('domisiliMap');
+                    const map = L.map(mapTarget).setView([lat, lng], 15);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        maxZoom: 19,
+                        attribution: '&copy; OpenStreetMap'
+                    }).addTo(map);
+                    L.marker([lat, lng]).addTo(map);
+
+                    if (alamatEl) alamatEl.textContent = alamat || '-';
+                    if (coordEl) coordEl.textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                }
+            } catch (e) {
+                // abaikan kesalahan rendering peta
+            }
+        }
+
+        function renderBerita(resp) {
+            const el = document.getElementById('beritaInputSection');
+            const items = (resp && resp.success && Array.isArray(resp.data)) ? resp.data : [];
+            if (items.length === 0) { el.innerHTML = '<span class="text-gray-500">Tidak ada berita.</span>'; return; }
+            
+            // Mapping status berita
+            const statusMap = {
+                'published': 'Dipublikasi',
+                'draft': 'Draft',
+                'archived': 'Diarsipkan'
+            };
+            
+            const rows = items.map((it, i) => `
+                <tr class="border-b">
+                    <td class="px-3 py-2">${i + 1}</td>
+                    <td class="px-3 py-2 font-medium">${it.judul || '-'}</td>
+                    <td class="px-3 py-2">
+                        <span class="px-2 py-1 text-xs font-medium rounded-full ${
+                            it.status === 'published' ? 'bg-green-100 text-green-800' :
+                            it.status === 'draft' ? 'bg-yellow-100 text-yellow-800' :
+                            it.status === 'archived' ? 'bg-gray-100 text-gray-800' :
+                            'bg-gray-100 text-gray-800'
+                        }">
+                            ${statusMap[it.status] || it.status || '-'}
+                        </span>
+                    </td>
+                    <td class="px-3 py-2">${(it.created_at||'').toString().substring(0,10)}</td>
+                </tr>
+            `).join('');
+            el.innerHTML = `
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-600">
+                        <thead class="text-xs uppercase bg-[#e6e8ed] text-gray-700">
+                            <tr>
+                                <th class="px-3 py-2">No</th>
+                                <th class="px-3 py-2">Judul</th>
+                                <th class="px-3 py-2">Status</th>
+                                <th class="px-3 py-2">Tanggal</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white">${rows}</tbody>
+                    </table>
+                </div>`;
+        }
+
+        function renderTagihan(resp) {
+            const el = document.getElementById('tagihanSection');
+            const items = (resp && resp.success && Array.isArray(resp.data)) ? resp.data : [];
+            if (items.length === 0) { el.innerHTML = '<span class="text-gray-500">Tidak ada tagihan.</span>'; return; }
+            
+            // Format nominal ke Rupiah
+            const formatRupiah = (nominal) => {
+                if (!nominal || nominal === '-') return '-';
+                return 'Rp ' + Number(nominal).toLocaleString('id-ID');
+            };
+            
+            const rows = items.map((it, i) => `
+                <tr class="border-b">
+                    <td class="px-3 py-2">${i + 1}</td>
+                    <td class="px-3 py-2">${it.kategori || '-'}</td>
+                    <td class="px-3 py-2">${it.sub_kategori || '-'}</td>
+                    <td class="px-3 py-2 font-medium">${formatRupiah(it.nominal)}</td>
+                    <td class="px-3 py-2">
+                        <span class="px-2 py-1 text-xs font-medium rounded-full ${
+                            it.status === 'lunas' ? 'bg-green-100 text-green-800' :
+                            it.status === 'belum_lunas' ? 'bg-red-100 text-red-800' :
+                            it.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-gray-100 text-gray-800'
+                        }">
+                            ${it.status === 'lunas' ? 'Lunas' :
+                              it.status === 'belum_lunas' ? 'Belum Lunas' :
+                              it.status === 'pending' ? 'Pending' :
+                              it.status || '-'}
+                        </span>
+                    </td>
+                    <td class="px-3 py-2">${it.tanggal || '-'}</td>
+                </tr>
+            `).join('');
+            el.innerHTML = `
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-600">
+                        <thead class="text-xs uppercase bg-[#e6e8ed] text-gray-700">
+                            <tr>
+                                <th class="px-3 py-2">No</th>
+                                <th class="px-3 py-2">Kategori</th>
+                                <th class="px-3 py-2">Sub Kategori</th>
+                                <th class="px-3 py-2">Nominal</th>
+                                <th class="px-3 py-2">Status</th>
+                                <th class="px-3 py-2">Tanggal</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white">${rows}</tbody>
+                    </table>
+                </div>`;
+        }
+
+        function renderAset(resp) {
+            const el = document.getElementById('asetSection');
+            const items = (resp && resp.success && Array.isArray(resp.data)) ? resp.data : [];
+            if (items.length === 0) { el.innerHTML = '<span class="text-gray-500">Tidak ada aset.</span>'; return; }
+            const rows = items.map((it, i) => `
+                <tr class="border-b">
+                    <td class="px-3 py-2">${i + 1}</td>
+                    <td class="px-3 py-2 font-medium">${it.nama_aset || '-'}</td>
+                    <td class="px-3 py-2">${it.nik_pemilik || '-'}</td>
+                    <td class="px-3 py-2">${it.nama_pemilik || '-'}</td>
+                    <td class="px-3 py-2">${it.alamat || '-'}</td>
+                    <td class="px-3 py-2">${it.klasifikasi || '-'}</td>
+                    <td class="px-3 py-2">${it.jenis_aset || '-'}</td>
+                    <td class="px-3 py-2">
+                        <div class="flex space-x-2">
+                            ${it.foto_aset_depan ? `<img src="${it.foto_aset_depan}" alt="Foto Depan" class="w-12 h-12 rounded object-cover cursor-pointer" onclick="showImageModal('${it.foto_aset_depan}', 'Foto Depan Aset')">` : '<span class="text-gray-400">-</span>'}
+                            ${it.foto_aset_samping ? `<img src="${it.foto_aset_samping}" alt="Foto Samping" class="w-12 h-12 rounded object-cover cursor-pointer" onclick="showImageModal('${it.foto_aset_samping}', 'Foto Samping Aset')">` : '<span class="text-gray-400">-</span>'}
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+            el.innerHTML = `
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-600">
+                        <thead class="text-xs uppercase bg-[#e6e8ed] text-gray-700">
+                            <tr>
+                                <th class="px-3 py-2">No</th>
+                                <th class="px-3 py-2">Nama Aset</th>
+                                <th class="px-3 py-2">NIK Pemilik</th>
+                                <th class="px-3 py-2">Nama Pemilik</th>
+                                <th class="px-3 py-2">Alamat</th>
+                                <th class="px-3 py-2">Klasifikasi</th>
+                                <th class="px-3 py-2">Jenis Aset</th>
+                                <th class="px-3 py-2">Foto</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white">${rows}</tbody>
+                    </table>
+                </div>`;
+        }
+
+        function renderLetters(resp) {
+            const el = document.getElementById('lettersSection');
+            const items = (resp && resp.success && Array.isArray(resp.data)) ? resp.data : [];
+            if (items.length === 0) { el.innerHTML = '<span class="text-gray-500">Tidak ada surat.</span>'; return; }
+
+            const rows = items.map((it, i) => `
+                <tr class="border-b">
+                    <td class="px-3 py-2">${i + 1}</td>
+                    <td class="px-3 py-2">${it.type_label || '-'}</td>
+                    <td class="px-3 py-2">${it.full_name || '-'}</td>
+                    <td class="px-3 py-2">${it.nik || '-'}</td>
+                    <td class="px-3 py-2">${it.purpose || '-'}</td>
+                    <td class="px-3 py-2">${it.letter_date || '-'}</td>
+                    <td class="px-3 py-2">${it.is_accepted === null || it.is_accepted === undefined ? '-' : (it.is_accepted ? 'Diterima' : 'Menunggu')}</td>
+                </tr>
+            `).join('');
+
+            el.innerHTML = `
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-600">
+                        <thead class="text-xs uppercase bg-[#e6e8ed] text-gray-700">
+                            <tr>
+                                <th class="px-3 py-2">No</th>
+                                <th class="px-3 py-2">Jenis Surat</th>
+                                <th class="px-3 py-2">Nama</th>
+                                <th class="px-3 py-2">NIK</th>
+                                <th class="px-3 py-2">Keperluan</th>
+                                <th class="px-3 py-2">Tanggal</th>
+                                <th class="px-3 py-2">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white">${rows}</tbody>
+                    </table>
+                </div>`;
+        }
+
+        // Fungsi untuk menampilkan foto dalam modal
+        function showImageModal(imageSrc, title) {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-white rounded-lg p-6 max-w-4xl max-h-full overflow-auto">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold">${title}</h3>
+                        <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+                    </div>
+                    <img src="${imageSrc}" alt="${title}" class="max-w-full max-h-96 mx-auto rounded">
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            // Tutup modal saat klik di luar gambar
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
         }
     </script>
 

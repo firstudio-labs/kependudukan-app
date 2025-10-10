@@ -64,12 +64,12 @@ class Aset extends Model
 
     public function klasifikasi()
     {
-        return $this->belongsTo(Klasifikasi::class);
+        return $this->belongsTo(Klasifikasi::class, 'klasifikasi_id');
     }
 
     public function jenisAset()
     {
-        return $this->belongsTo(JenisAset::class);
+        return $this->belongsTo(JenisAset::class, 'jenis_aset_id');
     }
 
     // Ensure these accessors use the correct storage paths

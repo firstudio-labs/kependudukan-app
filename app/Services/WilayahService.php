@@ -415,6 +415,120 @@ class WilayahService
     }
 
     /**
+     * Get province data by ID
+     *
+     * @param string $id
+     * @return array|null
+     */
+    public function getProvinceById($id)
+    {
+        $cacheKey = "province_{$id}";
+        
+        // Check cache first
+        if (Cache::has($cacheKey)) {
+            return Cache::get($cacheKey);
+        }
+
+        try {
+            // Get all provinces and find the one with matching ID
+            $provinces = $this->getProvinces();
+            
+            foreach ($provinces as $province) {
+                if ($province['id'] == $id) {
+                    Cache::put($cacheKey, $province, now()->addDay());
+                    return $province;
+                }
+            }
+
+            Log::error("Province not found with ID: {$id}");
+            return null;
+        } catch (\Exception $e) {
+            Log::error("Error getting province by ID: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Get district data by ID
+     *
+     * @param string $id
+     * @return array|null
+     */
+    public function getDistrictById($id)
+    {
+        $cacheKey = "district_{$id}";
+        
+        // Check cache first
+        if (Cache::has($cacheKey)) {
+            return Cache::get($cacheKey);
+        }
+
+        try {
+            // Get all districts and find the one with matching ID
+            $page = 1;
+            do {
+                $districtsResponse = $this->getKabupatenByPage($page);
+                $districts = $districtsResponse['data'] ?? [];
+                
+                foreach ($districts as $district) {
+                    if ($district['id'] == $id) {
+                        Cache::put($cacheKey, $district, now()->addDay());
+                        return $district;
+                    }
+                }
+                
+                $page++;
+            } while (!empty($districts) && $page <= 10); // Limit to 10 pages to avoid infinite loop
+
+            Log::error("District not found with ID: {$id}");
+            return null;
+        } catch (\Exception $e) {
+            Log::error("Error getting district by ID: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Get sub-district data by ID
+     *
+     * @param string $id
+     * @return array|null
+     */
+    public function getSubDistrictById($id)
+    {
+        $cacheKey = "sub_district_{$id}";
+        
+        // Check cache first
+        if (Cache::has($cacheKey)) {
+            return Cache::get($cacheKey);
+        }
+
+        try {
+            // Get all sub-districts and find the one with matching ID
+            $page = 1;
+            do {
+                $subDistrictsResponse = $this->getKecamatanByPage($page);
+                $subDistricts = $subDistrictsResponse['data'] ?? [];
+                
+                foreach ($subDistricts as $subDistrict) {
+                    if ($subDistrict['id'] == $id) {
+                        Cache::put($cacheKey, $subDistrict, now()->addDay());
+                        return $subDistrict;
+                    }
+                }
+                
+                $page++;
+            } while (!empty($subDistricts) && $page <= 10); // Limit to 10 pages to avoid infinite loop
+
+            Log::error("Sub-district not found with ID: {$id}");
+            return null;
+        } catch (\Exception $e) {
+            Log::error("Error getting sub-district by ID: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
      * Get village data by ID
      *
      * @param string $id

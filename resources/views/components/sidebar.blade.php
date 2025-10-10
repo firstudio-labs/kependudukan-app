@@ -16,7 +16,7 @@
                 <a href="/" class="flex ms-2 md:me-24">
                     <span
                         class="self-center text-sm font-semibold sm:text-base whitespace-nowrap text-transparent bg-clip-text bg-gradient-to-r from-[#2D336B] to-[#4A56A6]">
-                        Kependudukan
+                        LADIMAS
                     </span>
                 </a>
             </div>
@@ -569,31 +569,11 @@
 
                     <!-- Berita Desa -->
                     <li class="-ml-5">
-                        <button type="button"
-                            class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
-                            onclick="toggleDropdown('adminBeritaDropdown')">
+                        <a href="{{ route('admin.desa.berita-desa.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                            {{ request()->routeIs('admin.desa.berita-desa.*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                             <i class="fa-solid fa-newspaper text-lg transition-all duration-300"></i>
                             <span>Berita Desa</span>
-                            <i id="dropdown-icon-admin-berita" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
-                        </button>
-                        <ul id="adminBeritaDropdown" class="hidden space-y-2 pl-6">
-                            <li>
-                                <a href="{{ route('admin.desa.berita-desa.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                                        {{ request()->routeIs('admin.desa.berita-desa.index')
-                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
-                                    <span>Daftar Berita</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('admin.desa.berita-desa.pending') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                                        {{ request()->routeIs('admin.desa.berita-desa.pending')
-                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
-                                    <span>Approval Berita Desa</span>
-                                </a>
-                            </li>
-                        </ul>
+                        </a>
                     </li>
 
                     <!-- Agenda Desa -->
@@ -615,6 +595,17 @@
                     : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                             <i class="fa-solid fa-store text-lg transition-all duration-300"></i>
                             <span>Usaha Desa</span>
+                        </a>
+                    </li>
+
+                    <!-- Warungku: daftar informasi usaha seluruh penduduk desa -->
+                    <li class="-ml-5">
+                        <a href="{{ route('admin.desa.warungku.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                                                                                                        {{ request()->routeIs('admin.desa.warungku.*')
+                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                            <i class="fa-solid fa-basket-shopping text-lg transition-all duration-300"></i>
+                            <span>Warungku</span>
                         </a>
                     </li>
 
@@ -669,6 +660,17 @@
                         </a>
                     </li>
 
+                    <!-- Master Tagihan -->
+                    <li class="-ml-5">
+                        <a href="{{ route('admin.desa.master-tagihan.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                                                                                                        {{ request()->routeIs('admin.desa.master-tagihan.*')
+                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                            <i class="fa-solid fa-receipt text-lg transition-all duration-300"></i>
+                            <span>Master Tagihan</span>
+                        </a>
+                    </li>
+
                     <!-- Pengumuman -->
                     <li class="-ml-5">
                         <a href="{{ route('admin.desa.pengumuman.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
@@ -677,6 +679,17 @@
                     : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                             <i class="fa-solid fa-bullhorn text-lg transition-all duration-300"></i>
                             <span>Pengumuman</span>
+                        </a>
+                    </li>
+
+                    <!-- Pengguna Mobile -->
+                    <li class="-ml-5">
+                        <a href="{{ route('admin.desa.pengguna-mobile.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                                                                                                                                    {{ request()->routeIs('admin.desa.pengguna-mobile.*')
+                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                            <i class="fa-solid fa-mobile-screen-button text-lg transition-all duration-300"></i>
+                            <span>Pengguna Mobile</span>
                         </a>
                     </li>
 

@@ -16,6 +16,7 @@ class SaranaUmum extends Model
         'tag_lokasi',
         'alamat',
         'kontak',
+        'foto',
     ];
 
     public function kategori()

@@ -18,6 +18,7 @@ class BeritaDesa extends Model
         'komentar',
         'status',
         'user_id',
+        'nik_penduduk',
         'province_id',
         'districts_id',
         'sub_districts_id',
@@ -30,6 +31,11 @@ class BeritaDesa extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function penduduk()
+    {
+        return $this->belongsTo(Penduduk::class, 'nik_penduduk', 'nik');
     }
 
     // Relasi dengan wilayah

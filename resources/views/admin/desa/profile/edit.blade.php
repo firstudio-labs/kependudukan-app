@@ -53,6 +53,22 @@
                                 onchange="previewLogo(this)">
                             <p class="text-sm text-gray-500 mt-2">Format: JPG, PNG, GIF. Maks: 2MB</p>
                         </div>
+
+                        <!-- Foto Kepala Desa -->
+                        <div class="flex flex-col items-center">
+                            <div class="w-32 h-32 rounded bg-gray-100 overflow-hidden mb-4 border border-gray-300 relative">
+                                @php($fotoKepala = $user->kepalaDesa?->foto)
+                                <img id="preview-foto-kepala-desa" src="{{ $fotoKepala ? asset('storage/' . $fotoKepala) : '' }}" alt="Foto Kepala Desa" class="w-full h-full object-cover {{ $fotoKepala ? '' : 'hidden' }}">
+                                <span id="preview-foto-kepala-desa-text" class="absolute inset-0 flex items-center justify-center text-gray-400 {{ $fotoKepala ? 'hidden' : '' }}">Tidak ada foto</span>
+                            </div>
+                            <label for="foto_kepala_desa"
+                                   class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition cursor-pointer">
+                                   Ubah Foto Kepala Desa
+                            </label>
+                            <input type="file" id="foto_kepala_desa" name="foto_kepala_desa" class="hidden" accept="image/*"
+                                   onchange="previewFotoKepalaDesa(this)">
+                            <p class="text-sm text-gray-500 mt-2">Format: JPG, PNG, GIF. Maks: 2MB</p>
+                        </div>
                     </div>
                 </div>
 
@@ -251,6 +267,24 @@
                     }
                 }
 
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function previewFotoKepalaDesa(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.getElementById('preview-foto-kepala-desa');
+                    const txt = document.getElementById('preview-foto-kepala-desa-text');
+                    if (img) {
+                        img.src = e.target.result;
+                        img.style.display = 'block';
+                    }
+                    if (txt) {
+                        txt.style.display = 'none';
+                    }
+                }
                 reader.readAsDataURL(input.files[0]);
             }
         }

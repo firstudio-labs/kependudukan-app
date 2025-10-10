@@ -569,7 +569,7 @@ class ProfileController extends Controller
                 ], 401);
             }
 
-            // Simpan ke database lokal dan update semua anggota keluarga
+            // Hanya update database lokal saja, tidak ke API CitizenService
             if (Auth::guard('penduduk')->check() && !empty($userData->nik)) {
                 try {
                     // Ambil data KK dari user yang sedang login
@@ -588,7 +588,7 @@ class ProfileController extends Controller
                         ], 400);
                     }
 
-                    Log::info('Updating location for family with KK', [
+                    Log::info('Updating location for family with KK (LOCAL ONLY)', [
                         'kk' => $kk,
                         'coordinate' => $request->tag_lokasi,
                         'address' => $request->alamat
@@ -605,7 +605,7 @@ class ProfileController extends Controller
                     $updatedMembers = [];
                     $failedUpdates = [];
 
-                    // Update database lokal untuk semua anggota keluarga
+                    // HANYA Update database lokal untuk semua anggota keluarga (TIDAK ke API)
                     foreach ($familyMembers as $member) {
                         if (!isset($member['nik']) || empty($member['nik'])) {
                             continue;
@@ -614,19 +614,24 @@ class ProfileController extends Controller
                         $memberNik = (int) $member['nik'];
                         
                         try {
-                            // Update database lokal
+                            // Update database lokal saja
                             $penduduk = Penduduk::where('nik', $memberNik)->first();
                             if ($penduduk) {
                                 $penduduk->tag_lokasi = $request->tag_lokasi;
                                 $penduduk->alamat = $request->alamat;
                                 $penduduk->save();
                                 
-                                Log::info('Local database updated for family member', [
+                                Log::info('Local database updated for family member (NO API CALL)', [
                                     'nik' => $memberNik,
                                     'name' => $member['full_name'] ?? $member['nama'] ?? 'Unknown',
                                     'coordinate' => $request->tag_lokasi,
                                     'address' => $request->alamat
                                 ]);
+                                
+                                $updatedMembers[] = [
+                                    'nik' => $memberNik,
+                                    'name' => $member['full_name'] ?? $member['nama'] ?? 'Unknown'
+                                ];
                             } else {
                                 // Buat record baru jika belum ada
                                 Penduduk::create([
@@ -636,38 +641,18 @@ class ProfileController extends Controller
                                     'alamat' => $request->alamat,
                                 ]);
                                 
-                                Log::info('Created new local record for family member', [
+                                Log::info('Created new local record for family member (NO API CALL)', [
                                     'nik' => $memberNik,
                                     'name' => $member['full_name'] ?? $member['nama'] ?? 'Unknown'
                                 ]);
-                            }
-
-                            // Update ke API eksternal
-                            $apiResponse = $this->citizenService->updateCitizen($memberNik, [
-                                'coordinate' => $request->tag_lokasi,
-                                'address' => $request->alamat
-                            ]);
-
-                            if (isset($apiResponse['status']) && $apiResponse['status'] === 'ERROR') {
-                                $failedUpdates[] = [
-                                    'nik' => $memberNik,
-                                    'name' => $member['full_name'] ?? $member['nama'] ?? 'Unknown',
-                                    'error' => $apiResponse['message'] ?? 'Unknown error'
-                                ];
-                                Log::warning('API update failed for family member', [
-                                    'nik' => $memberNik,
-                                    'error' => $apiResponse['message'] ?? 'Unknown error'
-                                ]);
-                            } else {
+                                
                                 $updatedMembers[] = [
                                     'nik' => $memberNik,
                                     'name' => $member['full_name'] ?? $member['nama'] ?? 'Unknown'
                                 ];
-                                Log::info('API update successful for family member', [
-                                    'nik' => $memberNik,
-                                    'name' => $member['full_name'] ?? $member['nama'] ?? 'Unknown'
-                                ]);
                             }
+
+                            // TIDAK ADA UPDATE KE API - HANYA DATABASE LOKAL
 
                         } catch (\Exception $e) {
                             $failedUpdates[] = [
@@ -675,7 +660,7 @@ class ProfileController extends Controller
                                 'name' => $member['full_name'] ?? $member['nama'] ?? 'Unknown',
                                 'error' => $e->getMessage()
                             ];
-                            Log::error('Error updating family member', [
+                            Log::error('Error updating family member locally', [
                                 'nik' => $memberNik,
                                 'error' => $e->getMessage()
                             ]);
@@ -683,7 +668,7 @@ class ProfileController extends Controller
                     }
 
                     // Log hasil update
-                    Log::info('Family location update completed', [
+                    Log::info('Family location update completed (LOCAL DATABASE ONLY)', [
                         'kk' => $kk,
                         'total_members' => count($familyMembers),
                         'successful_updates' => count($updatedMembers),
@@ -692,9 +677,9 @@ class ProfileController extends Controller
                         'failed_members' => $failedUpdates
                     ]);
 
-                    $message = "Lokasi berhasil disimpan untuk " . count($updatedMembers) . " anggota keluarga";
+                    $message = "Lokasi berhasil disimpan untuk " . count($updatedMembers) . " anggota keluarga (Database Lokal)";
                     if (count($failedUpdates) > 0) {
-                        $message .= ". " . count($failedUpdates) . " anggota gagal diupdate ke API eksternal.";
+                        $message .= ". " . count($failedUpdates) . " anggota gagal diupdate.";
                     }
 
                     return response()->json([
@@ -735,6 +720,45 @@ class ProfileController extends Controller
         }
     }
 
-    
+    public function updateContact(Request $request)
+    {
+        if (Auth::guard('web')->check()) {
+            $userData = Auth::guard('web')->user();
+        } elseif (Auth::guard('penduduk')->check()) {
+            $userData = Auth::guard('penduduk')->user();
+        } else {
+            return redirect()
+                ->route('login')
+                ->with('error', 'Please login to update your contact information');
+        }
+
+        $request->validate([
+            'no_hp' => 'required|string|max:15|regex:/^[0-9+\-\s()]+$/',
+            'current_password' => 'nullable|string',
+            'new_password' => 'nullable|min:6|confirmed',
+        ]);
+
+        // Update nomor HP
+        $userData->no_hp = $request->no_hp;
+
+        // Update password jika ada
+        if ($request->filled('new_password')) {
+            if (empty($request->current_password)) {
+                return back()->withErrors(['current_password' => 'Password lama harus diisi untuk mengubah password.']);
+            }
+
+            if (Hash::check($request->current_password, $userData->password)) {
+                $userData->password = Hash::make($request->new_password);
+            } else {
+                return back()->withErrors(['current_password' => 'Password lama tidak sesuai.']);
+            }
+        }
+
+        $userData->save();
+
+        return redirect()
+            ->route('user.profile.index')
+            ->with('success', 'Informasi kontak berhasil diperbarui');
+    }
 
 }

@@ -313,7 +313,7 @@ class ProfileController extends Controller
                 ], 400);
             }
 
-            Log::info('API: updating location for family by KK', [
+            Log::info('API: updating location for family by KK (LOCAL ONLY)', [
                 'kk' => $kk,
                 'coordinate' => $request->tag_lokasi,
                 'address' => $request->alamat,
@@ -330,19 +330,32 @@ class ProfileController extends Controller
             $updatedMembers = [];
             $failedUpdates = [];
 
+            // HANYA Update database lokal (TIDAK ke API eksternal)
             foreach ($familyMembers as $member) {
                 if (empty($member['nik'])) {
                     continue;
                 }
                 $memberNik = (int) $member['nik'];
 
-                // Update lokal DB (buat jika belum ada)
+                // Update lokal DB saja (buat jika belum ada)
                 try {
                     $penduduk = Penduduk::where('nik', $memberNik)->first();
                     if ($penduduk) {
                         $penduduk->tag_lokasi = $request->tag_lokasi;
                         $penduduk->alamat = $request->alamat;
                         $penduduk->save();
+                        
+                        Log::info('API: Local database updated for family member (NO API CALL)', [
+                            'nik' => $memberNik,
+                            'name' => $member['full_name'] ?? $member['nama'] ?? 'Unknown',
+                            'coordinate' => $request->tag_lokasi,
+                            'address' => $request->alamat
+                        ]);
+                        
+                        $updatedMembers[] = [
+                            'nik' => $memberNik,
+                            'name' => $member['full_name'] ?? $member['nama'] ?? 'Unknown'
+                        ];
                     } else {
                         Penduduk::create([
                             'nik' => $memberNik,
@@ -350,32 +363,12 @@ class ProfileController extends Controller
                             'tag_lokasi' => $request->tag_lokasi,
                             'alamat' => $request->alamat,
                         ]);
-                    }
-                } catch (\Exception $e) {
-                    Log::error('API: failed updating local DB for member', [
-                        'nik' => $memberNik,
-                        'error' => $e->getMessage()
-                    ]);
-                }
-
-                // Update ke API eksternal
-                try {
-                    $resp = $this->citizenService->updateCitizen($memberNik, [
-                        'coordinate' => $request->tag_lokasi,
-                        'address' => $request->alamat
-                    ]);
-
-                    if (isset($resp['status']) && $resp['status'] === 'ERROR') {
-                        $failedUpdates[] = [
+                        
+                        Log::info('API: Created new local record for family member (NO API CALL)', [
                             'nik' => $memberNik,
-                            'name' => $member['full_name'] ?? $member['nama'] ?? 'Unknown',
-                            'error' => $resp['message'] ?? 'Unknown error'
-                        ];
-                        Log::warning('API: external update failed for member', [
-                            'nik' => $memberNik,
-                            'error' => $resp['message'] ?? 'Unknown error'
+                            'name' => $member['full_name'] ?? $member['nama'] ?? 'Unknown'
                         ]);
-                    } else {
+                        
                         $updatedMembers[] = [
                             'nik' => $memberNik,
                             'name' => $member['full_name'] ?? $member['nama'] ?? 'Unknown'
@@ -387,16 +380,33 @@ class ProfileController extends Controller
                         'name' => $member['full_name'] ?? $member['nama'] ?? 'Unknown',
                         'error' => $e->getMessage()
                     ];
-                    Log::error('API: exception updating external API for member', [
+                    Log::error('API: failed updating local DB for member', [
                         'nik' => $memberNik,
                         'error' => $e->getMessage()
                     ]);
                 }
+
+                // TIDAK ADA UPDATE KE API EKSTERNAL - HANYA DATABASE LOKAL
+            }
+
+            // Log hasil update
+            Log::info('API: Family location update completed (LOCAL DATABASE ONLY)', [
+                'kk' => $kk,
+                'total_members' => count($familyMembers),
+                'successful_updates' => count($updatedMembers),
+                'failed_updates' => count($failedUpdates),
+                'updated_members' => $updatedMembers,
+                'failed_members' => $failedUpdates
+            ]);
+
+            $message = "Lokasi berhasil disimpan untuk " . count($updatedMembers) . " anggota keluarga (Database Lokal)";
+            if (count($failedUpdates) > 0) {
+                $message .= ". " . count($failedUpdates) . " anggota gagal diupdate.";
             }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Lokasi dan alamat keluarga berhasil diperbarui',
+                'message' => $message,
                 'data' => [
                     'updated_members' => $updatedMembers,
                     'failed_updates' => $failedUpdates,

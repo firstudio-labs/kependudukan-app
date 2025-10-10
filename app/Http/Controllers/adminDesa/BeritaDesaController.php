@@ -23,9 +23,9 @@ class BeritaDesaController extends Controller
     {
         $this->authorizeAdminDesa();
 
-        $query = BeritaDesa::with('user')
+        $query = BeritaDesa::with(['user', 'penduduk'])
             ->where('villages_id', Auth::user()->villages_id)
-            ->where('status', 'approved');
+            ->whereIn('status', ['published', 'archived']);
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -47,49 +47,21 @@ class BeritaDesaController extends Controller
             'villages_id' => $adminUser->villages_id
         ];
         
-        // Tambahkan data wilayah untuk setiap berita berdasarkan admin yang login
+        // Tambahkan data wilayah dan nama penduduk untuk setiap berita berdasarkan admin yang login
         foreach ($berita as $item) {
             // Gunakan data wilayah dari admin yang login, bukan dari berita
             $item->wilayah_info = $this->getWilayahInfo($dummyBerita);
+            $item->nama_penduduk = $this->getNamaPenduduk($item->nik_penduduk);
         }
 
-        $context = 'approved';
+        $context = 'published';
         return view('admin.desa.berita-desa.index', compact('berita', 'context'));
     }
 
     public function pending(Request $request)
     {
-        $this->authorizeAdminDesa();
-
-        $query = BeritaDesa::with('user')
-            ->where('villages_id', Auth::user()->villages_id)
-            ->where('status', 'pending');
-
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('judul', 'like', "%{$search}%")
-                    ->orWhere('deskripsi', 'like', "%{$search}%")
-                    ->orWhere('komentar', 'like', "%{$search}%");
-            });
-        }
-
-        $berita = $query->latest()->paginate(10);
-
-        // Wilayah info pakai data admin login (konsisten dengan index)
-        $adminUser = Auth::user();
-        $dummyBerita = (object) [
-            'province_id' => $adminUser->province_id,
-            'districts_id' => $adminUser->districts_id,
-            'sub_districts_id' => $adminUser->sub_districts_id,
-            'villages_id' => $adminUser->villages_id
-        ];
-        foreach ($berita as $item) {
-            $item->wilayah_info = $this->getWilayahInfo($dummyBerita);
-        }
-
-        $context = 'pending';
-        return view('admin.desa.berita-desa.index', compact('berita', 'context'));
+        // Halaman approval dipindahkan ke index dengan dropdown status
+        return redirect()->route('admin.desa.berita-desa.index');
     }
 
     public function create()
@@ -117,12 +89,13 @@ class BeritaDesaController extends Controller
             'judul' => 'required|string|max:255',
             'gambar' => 'nullable|image|mimes:jpeg,png,jpg|max:4096',
             'deskripsi' => 'required|string',
-            'komentar' => 'nullable|string'
+            'komentar' => 'nullable|string',
+            'set_status' => 'nullable|in:archived'
         ]);
 
         $data = $request->only(['judul', 'deskripsi', 'komentar']);
         $data['user_id'] = Auth::id();
-        $data['status'] = 'approved';
+        $data['status'] = 'published';
         
         // Ambil wilayah dari user yang login (admin desa)
         $adminDesa = Auth::user();
@@ -209,6 +182,10 @@ class BeritaDesaController extends Controller
             $data['gambar'] = $path;
         }
 
+        // Jika set_status=archived, langsung set status arsip
+        if ($request->input('set_status') === 'archived') {
+            $data['status'] = 'archived';
+        }
         $berita->update($data);
 
         return redirect()->route('admin.desa.berita-desa.index')
@@ -236,6 +213,10 @@ class BeritaDesaController extends Controller
         $this->authorizeAdminDesa();
         $berita = BeritaDesa::with('user')->findOrFail($id);
         abort_unless($berita->villages_id == Auth::user()->villages_id, 403);
+        
+        // Tambahkan data nama penduduk
+        $berita->nama_penduduk = $this->getNamaPenduduk($berita->nik_penduduk);
+        
         return response()->json([
             'status' => 'success',
             'data' => $berita
@@ -247,7 +228,7 @@ class BeritaDesaController extends Controller
         $this->authorizeAdminDesa();
         $berita = BeritaDesa::findOrFail($id);
         abort_unless($berita->villages_id == Auth::user()->villages_id, 403);
-        $berita->update(['status' => 'approved']);
+        $berita->update(['status' => 'published']);
         return redirect()->back()->with('success', 'Berita disetujui.');
     }
 
@@ -256,8 +237,12 @@ class BeritaDesaController extends Controller
         $this->authorizeAdminDesa();
         $berita = BeritaDesa::findOrFail($id);
         abort_unless($berita->villages_id == Auth::user()->villages_id, 403);
-        $berita->update(['status' => 'rejected']);
-        return redirect()->back()->with('success', 'Berita ditolak.');
+        // Jika ditolak, hapus permanen sesuai requirement
+        if ($berita->gambar && Storage::exists('public/' . $berita->gambar)) {
+            Storage::delete('public/' . $berita->gambar);
+        }
+        $berita->delete();
+        return redirect()->back()->with('success', 'Berita ditolak dan dihapus.');
     }
 
     private function authorizeAdminDesa(): void
@@ -398,6 +383,31 @@ class BeritaDesaController extends Controller
         }
         
         return $wilayah;
+    }
+
+    /**
+     * Get nama penduduk from CitizenService
+     */
+    private function getNamaPenduduk($nik)
+    {
+        if (!$nik) {
+            return null;
+        }
+
+        try {
+            $citizenService = app(\App\Services\CitizenService::class);
+            $citizenData = $citizenService->getCitizenByNIK((int) $nik);
+            
+            if (is_array($citizenData)) {
+                $data = $citizenData['data'] ?? $citizenData;
+                return $data['full_name'] ?? $data['nama'] ?? 'Nama tidak tersedia';
+            }
+            
+            return 'Nama tidak tersedia';
+        } catch (\Exception $e) {
+            \Log::error('Error getting citizen name: ' . $e->getMessage(), ['nik' => $nik]);
+            return 'Nama tidak tersedia';
+        }
     }
 }
 

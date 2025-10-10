@@ -49,9 +49,13 @@ class UsahaDesaController extends Controller
             'ijin' => 'nullable|string|max:255',
             'tahun_didirikan' => 'nullable|digits:4',
             'ketua' => 'nullable|string|max:255',
+            'foto' => 'nullable|image|mimes:jpeg,png,webp|max:2048',
         ]);
 
         $validated['user_id'] = Auth::guard('web')->id();
+        if ($request->hasFile('foto')) {
+            $validated['foto'] = $request->file('foto')->store('uploads/usaha', 'public');
+        }
         UsahaDesa::create($validated);
 
         return redirect()->route('admin.desa.usaha.index')->with('success', 'Usaha Desa berhasil ditambahkan');
@@ -73,8 +77,12 @@ class UsahaDesaController extends Controller
             'ijin' => 'nullable|string|max:255',
             'tahun_didirikan' => 'nullable|digits:4',
             'ketua' => 'nullable|string|max:255',
+            'foto' => 'nullable|image|mimes:jpeg,png,webp|max:2048',
         ]);
 
+        if ($request->hasFile('foto')) {
+            $validated['foto'] = $request->file('foto')->store('uploads/usaha', 'public');
+        }
         $usaha->update($validated);
         return redirect()->route('admin.desa.usaha.index')->with('success', 'Usaha Desa berhasil diperbarui');
     }

@@ -35,9 +35,10 @@ class BeritaDesaController extends Controller
 
         $berita = $query->latest()->paginate(10);
         
-        // Tambahkan data wilayah untuk setiap berita agar bisa tampilkan nama
+        // Tambahkan data wilayah dan nama penduduk untuk setiap berita agar bisa tampilkan nama
         foreach ($berita as $item) {
             $item->wilayah_info = $this->getWilayahInfo($item);
+            $item->nama_penduduk = $this->getNamaPenduduk($item->nik_penduduk);
         }
         
         return view('superadmin.berita-desa.index', compact('berita'));
@@ -181,7 +182,10 @@ class BeritaDesaController extends Controller
 
     public function show($id)
     {
-        $berita = BeritaDesa::with(['user'])->findOrFail($id);
+        $berita = BeritaDesa::with(['user', 'penduduk'])->findOrFail($id);
+        
+        // Tambahkan data nama penduduk
+        $berita->nama_penduduk = $this->getNamaPenduduk($berita->nik_penduduk);
         
         // Tidak perlu lagi generate wilayah_info
         // Langsung gunakan field dari database: province_id, districts_id, sub_districts_id, villages_id
@@ -338,6 +342,31 @@ class BeritaDesaController extends Controller
         } catch (\Exception $e) {
             Log::error('Error getting desa: ' . $e->getMessage());
             return response()->json(['error' => 'Failed to load desa'], 500);
+        }
+    }
+
+    /**
+     * Get nama penduduk from CitizenService
+     */
+    private function getNamaPenduduk($nik)
+    {
+        if (!$nik) {
+            return null;
+        }
+
+        try {
+            $citizenService = app(\App\Services\CitizenService::class);
+            $citizenData = $citizenService->getCitizenByNIK((int) $nik);
+            
+            if (is_array($citizenData)) {
+                $data = $citizenData['data'] ?? $citizenData;
+                return $data['full_name'] ?? $data['nama'] ?? 'Nama tidak tersedia';
+            }
+            
+            return 'Nama tidak tersedia';
+        } catch (\Exception $e) {
+            Log::error('Error getting citizen name: ' . $e->getMessage(), ['nik' => $nik]);
+            return 'Nama tidak tersedia';
         }
     }
 }

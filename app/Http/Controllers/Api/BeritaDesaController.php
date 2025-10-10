@@ -64,7 +64,7 @@ class BeritaDesaController extends Controller
 
             $query = BeritaDesa::query();
             $query->where('villages_id', $villageId)
-                  ->where('status', 'approved');
+                  ->where('status', 'published');
 
             // Handle search parameter
             if ($request->has('search') && !empty($request->search)) {
@@ -152,7 +152,8 @@ class BeritaDesaController extends Controller
                 'districts_id' => $districtId ? (int) $districtId : null,
                 'sub_districts_id' => $subDistrictId ? (int) $subDistrictId : null,
                 'villages_id' => (int) $villageId,
-                'status' => $request->boolean('submit_for_approval', true) ? 'pending' : 'draft',
+                // Semua berita dari penduduk disimpan sebagai diarsipkan; admin akan mem-publish dari panel
+                'status' => 'archived',
             ];
 
             if ($request->hasFile('gambar')) {
@@ -167,7 +168,7 @@ class BeritaDesaController extends Controller
 
             return response()->json([
                 'status' => 'success',
-                'message' => $data['status'] === 'pending' ? 'Berita dibuat dan dikirim untuk persetujuan' : 'Berita disimpan sebagai draf',
+                'message' => 'Berita diarsipkan dan menunggu verifikasi admin desa',
                 'data' => $berita
             ], 201);
 
@@ -192,13 +193,16 @@ class BeritaDesaController extends Controller
                 })
                 ->firstOrFail();
 
-            if ($berita->status === 'approved') {
-                return response()->json(['status' => 'success', 'message' => 'Berita sudah disetujui'], 200);
+            if ($berita->status === 'published') {
+                return response()->json(['status' => 'success', 'message' => 'Berita sudah dipublikasikan'], 200);
             }
 
-            $berita->update(['status' => 'pending']);
-
-            return response()->json(['status' => 'success', 'message' => 'Berita dikirim untuk persetujuan', 'data' => $berita], 200);
+            // Tidak ada status pending lagi; biarkan tetap archived dan informasikan menunggu admin
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Berita menunggu verifikasi admin desa',
+                'data' => $berita
+            ], 200);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json(['status' => 'error', 'message' => 'Berita tidak ditemukan'], 404);
         } catch (\Exception $e) {

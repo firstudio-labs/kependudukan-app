@@ -101,8 +101,19 @@
                     </div>
 
                     <div class="mb-4">
-                        <h3 class="text-lg font-semibold text-gray-700">Nama Kepala Desa</h3>
-                        <p class="text-gray-600">{{ $user->kepalaDesa?->nama ?? '-' }}</p>
+                        <h3 class="text-lg font-semibold text-gray-700">Kepala Desa</h3>
+                        <div class="flex items-center gap-4">
+                            <div class="w-24 h-24 rounded bg-gray-100 overflow-hidden border">
+                                @if($user->kepalaDesa?->foto)
+                                    <img src="{{ asset('storage/' . $user->kepalaDesa->foto) }}" alt="Foto Kepala Desa" class="w-full h-full object-cover">
+                                @else
+                                    <div class="w-full h-full flex items-center justify-center text-gray-400 text-xs">Tidak ada foto</div>
+                                @endif
+                            </div>
+                            <div>
+                                <div class="text-gray-800 font-medium">{{ $user->kepalaDesa?->nama ?? '-' }}</div>
+                            </div>
+                        </div>
                     </div>
 
                     @if($user->kepalaDesa?->tanda_tangan)

@@ -28,6 +28,95 @@ if (Auth::guard('web')->check()) {
 }
             @endphp
 
+            <!-- Form Edit Kontak & Password -->
+            <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="text-xl font-semibold text-gray-700">Kontak & Keamanan</h2>
+                        <p class="text-gray-500">Ubah nomor HP dan password Anda</p>
+                    </div>
+                    <div>
+                        <button type="button" onclick="toggleContactForm()" id="btnToggleContact"
+                            class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg shadow-md border border-green-500 transition-all font-medium">
+                            <i class="fa-solid fa-phone"></i>
+                            <span id="btnToggleContactText">Edit Kontak & Password</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <dl class="grid grid-cols-1 gap-x-4 gap-y-3">
+                            <div class="sm:col-span-1">
+                                <dt class="text-sm font-medium text-gray-500">Nomor HP</dt>
+                                <dd class="mt-1 text-sm text-gray-900">{{ $userData->no_hp ?? 'Belum diisi' }}</dd>
+                            </div>
+                        </dl>
+                    </div>
+                    <div>
+                        <dl class="grid grid-cols-1 gap-x-4 gap-y-3">
+                            <div class="sm:col-span-1">
+                                <dt class="text-sm font-medium text-gray-500">Password</dt>
+                                <dd class="mt-1 text-sm text-gray-900">••••••••</dd>
+                            </div>
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- Form Edit Kontak & Password -->
+                <div id="editContactForm" class="hidden mt-6">
+                    <form method="POST" action="{{ route('profile.update-contact') }}" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        @csrf
+                        <div>
+                            <label class="block text-sm text-gray-700">Nomor HP Baru</label>
+                            <input type="tel" name="no_hp" value="{{ $userData->no_hp ?? '' }}" 
+                                class="mt-1 w-full border rounded p-2 @error('no_hp') border-red-500 @enderror" 
+                                placeholder="Contoh: 081234567890" required />
+                            @error('no_hp')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-700">Password Lama</label>
+                            <input type="password" name="current_password" 
+                                class="mt-1 w-full border rounded p-2 @error('current_password') border-red-500 @enderror" 
+                                placeholder="Masukkan password lama" />
+                            @error('current_password')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-700">Password Baru</label>
+                            <input type="password" name="new_password" 
+                                class="mt-1 w-full border rounded p-2 @error('new_password') border-red-500 @enderror" 
+                                placeholder="Minimal 6 karakter" />
+                            @error('new_password')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-700">Konfirmasi Password Baru</label>
+                            <input type="password" name="new_password_confirmation" 
+                                class="mt-1 w-full border rounded p-2 @error('new_password_confirmation') border-red-500 @enderror" 
+                                placeholder="Ulangi password baru" />
+                            @error('new_password_confirmation')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div class="md:col-span-2 flex gap-2">
+                            <button type="submit" 
+                                class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium">
+                                <i class="fa-solid fa-save mr-2"></i>Simpan Perubahan
+                            </button>
+                            <button type="button" onclick="toggleContactForm()" 
+                                class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium">
+                                <i class="fa-solid fa-times mr-2"></i>Batal
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
             <!-- Tabel Informasi Pribadi -->
             <div class="bg-white p-6 rounded-lg shadow-md mb-6">
                 <div class="flex items-center justify-between mb-6">
@@ -2200,6 +2289,34 @@ if (!empty($userData->tag_lokasi)) {
                         btn.classList.remove('hover:bg-red-700');
                         btn.classList.add('hover:bg-blue-700');
                         btnText.textContent = 'Edit Biodata (Minta Approval)';
+                    }
+                }
+
+                function toggleContactForm() {
+                    const el = document.getElementById('editContactForm');
+                    const btn = document.getElementById('btnToggleContact');
+                    const btnText = document.getElementById('btnToggleContactText');
+                    if (!el) return;
+                    const isHidden = el.classList.contains('hidden');
+                    if (isHidden) {
+                        el.classList.remove('hidden');
+                        btn.classList.remove('bg-green-600');
+                        btn.classList.add('bg-red-600');
+                        btn.classList.remove('border-green-500');
+                        btn.classList.add('border-red-500');
+                        btn.classList.remove('hover:bg-green-700');
+                        btn.classList.add('hover:bg-red-700');
+                        btnText.textContent = 'Tutup Form Edit';
+                        el.scrollIntoView({ behavior: 'smooth' });
+                    } else {
+                        el.classList.add('hidden');
+                        btn.classList.remove('bg-red-600');
+                        btn.classList.add('bg-green-600');
+                        btn.classList.remove('border-red-500');
+                        btn.classList.add('border-green-500');
+                        btn.classList.remove('hover:bg-red-700');
+                        btn.classList.add('hover:bg-green-700');
+                        btnText.textContent = 'Edit Kontak & Password';
                     }
                 }
             </script>

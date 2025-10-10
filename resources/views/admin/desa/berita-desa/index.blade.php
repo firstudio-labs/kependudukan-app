@@ -21,18 +21,16 @@
                     </svg>
                 </button>
             </form>
-            @if(($context ?? 'approved') === 'approved')
-                <div>
-                    <a href="{{ route('admin.desa.berita-desa.create') }}"
-                        class="flex items-center justify-center bg-[#7886C7] text-white font-semibold py-2 px-4 rounded-lg hover:bg-[#2D336B] transition duration-300 ease-in-out">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                            class="w-4 h-4 mr-2">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                        </svg>
-                        <span>Tambah Berita</span>
-                    </a>
-                </div>
-            @endif
+            <div>
+                <a href="{{ route('admin.desa.berita-desa.create') }}"
+                    class="flex items-center justify-center bg-[#7886C7] text-white font-semibold py-2 px-4 rounded-lg hover:bg-[#2D336B] transition duration-300 ease-in-out">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                        class="w-4 h-4 mr-2">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    <span>Tambah Berita</span>
+                </a>
+            </div>
         </div>
 
         <div class="bg-white shadow-md rounded-lg overflow-hidden">
@@ -44,13 +42,10 @@
                             <th class="px-6 py-3">Judul Berita</th>
                             <th class="px-6 py-3">Deskripsi</th>
                             <th class="px-6 py-3">Lokasi</th>
+                            <th class="px-6 py-3">Jurnalis</th>
                             <th class="px-6 py-3">Tanggal</th>
-                            @if(($context ?? 'approved') === 'pending')
-                                <th class="px-6 py-3">Status</th>
-                                <th class="px-6 py-3">Aksi</th>
-                            @else
-                                <th class="px-6 py-3">Aksi</th>
-                            @endif
+                            <th class="px-6 py-3">Status</th>
+                            <th class="px-6 py-3">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -136,68 +131,88 @@
                                     @endif
                                 </td>
                                 <td class="px-6 py-4">
+                                    @if($item->nama_penduduk)
+                                        <div class="text-sm font-medium text-gray-900">{{ $item->nama_penduduk }}</div>
+                                    @else
+                                        <span class="text-gray-400 text-sm">-</span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4">
                                     <div class="text-center">
                                         <div class="font-medium text-gray-900">{{ $item->created_at->format('d') }}</div>
                                         <div class="text-xs text-gray-500">{{ $item->created_at->format('M Y') }}</div>
                                         <div class="text-xs text-gray-400">{{ $item->created_at->format('H:i') }}</div>
                                     </div>
                                 </td>
-                                @if(($context ?? 'approved') === 'pending')
-                                    <td class="px-6 py-4">
-                                        <span class="inline-flex items-center px-2 py-1 text-xs font-medium rounded {{ $item->status === 'approved' ? 'bg-green-100 text-green-700' : ($item->status === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700') }}">
-                                            {{ ucfirst($item->status ?? 'pending') }}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <div class="flex items-center space-x-2">
-                                            <button onclick="showDetailModal({{ $item->id }})"
-                                                class="inline-flex items-center px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200"
-                                                aria-label="Lihat Detail">
-                                                <i class="fa-solid fa-eye mr-2"></i>
-                                                Detail
-                                            </button>
-                                            <form action="{{ route('admin.desa.berita-desa.approve', $item->id) }}" method="POST">
-                                                @csrf
-                                                <button type="submit" class="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500">
-                                                    <i class="fa-solid fa-check mr-2"></i> Approve
-                                                </button>
-                                            </form>
-                                            <form action="{{ route('admin.desa.berita-desa.reject', $item->id) }}" method="POST">
-                                                @csrf
-                                                <button type="submit" class="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500">
-                                                    <i class="fa-solid fa-xmark mr-2"></i> Tolak
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                @else
-                                    <td class="px-6 py-4">
-                                        <div class="flex items-center space-x-2">
-                                            <button onclick="showDetailModal({{ $item->id }})"
-                                                class="inline-flex items-center px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200"
-                                                aria-label="Lihat Detail">
-                                                <i class="fa-solid fa-eye mr-2"></i>
-                                                Detail
-                                            </button>
-                                            <a href="{{ route('admin.desa.berita-desa.edit', $item->id) }}"
-                                                class="inline-flex items-center px-3 py-2 text-sm font-medium text-yellow-600 bg-yellow-50 rounded-lg hover:bg-yellow-100 focus:outline-none focus:ring-2 focus:ring-yellow-500 transition-colors duration-200"
-                                                aria-label="Edit Berita">
-                                                <i class="fa-solid fa-pen-to-square mr-2"></i>
-                                                Edit
-                                            </a>
-                                            <button onclick="confirmDelete({{ $item->id }})" 
-                                                class="inline-flex items-center px-3 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors duration-200"
-                                                aria-label="Hapus Berita">
-                                                <i class="fa-solid fa-trash mr-2"></i>
-                                                Hapus
-                                            </button>
-                                        </div>
-                                    </td>
-                                @endif
+                                <td class="px-6 py-4">
+                                    @php
+                                        $badge = 'bg-yellow-100 text-yellow-700';
+                                        $label = 'Pending';
+                                        if ($item->status === 'published' || $item->status === 'approved') { $badge = 'bg-green-100 text-green-700'; $label = 'Dipublikasi'; }
+                                        elseif ($item->status === 'archived') { $badge = 'bg-gray-100 text-gray-700'; $label = 'Diarsipkan'; }
+                                    @endphp
+                                    <span class="inline-flex items-center px-2 py-1 text-xs font-medium rounded {{ $badge }}">{{ $label }}</span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center space-x-3">
+                                        <!-- Dropdown status ditempatkan paling kiri -->
+                                        @php
+                                            $statusColor = 'bg-yellow-100 text-yellow-700';
+                                            if ($item->status === 'published' || $item->status === 'approved') { $statusColor = 'bg-green-100 text-green-700'; }
+                                            elseif ($item->status === 'archived') { $statusColor = 'bg-gray-100 text-gray-700'; }
+                                        @endphp
+                                        <select class="status-select text-sm border border-gray-300 rounded-lg px-2 py-1 shadow-sm hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-[#7886C7] {{ $statusColor }}"
+                                                title="Ubah Status"
+                                                data-current-status="{{ $item->status }}"
+                                                onchange="changeBeritaStatus({{ $item->id }}, this.value, this)">
+                                            <option value="">Status…</option>
+                                            <option value="published" {{ ($item->status === 'published' || $item->status === 'approved') ? 'selected' : '' }}>Dipublikasi</option>
+                                            <option value="archived" {{ $item->status === 'archived' ? 'selected' : '' }}>Diarsipkan</option>
+                                            <option value="rejected">Ditolak</option>
+                                        </select>
+
+                                        <!-- Icon-only actions -->
+                                        <button onclick="showDetailModal({{ $item->id }})"
+                                            class="inline-flex items-center p-2 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200"
+                                            title="Detail" aria-label="Lihat Detail">
+                                            <i class="fa-solid fa-eye"></i>
+                                        </button>
+
+                                        <a href="{{ route('admin.desa.berita-desa.edit', $item->id) }}"
+                                           class="inline-flex items-center p-2 text-yellow-600 bg-yellow-50 rounded-lg hover:bg-yellow-100 focus:outline-none focus:ring-2 focus:ring-yellow-500 transition-colors duration-200"
+                                           title="Edit" aria-label="Edit Berita">
+                                            <i class="fa-solid fa-pen-to-square"></i>
+                                        </a>
+
+                                        <button onclick="confirmDelete({{ $item->id }})"
+                                            class="inline-flex items-center p-2 text-red-600 bg-red-50 rounded-lg hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors duration-200"
+                                            title="Hapus" aria-label="Hapus Berita">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+
+                                        <!-- Hidden forms for status actions -->
+                                        <form id="form-publish-{{ $item->id }}" action="{{ route('admin.desa.berita-desa.approve', $item->id) }}" method="POST" class="hidden">
+                                            @csrf
+                                        </form>
+
+                                        <form id="form-archive-{{ $item->id }}" action="{{ route('admin.desa.berita-desa.update', $item->id) }}" method="POST" class="hidden">
+                                            @csrf
+                                            @method('PUT')
+                                            <input type="hidden" name="judul" value="{{ $item->judul }}" />
+                                            <input type="hidden" name="deskripsi" value="{{ $item->deskripsi }}" />
+                                            <input type="hidden" name="komentar" value="{{ $item->komentar }}" />
+                                            <input type="hidden" name="set_status" value="archived" />
+                                        </form>
+
+                                        <form id="form-reject-{{ $item->id }}" action="{{ route('admin.desa.berita-desa.reject', $item->id) }}" method="POST" class="hidden">
+                                            @csrf
+                                        </form>
+                                    </div>
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center py-12">
+                                <td colspan="8" class="text-center py-12">
                                     <div class="flex flex-col items-center space-y-4">
                                         <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
                                             <i class="fa-solid fa-newspaper text-2xl text-gray-400"></i>
@@ -268,6 +283,20 @@
                         <p id="detailKomentar" class="text-base text-gray-900">-</p>
                     </div>
 
+                    <!-- Jurnalis Section -->
+                    <div>
+                        <p class="text-sm font-semibold text-gray-500 mb-3">Informasi Jurnalis:</p>
+                        <div id="detailJurnalis" class="bg-blue-50 rounded-lg p-4">
+                            <div class="flex items-center space-x-3">
+                                <span class="inline-flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-600 text-sm font-semibold rounded-full">J</span>
+                                <div>
+                                    <div class="text-xs text-gray-500 uppercase tracking-wide">Jurnalis</div>
+                                    <div id="detailNamaJurnalis" class="font-medium text-gray-900">-</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Gambar Berita Section -->
                     <div>
                         <p class="text-sm font-semibold text-gray-500 mb-2">Gambar Berita:</p>
@@ -289,8 +318,9 @@
     </div>
 
     <!-- Image Modal -->
-    <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-75 hidden z-50 flex items-center justify-center">
-        <div class="relative max-w-4xl max-h-full p-4">
+    <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-75 z-50 hidden">
+        <div class="w-full h-full flex items-center justify-center">
+            <div class="relative max-w-4xl max-h-full p-4">
             <button onclick="closeImageModal()" class="absolute top-4 right-4 text-white hover:text-gray-300 text-2xl font-bold z-10">
                 &times;
             </button>
@@ -298,10 +328,61 @@
             <div class="text-center mt-4">
                 <h3 id="modalTitle" class="text-white text-lg font-semibold"></h3>
             </div>
+            </div>
         </div>
     </div>
 
     <script>
+        function setSelectColor(sel) {
+            if (!sel) return;
+            sel.classList.remove('bg-green-100','text-green-700','bg-gray-100','text-gray-700','bg-yellow-100','text-yellow-700','bg-red-100','text-red-700');
+            const v = sel.value || sel.dataset.currentStatus || '';
+            if (v === 'published' || v === 'approved') sel.classList.add('bg-green-100','text-green-700');
+            else if (v === 'archived') sel.classList.add('bg-gray-100','text-gray-700');
+            else if (v === 'rejected') sel.classList.add('bg-red-100','text-red-700');
+            else sel.classList.add('bg-yellow-100','text-yellow-700');
+        }
+
+        function changeBeritaStatus(id, value, selEl) {
+            setSelectColor(selEl);
+            if (!value) return;
+            if (value === 'published' || value === 'approved') {
+                document.getElementById('form-publish-' + id).submit();
+                return;
+            }
+            if (value === 'archived') {
+                document.getElementById('form-archive-' + id).submit();
+                return;
+            }
+            if (value === 'rejected') {
+                // Konfirmasi sebelum hapus
+                Swal.fire({
+                    title: 'Tolak & Hapus berita ini?',
+                    text: 'Tindakan ini tidak dapat dibatalkan.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Ya, hapus!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        document.getElementById('form-reject-' + id).submit();
+                    }
+                    else {
+                        // Kembalikan warna sesuai status sebelumnya
+                        if (selEl) {
+                            selEl.value = selEl.dataset.currentStatus || '';
+                            setSelectColor(selEl);
+                        }
+                    }
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function(){
+            document.querySelectorAll('.status-select').forEach(function(sel){ setSelectColor(sel); });
+        });
         function showDetailModal(id) {
             // Show loading state
             document.getElementById('detailJudulBerita').textContent = 'Memuat...';
@@ -336,6 +417,9 @@
                         document.getElementById('detailJudulBerita').innerHTML = berita.judul || '-';
                         document.getElementById('detailDeskripsi').innerHTML = berita.deskripsi || '-';
                         document.getElementById('detailKomentar').innerHTML = berita.komentar || '-';
+
+                        // Update jurnalis info
+                        document.getElementById('detailNamaJurnalis').textContent = berita.nama_penduduk || 'Tidak tersedia';
 
                         // Clear previous image
                         imageContainer.innerHTML = '';

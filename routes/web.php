@@ -49,6 +49,7 @@ use App\Http\Controllers\LaporanDesaController;
 use App\Http\Controllers\LaporDesaController;
 use App\Http\Controllers\adminDesa\LaporanDesaController as AdminDesaLaporanDesaController;
 use App\Http\Controllers\adminDesa\AgendaDesaController as AdminDesaAgendaDesaController;
+use App\Http\Controllers\adminDesa\MasterTagihanController;
 use App\Http\Controllers\guest\BukuTamuController;
 use App\Http\Controllers\superadmin\BeritaDesaController as SuperadminBeritaDesaController;
 use App\Http\Controllers\User\BeritaDesaController as UserBeritaDesaController;
@@ -56,6 +57,7 @@ use App\Http\Controllers\User\PengumumanController as UserPengumumanController;
 use App\Http\Controllers\User\WarungkuController;
 use App\Http\Controllers\UsersController;
 use App\Http\Controllers\User\BiodataChangeController as UserBiodataChangeController;
+use App\Http\Controllers\adminDesa\BiodataRelatedDataController;
 
 
 // Homepage route should use our new method to force logout
@@ -843,6 +845,13 @@ Route::middleware(['auth:web', 'role:admin desa'])->group(function () {
     Route::put('/admin/desa/usaha/{usaha}', [\App\Http\Controllers\adminDesa\UsahaDesaController::class, 'update'])->name('admin.desa.usaha.update');
     Route::delete('/admin/desa/usaha/{usaha}', [\App\Http\Controllers\adminDesa\UsahaDesaController::class, 'destroy'])->name('admin.desa.usaha.destroy');
 
+    // Admin Desa Warungku (daftar informasi usaha dari semua penduduk di desa admin)
+    Route::get('/admin/desa/warungku', [\App\Http\Controllers\adminDesa\WarungkuController::class, 'index'])->name('admin.desa.warungku.index');
+    Route::get('/admin/desa/warungku/{id}', [\App\Http\Controllers\adminDesa\WarungkuController::class, 'show'])->where('id','[0-9]+')->name('admin.desa.warungku.show');
+
+    // Admin Desa Pengguna Mobile (penduduk dengan no_hp terisi)
+    Route::get('/admin/desa/pengguna-mobile', [\App\Http\Controllers\adminDesa\MobileUsersController::class, 'index'])->name('admin.desa.pengguna-mobile.index');
+
     // Kategori Sarana (Admin Desa)
     Route::get('/admin/desa/kategori-sarana', [\App\Http\Controllers\adminDesa\KategoriSaranaController::class, 'index'])->name('admin.desa.kategori-sarana.index');
     Route::get('/admin/desa/kategori-sarana/create', [\App\Http\Controllers\adminDesa\KategoriSaranaController::class, 'create'])->name('admin.desa.kategori-sarana.create');
@@ -876,6 +885,32 @@ Route::middleware(['auth:web', 'role:admin desa'])->group(function () {
     Route::get('/admin/desa/abdes/{abdes}/edit', [\App\Http\Controllers\adminDesa\AbdesController::class, 'edit'])->name('admin.desa.abdes.edit');
     Route::put('/admin/desa/abdes/{abdes}', [\App\Http\Controllers\adminDesa\AbdesController::class, 'update'])->name('admin.desa.abdes.update');
     Route::delete('/admin/desa/abdes/{abdes}', [\App\Http\Controllers\adminDesa\AbdesController::class, 'destroy'])->name('admin.desa.abdes.destroy');
+
+    // Master Tagihan Routes
+    Route::get('/admin/desa/master-tagihan', [\App\Http\Controllers\adminDesa\MasterTagihanController::class, 'index'])->name('admin.desa.master-tagihan.index');
+    
+    // Kategori routes
+    Route::post('/admin/desa/master-tagihan/kategori', [\App\Http\Controllers\adminDesa\MasterTagihanController::class, 'storeKategori'])->name('admin.desa.master-tagihan.kategori.store');
+    Route::put('/admin/desa/master-tagihan/kategori/{id}', [\App\Http\Controllers\adminDesa\MasterTagihanController::class, 'updateKategori'])->name('admin.desa.master-tagihan.kategori.update');
+    Route::delete('/admin/desa/master-tagihan/kategori/{id}', [\App\Http\Controllers\adminDesa\MasterTagihanController::class, 'destroyKategori'])->name('admin.desa.master-tagihan.kategori.destroy');
+    
+    // Sub Kategori routes
+    Route::post('/admin/desa/master-tagihan/sub-kategori', [\App\Http\Controllers\adminDesa\MasterTagihanController::class, 'storeSubKategori'])->name('admin.desa.master-tagihan.sub-kategori.store');
+    Route::put('/admin/desa/master-tagihan/sub-kategori/{id}', [\App\Http\Controllers\adminDesa\MasterTagihanController::class, 'updateSubKategori'])->name('admin.desa.master-tagihan.sub-kategori.update');
+    Route::delete('/admin/desa/master-tagihan/sub-kategori/{id}', [\App\Http\Controllers\adminDesa\MasterTagihanController::class, 'destroySubKategori'])->name('admin.desa.master-tagihan.sub-kategori.destroy');
+    
+    // Tagihan routes
+    Route::post('/admin/desa/master-tagihan/tagihan', [\App\Http\Controllers\adminDesa\MasterTagihanController::class, 'storeTagihan'])->name('admin.desa.master-tagihan.tagihan.store');
+    Route::get('/admin/desa/master-tagihan/tagihan/{id}', [\App\Http\Controllers\adminDesa\MasterTagihanController::class, 'showTagihan'])->name('admin.desa.master-tagihan.tagihan.show');
+    Route::put('/admin/desa/master-tagihan/tagihan/{id}', [\App\Http\Controllers\adminDesa\MasterTagihanController::class, 'updateTagihan'])->name('admin.desa.master-tagihan.tagihan.update');
+    Route::post('/admin/desa/master-tagihan/tagihan/{id}/status', [\App\Http\Controllers\adminDesa\MasterTagihanController::class, 'updateStatus'])->name('admin.desa.master-tagihan.tagihan.update-status');
+    Route::delete('/admin/desa/master-tagihan/tagihan/{id}', [\App\Http\Controllers\adminDesa\MasterTagihanController::class, 'destroyTagihan'])->name('admin.desa.master-tagihan.tagihan.destroy');
+    
+    // AJAX routes
+    Route::get('/admin/desa/master-tagihan/sub-kategoris/{kategoriId}', [\App\Http\Controllers\adminDesa\MasterTagihanController::class, 'getSubKategorisByKategori'])->name('admin.desa.master-tagihan.sub-kategoris.by-kategori');
+    
+    // Mobile Users routes
+    Route::get('/admin/desa/mobile-users', [\App\Http\Controllers\adminDesa\MobileUsersController::class, 'index'])->name('admin.desa.mobile-users.index');
 });
 
 // Route untuk operator - menggunakan web guard
@@ -897,6 +932,8 @@ Route::middleware(['auth:penduduk'])->group(function () {
         ->name('user.profile.edit');
     Route::put('/user/profile', [ProfileController::class, 'update'])
         ->name('user.profile.update');
+    Route::post('/user/profile/update-contact', [ProfileController::class, 'updateContact'])
+        ->name('profile.update-contact');
     Route::post('/user/profile/request-approval', [ProfileController::class, 'requestBiodataApproval'])
         ->name('user.profile.request-approval');
     Route::get('/user/profile/create', [ProfileController::class, 'create'])
@@ -1059,6 +1096,18 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['role:superadmin'])->prefix('superadmin/datamaster')->group(function () {
         Route::resource('user', UsersController::class, ['as' => 'superadmin.datamaster']);
     });
+});
+
+// Data terkait biodata (JSON) untuk admin menampilkan detail penduduk
+Route::middleware(['auth'])->group(function () {
+    Route::get('/admin/biodata/berita/{nik}', [BiodataRelatedDataController::class, 'beritaByNik'])->name('admin.biodata.berita');
+    Route::get('/admin/biodata/tagihan/{nik}', [BiodataRelatedDataController::class, 'tagihanByNik'])->name('admin.biodata.tagihan');
+    Route::get('/admin/biodata/aset/{nik}', [BiodataRelatedDataController::class, 'asetByNik'])->name('admin.biodata.aset');
+    Route::get('/admin/biodata/warung-produk/{nik}', [BiodataRelatedDataController::class, 'warungProdukByNik'])->name('admin.biodata.warung_produk');
+    Route::get('/admin/biodata/domisili/{nik}', [BiodataRelatedDataController::class, 'domisiliByNik'])->name('admin.biodata.domisili');
+    Route::get('/admin/biodata/laporan/{nik}', [BiodataRelatedDataController::class, 'laporanByNik'])->name('admin.biodata.laporan');
+    Route::get('/admin/biodata/penduduk-location/{nik}', [BiodataRelatedDataController::class, 'pendudukLocationByNik'])->name('admin.biodata.penduduk_location');
+    Route::get('/admin/biodata/surat/{nik}', [BiodataRelatedDataController::class, 'lettersByNik'])->name('admin.biodata.surat');
 });
 
 // Fix the fetch-heads-of-family route to use the correct controller

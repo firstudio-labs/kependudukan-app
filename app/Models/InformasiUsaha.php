@@ -10,7 +10,7 @@ class InformasiUsaha extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'penduduk_id', 'nama_usaha', 'kelompok_usaha', 'alamat', 'tag_lokasi', 'foto',
+        'user_id', 'penduduk_id', 'kk', 'nama_usaha', 'kelompok_usaha', 'alamat', 'tag_lokasi', 'foto',
         'province_id', 'districts_id', 'sub_districts_id', 'villages_id'
     ];
 

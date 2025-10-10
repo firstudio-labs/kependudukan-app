@@ -3,7 +3,7 @@
         <h1 class="text-2xl font-bold text-gray-800 mb-2">Tambah Sarana Umum</h1>
         <p class="text-sm text-gray-500 mb-6">Pilih jenis sarana, kategori (tergantung jenis), lalu isi detail.</p>
 
-        <form method="POST" action="{{ route('admin.desa.sarana-umum.store') }}" class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+        <form method="POST" action="{{ route('admin.desa.sarana-umum.store') }}" enctype="multipart/form-data" class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
             @csrf
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
@@ -28,7 +28,7 @@
                            class="mt-1 block w-full rounded-lg border border-gray-300 p-2.5 focus:border-[#7886C7] focus:ring-2 focus:ring-[#7886C7]" />
                     @error('nama_sarana')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror
                 </div>
-                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 md:col-span-2">
                     <x-map-input 
                         label="Lokasi Sarana Umum" 
                         addressId="alamat" 
@@ -46,11 +46,18 @@
                     @error('tag_lat')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror
                     @error('tag_lng')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror
                 </div>
-                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 md:col-span-2">
                     <label class="block text-sm font-medium text-gray-700">Kontak</label>
                     <input type="text" name="kontak" value="{{ old('kontak') }}" placeholder="Nomor/WA/Email (opsional)"
                            class="mt-1 block w-full rounded-lg border border-gray-300 p-2.5 focus:border-[#7886C7] focus:ring-2 focus:ring-[#7886C7]" />
                     @error('kontak')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700">Foto (opsional)</label>
+                    <input type="file" name="foto" accept="image/jpeg,image/png,image/webp"
+                           class="mt-1 block w-full rounded-lg border border-gray-300 p-2.5 focus:border-[#7886C7] focus:ring-2 focus:ring-[#7886C7]" />
+                    @error('foto')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror
+                    <img id="foto-preview" alt="Preview" class="h-24 rounded mt-2 hidden">
                 </div>
             </div>
 
@@ -65,6 +72,8 @@
         document.addEventListener('DOMContentLoaded', function(){
             const jenisSelect = document.getElementById('jenis-sarana');
             const kategoriSelect = document.getElementById('kategori-sarana');
+            const input = document.querySelector('input[name="foto"]');
+            const preview = document.getElementById('foto-preview');
 
             jenisSelect.addEventListener('change', async function(){
                 const jenis = jenisSelect.value;
@@ -83,6 +92,16 @@
                     kategoriSelect.innerHTML = '<option value="">Gagal memuat</option>';
                 }
             });
+
+            if (input && preview) {
+                input.addEventListener('change', function(){
+                    const file = input.files && input.files[0];
+                    if (file) {
+                        preview.src = URL.createObjectURL(file);
+                        preview.classList.remove('hidden');
+                    }
+                });
+            }
         });
     </script>
 </x-layout>

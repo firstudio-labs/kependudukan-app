@@ -29,7 +29,6 @@ class Penduduk extends Authenticatable
         'no_hp',
         'alamat',
         'tag_lokasi',
-        'informasi_usaha_id',
     ];
 
     /**
@@ -51,8 +50,5 @@ class Penduduk extends Authenticatable
         return 'nik';
     }
 
-    public function informasiUsaha()
-    {
-        return $this->belongsTo(InformasiUsaha::class, 'informasi_usaha_id');
-    }
+    // relasi informasi_usaha_id dihapus karena tidak lagi digunakan
 }

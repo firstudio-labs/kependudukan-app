@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         @vite('resources/css/app.css')
 
-        <title>Kependudukan</title>
+        <title>LADIMAS</title>
         <style>
             .glass-card {
                 background-color: rgba(45, 51, 107, 0.2);

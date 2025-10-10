@@ -37,6 +37,7 @@ class CitizenService
         }
     }
 
+
     /**
      * Get all citizens who are heads of families
      *

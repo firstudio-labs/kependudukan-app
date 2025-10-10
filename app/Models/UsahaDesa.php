@@ -16,6 +16,7 @@ class UsahaDesa extends Model
         'ijin',
         'tahun_didirikan',
         'ketua',
+        'foto',
     ];
 
     public function user()

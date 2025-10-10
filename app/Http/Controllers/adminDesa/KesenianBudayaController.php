@@ -50,6 +50,7 @@ class KesenianBudayaController extends Controller
             'tag_lat' => 'nullable|numeric',
             'tag_lng' => 'nullable|numeric',
             'kontak' => 'nullable|string|max:255',
+            'foto' => 'nullable|image|mimes:jpeg,png,webp|max:2048',
         ]);
         
         // Gabungkan lat dan lng menjadi tag_lokasi
@@ -58,6 +59,12 @@ class KesenianBudayaController extends Controller
         }
         
         $validated['user_id'] = Auth::guard('web')->id();
+        if ($validated['tag_lat'] && $validated['tag_lng']) {
+            $validated['tag_lokasi'] = $validated['tag_lat'] . ',' . $validated['tag_lng'];
+        }
+        if ($request->hasFile('foto')) {
+            $validated['foto'] = $request->file('foto')->store('uploads/kesenian', 'public');
+        }
         KesenianBudaya::create($validated);
         return redirect()->route('admin.desa.kesenian-budaya.index')->with('success','Data kesenian & budaya ditambahkan');
     }
@@ -79,6 +86,7 @@ class KesenianBudayaController extends Controller
             'tag_lat' => 'nullable|numeric',
             'tag_lng' => 'nullable|numeric',
             'kontak' => 'nullable|string|max:255',
+            'foto' => 'nullable|image|mimes:jpeg,png,webp|max:2048',
         ]);
         
         // Gabungkan lat dan lng menjadi tag_lokasi
@@ -86,6 +94,12 @@ class KesenianBudayaController extends Controller
             $validated['tag_lokasi'] = $validated['tag_lat'] . ',' . $validated['tag_lng'];
         }
         
+        if ($validated['tag_lat'] && $validated['tag_lng']) {
+            $validated['tag_lokasi'] = $validated['tag_lat'] . ',' . $validated['tag_lng'];
+        }
+        if ($request->hasFile('foto')) {
+            $validated['foto'] = $request->file('foto')->store('uploads/kesenian', 'public');
+        }
         $kesenianBudaya->update($validated);
         return redirect()->route('admin.desa.kesenian-budaya.index')->with('success','Data kesenian & budaya diperbarui');
     }

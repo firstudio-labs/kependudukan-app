@@ -28,6 +28,7 @@
                 <thead class="text-xs text-gray-700 uppercase bg-[#e6e8ed]">
                     <tr>
                         <th class="px-6 py-3 w-16">No</th>
+                        <th class="px-6 py-3">Foto</th>
                         <th class="px-6 py-3">Jenis</th>
                         <th class="px-6 py-3">Nama</th>
                         <th class="px-6 py-3">Ijin</th>
@@ -40,6 +41,13 @@
                     @forelse($items as $item)
                         <tr class="bg-white border-gray-300 border-b hover:bg-gray-50">
                             <td class="px-6 py-4">{{ ($items->firstItem() ?? 1) + $loop->index }}</td>
+                            <td class="px-6 py-4">
+                                @if($item->foto)
+                                    <img src="{{ asset('storage/'.$item->foto) }}" alt="Foto" class="h-12 w-12 object-cover rounded">
+                                @else
+                                    -
+                                @endif
+                            </td>
                             <td class="px-6 py-4">{{ $item->jenis }}</td>
                             <td class="px-6 py-4">{{ $item->nama }}</td>
                             <td class="px-6 py-4">{{ $item->ijin ?? '-' }}</td>
@@ -56,7 +64,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center py-4">Tidak ada data.</td>
+                            <td colspan="8" class="text-center py-4">Tidak ada data.</td>
                         </tr>
                     @endforelse
                 </tbody>

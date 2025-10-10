@@ -40,6 +40,7 @@
                             <th class="px-6 py-3">Judul Berita</th>
                             <th class="px-6 py-3">Deskripsi</th>
                             <th class="px-6 py-3">Lokasi</th>
+                            <th class="px-6 py-3">Jurnalis</th>
                             <th class="px-6 py-3">Tanggal</th>
                             <th class="px-6 py-3">Aksi</th>
                         </tr>
@@ -127,6 +128,13 @@
                                     @endif
                                 </td>
                                 <td class="px-6 py-4">
+                                    @if($item->nama_penduduk)
+                                        <div class="text-sm font-medium text-gray-900">{{ $item->nama_penduduk }}</div>
+                                    @else
+                                        <span class="text-gray-400 text-sm">-</span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4">
                                     <div class="text-center">
                                         <div class="font-medium text-gray-900">{{ $item->created_at->format('d') }}</div>
                                         <div class="text-xs text-gray-500">{{ $item->created_at->format('M Y') }}</div>
@@ -142,7 +150,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center py-4">Tidak ada data berita.</td>
+                                <td colspan="7" class="text-center py-4">Tidak ada data berita.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -201,6 +209,20 @@
                     <div>
                         <p class="text-sm font-semibold text-gray-500">Komentar:</p>
                         <p id="detailKomentar" class="text-base text-gray-900">-</p>
+                    </div>
+
+                    <!-- Jurnalis Section -->
+                    <div>
+                        <p class="text-sm font-semibold text-gray-500 mb-3">Informasi Jurnalis:</p>
+                        <div id="detailJurnalis" class="bg-blue-50 rounded-lg p-4">
+                            <div class="flex items-center space-x-3">
+                                <span class="inline-flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-600 text-sm font-semibold rounded-full">J</span>
+                                <div>
+                                    <div class="text-xs text-gray-500 uppercase tracking-wide">Jurnalis</div>
+                                    <div id="detailNamaJurnalis" class="font-medium text-gray-900">-</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Wilayah Section -->
@@ -306,6 +328,9 @@
                         document.getElementById('detailJudulBerita').innerHTML = berita.judul || '-';
                         document.getElementById('detailDeskripsi').innerHTML = berita.deskripsi || '-';
                         document.getElementById('detailKomentar').innerHTML = berita.komentar || '-';
+
+                        // Update jurnalis info
+                        document.getElementById('detailNamaJurnalis').textContent = berita.nama_penduduk || 'Tidak tersedia';
 
                         // Update wilayah info dengan format baru
                         const wilayah = berita.wilayah_info || {};

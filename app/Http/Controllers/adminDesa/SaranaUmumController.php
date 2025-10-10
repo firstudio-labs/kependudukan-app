@@ -53,6 +53,7 @@ class SaranaUmumController extends Controller
             'tag_lat' => 'nullable|numeric',
             'tag_lng' => 'nullable|numeric',
             'kontak' => 'nullable|string|max:255',
+            'foto' => 'nullable|image|mimes:jpeg,png,webp|max:2048',
         ]);
         
         // Gabungkan lat dan lng menjadi tag_lokasi
@@ -61,6 +62,9 @@ class SaranaUmumController extends Controller
         }
         
         $validated['user_id'] = Auth::guard('web')->id();
+        if ($request->hasFile('foto')) {
+            $validated['foto'] = $request->file('foto')->store('uploads/sarana', 'public');
+        }
         SaranaUmum::create($validated);
         return redirect()->route('admin.desa.sarana-umum.index')->with('success','Sarana umum ditambahkan');
     }
@@ -88,6 +92,7 @@ class SaranaUmumController extends Controller
             'tag_lat' => 'nullable|numeric',
             'tag_lng' => 'nullable|numeric',
             'kontak' => 'nullable|string|max:255',
+            'foto' => 'nullable|image|mimes:jpeg,png,webp|max:2048',
         ]);
         
         // Gabungkan lat dan lng menjadi tag_lokasi
@@ -95,6 +100,9 @@ class SaranaUmumController extends Controller
             $validated['tag_lokasi'] = $validated['tag_lat'] . ',' . $validated['tag_lng'];
         }
         
+        if ($request->hasFile('foto')) {
+            $validated['foto'] = $request->file('foto')->store('uploads/sarana', 'public');
+        }
         $saranaUmum->update($validated);
         return redirect()->route('admin.desa.sarana-umum.index')->with('success','Sarana umum diperbarui');
     }

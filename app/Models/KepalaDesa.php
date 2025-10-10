@@ -24,6 +24,7 @@ class KepalaDesa extends Model
     protected $fillable = [
         'user_id',
         'nama',
+        'foto',
         'tanda_tangan'
     ];
 
