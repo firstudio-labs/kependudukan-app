@@ -278,6 +278,7 @@ class BiodataRelatedDataController extends Controller
                 ->limit(50)
                 ->get()
                 ->map(function ($b) {
+                    $warungkuMaster = $b->warungkuMaster;
                     return [
                         'id' => $b->id,
                         'nama_produk' => $b->nama_produk,
@@ -285,8 +286,8 @@ class BiodataRelatedDataController extends Controller
                         'stok' => (int) $b->stok,
                         'deskripsi' => $b->deskripsi,
                         'foto_url' => $b->foto_url,
-                        'klasifikasi' => optional($b->warungkuMaster)->klasifikasi,
-                        'jenis' => optional($b->warungkuMaster)->jenis,
+                        'klasifikasi' => $warungkuMaster ? $warungkuMaster->klasifikasi : null,
+                        'jenis' => $warungkuMaster ? $warungkuMaster->jenis : null,
                         'created_at' => optional($b->created_at)->format('Y-m-d H:i:s'),
                     ];
                 });
