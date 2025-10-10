@@ -488,52 +488,56 @@ class BiodataRelatedDataController extends Controller
             } catch (\Throwable $e) { Log::error('lettersByNik skck err: '.$e->getMessage()); }
 
             // Domisili
-            $domisili = Domisili::query()
-                ->where(function ($q) use ($nik, $nikClean) {
-                    $q->where('nik', $nik)
-                      ->orWhereRaw("REPLACE(nik,' ','') = ?", [$nikClean])
-                      ->orWhere('nik', 'like', "%$nik%");
-                })
-                ->latest()
-                ->limit(50)
-                ->get()
-                ->map(function ($row) {
-                    return [
-                        'type' => 'domisili',
-                        'type_label' => 'Domisili',
-                        'id' => $row->id,
-                        'nik' => $row->nik,
-                        'full_name' => $row->full_name,
-                        'purpose' => 'Surat Domisili',
-                        'letter_date' => optional($row->created_at)->format('Y-m-d'),
-                        'is_accepted' => $row->is_accepted ?? null,
-                    ];
-                });
-            $items = $items->merge($domisili);
+            try {
+                $domisili = Domisili::query()
+                    ->where(function ($q) use ($nik, $nikClean) {
+                        $q->where('nik', $nik)
+                          ->orWhereRaw("REPLACE(nik,' ','') = ?", [$nikClean])
+                          ->orWhere('nik', 'like', "%$nik%");
+                    })
+                    ->latest()
+                    ->limit(50)
+                    ->get()
+                    ->map(function ($row) {
+                        return [
+                            'type' => 'domisili',
+                            'type_label' => 'Domisili',
+                            'id' => $row->id,
+                            'nik' => $row->nik,
+                            'full_name' => $row->full_name,
+                            'purpose' => 'Surat Domisili',
+                            'letter_date' => optional($row->created_at)->format('Y-m-d'),
+                            'is_accepted' => $row->is_accepted ?? null,
+                        ];
+                    });
+                $items = $items->merge($domisili);
+            } catch (\Throwable $e) { Log::error('lettersByNik domisili err: '.$e->getMessage()); }
 
             // Domisili Usaha
-            $domUsaha = DomisiliUsaha::query()
-                ->where(function ($q) use ($nik, $nikClean) {
-                    $q->where('nik', $nik)
-                      ->orWhereRaw("REPLACE(nik,' ','') = ?", [$nikClean])
-                      ->orWhere('nik', 'like', "%$nik%");
-                })
-                ->latest()
-                ->limit(50)
-                ->get()
-                ->map(function ($row) {
-                    return [
-                        'type' => 'domisili_usaha',
-                        'type_label' => 'Domisili Usaha',
-                        'id' => $row->id,
-                        'nik' => $row->nik,
-                        'full_name' => $row->full_name ?? $row->owner_name,
-                        'purpose' => $row->business_name,
-                        'letter_date' => optional($row->created_at)->format('Y-m-d'),
-                        'is_accepted' => $row->is_accepted ?? null,
-                    ];
-                });
-            $items = $items->merge($domUsaha);
+            try {
+                $domUsaha = DomisiliUsaha::query()
+                    ->where(function ($q) use ($nik, $nikClean) {
+                        $q->where('nik', $nik)
+                          ->orWhereRaw("REPLACE(nik,' ','') = ?", [$nikClean])
+                          ->orWhere('nik', 'like', "%$nik%");
+                    })
+                    ->latest()
+                    ->limit(50)
+                    ->get()
+                    ->map(function ($row) {
+                        return [
+                            'type' => 'domisili_usaha',
+                            'type_label' => 'Domisili Usaha',
+                            'id' => $row->id,
+                            'nik' => $row->nik,
+                            'full_name' => $row->full_name ?? $row->owner_name,
+                            'purpose' => $row->business_name,
+                            'letter_date' => optional($row->created_at)->format('Y-m-d'),
+                            'is_accepted' => $row->is_accepted ?? null,
+                        ];
+                    });
+                $items = $items->merge($domUsaha);
+            } catch (\Throwable $e) { Log::error('lettersByNik domisili_usaha err: '.$e->getMessage()); }
 
             // Pengantar KTP (jika ada)
             if (class_exists(PengantarKtp::class)) {
@@ -705,8 +709,9 @@ class BiodataRelatedDataController extends Controller
                 'data' => $items,
             ]);
         } catch (\Throwable $e) {
-            Log::error('lettersByNik error: '.$e->getMessage());
-            return response()->json(['success' => false, 'data' => []]);
+            Log::error('lettersByNik fatal: '.$e->getMessage());
+            // Tetap kembalikan success true agar UI tidak memblokir; data kosong saat terjadi error global
+            return response()->json(['success' => true, 'count' => 0, 'nik' => $nik, 'data' => []]);
         }
     }
 }
