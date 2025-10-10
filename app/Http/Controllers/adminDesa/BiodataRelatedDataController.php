@@ -409,7 +409,11 @@ class BiodataRelatedDataController extends Controller
 
             // Administrasi Umum
             $admin = Administration::query()
-                ->where('nik', $nik)
+                ->where(function ($q) use ($nik) {
+                    $q->where('nik', $nik)
+                      ->orWhereRaw("REPLACE(nik,' ','') = ?", [$nik])
+                      ->orWhere('nik', 'like', "%$nik%");
+                })
                 ->latest()
                 ->limit(50)
                 ->get()
@@ -429,7 +433,11 @@ class BiodataRelatedDataController extends Controller
 
             // Kehilangan
             $kehilangan = Kehilangan::query()
-                ->where('nik', $nik)
+                ->where(function ($q) use ($nik) {
+                    $q->where('nik', $nik)
+                      ->orWhereRaw("REPLACE(nik,' ','') = ?", [$nik])
+                      ->orWhere('nik', 'like', "%$nik%");
+                })
                 ->latest()
                 ->limit(50)
                 ->get()
@@ -449,7 +457,11 @@ class BiodataRelatedDataController extends Controller
 
             // SKCK
             $skck = SKCK::query()
-                ->where('nik', $nik)
+                ->where(function ($q) use ($nik) {
+                    $q->where('nik', $nik)
+                      ->orWhereRaw("REPLACE(nik,' ','') = ?", [$nik])
+                      ->orWhere('nik', 'like', "%$nik%");
+                })
                 ->latest()
                 ->limit(50)
                 ->get()
@@ -539,8 +551,12 @@ class BiodataRelatedDataController extends Controller
 
             // Rumah Sewa
             try {
-                $rumahSewa = RumahSewa::query()
-                    ->where('nik', $nik)
+            $rumahSewa = RumahSewa::query()
+                    ->where(function ($q) use ($nik) {
+                        $q->where('nik', $nik)
+                          ->orWhereRaw("REPLACE(nik,' ','') = ?", [$nik])
+                          ->orWhere('nik', 'like', "%$nik%");
+                    })
                     ->latest()
                     ->limit(50)
                     ->get()
@@ -561,8 +577,12 @@ class BiodataRelatedDataController extends Controller
 
             // Izin Keramaian
             try {
-                $keramaian = IzinKeramaian::query()
-                    ->where('nik', $nik)
+            $keramaian = IzinKeramaian::query()
+                    ->where(function ($q) use ($nik) {
+                        $q->where('nik', $nik)
+                          ->orWhereRaw("REPLACE(nik,' ','') = ?", [$nik])
+                          ->orWhere('nik', 'like', "%$nik%");
+                    })
                     ->latest()
                     ->limit(50)
                     ->get()
@@ -583,8 +603,12 @@ class BiodataRelatedDataController extends Controller
 
             // Kematian
             try {
-                $kematian = Kematian::query()
-                    ->where('nik', $nik)
+            $kematian = Kematian::query()
+                    ->where(function ($q) use ($nik) {
+                        $q->where('nik', $nik)
+                          ->orWhereRaw("REPLACE(nik,' ','') = ?", [$nik])
+                          ->orWhere('nik', 'like', "%$nik%");
+                    })
                     ->latest()
                     ->limit(50)
                     ->get()
@@ -606,8 +630,14 @@ class BiodataRelatedDataController extends Controller
             // Kelahiran: cocokkan father_nik / mother_nik
             try {
                 $kelahiran = Kelahiran::query()
-                    ->where('father_nik', $nik)
-                    ->orWhere('mother_nik', $nik)
+                    ->where(function ($q) use ($nik) {
+                        $q->where('father_nik', $nik)
+                          ->orWhere('mother_nik', $nik)
+                          ->orWhereRaw("REPLACE(father_nik,' ','') = ?", [$nik])
+                          ->orWhereRaw("REPLACE(mother_nik,' ','') = ?", [$nik])
+                          ->orWhere('father_nik', 'like', "%$nik%")
+                          ->orWhere('mother_nik', 'like', "%$nik%");
+                    })
                     ->latest()
                     ->limit(50)
                     ->get()
