@@ -408,15 +408,20 @@ class BiodataRelatedDataController extends Controller
             $items = collect();
             $nik = trim((string) $nik);
             $nikClean = str_replace(' ', '', $nik);
+            $nikDigits = preg_replace('/\D+/', '', $nik);
+
+            // Helper: tambah kondisi cocok NIK pada kolom tertentu dengan berbagai normalisasi
+            $whereNik = function ($q, $col = 'nik') use ($nik, $nikClean, $nikDigits) {
+                $q->where($col, $nik)
+                  ->orWhereRaw("REPLACE($col,' ','') = ?", [$nikClean])
+                  ->orWhereRaw("REPLACE(REPLACE(REPLACE($col,' ',''),'.',''),'-','') = ?", [$nikDigits])
+                  ->orWhere($col, 'like', "%$nik%");
+            };
 
             // Administrasi Umum
             try {
                 $admin = Administration::query()
-                    ->where(function ($q) use ($nik, $nikClean) {
-                        $q->where('nik', $nik)
-                          ->orWhereRaw("REPLACE(nik,' ','') = ?", [$nikClean])
-                          ->orWhere('nik', 'like', "%$nik%");
-                    })
+                    ->where(function ($q) use ($whereNik) { $whereNik($q, 'nik'); })
                     ->latest()
                     ->limit(50)
                     ->get()
@@ -438,11 +443,7 @@ class BiodataRelatedDataController extends Controller
             // Kehilangan
             try {
                 $kehilangan = Kehilangan::query()
-                    ->where(function ($q) use ($nik, $nikClean) {
-                        $q->where('nik', $nik)
-                          ->orWhereRaw("REPLACE(nik,' ','') = ?", [$nikClean])
-                          ->orWhere('nik', 'like', "%$nik%");
-                    })
+                    ->where(function ($q) use ($whereNik) { $whereNik($q, 'nik'); })
                     ->latest()
                     ->limit(50)
                     ->get()
@@ -464,11 +465,7 @@ class BiodataRelatedDataController extends Controller
             // SKCK
             try {
                 $skck = SKCK::query()
-                    ->where(function ($q) use ($nik, $nikClean) {
-                        $q->where('nik', $nik)
-                          ->orWhereRaw("REPLACE(nik,' ','') = ?", [$nikClean])
-                          ->orWhere('nik', 'like', "%$nik%");
-                    })
+                    ->where(function ($q) use ($whereNik) { $whereNik($q, 'nik'); })
                     ->latest()
                     ->limit(50)
                     ->get()
@@ -490,11 +487,7 @@ class BiodataRelatedDataController extends Controller
             // Domisili
             try {
                 $domisili = Domisili::query()
-                    ->where(function ($q) use ($nik, $nikClean) {
-                        $q->where('nik', $nik)
-                          ->orWhereRaw("REPLACE(nik,' ','') = ?", [$nikClean])
-                          ->orWhere('nik', 'like', "%$nik%");
-                    })
+                    ->where(function ($q) use ($whereNik) { $whereNik($q, 'nik'); })
                     ->latest()
                     ->limit(50)
                     ->get()
@@ -516,11 +509,7 @@ class BiodataRelatedDataController extends Controller
             // Domisili Usaha
             try {
                 $domUsaha = DomisiliUsaha::query()
-                    ->where(function ($q) use ($nik, $nikClean) {
-                        $q->where('nik', $nik)
-                          ->orWhereRaw("REPLACE(nik,' ','') = ?", [$nikClean])
-                          ->orWhere('nik', 'like', "%$nik%");
-                    })
+                    ->where(function ($q) use ($whereNik) { $whereNik($q, 'nik'); })
                     ->latest()
                     ->limit(50)
                     ->get()
@@ -568,11 +557,7 @@ class BiodataRelatedDataController extends Controller
             // Rumah Sewa
             try {
             $rumahSewa = RumahSewa::query()
-                    ->where(function ($q) use ($nik) {
-                        $q->where('nik', $nik)
-                          ->orWhereRaw("REPLACE(nik,' ','') = ?", [$nik])
-                          ->orWhere('nik', 'like', "%$nik%");
-                    })
+                    ->where(function ($q) use ($whereNik) { $whereNik($q, 'nik'); })
                     ->latest()
                     ->limit(50)
                     ->get()
@@ -594,11 +579,7 @@ class BiodataRelatedDataController extends Controller
             // Izin Keramaian
             try {
             $keramaian = IzinKeramaian::query()
-                    ->where(function ($q) use ($nik) {
-                        $q->where('nik', $nik)
-                          ->orWhereRaw("REPLACE(nik,' ','') = ?", [$nik])
-                          ->orWhere('nik', 'like', "%$nik%");
-                    })
+                    ->where(function ($q) use ($whereNik) { $whereNik($q, 'nik'); })
                     ->latest()
                     ->limit(50)
                     ->get()
@@ -620,11 +601,7 @@ class BiodataRelatedDataController extends Controller
             // Kematian
             try {
             $kematian = Kematian::query()
-                    ->where(function ($q) use ($nik) {
-                        $q->where('nik', $nik)
-                          ->orWhereRaw("REPLACE(nik,' ','') = ?", [$nik])
-                          ->orWhere('nik', 'like', "%$nik%");
-                    })
+                    ->where(function ($q) use ($whereNik) { $whereNik($q, 'nik'); })
                     ->latest()
                     ->limit(50)
                     ->get()
