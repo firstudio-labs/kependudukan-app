@@ -1224,7 +1224,7 @@
 
         // ====== Loader Paralel Data Terkait (by NIK) ======
         function loadAllRelatedByNik(nik) {
-            const timeoutMs = 7000;
+            const timeoutMs = 15000; // beri waktu lebih lama di produksi agar tidak time out
             const withTimeout = (p) => Promise.race([
                 p, new Promise(resolve => setTimeout(() => resolve({ success: false, data: [] }), timeoutMs))
             ]);
@@ -1237,7 +1237,11 @@
                 withTimeout(fetch(`/admin/biodata/tagihan/${nik}`).then(r => r.json()).catch(() => ({ success:false }))),
                 withTimeout(fetch(`/admin/biodata/aset/${nik}`).then(r => r.json()).catch(() => ({ success:false }))),
                 withTimeout(fetch(`/admin/biodata/penduduk-location/${nik}`).then(r => r.json()).catch(() => ({ success:false }))),
-                withTimeout(fetch(`/admin/biodata/surat/${nik}`).then(r => r.json()).catch(() => ({ success:false })))
+                // Untuk surat, beri timeout ekstra panjang karena mengagregasi banyak tabel
+                Promise.race([
+                    fetch(`/admin/biodata/surat/${nik}`).then(r => r.json()).catch(() => ({ success:false })),
+                    new Promise(resolve => setTimeout(() => resolve({ success:false, data: [] }), 20000))
+                ])
             ]).then(([warungRes, laporanRes, domisiliRes, beritaRes, tagihanRes, asetRes, lokasiRes, lettersRes]) => {
                 renderWarungProduk(warungRes);
                 renderLaporan(laporanRes);
