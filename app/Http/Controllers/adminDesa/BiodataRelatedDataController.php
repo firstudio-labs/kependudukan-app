@@ -649,7 +649,12 @@ class BiodataRelatedDataController extends Controller
             } catch (\Throwable $e) {}
 
             // Urutkan dan batasi
-            $items = $items->sortByDesc('letter_date')->values()->take(100);
+            $items = $items->sortByDesc('letter_date')->values()->take(200);
+
+            Log::info('lettersByNik debug', [
+                'nik' => $nik,
+                'total' => $items->count(),
+            ]);
 
             return response()->json(['success' => true, 'data' => $items]);
         } catch (\Throwable $e) {
