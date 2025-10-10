@@ -256,6 +256,82 @@ class ProfileController extends Controller
         }
     }
 
+    /**
+     * Update nomor HP pengguna terautentikasi (token/session)
+     */
+    public function updatePhone(Request $request)
+    {
+        // Ambil user dari sanctum terlebih dahulu, lalu guard penduduk/web
+        if (auth('sanctum')->check()) {
+            $user = auth('sanctum')->user();
+        } else if (Auth::guard('penduduk')->check()) {
+            $user = Auth::guard('penduduk')->user();
+        } else if (Auth::guard('web')->check()) {
+            $user = Auth::guard('web')->user();
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized'
+            ], 401);
+        }
+
+        $validated = $request->validate([
+            'no_hp' => 'required|string|max:20',
+        ]);
+
+        $user->no_hp = $validated['no_hp'];
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Nomor HP berhasil diperbarui',
+            'data' => [
+                'no_hp' => $user->no_hp,
+            ]
+        ]);
+    }
+
+    /**
+     * Update password pengguna terautentikasi (token/session)
+     */
+    public function updatePassword(Request $request)
+    {
+        if (auth('sanctum')->check()) {
+            $user = auth('sanctum')->user();
+        } else if (Auth::guard('penduduk')->check()) {
+            $user = Auth::guard('penduduk')->user();
+        } else if (Auth::guard('web')->check()) {
+            $user = Auth::guard('web')->user();
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized'
+            ], 401);
+        }
+
+        $validated = $request->validate([
+            'current_password' => 'required|string',
+            'new_password' => 'required|string|min:6|confirmed',
+        ]);
+
+        if (!Hash::check($validated['current_password'], $user->password)) {
+            return response()->json([
+                'success' => false,
+                'errors' => [
+                    'current_password' => ['Password lama tidak sesuai']
+                ]
+            ], 422);
+        }
+
+        $user->password = Hash::make($validated['new_password']);
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Password berhasil diperbarui'
+        ]);
+    }
+
     protected function handleFileUpload(Request $request, $model, $field)
     {
         if ($request->hasFile($field)) {

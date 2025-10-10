@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\PengumumanController as ApiPengumumanController;
 use App\Http\Controllers\Api\AgendaDesaController;
 use App\Http\Controllers\Api\WarungkuController as ApiWarungkuController;
 use App\Http\Controllers\Api\PemerintahDesaController;
+use App\Http\Controllers\Api\TagihanController as ApiTagihanController;
 
 /*
 |--------------------------------------------------------------------------
@@ -102,6 +103,10 @@ Route::middleware(ApiTokenOwnerMiddleware::class)->group(function () {
             ->name('user.profile.edit');
         Route::put('/profile', [ProfileController::class, 'update'])
             ->name('user.profile.update');
+        Route::post('/profile/update-phone', [ProfileController::class, 'updatePhone'])
+            ->name('user.profile.update-phone');
+        Route::post('/profile/update-password', [ProfileController::class, 'updatePassword'])
+            ->name('user.profile.update-password');
         Route::get('/profile/create', [ProfileController::class, 'create'])
             ->name('user.profile.create');
         Route::post('/profile', [ProfileController::class, 'store'])
@@ -162,6 +167,10 @@ Route::middleware(ApiTokenOwnerMiddleware::class)->group(function () {
 
         // Pemerintah Desa (berdasarkan desa user login)
         Route::get('/pemerintah-desa', [PemerintahDesaController::class, 'show'])->name('user.api.pemerintah-desa.show');
+
+        // Tagihan penduduk (berdasarkan NIK user)
+        Route::get('/tagihan', [ApiTagihanController::class, 'index'])->name('user.api.tagihan.index');
+        Route::get('/tagihan/{tagihan}', [ApiTagihanController::class, 'show'])->name('user.api.tagihan.show');
 
 
         //riwayat surat
