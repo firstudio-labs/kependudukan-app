@@ -1416,7 +1416,25 @@
 
                     loadLeaflet()
                         .then(() => initMapDom(data))
-                        .catch(() => {/* diamkan jika gagal memuat */});
+                        .catch(() => {
+                            // Fallback terakhir: render peta via iframe OSM supaya tetap terlihat di produksi
+                            try {
+                                let lat = -6.1753924;
+                                let lng = 106.8271528;
+                                let alamat = '-';
+                                if (data && data.tag_lokasi) {
+                                    const parts = data.tag_lokasi.split(',').map(function (v) { return parseFloat(v.trim()); });
+                                    if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) { lat = parts[0]; lng = parts[1]; }
+                                }
+                                if (data && data.alamat) alamat = data.alamat;
+                                const delta = 0.01;
+                                const bbox = [lng - delta, lat - delta, lng + delta, lat + delta].join(',');
+                                mapEl.innerHTML = `<iframe width="100%" height="100%" frameborder="0" scrolling="no" marginheight="0" marginwidth="0"
+                                    src="https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat},${lng}"></iframe>`;
+                                if (alamatEl) alamatEl.textContent = alamat || '-';
+                                if (coordEl) coordEl.textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                            } catch (_) {}
+                        });
                 } else {
                     initMapDom(data);
                 }
