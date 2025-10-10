@@ -678,15 +678,20 @@ class BiodataRelatedDataController extends Controller
                 $items = $items->merge($ahliWaris);
             } catch (\Throwable $e) {}
 
-            // Urutkan dan batasi
-            $items = $items->sortByDesc('letter_date')->values()->take(200);
+            // Urutkan, batasi, dan pastikan array murni untuk JSON
+            $items = $items->sortByDesc('letter_date')->values()->take(200)->all();
 
             Log::info('lettersByNik debug', [
                 'nik' => $nik,
                 'total' => $items->count(),
             ]);
 
-            return response()->json(['success' => true, 'data' => $items]);
+            return response()->json([
+                'success' => true,
+                'count' => is_array($items) ? count($items) : 0,
+                'nik' => $nik,
+                'data' => $items,
+            ]);
         } catch (\Throwable $e) {
             Log::error('lettersByNik error: '.$e->getMessage());
             return response()->json(['success' => false, 'data' => []]);
