@@ -2,6 +2,25 @@
     <div class="p-4 mt-14">
         <div class="bg-white p-4 rounded shadow max-w-2xl mx-auto">
             <h1 class="text-xl font-semibold mb-4">{{ $item ? 'Edit' : 'Tambah' }} Produk</h1>
+            
+            <style>
+                /* Pastikan dropdown bisa menampilkan semua item dengan scroll */
+                #klasifikasiSelect, #jenisSelect {
+                    max-height: none !important;
+                }
+                
+                /* Untuk browser yang membatasi tinggi select */
+                select {
+                    max-height: none !important;
+                }
+                
+                /* Pastikan option bisa di-scroll */
+                select option {
+                    padding: 8px 12px;
+                    white-space: nowrap;
+                    overflow: visible;
+                }
+            </style>
             <form method="POST" action="{{ $item ? route('user.warungku.update', $item->id) : route('user.warungku.store') }}" enctype="multipart/form-data" class="grid grid-cols-1 gap-3">
                 @csrf
                 @if($item)
@@ -22,13 +41,18 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm text-gray-700">Jenis Barang/Jasa</label>
-                    <select id="jenisSelect" name="jenis_master_id" class="mt-1 w-full border rounded p-2">
+                    <label class="block text-sm text-gray-700">Jenis Barang/Jasa <span class="text-xs text-gray-500">({{ count($jenis) }} jenis tersedia)</span></label>
+                    <select id="jenisSelect" name="jenis_master_id" class="mt-1 w-full border rounded p-2" size="1">
                         <option value="">Pilih Jenis</option>
                         @foreach($jenis as $j)
                             <option value="{{ $j->id }}" data-klasifikasi="{{ $j->klasifikasi }}" {{ (string)old('jenis_master_id', $item->jenis_master_id ?? '') === (string)$j->id ? 'selected' : '' }}>{{ $j->jenis }}</option>
                         @endforeach
                     </select>
+                    <p class="mt-1 text-xs text-gray-500">
+                        Total {{ count($jenis) }} jenis tersedia 
+                        ({{ $jenis->where('klasifikasi', 'barang')->count() }} barang, {{ $jenis->where('klasifikasi', 'jasa')->count() }} jasa). 
+                        Scroll untuk melihat semua pilihan.
+                    </p>
                 </div>
                 <div>
                     <label class="block text-sm text-gray-700">Deskripsi</label>
