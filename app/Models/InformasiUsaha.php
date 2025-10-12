@@ -11,7 +11,7 @@ class InformasiUsaha extends Model
 
     protected $fillable = [
         'user_id', 'penduduk_id', 'kk', 'nama_usaha', 'kelompok_usaha', 'alamat', 'tag_lokasi', 'foto',
-        'province_id', 'districts_id', 'sub_districts_id', 'villages_id'
+        'province_id', 'districts_id', 'sub_districts_id', 'villages_id', 'status'
     ];
 
     protected $appends = ['foto_url'];

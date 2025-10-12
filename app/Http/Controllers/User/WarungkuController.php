@@ -16,6 +16,11 @@ class WarungkuController extends Controller
     {
         $query = BarangWarungku::query()->with(['informasiUsaha.penduduk']);
 
+        // Hanya tampilkan produk dari toko yang aktif (untuk penduduk)
+        $query->whereHas('informasiUsaha', function ($q) {
+            $q->where('status', 'aktif');
+        });
+
         if ($request->filled('search')) {
             $s = $request->search;
             $query->where('nama_produk', 'like', "%{$s}%");

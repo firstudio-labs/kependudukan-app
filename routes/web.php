@@ -848,6 +848,7 @@ Route::middleware(['auth:web', 'role:admin desa'])->group(function () {
     // Admin Desa Warungku (daftar informasi usaha dari semua penduduk di desa admin)
     Route::get('/admin/desa/warungku', [\App\Http\Controllers\adminDesa\WarungkuController::class, 'index'])->name('admin.desa.warungku.index');
     Route::get('/admin/desa/warungku/{id}', [\App\Http\Controllers\adminDesa\WarungkuController::class, 'show'])->where('id','[0-9]+')->name('admin.desa.warungku.show');
+    Route::post('/admin/desa/warungku/{id}/update-status', [\App\Http\Controllers\adminDesa\WarungkuController::class, 'updateStatus'])->where('id','[0-9]+')->name('admin.desa.warungku.update-status');
 
     // Admin Desa Pengguna Mobile (penduduk dengan no_hp terisi)
     Route::get('/admin/desa/pengguna-mobile', [\App\Http\Controllers\adminDesa\MobileUsersController::class, 'index'])->name('admin.desa.pengguna-mobile.index');
