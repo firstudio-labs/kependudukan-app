@@ -41,18 +41,13 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm text-gray-700">Jenis Barang/Jasa <span class="text-xs text-gray-500">({{ count($jenis) }} jenis tersedia)</span></label>
+                    <label class="block text-sm text-gray-700">Jenis Barang/Jasa</label>
                     <select id="jenisSelect" name="jenis_master_id" class="mt-1 w-full border rounded p-2" size="1">
                         <option value="">Pilih Jenis</option>
                         @foreach($jenis as $j)
                             <option value="{{ $j->id }}" data-klasifikasi="{{ $j->klasifikasi }}" {{ (string)old('jenis_master_id', $item->jenis_master_id ?? '') === (string)$j->id ? 'selected' : '' }}>{{ $j->jenis }}</option>
                         @endforeach
                     </select>
-                    <p class="mt-1 text-xs text-gray-500">
-                        Total {{ count($jenis) }} jenis tersedia 
-                        ({{ $jenis->where('klasifikasi', 'barang')->count() }} barang, {{ $jenis->where('klasifikasi', 'jasa')->count() }} jasa). 
-                        Scroll untuk melihat semua pilihan.
-                    </p>
                 </div>
                 <div>
                     <label class="block text-sm text-gray-700">Deskripsi</label>
