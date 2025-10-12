@@ -57,7 +57,7 @@
         </div>
 
         <div class="mt-4">
-            {{ $items->withQueryString()->links() }}
+            <x-pagination :data="$items" />
         </div>
     </div>
 </x-layout>
