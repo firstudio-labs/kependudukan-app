@@ -116,6 +116,13 @@ class WarungkuController extends Controller
     {
         $barangWarungku->load('informasiUsaha.penduduk');
         $jenisMaster = WarungkuMaster::select('id','jenis','klasifikasi')->find($barangWarungku->jenis_master_id);
+        
+        // Hitung statistik produk dari toko yang sama
+        $informasiUsahaId = $barangWarungku->informasi_usaha_id;
+        $totalProducts = BarangWarungku::where('informasi_usaha_id', $informasiUsahaId)->count();
+        $availableProducts = BarangWarungku::where('informasi_usaha_id', $informasiUsahaId)->where('stok', '>', 0)->count();
+        $outOfStockProducts = BarangWarungku::where('informasi_usaha_id', $informasiUsahaId)->where('stok', '=', 0)->count();
+        
         return response()->json([
             'data' => [
                 'id' => $barangWarungku->id,
@@ -141,6 +148,11 @@ class WarungkuController extends Controller
                         'nama_lengkap' => $barangWarungku->informasiUsaha?->penduduk?->nama_lengkap,
                         'no_hp' => $barangWarungku->informasiUsaha?->penduduk?->no_hp,
                     ]
+                ],
+                'statistik_toko' => [
+                    'total_produk' => $totalProducts,
+                    'produk_tersedia' => $availableProducts,
+                    'produk_habis' => $outOfStockProducts
                 ]
             ]
         ]);
