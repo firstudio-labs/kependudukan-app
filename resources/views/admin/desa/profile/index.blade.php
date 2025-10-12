@@ -42,7 +42,14 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div class="md:col-span-2">
                                 <label class="block text-gray-600 text-sm font-medium mb-1">Peta Lokasi</label>
-                                <div id="map-view" class="w-full h-60 rounded border border-gray-300"></div>
+                                <div id="map-view" class="w-full h-60 rounded border border-gray-300" style="min-height: 240px; background-color: #f8f9fa; position: relative;">
+                                    <div id="map-loading" class="absolute inset-0 flex items-center justify-center bg-gray-100 rounded">
+                                        <div class="text-center">
+                                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                                            <span class="text-sm text-gray-600">Memuat peta...</span>
+                                        </div>
+                                    </div>
+                                </div>
                                 <div class="text-sm text-gray-700 mt-2">
                                     <span class="font-medium">Koordinat:</span>
                                     <span id="koordinat-text">{{ $user->tag_lokasi ?? '-' }}</span>
@@ -384,6 +391,106 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script>
+        // Pastikan Leaflet dimuat sebelum menjalankan script peta
+        function initMap() {
+            const mapEl = document.getElementById('map-view');
+            if (!mapEl) return;
+
+            // Pastikan Leaflet sudah dimuat
+            if (typeof L === 'undefined') {
+                console.error('Leaflet library not loaded');
+                return;
+            }
+
+            let lat = -6.1753924; // default Monas
+            let lng = 106.8271528;
+            const tagLokasi = "{{ $user->tag_lokasi ?? '' }}";
+            
+            if (tagLokasi) {
+                const parts = tagLokasi.split(',').map(function (v) { return parseFloat(v.trim()); });
+                if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+                    lat = parts[0];
+                    lng = parts[1];
+                }
+            }
+
+            try {
+                const map = L.map('map-view', {
+                    zoomControl: true,
+                    scrollWheelZoom: false,
+                    dragging: true
+                }).setView([lat, lng], 15);
+                
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: '&copy; OpenStreetMap'
+                }).addTo(map);
+
+                L.marker([lat, lng], { 
+                    draggable: false, 
+                    keyboard: false 
+                }).addTo(map);
+
+                // Update koordinat text
+                const koordinatText = document.getElementById('koordinat-text');
+                if (koordinatText) {
+                    koordinatText.textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                }
+
+                // Sembunyikan loading indicator
+                const loadingEl = document.getElementById('map-loading');
+                if (loadingEl) {
+                    loadingEl.style.display = 'none';
+                }
+
+                // Perbaiki layout saat container awalnya tersembunyi
+                setTimeout(function () { 
+                    try { 
+                        map.invalidateSize(true); 
+                    } catch (e) {
+                        console.error('Error invalidating map size:', e);
+                    } 
+                }, 200);
+                
+                setTimeout(function () { 
+                    try { 
+                        map.invalidateSize(true); 
+                    } catch (e) {
+                        console.error('Error invalidating map size:', e);
+                    } 
+                }, 600);
+                
+                setTimeout(function () { 
+                    try { 
+                        map.invalidateSize(true); 
+                    } catch (e) {
+                        console.error('Error invalidating map size:', e);
+                    } 
+                }, 1200);
+
+            } catch (error) {
+                console.error('Error initializing map:', error);
+                // Sembunyikan loading dan tampilkan pesan error
+                const loadingEl = document.getElementById('map-loading');
+                if (loadingEl) {
+                    loadingEl.innerHTML = '<div class="text-center text-gray-500"><div class="text-red-500 mb-2">⚠️</div><div class="text-sm">Gagal memuat peta</div><div class="text-xs mt-1">Silakan refresh halaman</div></div>';
+                }
+            }
+        }
+
+        // Jalankan initMap setelah DOM loaded dan Leaflet tersedia
+        document.addEventListener('DOMContentLoaded', function () {
+            // Tunggu hingga Leaflet benar-benar dimuat
+            function waitForLeaflet() {
+                if (typeof L !== 'undefined') {
+                    initMap();
+                } else {
+                    setTimeout(waitForLeaflet, 50);
+                }
+            }
+            waitForLeaflet();
+        });
+
         document.addEventListener('DOMContentLoaded', function () {
             const formSection = document.getElementById('perangkat-form');
             const toggleBtn = document.getElementById('toggle-perangkat-btn');
@@ -496,31 +603,6 @@
                 // Scroll ke form
                 setTimeout(function(){ formSection.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 100);
             }
-        });
-    </script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const mapEl = document.getElementById('map-view');
-            if (!mapEl) return;
-
-            let lat = -6.1753924; // default Monas
-            let lng = 106.8271528;
-            const tagLokasi = "{{ $user->tag_lokasi ?? '' }}";
-            if (tagLokasi) {
-                const parts = tagLokasi.split(',').map(function (v) { return parseFloat(v.trim()); });
-                if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
-                    lat = parts[0];
-                    lng = parts[1];
-                }
-            }
-
-            const map = L.map('map-view').setView([lat, lng], 15);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '&copy; OpenStreetMap'
-            }).addTo(map);
-
-            L.marker([lat, lng]).addTo(map);
         });
     </script>
 </x-layout>
