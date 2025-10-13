@@ -20,6 +20,9 @@ use App\Http\Controllers\Api\WarungkuController as ApiWarungkuController;
 use App\Http\Controllers\Api\PemerintahDesaController;
 use App\Http\Controllers\Api\TagihanController as ApiTagihanController;
 use App\Http\Controllers\Api\AdminTagihanController;
+use App\Http\Controllers\Api\AdminPengumumanApiController;
+use App\Http\Controllers\Api\AdminBeritaDesaApiController;
+use App\Http\Controllers\Api\AdminPemerintahDesaApiController;
 
 /*
 |--------------------------------------------------------------------------
@@ -202,6 +205,29 @@ Route::middleware(ApiTokenOwnerMiddleware::class)->group(function () {
             Route::delete('/{tagihan}', [AdminTagihanController::class, 'destroy'])->whereNumber('tagihan')->name('admin.api.tagihan.destroy');
             Route::post('/{tagihan}/status', [AdminTagihanController::class, 'updateStatus'])->whereNumber('tagihan')->name('admin.api.tagihan.update-status');
         });
+
+        // Admin Desa - Pengumuman
+        Route::prefix('admin/pengumuman')->group(function () {
+            Route::get('/', [AdminPengumumanApiController::class, 'index']);
+            Route::post('/', [AdminPengumumanApiController::class, 'store']);
+            Route::get('/{pengumuman}', [AdminPengumumanApiController::class, 'show'])->whereNumber('pengumuman');
+            Route::put('/{pengumuman}', [AdminPengumumanApiController::class, 'update'])->whereNumber('pengumuman');
+            Route::delete('/{pengumuman}', [AdminPengumumanApiController::class, 'destroy'])->whereNumber('pengumuman');
+        });
+
+        // Admin Desa - Berita Desa
+        Route::prefix('admin/berita')->group(function () {
+            Route::get('/', [AdminBeritaDesaApiController::class, 'index']);
+            Route::post('/', [AdminBeritaDesaApiController::class, 'store']);
+            Route::get('/{berita}', [AdminBeritaDesaApiController::class, 'show'])->whereNumber('berita');
+            Route::put('/{berita}', [AdminBeritaDesaApiController::class, 'update'])->whereNumber('berita');
+            Route::delete('/{berita}', [AdminBeritaDesaApiController::class, 'destroy'])->whereNumber('berita');
+            Route::post('/{berita}/publish', [AdminBeritaDesaApiController::class, 'publish'])->whereNumber('berita');
+            Route::post('/{berita}/archive', [AdminBeritaDesaApiController::class, 'archive'])->whereNumber('berita');
+        });
+
+        // Admin Desa - Ringkasan Pemerintah Desa (berdasarkan villages_id admin login)
+        Route::get('/admin/pemerintah-desa', [AdminPemerintahDesaApiController::class, 'show'])->name('admin.api.pemerintah-desa.show');
 
 
         //riwayat surat
