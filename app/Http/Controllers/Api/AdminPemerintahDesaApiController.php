@@ -18,6 +18,7 @@ use App\Models\Abdes;
 use App\Models\InformasiUsaha;
 use App\Models\BarangWarungku;
 use App\Models\WarungkuMaster;
+use App\Services\CitizenService;
 
 class AdminPemerintahDesaApiController extends Controller
 {
@@ -73,6 +74,13 @@ class AdminPemerintahDesaApiController extends Controller
             return asset('storage/' . ltrim($path, '/'));
         };
 
+        // Statistik penduduk desa dari CitizenService
+        $citizenService = app(CitizenService::class);
+        $genderStats = $citizenService->getGenderStatsByVillage($villageId); // harapkan ['male' => x, 'female' => y]
+        $ageGroupStats = $citizenService->getAgeGroupStatsByVillage($villageId); // statistik umur
+        $educationStats = $citizenService->getEducationStatsByVillage($villageId); // statistik pendidikan
+        $religionStats = $citizenService->getReligionStatsByVillage($villageId); // statistik agama
+        
         // Klasifikasi & jenis dari barang warungku milik penduduk di desa tersebut
         $informasiUsahaIds = InformasiUsaha::where('villages_id', $villageId)->pluck('id');
         $barangCountsByJenis = BarangWarungku::whereIn('informasi_usaha_id', $informasiUsahaIds)
@@ -174,7 +182,10 @@ class AdminPemerintahDesaApiController extends Controller
                 ];
             }),
             'abdes' => $abdes,
-            // statistik warungku per jenis
+            'statistik_penduduk' => $genderStats,
+            'statistik_umur' => $ageGroupStats,
+            'statistik_pendidikan' => $educationStats,
+            'statistik_agama' => $religionStats,
             'warungku_klasifikasi_jenis' => $jenisMasters,
         ]);
     }
