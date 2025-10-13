@@ -20,7 +20,6 @@ use App\Http\Controllers\Api\WarungkuController as ApiWarungkuController;
 use App\Http\Controllers\Api\PemerintahDesaController;
 use App\Http\Controllers\Api\TagihanController as ApiTagihanController;
 use App\Http\Controllers\Api\AdminTagihanController;
-use App\Http\Controllers\Api\AdminPemerintahDesaController;
 
 /*
 |--------------------------------------------------------------------------
@@ -171,8 +170,6 @@ Route::middleware(ApiTokenOwnerMiddleware::class)->group(function () {
 
         // Pemerintah Desa (berdasarkan desa user login)
         Route::get('/pemerintah-desa', [PemerintahDesaController::class, 'show'])->name('user.api.pemerintah-desa.show');
-        // Versi Admin - Data lengkap desa (harus admin bearer token)
-        Route::get('/admin/pemerintah-desa', [AdminPemerintahDesaController::class, 'show'])->name('admin.api.pemerintah-desa.show');
 
         // Tagihan penduduk (berdasarkan NIK user)
         Route::get('/tagihan', [ApiTagihanController::class, 'index'])->name('user.api.tagihan.index');
@@ -180,14 +177,14 @@ Route::middleware(ApiTokenOwnerMiddleware::class)->group(function () {
         Route::get('/tagihan-kategori', [ApiTagihanController::class, 'kategori'])->name('user.api.tagihan.kategori');
         // Admin Desa - Kelola Tagihan (berdasarkan desa user admin)
         Route::prefix('admin/tagihan')->group(function () {
-            Route::get('/', [AdminTagihanController::class, 'index'])->name('admin.api.tagihan.index');
-            Route::post('/', [AdminTagihanController::class, 'store'])->name('admin.api.tagihan.store');
-            Route::get('/{tagihan}', [AdminTagihanController::class, 'show'])->name('admin.api.tagihan.show');
-            Route::put('/{tagihan}', [AdminTagihanController::class, 'update'])->name('admin.api.tagihan.update');
-            Route::delete('/{tagihan}', [AdminTagihanController::class, 'destroy'])->name('admin.api.tagihan.destroy');
-            Route::post('/{tagihan}/status', [AdminTagihanController::class, 'updateStatus'])->name('admin.api.tagihan.update-status');
+            // Pastikan rute statis/khusus dideklarasikan sebelum rute dinamis {tagihan}
             Route::get('/kategori', [AdminTagihanController::class, 'kategori'])->name('admin.api.tagihan.kategori');
             Route::get('/kategori/{kategoriId}/sub', [AdminTagihanController::class, 'subKategoriByKategori'])->name('admin.api.tagihan.sub-kategori');
+            // List kategori saja dan sub kategori saja
+            Route::get('/kategori-only', [AdminTagihanController::class, 'kategoriIndex'])->name('admin.api.tagihan.kategori.index');
+            Route::get('/sub-kategori-only', [AdminTagihanController::class, 'subKategoriIndex'])->name('admin.api.tagihan.sub-kategori.index');
+            // Dropdown helper
+            Route::get('/dropdowns', [AdminTagihanController::class, 'dropdowns'])->name('admin.api.tagihan.dropdowns');
             // CRUD kategori
             Route::post('/kategori', [AdminTagihanController::class, 'storeKategori'])->name('admin.api.tagihan.kategori.store');
             Route::put('/kategori/{id}', [AdminTagihanController::class, 'updateKategori'])->name('admin.api.tagihan.kategori.update');
@@ -196,11 +193,14 @@ Route::middleware(ApiTokenOwnerMiddleware::class)->group(function () {
             Route::post('/sub-kategori', [AdminTagihanController::class, 'storeSubKategori'])->name('admin.api.tagihan.sub-kategori.store');
             Route::put('/sub-kategori/{id}', [AdminTagihanController::class, 'updateSubKategori'])->name('admin.api.tagihan.sub-kategori.update');
             Route::delete('/sub-kategori/{id}', [AdminTagihanController::class, 'destroySubKategori'])->name('admin.api.tagihan.sub-kategori.destroy');
-            // List khusus & dropdown
-            Route::get('/kategori-only', [AdminTagihanController::class, 'kategoriIndex'])->name('admin.api.tagihan.kategori-only');
-            Route::get('/sub-kategori-only', [AdminTagihanController::class, 'subKategoriIndex'])->name('admin.api.tagihan.sub-kategori-only');
-            Route::get('/dropdown/kategori', [AdminTagihanController::class, 'dropdownKategori'])->name('admin.api.tagihan.dropdown.kategori');
-            Route::get('/dropdown/sub-kategori', [AdminTagihanController::class, 'dropdownSubKategori'])->name('admin.api.tagihan.dropdown.sub-kategori');
+
+            // Rute utama tagihan (setelah rute kategori agar tidak bentrok)
+            Route::get('/', [AdminTagihanController::class, 'index'])->name('admin.api.tagihan.index');
+            Route::post('/', [AdminTagihanController::class, 'store'])->name('admin.api.tagihan.store');
+            Route::get('/{tagihan}', [AdminTagihanController::class, 'show'])->whereNumber('tagihan')->name('admin.api.tagihan.show');
+            Route::put('/{tagihan}', [AdminTagihanController::class, 'update'])->whereNumber('tagihan')->name('admin.api.tagihan.update');
+            Route::delete('/{tagihan}', [AdminTagihanController::class, 'destroy'])->whereNumber('tagihan')->name('admin.api.tagihan.destroy');
+            Route::post('/{tagihan}/status', [AdminTagihanController::class, 'updateStatus'])->whereNumber('tagihan')->name('admin.api.tagihan.update-status');
         });
 
 

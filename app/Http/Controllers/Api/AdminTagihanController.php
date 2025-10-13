@@ -224,6 +224,86 @@ class AdminTagihanController extends Controller
     }
 
     /**
+     * List kategori saja (untuk tabel / dropdown)
+     */
+    public function kategoriIndex(Request $request)
+    {
+        $user = $this->getAdminUser($request);
+        [$ok, $err] = $this->ensureAdminAccess($user);
+        if (!$ok) {
+            return response()->json(['message' => $err], $err === 'Unauthorized' ? 401 : 403);
+        }
+
+        $query = KategoriTagihan::query();
+        if ($request->filled('search')) {
+            $query->where('nama_kategori', 'like', '%' . $request->input('search') . '%');
+        }
+        if ($request->boolean('simple', false)) {
+            $items = $query->orderBy('nama_kategori')->get(['id', 'nama_kategori']);
+            return response()->json(['data' => $items]);
+        }
+        $perPage = (int) $request->input('per_page', 10);
+        $items = $query->orderBy('nama_kategori')->paginate($perPage)->withQueryString();
+        return response()->json(['data' => $items]);
+    }
+
+    /**
+     * List sub kategori saja (opsional filter kategori_id)
+     */
+    public function subKategoriIndex(Request $request)
+    {
+        $user = $this->getAdminUser($request);
+        [$ok, $err] = $this->ensureAdminAccess($user);
+        if (!$ok) {
+            return response()->json(['message' => $err], $err === 'Unauthorized' ? 401 : 403);
+        }
+
+        $query = SubKategoriTagihan::query();
+        if ($request->filled('kategori_id')) {
+            $query->where('kategori_id', (int) $request->input('kategori_id'));
+        }
+        if ($request->filled('search')) {
+            $query->where('nama_sub_kategori', 'like', '%' . $request->input('search') . '%');
+        }
+        if ($request->boolean('simple', false)) {
+            $items = $query->orderBy('nama_sub_kategori')->get(['id', 'kategori_id', 'nama_sub_kategori']);
+            return response()->json(['data' => $items]);
+        }
+        $perPage = (int) $request->input('per_page', 10);
+        $items = $query->orderBy('nama_sub_kategori')->paginate($perPage)->withQueryString();
+        return response()->json(['data' => $items]);
+    }
+
+    /**
+     * Dropdown helper untuk form kelola tagihan
+     * - categories: list simple id+nama
+     * - sub_categories: jika kategori_id diberikan
+     */
+    public function dropdowns(Request $request)
+    {
+        $user = $this->getAdminUser($request);
+        [$ok, $err] = $this->ensureAdminAccess($user);
+        if (!$ok) {
+            return response()->json(['message' => $err], $err === 'Unauthorized' ? 401 : 403);
+        }
+
+        $categories = KategoriTagihan::orderBy('nama_kategori')->get(['id', 'nama_kategori']);
+        $subCategories = [];
+        if ($request->filled('kategori_id')) {
+            $subCategories = SubKategoriTagihan::where('kategori_id', (int) $request->input('kategori_id'))
+                ->orderBy('nama_sub_kategori')
+                ->get(['id', 'kategori_id', 'nama_sub_kategori']);
+        }
+
+        return response()->json([
+            'data' => [
+                'categories' => $categories,
+                'sub_categories' => $subCategories,
+            ]
+        ]);
+    }
+
+    /**
      * CRUD Kategori
      */
     public function storeKategori(Request $request)
@@ -319,86 +399,6 @@ class AdminTagihanController extends Controller
         $sub = SubKategoriTagihan::findOrFail($id);
         $sub->delete();
         return response()->json(['success' => true]);
-    }
-
-    /**
-     * List khusus Kategori (tanpa relasi) + pencarian & pagination
-     */
-    public function kategoriIndex(Request $request)
-    {
-        $user = $this->getAdminUser($request);
-        [$ok, $err] = $this->ensureAdminAccess($user);
-        if (!$ok) {
-            return response()->json(['message' => $err], $err === 'Unauthorized' ? 401 : 403);
-        }
-
-        $query = KategoriTagihan::query();
-        if ($request->filled('search')) {
-            $query->where('nama_kategori', 'like', '%'.$request->input('search').'%');
-        }
-        $perPage = (int) $request->input('per_page', 10);
-        $items = $query->orderBy('nama_kategori')->paginate($perPage)->withQueryString();
-        return response()->json(['data' => $items]);
-    }
-
-    /**
-     * List khusus Sub Kategori (opsional filter kategori_id) + pencarian & pagination
-     */
-    public function subKategoriIndex(Request $request)
-    {
-        $user = $this->getAdminUser($request);
-        [$ok, $err] = $this->ensureAdminAccess($user);
-        if (!$ok) {
-            return response()->json(['message' => $err], $err === 'Unauthorized' ? 401 : 403);
-        }
-
-        $query = SubKategoriTagihan::query();
-        if ($request->filled('kategori_id')) {
-            $query->where('kategori_id', (int) $request->input('kategori_id'));
-        }
-        if ($request->filled('search')) {
-            $query->where('nama_sub_kategori', 'like', '%'.$request->input('search').'%');
-        }
-        $perPage = (int) $request->input('per_page', 10);
-        $items = $query->orderBy('nama_sub_kategori')->paginate($perPage)->withQueryString();
-        return response()->json(['data' => $items]);
-    }
-
-    /**
-     * Dropdown kategori (id, nama)
-     */
-    public function dropdownKategori(Request $request)
-    {
-        $user = $this->getAdminUser($request);
-        [$ok, $err] = $this->ensureAdminAccess($user);
-        if (!$ok) {
-            return response()->json(['message' => $err], $err === 'Unauthorized' ? 401 : 403);
-        }
-
-        $items = KategoriTagihan::orderBy('nama_kategori')
-            ->get(['id', 'nama_kategori']);
-        return response()->json(['data' => $items]);
-    }
-
-    /**
-     * Dropdown sub-kategori (id, nama) per kategori_id
-     */
-    public function dropdownSubKategori(Request $request)
-    {
-        $user = $this->getAdminUser($request);
-        [$ok, $err] = $this->ensureAdminAccess($user);
-        if (!$ok) {
-            return response()->json(['message' => $err], $err === 'Unauthorized' ? 401 : 403);
-        }
-
-        $request->validate([
-            'kategori_id' => 'required|exists:kategori_tagihans,id'
-        ]);
-
-        $items = SubKategoriTagihan::where('kategori_id', (int) $request->input('kategori_id'))
-            ->orderBy('nama_sub_kategori')
-            ->get(['id', 'nama_sub_kategori', 'kategori_id']);
-        return response()->json(['data' => $items]);
     }
 }
 
