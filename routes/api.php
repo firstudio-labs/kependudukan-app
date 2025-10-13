@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\WarungkuController as ApiWarungkuController;
 use App\Http\Controllers\Api\PemerintahDesaController;
 use App\Http\Controllers\Api\TagihanController as ApiTagihanController;
 use App\Http\Controllers\Api\AdminTagihanController;
+use App\Http\Controllers\Api\AdminPemerintahDesaController;
 
 /*
 |--------------------------------------------------------------------------
@@ -170,6 +171,8 @@ Route::middleware(ApiTokenOwnerMiddleware::class)->group(function () {
 
         // Pemerintah Desa (berdasarkan desa user login)
         Route::get('/pemerintah-desa', [PemerintahDesaController::class, 'show'])->name('user.api.pemerintah-desa.show');
+        // Versi Admin - Data lengkap desa (harus admin bearer token)
+        Route::get('/admin/pemerintah-desa', [AdminPemerintahDesaController::class, 'show'])->name('admin.api.pemerintah-desa.show');
 
         // Tagihan penduduk (berdasarkan NIK user)
         Route::get('/tagihan', [ApiTagihanController::class, 'index'])->name('user.api.tagihan.index');
