@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\AgendaDesaController;
 use App\Http\Controllers\Api\WarungkuController as ApiWarungkuController;
 use App\Http\Controllers\Api\PemerintahDesaController;
 use App\Http\Controllers\Api\TagihanController as ApiTagihanController;
+use App\Http\Controllers\Api\AdminTagihanController;
 
 /*
 |--------------------------------------------------------------------------
@@ -37,6 +38,8 @@ Route::middleware('guest')->group(function () {
     Route::get('/', [AuthController::class, 'homepage'])->name('homepage');
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [AuthController::class, 'login']);
+    // Admin login (users table)
+    Route::post('/admin/login', [AuthController::class, 'adminLogin'])->name('admin.login');
     Route::get('/register', [AuthController::class, 'showRegistrationForm'])->name('register');
     Route::post('/register', [AuthController::class, 'register']);
 });
@@ -172,6 +175,17 @@ Route::middleware(ApiTokenOwnerMiddleware::class)->group(function () {
         Route::get('/tagihan', [ApiTagihanController::class, 'index'])->name('user.api.tagihan.index');
         Route::get('/tagihan/{tagihan}', [ApiTagihanController::class, 'show'])->name('user.api.tagihan.show');
         Route::get('/tagihan-kategori', [ApiTagihanController::class, 'kategori'])->name('user.api.tagihan.kategori');
+        // Admin Desa - Kelola Tagihan (berdasarkan desa user admin)
+        Route::prefix('admin/tagihan')->group(function () {
+            Route::get('/', [AdminTagihanController::class, 'index'])->name('admin.api.tagihan.index');
+            Route::post('/', [AdminTagihanController::class, 'store'])->name('admin.api.tagihan.store');
+            Route::get('/{tagihan}', [AdminTagihanController::class, 'show'])->name('admin.api.tagihan.show');
+            Route::put('/{tagihan}', [AdminTagihanController::class, 'update'])->name('admin.api.tagihan.update');
+            Route::delete('/{tagihan}', [AdminTagihanController::class, 'destroy'])->name('admin.api.tagihan.destroy');
+            Route::post('/{tagihan}/status', [AdminTagihanController::class, 'updateStatus'])->name('admin.api.tagihan.update-status');
+            Route::get('/kategori', [AdminTagihanController::class, 'kategori'])->name('admin.api.tagihan.kategori');
+            Route::get('/kategori/{kategoriId}/sub', [AdminTagihanController::class, 'subKategoriByKategori'])->name('admin.api.tagihan.sub-kategori');
+        });
 
 
         //riwayat surat

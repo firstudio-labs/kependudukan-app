@@ -251,6 +251,70 @@ class AuthController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Login khusus admin (users table) menggunakan NIK + password
+     */
+    public function adminLogin(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'nik' => 'required|string',
+                'password' => 'required|string',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Validation error',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            if (!Auth::guard('web')->attempt(['nik' => $request->nik, 'password' => $request->password])) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'NIK atau password salah.'
+                ], 401);
+            }
+
+            $user = Auth::guard('web')->user();
+
+            // Batasi hanya role admin/operator (bukan penduduk)
+            $allowedRoles = ['superadmin', 'admin desa', 'admin kabupaten', 'operator'];
+            if (!$user->role || !in_array(strtolower($user->role), $allowedRoles)) {
+                // Logout segera jika role tidak diizinkan
+                Auth::guard('web')->logout();
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Akun tidak memiliki akses admin.'
+                ], 403);
+            }
+
+            $token = $user->createToken('admin_auth_token')->plainTextToken;
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Login admin berhasil',
+                'data' => [
+                    'user' => $user,
+                    'role' => $user->role,
+                    'access_token' => $token,
+                    'token_type' => 'Bearer'
+                ]
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Admin login error: ' . $e->getMessage(), [
+                'exception' => $e
+            ]);
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Terjadi kesalahan pada server',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
     
     public function showRegistrationForm()
     {
