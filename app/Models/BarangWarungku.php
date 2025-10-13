@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Services\ImageConverterService;
 
 class BarangWarungku extends Model
 {
@@ -27,7 +28,7 @@ class BarangWarungku extends Model
 
     public function getFotoUrlAttribute()
     {
-        return $this->foto ? asset('storage/' . $this->foto) : null;
+        return ImageConverterService::getImageUrl($this->foto);
     }
 }
 

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\BarangWarungku;
 use App\Models\InformasiUsaha;
 use App\Models\WarungkuMaster;
+use App\Services\ImageConverterService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Services\WilayahService;
@@ -214,14 +215,17 @@ class WarungkuController extends Controller
             'deskripsi' => 'nullable|string',
             'harga' => 'required|numeric|min:0',
             'stok' => 'required|integer|min:0',
-            'foto' => 'nullable|image|max:2048',
+            'foto' => 'nullable|image|max:10240', // 10MB max, akan di-resize dan konversi ke WebP
         ]);
 
         $item = new BarangWarungku($validated);
         $item->informasi_usaha_id = $informasiUsaha->id;
         if ($request->hasFile('foto')) {
-            $path = $request->file('foto')->store('warungku', 'public');
-            $item->foto = $path;
+            // Convert to WebP format with optimized dimensions (max 800x600)
+            $path = ImageConverterService::convertToWebP($request->file('foto'), 'warungku', 85, 800, 600);
+            if ($path) {
+                $item->foto = $path;
+            }
         }
         $item->save();
 
@@ -245,13 +249,21 @@ class WarungkuController extends Controller
             'deskripsi' => 'nullable|string',
             'harga' => 'required|numeric|min:0',
             'stok' => 'required|integer|min:0',
-            'foto' => 'nullable|image|max:2048',
+            'foto' => 'nullable|image|max:10240', // 10MB max, akan di-resize dan konversi ke WebP
         ]);
 
         $barangWarungku->fill($validated);
         if ($request->hasFile('foto')) {
-            $path = $request->file('foto')->store('warungku', 'public');
-            $barangWarungku->foto = $path;
+            // Delete old image if exists
+            if ($barangWarungku->foto) {
+                ImageConverterService::deleteImage($barangWarungku->foto);
+            }
+            
+            // Convert to WebP format with optimized dimensions (max 800x600)
+            $path = ImageConverterService::convertToWebP($request->file('foto'), 'warungku', 85, 800, 600);
+            if ($path) {
+                $barangWarungku->foto = $path;
+            }
         }
         $barangWarungku->save();
 
@@ -267,6 +279,11 @@ class WarungkuController extends Controller
         $informasiUsaha = InformasiUsaha::where('penduduk_id', $user->id)->first();
         if (!$informasiUsaha || $barangWarungku->informasi_usaha_id !== $informasiUsaha->id) {
             return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        // Delete associated image file
+        if ($barangWarungku->foto) {
+            ImageConverterService::deleteImage($barangWarungku->foto);
         }
 
         $barangWarungku->delete();

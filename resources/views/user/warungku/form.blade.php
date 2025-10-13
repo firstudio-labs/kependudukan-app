@@ -65,7 +65,8 @@
                 </div>
                 <div>
                     <label class="block text-sm text-gray-700">Foto</label>
-                    <input id="fotoInput" type="file" name="foto" accept="image/jpeg,image/png" class="mt-1 w-full border rounded p-2 bg-white" />
+                    <input id="fotoInput" type="file" name="foto" accept="image/jpeg,image/png,image/gif,image/webp" class="mt-1 w-full border rounded p-2 bg-white" />
+                    <p class="text-xs text-gray-500 mt-1">Maksimal 10MB. Gambar akan otomatis di-resize dan dikonversi ke format WebP untuk optimasi.</p>
                     @if($item && $item->foto_url)
                         <img id="fotoPreview" src="{{ $item->foto_url }}" class="mt-2 h-32 rounded" />
                     @else
