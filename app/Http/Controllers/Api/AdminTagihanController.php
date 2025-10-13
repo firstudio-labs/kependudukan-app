@@ -222,6 +222,104 @@ class AdminTagihanController extends Controller
         $subs = SubKategoriTagihan::where('kategori_id', $kategoriId)->orderBy('nama_sub_kategori')->get();
         return response()->json(['data' => $subs]);
     }
+
+    /**
+     * CRUD Kategori
+     */
+    public function storeKategori(Request $request)
+    {
+        $user = $this->getAdminUser($request);
+        [$ok, $err] = $this->ensureAdminAccess($user);
+        if (!$ok) {
+            return response()->json(['message' => $err], $err === 'Unauthorized' ? 401 : 403);
+        }
+
+        $validated = $request->validate([
+            'nama_kategori' => 'required|string|max:255|unique:kategori_tagihans,nama_kategori'
+        ]);
+
+        $kategori = KategoriTagihan::create($validated);
+        return response()->json(['success' => true, 'data' => $kategori], 201);
+    }
+
+    public function updateKategori(Request $request, $id)
+    {
+        $user = $this->getAdminUser($request);
+        [$ok, $err] = $this->ensureAdminAccess($user);
+        if (!$ok) {
+            return response()->json(['message' => $err], $err === 'Unauthorized' ? 401 : 403);
+        }
+
+        $kategori = KategoriTagihan::findOrFail($id);
+        $validated = $request->validate([
+            'nama_kategori' => 'required|string|max:255|unique:kategori_tagihans,nama_kategori,' . $id
+        ]);
+        $kategori->update($validated);
+        return response()->json(['success' => true, 'data' => $kategori]);
+    }
+
+    public function destroyKategori(Request $request, $id)
+    {
+        $user = $this->getAdminUser($request);
+        [$ok, $err] = $this->ensureAdminAccess($user);
+        if (!$ok) {
+            return response()->json(['message' => $err], $err === 'Unauthorized' ? 401 : 403);
+        }
+
+        $kategori = KategoriTagihan::findOrFail($id);
+        $kategori->delete();
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * CRUD Sub Kategori
+     */
+    public function storeSubKategori(Request $request)
+    {
+        $user = $this->getAdminUser($request);
+        [$ok, $err] = $this->ensureAdminAccess($user);
+        if (!$ok) {
+            return response()->json(['message' => $err], $err === 'Unauthorized' ? 401 : 403);
+        }
+
+        $validated = $request->validate([
+            'kategori_id' => 'required|exists:kategori_tagihans,id',
+            'nama_sub_kategori' => 'required|string|max:255'
+        ]);
+
+        $sub = SubKategoriTagihan::create($validated);
+        return response()->json(['success' => true, 'data' => $sub], 201);
+    }
+
+    public function updateSubKategori(Request $request, $id)
+    {
+        $user = $this->getAdminUser($request);
+        [$ok, $err] = $this->ensureAdminAccess($user);
+        if (!$ok) {
+            return response()->json(['message' => $err], $err === 'Unauthorized' ? 401 : 403);
+        }
+
+        $sub = SubKategoriTagihan::findOrFail($id);
+        $validated = $request->validate([
+            'kategori_id' => 'required|exists:kategori_tagihans,id',
+            'nama_sub_kategori' => 'required|string|max:255'
+        ]);
+        $sub->update($validated);
+        return response()->json(['success' => true, 'data' => $sub]);
+    }
+
+    public function destroySubKategori(Request $request, $id)
+    {
+        $user = $this->getAdminUser($request);
+        [$ok, $err] = $this->ensureAdminAccess($user);
+        if (!$ok) {
+            return response()->json(['message' => $err], $err === 'Unauthorized' ? 401 : 403);
+        }
+
+        $sub = SubKategoriTagihan::findOrFail($id);
+        $sub->delete();
+        return response()->json(['success' => true]);
+    }
 }
 
 

@@ -185,6 +185,14 @@ Route::middleware(ApiTokenOwnerMiddleware::class)->group(function () {
             Route::post('/{tagihan}/status', [AdminTagihanController::class, 'updateStatus'])->name('admin.api.tagihan.update-status');
             Route::get('/kategori', [AdminTagihanController::class, 'kategori'])->name('admin.api.tagihan.kategori');
             Route::get('/kategori/{kategoriId}/sub', [AdminTagihanController::class, 'subKategoriByKategori'])->name('admin.api.tagihan.sub-kategori');
+            // CRUD kategori
+            Route::post('/kategori', [AdminTagihanController::class, 'storeKategori'])->name('admin.api.tagihan.kategori.store');
+            Route::put('/kategori/{id}', [AdminTagihanController::class, 'updateKategori'])->name('admin.api.tagihan.kategori.update');
+            Route::delete('/kategori/{id}', [AdminTagihanController::class, 'destroyKategori'])->name('admin.api.tagihan.kategori.destroy');
+            // CRUD sub kategori
+            Route::post('/sub-kategori', [AdminTagihanController::class, 'storeSubKategori'])->name('admin.api.tagihan.sub-kategori.store');
+            Route::put('/sub-kategori/{id}', [AdminTagihanController::class, 'updateSubKategori'])->name('admin.api.tagihan.sub-kategori.update');
+            Route::delete('/sub-kategori/{id}', [AdminTagihanController::class, 'destroySubKategori'])->name('admin.api.tagihan.sub-kategori.destroy');
         });
 
 
