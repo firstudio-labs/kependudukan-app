@@ -193,6 +193,11 @@ Route::middleware(ApiTokenOwnerMiddleware::class)->group(function () {
             Route::post('/sub-kategori', [AdminTagihanController::class, 'storeSubKategori'])->name('admin.api.tagihan.sub-kategori.store');
             Route::put('/sub-kategori/{id}', [AdminTagihanController::class, 'updateSubKategori'])->name('admin.api.tagihan.sub-kategori.update');
             Route::delete('/sub-kategori/{id}', [AdminTagihanController::class, 'destroySubKategori'])->name('admin.api.tagihan.sub-kategori.destroy');
+            // List khusus & dropdown
+            Route::get('/kategori-only', [AdminTagihanController::class, 'kategoriIndex'])->name('admin.api.tagihan.kategori-only');
+            Route::get('/sub-kategori-only', [AdminTagihanController::class, 'subKategoriIndex'])->name('admin.api.tagihan.sub-kategori-only');
+            Route::get('/dropdown/kategori', [AdminTagihanController::class, 'dropdownKategori'])->name('admin.api.tagihan.dropdown.kategori');
+            Route::get('/dropdown/sub-kategori', [AdminTagihanController::class, 'dropdownSubKategori'])->name('admin.api.tagihan.dropdown.sub-kategori');
         });
 
 
