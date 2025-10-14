@@ -910,40 +910,22 @@ class BiodataController extends Controller
     {
         try {
             $request->validate([
-                'excel_file' => 'required|file|mimes:xlsx,xls|max:10240',
+                'csv_file' => 'required|file|mimes:csv,txt,application/csv,text/csv,text/plain|max:10240',
             ]);
 
-            $import = new CitizensImport($this->citizenService);
-            Excel::import($import, $request->file('excel_file'));
+            // Get the API endpoint from config
+            $apiUrl = config('services.kependudukan.url') . '/api/citizens/import/upload';
+            $apiKey = config('services.kependudukan.key');
 
-            if (count($import->errors) > 0) {
-                $errorMessages = "<ul class='text-left'>";
-                foreach ($import->errors as $error) {
-                    $errorMessages .= "<li>• {$error}</li>";
-                }
-                $errorMessages .= "</ul>";
+            // Prepare the file for upload
+            $file = $request->file('csv_file');
 
-                $summaryMessage = "Import selesai dengan beberapa error:<br>";
-                $summaryMessage .= "• Total baris diproses: {$import->processedRows}<br>";
-                $summaryMessage .= "• Berhasil diimport: {$import->successCount}<br>";
-                $summaryMessage .= "• Baris yang dilewati: {$import->skippedRows}<br>";
-                $summaryMessage .= "• Jumlah error: " . count($import->errors) . "<br><br>";
-                $summaryMessage .= "Detail error:";
-
-                // Preserve current page and search parameters
-                $redirectParams = [];
-                if ($request->has('current_page')) {
-                    $redirectParams['page'] = $request->input('current_page');
-                }
-                if ($request->has('current_search')) {
-                    $redirectParams['search'] = $request->input('current_search');
-                }
-
-                return redirect()->route('superadmin.biodata.index', $redirectParams)
-                    ->with('import_errors', $summaryMessage . $errorMessages);
-            }
-
-            $successMessage = "Data berhasil diimport";
+            // Create a multipart form data request
+            $response = Http::withHeaders([
+                // 'Accept' => 'application/json',
+                'X-API-Key' => $apiKey,
+            ])->attach('file', $file->get(), $file->getClientOriginalName())
+            ->post($apiUrl);
 
             // Preserve current page and search parameters
             $redirectParams = [];
@@ -954,10 +936,45 @@ class BiodataController extends Controller
                 $redirectParams['search'] = $request->input('current_search');
             }
 
-            return redirect()->route('superadmin.biodata.index', $redirectParams)
-                ->with('success', $successMessage);
+            if ($response->successful()) {
+                $responseData = $response->json();
+
+                // Check if there are any errors in the response
+                if (isset($responseData['errors']) && count($responseData['errors']) > 0) {
+                    $errorMessages = "<ul class='text-left'>";
+                    foreach ($responseData['errors'] as $error) {
+                        $errorMessages .= "<li>• {$error}</li>";
+                    }
+                    $errorMessages .= "</ul>";
+
+                    $summaryMessage = "Import selesai dengan beberapa error:<br>";
+                    $summaryMessage .= "• Total baris diproses: " . ($responseData['processed_rows'] ?? 0) . "<br>";
+                    $summaryMessage .= "• Berhasil diimport: " . ($responseData['success_count'] ?? 0) . "<br>";
+                    $summaryMessage .= "• Baris yang dilewati: " . ($responseData['skipped_rows'] ?? 0) . "<br>";
+                    $summaryMessage .= "• Jumlah error: " . count($responseData['errors']) . "<br><br>";
+                    $summaryMessage .= "Detail error:";
+
+                    return redirect()->route('superadmin.biodata.index', $redirectParams)
+                        ->with('import_errors', $summaryMessage . $errorMessages);
+                }
+
+                $successMessage = $responseData['message'] ?? "Data berhasil diimport";
+                return redirect()->route('superadmin.biodata.index', $redirectParams)
+                    ->with('success', $successMessage);
+            } else {
+                $errorMessage = 'Gagal import data';
+                if ($response->json() && isset($response->json()['message'])) {
+                    $errorMessage .= ': ' . $response->json()['message'];
+                } else {
+                    $errorMessage .= ' (HTTP ' . $response->status() . ')';
+                }
+
+                return redirect()->route('superadmin.biodata.index', $redirectParams)
+                    ->with('error', $errorMessage);
+            }
         } catch (\Exception $e) {
             Log::error('Import failed with exception: ' . $e->getMessage());
+
             // Preserve current page and search parameters
             $redirectParams = [];
             if ($request->has('current_page')) {
@@ -1071,90 +1088,81 @@ class BiodataController extends Controller
     public function downloadTemplate()
     {
         try {
-            // Create template data with correct field names for Excel
-            $templateData = [
-                [
-                    'nik',
-                    'no_kk',
-                    'nama_lgkp',
-                    'jenis_kelamin',
-                    'tanggal_lahir',
-                    'umur',
-                    'tempat_lahir',
-                    'alamat',
-                    'no_rt',
-                    'no_rw',
-                    'kode_pos',
-                    'no_prop',
-                    'nama_prop',
-                    'no_kab',
-                    'nama_kab',
-                    'no_kec',
-                    'nama_kec',
-                    'no_kel',
-                    'kelurahan',
-                    'shdk',
-                    'status_kawin',
-                    'pendidikan',
-                    'agama',
-                    'pekerjaan',
-                    'golongan_darah',
-                    'akta_lahir',
-                    'no_akta_lahir',
-                    'akta_kawin',
-                    'no_akta_kawin',
-                    'akta_cerai',
-                    'no_akta_cerai',
-                    'nama_ayah',
-                    'nama_ibu',
-                    'nik_ayah',
-                    'nik_ibu'
-                ],
-                [
-                    '1234567890123456',
-                    '1234567890123456',
-                    'John Doe',
-                    'Laki-laki',
-                    '1990-01-01',
-                    '33',
-                    'Jakarta',
-                    'Jl. Contoh No. 123',
-                    '001',
-                    '001',
-                    '12345',
-                    '31',
-                    'DKI Jakarta',
-                    '3171',
-                    'Jakarta Pusat',
-                    '317101',
-                    'Gambir',
-                    '31710101',
-                    'Gambir',
-                    'Kepala Keluarga',
-                    'Kawin Tercatat',
-                    'SLTA/SMA/Sederajat',
-                    'Islam',
-                    'Pegawai Negeri Sipil',
-                    'A',
-                    'Ada',
-                    '1234567890123456',
-                    'Ada',
-                    '1234567890123457',
-                    'Tidak Ada',
-                    '',
-                    'John Father',
-                    'Jane Mother',
-                    '1234567890123456',
-                    '1234567890123457'
-                ]
-            ];
+            // Get the API endpoint from config
+            $apiUrl = config('services.kependudukan.url') . '/api/citizens/import/template/download';
+            $apiKey = config('services.kependudukan.key');
 
-            $filename = 'template_biodata_' . date('Ymd_His') . '.xlsx';
-            return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\CitizensExport($templateData, true), $filename);
+            // Make API request to download template
+            $response = Http::withHeaders([
+                'Accept' => 'application/json',
+                'X-API-Key' => $apiKey,
+            ])->get($apiUrl);
+
+            if ($response->successful()) {
+                // Get the content type from the response
+                $contentType = $response->header('Content-Type', 'text/csv');
+
+                // Get filename from Content-Disposition header or create default
+                $contentDisposition = $response->header('Content-Disposition');
+                $filename = 'template_biodata_' . date('Ymd_His') . '.csv';
+
+                if ($contentDisposition && preg_match('/filename="([^"]+)"/', $contentDisposition, $matches)) {
+                    $filename = $matches[1];
+                }
+
+                // Return the file content directly
+                return Response::make($response->body(), 200, [
+                    'Content-Type' => $contentType,
+                    'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+                ]);
+            } else {
+                $errorMessage = 'Gagal mengunduh template';
+                if ($response->json() && isset($response->json()['message'])) {
+                    $errorMessage .= ': ' . $response->json()['message'];
+                } else {
+                    $errorMessage .= ' (HTTP ' . $response->status() . ')';
+                }
+
+                return redirect()->route('superadmin.biodata.index')
+                    ->with('error', $errorMessage);
+            }
         } catch (\Exception $e) {
-            Log::error('Error creating template: ' . $e->getMessage());
+            Log::error('Error downloading template from API: ' . $e->getMessage());
             return redirect()->route('superadmin.biodata.index')
-                ->with('error', 'Gagal membuat template: ' . $e->getMessage());
+                ->with('error', 'Gagal mengunduh template: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get template information from API
+     */
+    public function getTemplateInfo()
+    {
+        try {
+            // Get the API endpoint from config
+            $apiUrl = config('services.kependudukan.url') . '/api/citizens/import/template';
+            $apiKey = config('services.kependudukan.key');
+
+            // Make API request to get template info
+            $response = Http::withHeaders([
+                'Accept' => 'application/json',
+                'X-API-Key' => $apiKey,
+            ])->get($apiUrl);
+
+            if ($response->successful()) {
+                return response()->json($response->json());
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gagal mengambil informasi template'
+                ], $response->status());
+            }
+        } catch (\Exception $e) {
+            Log::error('Error getting template info from API: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengambil informasi template: ' . $e->getMessage()
+            ], 500);
         }
     }
 

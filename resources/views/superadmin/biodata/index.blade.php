@@ -28,7 +28,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-4 h-4">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
                     </svg>
-                    <span>Import Excel</span>
+                    <span>Import CSV</span>
                 </button>
 
                 {{-- <button
@@ -393,7 +393,7 @@
             <div class="relative w-full max-w-md bg-white rounded-lg shadow-xl overflow-hidden">
                 <!-- Modal Header -->
                 <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-[#7886C7] bg-gray-50">
-                    <h3 class="text-xl font-semibold text-[#2D336B]">Import Data Biodata</h3>
+                    <h3 class="text-xl font-semibold text-[#2D336B]">Import Data Biodata (CSV)</h3>
                     <button onclick="document.getElementById('importModal').classList.add('hidden')" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 inline-flex justify-center items-center">
                         <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
                             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
@@ -408,24 +408,24 @@
                         <input type="hidden" name="current_search" value="{{ request('search', '') }}">
                         @csrf
                         <div class="mb-4">
-                            <label for="excel_file" class="block text-sm font-medium text-gray-700 mb-2">Pilih File Excel</label>
+                            <label for="csv_file" class="block text-sm font-medium text-gray-700 mb-2">Pilih File CSV</label>
                             <div class="flex items-center justify-center w-full">
-                                <label for="excel_file" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                                <label for="csv_file" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
                                     <div class="flex flex-col items-center justify-center pt-5 pb-6">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 mb-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                         </svg>
                                         <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">Klik untuk upload</span> atau drag and drop</p>
-                                        <p class="text-xs text-gray-500">Format: XLS, XLSX (Max. 10MB)</p>
+                                        <p class="text-xs text-gray-500">Format: CSV (Max. 10MB)</p>
                                     </div>
-                                    <input id="excel_file" name="excel_file" type="file" class="hidden" accept=".xls,.xlsx" required />
+                                    <input id="csv_file" name="csv_file" type="file" class="hidden" accept=".csv" required />
                                 </label>
                             </div>
                             <div id="file-name" class="mt-2 text-sm text-gray-500"></div>
                         </div>
 
                         <div class="mb-4">
-                            <a href="{{ route('superadmin.biodata.template') }}" class="text-sm text-blue-600 hover:underline">Download template Excel</a>
+                            <a href="{{ route('superadmin.biodata.template') }}" class="text-sm text-blue-600 hover:underline">Download template CSV</a>
                         </div>
 
                         <div class="flex justify-end">
@@ -444,8 +444,8 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // File name display for Excel import
-            const fileInput = document.getElementById('excel_file');
+            // File name display for CSV import
+            const fileInput = document.getElementById('csv_file');
             const fileNameDisplay = document.getElementById('file-name');
 
             if (fileInput) {

@@ -372,6 +372,7 @@ Route::middleware(['auth:web', 'role:superadmin'])->group(function () {
     // Routes for Excel import
     Route::post('/superadmin/biodata/import', [BiodataController::class, 'import'])->name('superadmin.biodata.import');
     Route::get('/superadmin/biodata/template', [BiodataController::class, 'downloadTemplate'])->name('superadmin.biodata.template');
+    Route::get('/superadmin/biodata/template/info', [BiodataController::class, 'getTemplateInfo'])->name('superadmin.biodata.template.info');
 
     // Penandatangan routes
     Route::get('/superadmin/datamaster/surat/penandatangan', [PenandatangananController::class, 'index'])
@@ -889,27 +890,27 @@ Route::middleware(['auth:web', 'role:admin desa'])->group(function () {
 
     // Master Tagihan Routes
     Route::get('/admin/desa/master-tagihan', [\App\Http\Controllers\adminDesa\MasterTagihanController::class, 'index'])->name('admin.desa.master-tagihan.index');
-    
+
     // Kategori routes
     Route::post('/admin/desa/master-tagihan/kategori', [\App\Http\Controllers\adminDesa\MasterTagihanController::class, 'storeKategori'])->name('admin.desa.master-tagihan.kategori.store');
     Route::put('/admin/desa/master-tagihan/kategori/{id}', [\App\Http\Controllers\adminDesa\MasterTagihanController::class, 'updateKategori'])->name('admin.desa.master-tagihan.kategori.update');
     Route::delete('/admin/desa/master-tagihan/kategori/{id}', [\App\Http\Controllers\adminDesa\MasterTagihanController::class, 'destroyKategori'])->name('admin.desa.master-tagihan.kategori.destroy');
-    
+
     // Sub Kategori routes
     Route::post('/admin/desa/master-tagihan/sub-kategori', [\App\Http\Controllers\adminDesa\MasterTagihanController::class, 'storeSubKategori'])->name('admin.desa.master-tagihan.sub-kategori.store');
     Route::put('/admin/desa/master-tagihan/sub-kategori/{id}', [\App\Http\Controllers\adminDesa\MasterTagihanController::class, 'updateSubKategori'])->name('admin.desa.master-tagihan.sub-kategori.update');
     Route::delete('/admin/desa/master-tagihan/sub-kategori/{id}', [\App\Http\Controllers\adminDesa\MasterTagihanController::class, 'destroySubKategori'])->name('admin.desa.master-tagihan.sub-kategori.destroy');
-    
+
     // Tagihan routes
     Route::post('/admin/desa/master-tagihan/tagihan', [\App\Http\Controllers\adminDesa\MasterTagihanController::class, 'storeTagihan'])->name('admin.desa.master-tagihan.tagihan.store');
     Route::get('/admin/desa/master-tagihan/tagihan/{id}', [\App\Http\Controllers\adminDesa\MasterTagihanController::class, 'showTagihan'])->name('admin.desa.master-tagihan.tagihan.show');
     Route::put('/admin/desa/master-tagihan/tagihan/{id}', [\App\Http\Controllers\adminDesa\MasterTagihanController::class, 'updateTagihan'])->name('admin.desa.master-tagihan.tagihan.update');
     Route::post('/admin/desa/master-tagihan/tagihan/{id}/status', [\App\Http\Controllers\adminDesa\MasterTagihanController::class, 'updateStatus'])->name('admin.desa.master-tagihan.tagihan.update-status');
     Route::delete('/admin/desa/master-tagihan/tagihan/{id}', [\App\Http\Controllers\adminDesa\MasterTagihanController::class, 'destroyTagihan'])->name('admin.desa.master-tagihan.tagihan.destroy');
-    
+
     // AJAX routes
     Route::get('/admin/desa/master-tagihan/sub-kategoris/{kategoriId}', [\App\Http\Controllers\adminDesa\MasterTagihanController::class, 'getSubKategorisByKategori'])->name('admin.desa.master-tagihan.sub-kategoris.by-kategori');
-    
+
     // Mobile Users routes
     Route::get('/admin/desa/mobile-users', [\App\Http\Controllers\adminDesa\MobileUsersController::class, 'index'])->name('admin.desa.mobile-users.index');
 });
