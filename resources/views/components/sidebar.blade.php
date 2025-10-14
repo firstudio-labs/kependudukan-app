@@ -660,15 +660,33 @@
                         </a>
                     </li>
 
-                    <!-- Master Tagihan -->
+                    <!-- Master Tagihan (dropdown) -->
                     <li class="-ml-5">
-                        <a href="{{ route('admin.desa.master-tagihan.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                        {{ request()->routeIs('admin.desa.master-tagihan.*')
-                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                        <button type="button"
+                            class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
+                            onclick="toggleDropdown('masterTagihanDropdown')">
                             <i class="fa-solid fa-receipt text-lg transition-all duration-300"></i>
                             <span>Master Tagihan</span>
-                        </a>
+                            <i id="dropdown-icon-master-tagihan" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
+                        </button>
+                        <ul id="masterTagihanDropdown" class="hidden space-y-2 pl-6">
+                            <li>
+                                <a href="{{ route('admin.desa.master-tagihan.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                                                                                                            {{ request()->routeIs('admin.desa.master-tagihan.index')
+                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                    <span>Kategori & Sub Kategori</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('admin.desa.master-tagihan.tagihan.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                                                                                                            {{ request()->routeIs('admin.desa.master-tagihan.tagihan.index')
+                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                    <span>Tagihan</span>
+                                </a>
+                            </li>
+                        </ul>
                     </li>
 
                     <!-- Pengumuman -->

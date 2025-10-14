@@ -44,36 +44,55 @@ class MasterTagihanController extends Controller
         }
         $subKategoris = $subKategorisQuery->orderBy('nama_sub_kategori')->get();
 
-        // Get tagihans
-        $tagihansQuery = Tagihan::with(['kategori', 'subKategori'])
-            ->where('villages_id', $villagesId);
-        
-        if (!empty($searchTagihan)) {
-            $tagihansQuery->where('keterangan', 'like', "%{$searchTagihan}%");
-        }
-        
-        $tagihans = $tagihansQuery->orderBy('created_at', 'desc')->paginate(10);
-
-        // Get penduduks for dropdown
-        $penduduksResponse = $this->citizenService->getCitizensByVillageId($villagesId);
-        $penduduks = $penduduksResponse['data']['citizens'] ?? [];
-        
-        // Debug: Log the structure of penduduks data
-        if (!empty($penduduks)) {
-            \Log::info('Penduduks data structure:', $penduduks[0] ?? []);
-        }
-        
-        // Create a lookup array for penduduk data using NIK as key
-        $pendudukLookup = collect($penduduks)->keyBy('nik');
+        // Default vars to keep legacy view references safe (Tagihan moved to its own page)
+        $searchTagihan = null;
+        $tagihans = collect();
+        $penduduks = [];
+        $pendudukLookup = collect();
 
         return view('admin.desa.master-tagihan.index', compact(
             'kategoris', 
             'subKategoris', 
+            'searchKategori',
+            'searchSubKategori',
+            'searchTagihan',
+            'tagihans',
+            'penduduks',
+            'pendudukLookup',
+        ));
+    }
+
+    /**
+     * Halaman khusus Tagihan (dipisah dari master kategori & sub-kategori)
+     */
+    public function tagihanIndex(Request $request)
+    {
+        $user = Auth::guard('web')->user();
+        $villagesId = $user->villages_id;
+
+        $searchTagihan = $request->input('search_tagihan');
+
+        // Get tagihans
+        $tagihansQuery = Tagihan::with(['kategori', 'subKategori'])
+            ->where('villages_id', $villagesId);
+        if (!empty($searchTagihan)) {
+            $tagihansQuery->where('keterangan', 'like', "%{$searchTagihan}%");
+        }
+        $tagihans = $tagihansQuery->orderBy('created_at', 'desc')->paginate(10);
+
+        // Get kategoris for dropdowns
+        $kategoris = KategoriTagihan::orderBy('nama_kategori')->get();
+
+        // Get penduduks for dropdown
+        $penduduksResponse = $this->citizenService->getCitizensByVillageId($villagesId);
+        $penduduks = $penduduksResponse['data']['citizens'] ?? [];
+        $pendudukLookup = collect($penduduks)->keyBy('nik');
+
+        return view('admin.desa.master-tagihan.tagihan', compact(
+            'kategoris', 
             'tagihans', 
             'penduduks',
             'pendudukLookup',
-            'searchKategori',
-            'searchSubKategori', 
             'searchTagihan'
         ));
     }

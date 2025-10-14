@@ -890,7 +890,8 @@ Route::middleware(['auth:web', 'role:admin desa'])->group(function () {
 
     // Master Tagihan Routes
     Route::get('/admin/desa/master-tagihan', [\App\Http\Controllers\adminDesa\MasterTagihanController::class, 'index'])->name('admin.desa.master-tagihan.index');
-
+    // Halaman khusus Tagihan
+    Route::get('/admin/desa/master-tagihan/tagihan', [\App\Http\Controllers\adminDesa\MasterTagihanController::class, 'tagihanIndex'])->name('admin.desa.master-tagihan.tagihan.index');
     // Kategori routes
     Route::post('/admin/desa/master-tagihan/kategori', [\App\Http\Controllers\adminDesa\MasterTagihanController::class, 'storeKategori'])->name('admin.desa.master-tagihan.kategori.store');
     Route::put('/admin/desa/master-tagihan/kategori/{id}', [\App\Http\Controllers\adminDesa\MasterTagihanController::class, 'updateKategori'])->name('admin.desa.master-tagihan.kategori.update');
