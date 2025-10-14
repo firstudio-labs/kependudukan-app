@@ -23,6 +23,7 @@ use App\Http\Controllers\Api\AdminTagihanController;
 use App\Http\Controllers\Api\AdminPengumumanApiController;
 use App\Http\Controllers\Api\AdminBeritaDesaApiController;
 use App\Http\Controllers\Api\AdminPemerintahDesaApiController;
+use App\Http\Controllers\Api\AdminBiodataController;
 
 /*
 |--------------------------------------------------------------------------
@@ -228,6 +229,20 @@ Route::middleware(ApiTokenOwnerMiddleware::class)->group(function () {
 
         // Admin Desa - Ringkasan Pemerintah Desa (berdasarkan villages_id admin login)
         Route::get('/admin/pemerintah-desa', [AdminPemerintahDesaApiController::class, 'show'])->name('admin.api.pemerintah-desa.show');
+
+        // Admin Desa - Biodata (CRUD minimal: show & update)
+        Route::prefix('admin/biodata')->group(function () {
+            Route::get('/{nik}', [AdminBiodataController::class, 'show'])->whereNumber('nik')->name('admin.api.biodata.show');
+            Route::put('/{nik}', [AdminBiodataController::class, 'update'])->whereNumber('nik')->name('admin.api.biodata.update');
+
+            // Dropdown endpoints for form options
+            Route::get('/dropdowns/provinces', [AdminBiodataController::class, 'provinces'])->name('admin.api.biodata.dropdowns.provinces');
+            Route::get('/dropdowns/districts/{provinceCode}', [AdminBiodataController::class, 'districts'])->name('admin.api.biodata.dropdowns.districts');
+            Route::get('/dropdowns/sub-districts/{districtCode}', [AdminBiodataController::class, 'subDistricts'])->name('admin.api.biodata.dropdowns.sub-districts');
+            Route::get('/dropdowns/villages/{subDistrictCode}', [AdminBiodataController::class, 'villages'])->name('admin.api.biodata.dropdowns.villages');
+            Route::get('/dropdowns/jobs', [AdminBiodataController::class, 'jobs'])->name('admin.api.biodata.dropdowns.jobs');
+            Route::get('/dropdowns/enums', [AdminBiodataController::class, 'enums'])->name('admin.api.biodata.dropdowns.enums');
+        });
 
 
         //riwayat surat
