@@ -293,35 +293,96 @@ class DashboardController extends Controller
             }
         }
 
-        // Dapatkan data warga
-        Log::info('Mengambil data warga berdasarkan nama desa', ['village_name' => $villageName]);
+        // Dapatkan data warga berdasarkan village_id
+        Log::info('Mengambil data warga berdasarkan village_id', ['village_id' => $villageId, 'village_name' => $villageName]);
 
         // Gunakan metode yang tersedia di CitizenService
         $citizenData = $this->citizenService->getAllCitizensWithHighLimit();
 
-        // Filter warga berdasarkan nama desa secara manual jika perlu
+        // Filter warga berdasarkan village_id atau village_name
         $filteredCitizens = [];
 
         // Ekstrak array warga dari respons API dengan penanganan yang lebih baik
         if (isset($citizenData['data']['citizens']) && is_array($citizenData['data']['citizens'])) {
             $allCitizens = $citizenData['data']['citizens'];
-            // Filter citizens by village name if we have it
-            if (!empty($villageName) && $villageName !== 'Desa #' . $villageId) {
-                foreach ($allCitizens as $citizen) {
-                    if (isset($citizen['village_name']) &&
-                        (strtolower($citizen['village_name']) === strtolower($villageName) ||
-                         strpos(strtolower($citizen['village_name']), strtolower($villageName)) !== false)) {
-                        $filteredCitizens[] = $citizen;
+
+            // Filter citizens by village_id first, then by village_name as fallback
+            foreach ($allCitizens as $citizen) {
+                $isFromThisVillage = false;
+
+                // Check by village_id if available
+                if (isset($citizen['village_id']) && $citizen['village_id'] == $villageId) {
+                    $isFromThisVillage = true;
+                }
+                // Fallback to village_name comparison if village_id doesn't match
+                elseif (!empty($villageName) && $villageName !== 'Desa #' . $villageId && isset($citizen['village_name'])) {
+                    $citizenVillageName = strtolower(trim($citizen['village_name']));
+                    $targetVillageName = strtolower(trim($villageName));
+
+                    if ($citizenVillageName === $targetVillageName ||
+                        strpos($citizenVillageName, $targetVillageName) !== false ||
+                        strpos($targetVillageName, $citizenVillageName) !== false) {
+                        $isFromThisVillage = true;
                     }
                 }
-                Log::info('Filtered citizens by village name', ['count' => count($filteredCitizens)]);
-            } else {
-                $filteredCitizens = $allCitizens;
+
+                if ($isFromThisVillage) {
+                    $filteredCitizens[] = $citizen;
+                }
             }
+
+            Log::info('Filtered citizens by village', [
+                'village_id' => $villageId,
+                'village_name' => $villageName,
+                'total_citizens' => count($allCitizens),
+                'filtered_citizens' => count($filteredCitizens)
+            ]);
         } elseif (isset($citizenData['citizens']) && is_array($citizenData['citizens'])) {
-            $filteredCitizens = $citizenData['citizens'];
+            // Apply same filtering logic to this structure
+            $allCitizens = $citizenData['citizens'];
+            foreach ($allCitizens as $citizen) {
+                $isFromThisVillage = false;
+
+                if (isset($citizen['village_id']) && $citizen['village_id'] == $villageId) {
+                    $isFromThisVillage = true;
+                } elseif (!empty($villageName) && $villageName !== 'Desa #' . $villageId && isset($citizen['village_name'])) {
+                    $citizenVillageName = strtolower(trim($citizen['village_name']));
+                    $targetVillageName = strtolower(trim($villageName));
+
+                    if ($citizenVillageName === $targetVillageName ||
+                        strpos($citizenVillageName, $targetVillageName) !== false ||
+                        strpos($targetVillageName, $citizenVillageName) !== false) {
+                        $isFromThisVillage = true;
+                    }
+                }
+
+                if ($isFromThisVillage) {
+                    $filteredCitizens[] = $citizen;
+                }
+            }
         } elseif (isset($citizenData['data']) && is_array($citizenData['data'])) {
-            $filteredCitizens = $citizenData['data'];
+            // Apply same filtering logic to this structure
+            $allCitizens = $citizenData['data'];
+            foreach ($allCitizens as $citizen) {
+                $isFromThisVillage = false;
+
+                if (isset($citizen['village_id']) && $citizen['village_id'] == $villageId) {
+                    $isFromThisVillage = true;
+                } elseif (!empty($villageName) && $villageName !== 'Desa #' . $villageId && isset($citizen['village_name'])) {
+                    $citizenVillageName = strtolower(trim($citizen['village_name']));
+                    $targetVillageName = strtolower(trim($villageName));
+
+                    if ($citizenVillageName === $targetVillageName ||
+                        strpos($citizenVillageName, $targetVillageName) !== false ||
+                        strpos($targetVillageName, $citizenVillageName) !== false) {
+                        $isFromThisVillage = true;
+                    }
+                }
+
+                if ($isFromThisVillage) {
+                    $filteredCitizens[] = $citizen;
+                }
+            }
         }
 
         // Hitung total warga

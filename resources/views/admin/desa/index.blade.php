@@ -58,7 +58,7 @@
                             class="mt-1 text-2xl font-bold {{ isset($totalCitizens) && $totalCitizens > 0 ? 'text-[#2D336B]' : 'text-red-500' }}">
                             {{ isset($totalCitizens) && $totalCitizens > 0 ? number_format($totalCitizens) : 'Data tidak tersedia' }}
                         </p>
-                        <p class="text-xs text-gray-500 mt-1">Data Kependudukan</p>
+                        <p class="text-xs text-gray-500 mt-1">Data Kependudukan {{ $villageName }}</p>
                     </div>
                     <div class="text-[#2D336B]">
                         <i class="fas fa-id-card text-xl md:text-2xl"></i>
@@ -71,7 +71,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <!-- Pie Chart - Heads of Family Comparison -->
             <div class="bg-white p-6 rounded-lg shadow-md">
-                <h3 class="text-lg font-semibold text-gray-700 mb-4">Data Penduduk</h3>
+                <h3 class="text-lg font-semibold text-gray-700 mb-4">Data Penduduk {{ $villageName }}</h3>
                 <div class="h-64">
                     @if (isset($totalCitizens) && $totalCitizens > 0 && isset($headsOfFamily))
                         <canvas id="familyHeadChart"></canvas>
@@ -99,7 +99,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 <!-- Gender Distribution Chart -->
                 <div class="bg-white p-6 rounded-lg shadow-md">
-                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Distribusi Gender</h3>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Distribusi Gender {{ $villageName }}</h3>
                     <div class="h-64">
                         <canvas id="genderChart"></canvas>
                     </div>
@@ -107,7 +107,7 @@
 
                 <!-- Age Distribution Chart -->
                 <div class="bg-white p-6 rounded-lg shadow-md">
-                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Distribusi Usia</h3>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Distribusi Usia {{ $villageName }}</h3>
                     <div class="h-64">
                         <canvas id="ageChart"></canvas>
                     </div>
