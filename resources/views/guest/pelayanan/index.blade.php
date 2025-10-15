@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Layanan Desa Digital</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{ asset('app-icon.ico') }}">
+    <link rel="shortcut icon" type="image/x-icon" href="{{ asset('app-icon.ico') }}">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet" />
@@ -20,7 +24,10 @@
         </div>
 
         <div class="relative z-10 max-w-4xl mx-auto">
-            <h2 class="text-3xl font-bold text-black text-center mb-10">Selamat Datang di Portal Layanan Desa</h2>
+            <h2 class="text-3xl font-bold text-black text-center mb-10 flex items-center justify-center">
+                <img src="{{ asset('app-icon.ico') }}" alt="Logo" class="w-8 h-8 mr-3">
+                Selamat Datang di Portal Layanan Desa
+            </h2>
 
             <div class="mb-8 text-center">
                 <p class="text-lg">Silakan isi formulir di bawah ini untuk mengajukan layanan desa</p>

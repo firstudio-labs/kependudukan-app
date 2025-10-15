@@ -2,7 +2,7 @@
 <nav class="sticky top-0 left-0 right-0 flex justify-between items-center px-4 sm:px-6 py-4 bg-transparent backdrop-blur-sm z-50 transition-all duration-300">
     <!-- Logo/Brand -->
     <a href="/" class="text-xl sm:text-2xl font-bold text-[#4F46E5] flex items-center">
-        <img src="{{ asset('favicon.ico') }}" alt="Logo" class="w-6 h-6 mr-2">
+        <img src="{{ asset('app-icon.ico') }}" alt="Logo" class="w-6 h-6 mr-2">
         LADIMAS
     </a>
 
@@ -39,7 +39,7 @@
 
     <!-- Brand/Logo in menu -->
     <div class="text-3xl font-bold text-[#4F46E5] mb-10 flex items-center justify-center">
-        <img src="{{ asset('favicon.ico') }}" alt="Logo" class="w-8 h-8 mr-3">
+        <img src="{{ asset('app-icon.ico') }}" alt="Logo" class="w-8 h-8 mr-3">
         LADIMAS
     </div>
 

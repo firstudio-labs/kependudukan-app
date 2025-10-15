@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
-    <link rel="shortcut icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <link rel="icon" type="image/x-icon" href="{{ asset('app-icon.ico') }}">
+    <link rel="shortcut icon" type="image/x-icon" href="{{ asset('app-icon.ico') }}">
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -266,7 +266,10 @@
         <div class="max-w-6xl mx-auto w-full flex flex-col h-full">
             <!-- Header with location info -->
             <div class="flex flex-col md:flex-row justify-between items-center gap-2 mb-8">
-                <h1 class="text-xl md:text-2xl font-extrabold text-gray-800 text-shadow">Portal Layanan Desa</h1>
+                 <h1 class="text-xl md:text-2xl font-extrabold text-gray-800 text-shadow flex items-center">
+                     <img src="{{ asset('app-icon.ico') }}" alt="Logo" class="w-8 h-8 mr-3">
+                     Portal Layanan Desa
+                 </h1>
                 <!-- Optionally show location info if you need it -->
                 <!-- <p class="text-sm text-gray-600">Lokasi: {{ $village_id }}</p> -->
                 <div class="relative w-full md:w-1/3">

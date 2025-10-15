@@ -14,7 +14,7 @@
                     </svg>
                 </button>
                 <a href="/" class="flex ms-2 md:me-24 items-center">
-                    <img src="{{ asset('favicon.ico') }}" alt="Logo" class="w-5 h-5 mr-2">
+                    <img src="{{ asset('app-icon.ico') }}" alt="Logo" class="w-6 h-6 mr-2">
                     <span
                         class="self-center text-sm font-semibold sm:text-base whitespace-nowrap text-transparent bg-clip-text bg-gradient-to-r from-[#2D336B] to-[#4A56A6]">
                         LADIMAS
