@@ -149,11 +149,12 @@
                                 <td class="px-6 py-4">{{ $loop->iteration }}</td>
                                 <td class="px-6 py-4">
                                     @php
-                                        $pendudukData = $pendudukLookup->get($tagihan->nik);
+                                        $nikKey = (string) $tagihan->nik;
+                                        $pendudukData = $pendudukLookup->get($nikKey);
                                     @endphp
                                     <div>
                                         <div class="font-medium">{{ $pendudukData['full_name'] ?? 'Data tidak ditemukan' }}</div>
-                                        <div class="text-xs text-gray-500">{{ $pendudukData['nik'] ?? 'NIK: ' . $tagihan->nik }}</div>
+                                        <div class="text-xs text-gray-500">{{ $pendudukData['nik'] ?? ('NIK: ' . $nikKey) }}</div>
                                     </div>
                                 </td>
                                 <td class="px-6 py-4">{{ $tagihan->kategori->nama_kategori }}</td>

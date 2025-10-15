@@ -78,7 +78,11 @@ class MasterTagihanController extends Controller
         // Ambil penduduk desa untuk lookup nama & KK (via CitizenService)
         $penduduksResponse = $this->citizenService->getCitizensByVillageId($villagesId, 1, 10000);
         $penduduks = $penduduksResponse['data']['citizens'] ?? [];
-        $pendudukLookup = collect($penduduks)->keyBy('nik');
+        // Build lookup yang robust: gunakan kunci NIK sebagai string
+        $pendudukLookup = collect($penduduks)->mapWithKeys(function ($p) {
+            $nik = isset($p['nik']) ? (string) $p['nik'] : '';
+            return [$nik => $p];
+        });
 
         // Get tagihans
         $tagihansQuery = Tagihan::with(['kategori', 'subKategori'])
