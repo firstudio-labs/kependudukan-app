@@ -29,6 +29,7 @@ class MasterTagihanController extends Controller
         $searchKategori = $request->input('search_kategori');
         $searchSubKategori = $request->input('search_sub_kategori');
         $searchTagihan = $request->input('search_tagihan');
+        // status filter dihapus sesuai permintaan
 
         // Get kategoris
         $kategorisQuery = KategoriTagihan::query();
@@ -71,22 +72,59 @@ class MasterTagihanController extends Controller
         $villagesId = $user->villages_id;
 
         $searchTagihan = $request->input('search_tagihan');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+
+        // Ambil penduduk desa untuk lookup nama & KK (via CitizenService)
+        $penduduksResponse = $this->citizenService->getCitizensByVillageId($villagesId, 1, 10000);
+        $penduduks = $penduduksResponse['data']['citizens'] ?? [];
+        $pendudukLookup = collect($penduduks)->keyBy('nik');
 
         // Get tagihans
         $tagihansQuery = Tagihan::with(['kategori', 'subKategori'])
             ->where('villages_id', $villagesId);
         if (!empty($searchTagihan)) {
-            $tagihansQuery->where('keterangan', 'like', "%{$searchTagihan}%");
+            $term = trim($searchTagihan);
+
+            // Siapkan daftar NIK berdasarkan kecocokan nama atau KK dari CitizenService
+            $niksByName = collect($penduduks)
+                ->filter(function ($c) use ($term) {
+                    return str_contains(strtolower($c['full_name'] ?? ''), strtolower($term));
+                })
+                ->pluck('nik')
+                ->all();
+
+            $niksByKK = collect($penduduks)
+                ->filter(function ($c) use ($term) {
+                    return str_contains((string)($c['kk'] ?? ''), (string)$term);
+                })
+                ->pluck('nik')
+                ->all();
+
+            $nikPool = array_values(array_unique(array_merge($niksByName, $niksByKK)));
+
+            $tagihansQuery->where(function ($q) use ($term, $nikPool) {
+                // cari pada keterangan
+                $q->where('keterangan', 'like', "%{$term}%")
+                  // cari pada NIK
+                  ->orWhere('nik', 'like', "%{$term}%")
+                  // cari berdasarkan nama penduduk (mapping NIK dari citizen service)
+                  ->orWhereIn('nik', $nikPool);
+            });
         }
-        $tagihans = $tagihansQuery->orderBy('created_at', 'desc')->paginate(10);
+        // Filter tanggal (opsional)
+        if (!empty($startDate) && !empty($endDate)) {
+            $tagihansQuery->whereDate('tanggal', '>=', $startDate)
+                          ->whereDate('tanggal', '<=', $endDate);
+        } elseif (!empty($startDate)) {
+            $tagihansQuery->whereDate('tanggal', '>=', $startDate);
+        } elseif (!empty($endDate)) {
+            $tagihansQuery->whereDate('tanggal', '<=', $endDate);
+        }
+        $tagihans = $tagihansQuery->orderBy('created_at', 'desc')->paginate(10)->appends($request->query());
 
         // Get kategoris for dropdowns
         $kategoris = KategoriTagihan::orderBy('nama_kategori')->get();
-
-        // Get penduduks for dropdown
-        $penduduksResponse = $this->citizenService->getCitizensByVillageId($villagesId);
-        $penduduks = $penduduksResponse['data']['citizens'] ?? [];
-        $pendudukLookup = collect($penduduks)->keyBy('nik');
 
         return view('admin.desa.master-tagihan.tagihan', compact(
             'kategoris', 
@@ -304,6 +342,82 @@ class MasterTagihanController extends Controller
         $tagihan = Tagihan::findOrFail($id);
         $tagihan->delete();
         return redirect()->back()->with('success', 'Tagihan berhasil dihapus');
+    }
+
+    /**
+     * Halaman form pembuatan tagihan multiple
+     */
+    public function createMultiple()
+    {
+        $user = Auth::guard('web')->user();
+        $villagesId = $user->villages_id;
+
+        // Get kategoris for dropdowns
+        $kategoris = KategoriTagihan::orderBy('nama_kategori')->get();
+
+        // Get penduduks for checklist - ambil semua tanpa pagination
+        $penduduksResponse = $this->citizenService->getCitizensByVillageId($villagesId, 1, 10000);
+        $penduduks = $penduduksResponse['data']['citizens'] ?? [];
+
+        return view('admin.desa.master-tagihan.create-multiple', compact(
+            'kategoris', 
+            'penduduks'
+        ));
+    }
+
+    /**
+     * Store multiple tagihans
+     */
+    public function storeMultiple(Request $request)
+    {
+        $user = Auth::guard('web')->user();
+        
+        $validated = $request->validate([
+            'kategori_id' => 'required|exists:kategori_tagihans,id',
+            'sub_kategori_id' => 'required|exists:sub_kategori_tagihans,id',
+            'nominal' => 'nullable|numeric|min:0',
+            'keterangan' => 'nullable|string',
+            'status' => 'required|in:pending,lunas,belum_lunas',
+            'tanggal' => 'required|date',
+            'selected_niks' => 'required|array|min:1',
+            'selected_niks.*' => 'required|string'
+        ]);
+
+        $createdCount = 0;
+        $errors = [];
+
+        foreach ($validated['selected_niks'] as $nik) {
+            try {
+                $tagihanData = [
+                    'nik' => $nik,
+                    'kategori_id' => $validated['kategori_id'],
+                    'sub_kategori_id' => $validated['sub_kategori_id'],
+                    'nominal' => $validated['nominal'],
+                    'keterangan' => $validated['keterangan'],
+                    'status' => $validated['status'],
+                    'tanggal' => $validated['tanggal'],
+                    'villages_id' => $user->villages_id
+                ];
+
+                Tagihan::create($tagihanData);
+                $createdCount++;
+            } catch (\Exception $e) {
+                $errors[] = "Gagal membuat tagihan untuk NIK {$nik}: " . $e->getMessage();
+            }
+        }
+
+        if ($createdCount > 0) {
+            $message = "Berhasil membuat {$createdCount} tagihan";
+            if (count($errors) > 0) {
+                $message .= ". Terdapat " . count($errors) . " error: " . implode(', ', $errors);
+            }
+            return redirect()->route('admin.desa.master-tagihan.tagihan.index')
+                ->with('success', $message);
+        } else {
+            return redirect()->back()
+                ->with('error', 'Gagal membuat tagihan: ' . implode(', ', $errors))
+                ->withInput();
+        }
     }
 
     // AJAX methods

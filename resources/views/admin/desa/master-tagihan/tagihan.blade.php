@@ -5,9 +5,15 @@
         <div class="bg-white rounded-lg shadow-md p-6">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-lg font-semibold text-gray-800">Kelola Tagihan</h2>
-                <button onclick="toggleTagihanForm()" class="text-white bg-[#7886C7] hover:bg-[#2D336B] focus:ring-4 focus:ring-[#5C69A7] font-medium rounded-lg text-sm px-4 py-2">
-                    Tambah Tagihan
-                </button>
+                <div class="flex gap-2">
+                    <a href="{{ route('admin.desa.master-tagihan.tagihan.create-multiple') }}" 
+                       class="text-white bg-green-600 hover:bg-green-700 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-4 py-2">
+                        <i class="fa-solid fa-plus mr-1"></i>Tambah Multiple
+                    </a>
+                    <button onclick="toggleTagihanForm()" class="text-white bg-[#7886C7] hover:bg-[#2D336B] focus:ring-4 focus:ring-[#5C69A7] font-medium rounded-lg text-sm px-4 py-2">
+                        <i class="fa-solid fa-plus mr-1"></i>Tambah Tagihan
+                    </button>
+                </div>
             </div>
 
             <div id="tagihanForm" class="hidden mb-4 p-4 bg-gray-50 rounded-lg">
@@ -17,6 +23,14 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Penduduk <span class="text-red-500">*</span></label>
                             <div class="relative">
+                                <!-- Search input untuk NIK/Nama -->
+                                <input type="text" id="pendudukSearchInput" placeholder="Cari NIK atau nama penduduk..."
+                                    class="block w-full p-2 pl-3 pr-10 text-sm text-gray-900 bg-white rounded-lg border border-gray-300 focus:ring-[#7886C7] focus:border-[#7886C7] mb-2">
+                                <div class="absolute top-2 right-2 pointer-events-none">
+                                    <i class="fa-solid fa-search text-gray-400"></i>
+                                </div>
+                                
+                                <!-- Dropdown penduduk -->
                                 <select name="nik" id="pendudukSelect" required
                                     class="block w-full p-2 text-sm text-gray-900 bg-white rounded-lg border border-gray-300 focus:ring-[#7886C7] focus:border-[#7886C7]">
                                     <option value="">Pilih Penduduk</option>
@@ -32,7 +46,7 @@
                                         <option value="">Tidak ada data penduduk</option>
                                     @endif
                                 </select>
-                                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none" style="top: 40px;">
                                     <i class="fa-solid fa-chevron-down text-gray-400"></i>
                                 </div>
                             </div>
@@ -92,13 +106,26 @@
             </div>
 
             <form method="GET" class="mb-4">
-                <div class="flex gap-3">
-                    <input type="text" name="search_tagihan" value="{{ $searchTagihan }}" placeholder="Cari nama/NIK/No KK/keterangan..."
-                        class="block p-2 pl-3 w-64 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500">
-                    <button type="submit" class="px-4 py-2 text-sm rounded-lg bg-[#7886C7] text-white hover:bg-[#2D336B]">Cari</button>
-                    @if($searchTagihan)
+                <div class="flex flex-wrap items-end gap-3">
+                    <div class="flex flex-col">
+                        <label class="text-xs text-gray-600 mb-1">Pencarian</label>
+                        <input type="text" name="search_tagihan" value="{{ $searchTagihan }}" placeholder="Cari NIK/No KK"
+                            class="block p-2 pl-3 w-64 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div class="flex flex-col">
+                        <label class="text-xs text-gray-600 mb-1">Tanggal dari</label>
+                        <input type="date" name="start_date" value="{{ request('start_date') }}"
+                            class="block p-2 w-44 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div class="flex flex-col">
+                        <label class="text-xs text-gray-600 mb-1">Tanggal sampai</label>
+                        <input type="date" name="end_date" value="{{ request('end_date') }}"
+                            class="block p-2 w-44 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div class="flex gap-2">
+                        <button type="submit" class="px-4 py-2 text-sm rounded-lg bg-[#7886C7] text-white hover:bg-[#2D336B]">Terapkan</button>
                         <a href="{{ route('admin.desa.master-tagihan.tagihan.index') }}" class="px-4 py-2 text-sm rounded-lg bg-gray-500 text-white hover:bg-gray-600">Reset</a>
-                    @endif
+                    </div>
                 </div>
             </form>
 
@@ -199,6 +226,8 @@
             if (isHidden) {
                 resetTagihanForm();
                 form.classList.remove('hidden');
+                // Pastikan semua opsi penduduk ditampilkan saat form dibuka
+                filterPenduduk();
             } else {
                 form.classList.add('hidden');
             }
@@ -207,14 +236,18 @@
         function resetTagihanForm() {
             document.getElementById('tagihanFormElement').action = '{{ route("admin.desa.master-tagihan.tagihan.store") }}';
             document.getElementById('tagihanFormElement').method = 'POST';
+            document.getElementById('pendudukSearchInput').value = '';
             document.getElementById('pendudukSelect').value = '';
             document.getElementById('tagihanKategoriSelect').value = '';
             document.getElementById('tagihanSubKategoriSelect').innerHTML = '<option value="">Pilih Sub Kategori</option>';
             document.getElementById('tagihanNominalInput').value = '';
             document.getElementById('tagihanStatusSelect').value = 'pending';
-            document.getElementById('tagihanTanggalInput').value = '';
+            // Set default tanggal ke hari ini (YYYY-MM-DD)
+            document.getElementById('tagihanTanggalInput').value = new Date().toISOString().split('T')[0];
             document.getElementById('tagihanKeteranganInput').value = '';
             document.getElementById('tagihanSubmitBtn').textContent = 'Simpan Tagihan';
+            // Reset filter penduduk
+            filterPenduduk();
         }
 
         function editTagihan(id) {
@@ -317,6 +350,43 @@
                 location.reload();
             });
         }
+
+        // Fungsi untuk memfilter penduduk berdasarkan search
+        function filterPenduduk() {
+            const searchTerm = document.getElementById('pendudukSearchInput').value.toLowerCase();
+            const select = document.getElementById('pendudukSelect');
+            const options = select.querySelectorAll('option');
+            
+            options.forEach(option => {
+                if (option.value === '') {
+                    // Selalu tampilkan option "Pilih Penduduk"
+                    option.style.display = 'block';
+                    return;
+                }
+                
+                const name = option.getAttribute('data-name')?.toLowerCase() || '';
+                const nik = option.getAttribute('data-nik')?.toLowerCase() || '';
+                
+                // Jika search kosong, tampilkan semua opsi
+                if (searchTerm === '') {
+                    option.style.display = 'block';
+                } else if (name.includes(searchTerm) || nik.includes(searchTerm)) {
+                    option.style.display = 'block';
+                } else {
+                    option.style.display = 'none';
+                }
+            });
+        }
+
+        // Event listener untuk search input
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('pendudukSearchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', filterPenduduk);
+                // Pastikan semua opsi penduduk ditampilkan saat halaman dimuat
+                filterPenduduk();
+            }
+        });
     </script>
 </x-layout>
 

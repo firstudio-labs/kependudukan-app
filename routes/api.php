@@ -201,6 +201,7 @@ Route::middleware(ApiTokenOwnerMiddleware::class)->group(function () {
             // Rute utama tagihan (setelah rute kategori agar tidak bentrok)
             Route::get('/', [AdminTagihanController::class, 'index'])->name('admin.api.tagihan.index');
             Route::post('/', [AdminTagihanController::class, 'store'])->name('admin.api.tagihan.store');
+            Route::post('/store-multiple', [AdminTagihanController::class, 'storeMultiple'])->name('admin.api.tagihan.store-multiple');
             Route::get('/{tagihan}', [AdminTagihanController::class, 'show'])->whereNumber('tagihan')->name('admin.api.tagihan.show');
             Route::put('/{tagihan}', [AdminTagihanController::class, 'update'])->whereNumber('tagihan')->name('admin.api.tagihan.update');
             Route::delete('/{tagihan}', [AdminTagihanController::class, 'destroy'])->whereNumber('tagihan')->name('admin.api.tagihan.destroy');

@@ -107,6 +107,67 @@ class AdminTagihanController extends Controller
     }
 
     /**
+     * Buat multiple tagihan sekaligus (bulk create) untuk desa admin
+     */
+    public function storeMultiple(Request $request)
+    {
+        $user = $this->getAdminUser($request);
+        [$ok, $err] = $this->ensureAdminAccess($user);
+        if (!$ok) {
+            return response()->json(['message' => $err], $err === 'Unauthorized' ? 401 : 403);
+        }
+
+        $validated = $request->validate([
+            'kategori_id' => 'required|exists:kategori_tagihans,id',
+            'sub_kategori_id' => 'required|exists:sub_kategori_tagihans,id',
+            'nominal' => 'nullable|numeric|min:0',
+            'keterangan' => 'nullable|string',
+            'status' => 'required|in:pending,lunas,belum_lunas',
+            'tanggal' => 'required|date',
+            'selected_niks' => 'required|array|min:1',
+            'selected_niks.*' => 'required|string'
+        ]);
+
+        $created = [];
+        $errors = [];
+
+        foreach ($validated['selected_niks'] as $nik) {
+            try {
+                $payload = [
+                    'nik' => $nik,
+                    'kategori_id' => $validated['kategori_id'],
+                    'sub_kategori_id' => $validated['sub_kategori_id'],
+                    'nominal' => $validated['nominal'] ?? null,
+                    'keterangan' => $validated['keterangan'] ?? null,
+                    'status' => $validated['status'],
+                    'tanggal' => $validated['tanggal'],
+                    'villages_id' => $user->villages_id,
+                ];
+
+                $tagihan = Tagihan::create($payload);
+                $created[] = $tagihan->id;
+            } catch (\Throwable $e) {
+                $errors[] = [
+                    'nik' => $nik,
+                    'message' => $e->getMessage(),
+                ];
+            }
+        }
+
+        $status = count($created) > 0 ? 201 : 422;
+        return response()->json([
+            'success' => count($created) > 0,
+            'message' => count($created) > 0
+                ? 'Berhasil membuat ' . count($created) . ' tagihan'
+                : 'Gagal membuat tagihan',
+            'data' => [
+                'created_ids' => $created,
+                'errors' => $errors,
+            ],
+        ], $status);
+    }
+
+    /**
      * Detail tagihan (hanya dalam desa admin)
      */
     public function show(Request $request, Tagihan $tagihan)
