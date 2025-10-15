@@ -127,6 +127,35 @@ class MasterTagihanController extends Controller
         }
         $tagihans = $tagihansQuery->orderBy('created_at', 'desc')->paginate(10)->appends($request->query());
 
+        // Lengkapi lookup untuk NIK yang tidak ditemukan di cache CitizenService desa (fallback by NIK)
+        try {
+            $neededNiks = collect($tagihans->items())
+                ->pluck('nik')
+                ->map(fn($n) => (string) $n)
+                ->unique()
+                ->values();
+
+            $missingNiks = $neededNiks->filter(function ($nik) use ($pendudukLookup) {
+                return !$pendudukLookup->has($nik);
+            });
+
+            foreach ($missingNiks as $nik) {
+                $detail = $this->citizenService->getCitizenByNIK($nik);
+                if (is_array($detail) && isset($detail['data']) && is_array($detail['data'])) {
+                    $data = $detail['data'];
+                    // Normalisasi bentuk agar konsisten dengan struktur lain
+                    $pendudukLookup->put((string)($data['nik'] ?? $nik), [
+                        'nik' => (string)($data['nik'] ?? $nik),
+                        'full_name' => $data['full_name'] ?? ($data['name'] ?? ($data['nama_lengkap'] ?? '')),
+                        'kk' => $data['kk'] ?? ($data['no_kk'] ?? null),
+                        'address' => $data['address'] ?? ($data['alamat'] ?? null),
+                    ]);
+                }
+            }
+        } catch (\Throwable $e) {
+            // abaikan fallback error; tampilan akan tetap menampilkan NIK
+        }
+
         // Get kategoris for dropdowns
         $kategoris = KategoriTagihan::orderBy('nama_kategori')->get();
 
