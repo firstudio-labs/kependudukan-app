@@ -69,7 +69,7 @@
             $items = $query->orderByDesc('tanggal')->paginate($perPage)->withQueryString();
 
             // Map response ringkas untuk mobile
-            // Siapkan mapping NIK->nama untuk response
+            // Siapkan mapping NIK->nama untuk response (berdasarkan NIK pada tagihan)
             $nikToName = [];
             try {
                 if (!empty($kk ?? null)) {
@@ -82,6 +82,19 @@
                 }
                 if (!isset($nikToName[$nikUser])) {
                     $nikToName[$nikUser] = $citizen['data']['full_name'] ?? ($citizen['data']['name'] ?? null);
+                }
+            } catch (\Throwable $e) {}
+
+            // Tambahan: pastikan semua NIK dalam halaman memiliki nama dengan fallback getCitizenByNIK(nik tagihan)
+            try {
+                $allNiksInPage = $items->getCollection()->pluck('nik')->map(fn($n) => (string)$n)->unique();
+                foreach ($allNiksInPage as $nikRow) {
+                    if (!isset($nikToName[$nikRow]) || empty($nikToName[$nikRow])) {
+                        $cit = $this->citizenService->getCitizenByNIK($nikRow);
+                        if (is_array($cit) && isset($cit['data'])) {
+                            $nikToName[$nikRow] = $cit['data']['full_name'] ?? ($cit['data']['name'] ?? ($cit['data']['nama_lengkap'] ?? null));
+                        }
+                    }
                 }
             } catch (\Throwable $e) {}
 
@@ -122,16 +135,47 @@
                 return response()->json(['message' => 'Unauthorized'], 401);
             }
 
-            if ((string) $tagihan->nik !== (string) $user->nik) {
+            // Izinkan akses jika pemilik tagihan atau anggota keluarga dalam satu KK
+            $allow = false;
+            try {
+                $viewerNik = (string) $user->nik;
+                $ownerNik = (string) $tagihan->nik;
+
+                if ($viewerNik === $ownerNik) {
+                    $allow = true;
+                } else {
+                    $viewer = $this->citizenService->getCitizenByNIK($viewerNik);
+                    $owner = $this->citizenService->getCitizenByNIK($ownerNik);
+                    $viewerKk = $viewer['data']['kk'] ?? ($viewer['data']['no_kk'] ?? null);
+                    $ownerKk = $owner['data']['kk'] ?? ($owner['data']['no_kk'] ?? null);
+                    if ($viewerKk && $ownerKk && (string)$viewerKk === (string)$ownerKk) {
+                        $allow = true;
+                    }
+                }
+            } catch (\Throwable $e) {
+                $allow = false;
+            }
+            if (!$allow) {
                 return response()->json(['message' => 'Forbidden'], 403);
             }
 
             $tagihan->load(['kategori', 'subKategori']);
 
+            // Ambil nama berdasarkan NIK pada tagihan secara langsung
+            $ownerFullName = null;
+            try {
+                $ownerNik = (string) $tagihan->nik;
+                $ownerData = $this->citizenService->getCitizenByNIK($ownerNik);
+                if (is_array($ownerData) && isset($ownerData['data'])) {
+                    $ownerFullName = $ownerData['data']['full_name'] ?? ($ownerData['data']['name'] ?? ($ownerData['data']['nama_lengkap'] ?? null));
+                }
+            } catch (\Throwable $e) {}
+
             return response()->json([
                 'data' => [
                     'id' => $tagihan->id,
                     'nik' => $tagihan->nik,
+                    'full_name' => $ownerFullName,
                     'villages_id' => $tagihan->villages_id,
                     'tanggal' => optional($tagihan->tanggal)->format('Y-m-d'),
                     'tanggal_formatted' => optional($tagihan->tanggal)->format('d F Y'),
