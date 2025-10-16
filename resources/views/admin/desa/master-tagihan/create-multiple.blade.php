@@ -66,7 +66,7 @@
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="text-lg font-semibold text-gray-800">Pilih Penduduk</h2>
                         <div class="flex gap-2">
-                            <button type="button" onclick="selectAll()" class="px-3 py-1 text-xs rounded bg-blue-500 text-white hover:bg-blue-600">
+                            <button type="button" onclick="selectAll()" class="px-3 py-1 text-xs rounded bg-blue-700 text-white hover:bg-blue-900">
                                 Pilih Semua
                             </button>
                             <button type="button" onclick="deselectAll" class="hidden"></button>
@@ -74,7 +74,7 @@
                                 Batal Pilih Semua
                             </button>
                             <a href="{{ route('admin.desa.master-tagihan.tagihan.index') }}"
-                               class="px-3 py-1 text-xs rounded bg-gray-500 text-white hover:bg-gray-600">
+                               class="px-3 py-1 text-xs rounded bg-red-700 text-white hover:bg-red-900">
                                 Batal
                             </a>
                             <button type="submit" id="submitBtn" disabled
