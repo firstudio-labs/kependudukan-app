@@ -69,8 +69,17 @@
                             <button type="button" onclick="selectAll()" class="px-3 py-1 text-xs rounded bg-blue-500 text-white hover:bg-blue-600">
                                 Pilih Semua
                             </button>
+                            <button type="button" onclick="deselectAll" class="hidden"></button>
                             <button type="button" onclick="deselectAll()" class="px-3 py-1 text-xs rounded bg-gray-500 text-white hover:bg-gray-600">
                                 Batal Pilih Semua
+                            </button>
+                            <a href="{{ route('admin.desa.master-tagihan.tagihan.index') }}"
+                               class="px-3 py-1 text-xs rounded bg-red-400 text-white hover:bg-red-500">
+                                Batal
+                            </a>
+                            <button type="submit" id="submitBtn" disabled
+                                    class="px-3 py-1 text-xs rounded bg-green-600 text-white hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed">
+                                Buat Tagihan (<span id="submitCount">0</span>)
                             </button>
                         </div>
                     </div>
@@ -176,17 +185,7 @@
                     </div>
                 </div>
 
-                <!-- Tombol Submit -->
-                <div class="flex justify-end gap-3">
-                    <a href="{{ route('admin.desa.master-tagihan.tagihan.index') }}" 
-                       class="px-6 py-2 text-sm rounded-lg bg-gray-500 text-white hover:bg-gray-600">
-                        Batal
-                    </a>
-                    <button type="submit" id="submitBtn" disabled
-                            class="px-6 py-2 text-sm rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed">
-                        Buat Tagihan (<span id="submitCount">0</span> penduduk)
-                    </button>
-                </div>
+                <!-- Tombol Submit dipindah ke baris kontrol atas -->
             </form>
         </div>
     </div>
