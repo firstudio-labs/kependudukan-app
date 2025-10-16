@@ -74,7 +74,7 @@
                                 Batal Pilih Semua
                             </button>
                             <a href="{{ route('admin.desa.master-tagihan.tagihan.index') }}"
-                               class="px-3 py-1 text-xs rounded bg-red-400 text-white hover:bg-red-500">
+                               class="px-3 py-1 text-xs rounded bg-gray-500 text-white hover:bg-gray-600">
                                 Batal
                             </a>
                             <button type="submit" id="submitBtn" disabled
