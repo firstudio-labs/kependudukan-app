@@ -78,10 +78,10 @@
                     <!-- Filter dan Search Penduduk -->
                     <div class="mb-4 space-y-3">
                         <div class="flex flex-wrap gap-3">
-                            <div class="flex-1 min-w-64">
+                            <div class="flex-1 min-w-64 relative">
                                 <input type="text" id="pendudukSearchInput" placeholder="Cari NIK atau nama penduduk..."
                                     class="block w-full p-2 pl-3 pr-10 text-sm text-gray-900 bg-white rounded-lg border border-gray-300 focus:ring-[#7886C7] focus:border-[#7886C7]">
-                                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none" style="margin-top: -32px;">
+                                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                                     <i class="fa-solid fa-search text-gray-400"></i>
                                 </div>
                             </div>
