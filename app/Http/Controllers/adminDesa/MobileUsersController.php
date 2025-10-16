@@ -7,6 +7,7 @@ use App\Models\Penduduk;
 use App\Services\CitizenService;
 use App\Services\WilayahService;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 
 class MobileUsersController extends Controller
@@ -30,9 +31,10 @@ class MobileUsersController extends Controller
             });
         }
 
-        // 3. Pagination dari database
-        $perPage = 10;
-        $penduduks = $query->paginate($perPage);
+        // 3. Ambil data dasar lebih besar lalu paginate SETELAH filter wilayah
+        $perPage = 10; // target tampilan per halaman
+        $baseTake = 1000; // ambil cukup besar untuk memastikan hasil setelah filter
+        $penduduksBase = $query->limit($baseTake)->get();
 
         // 4. Ambil data admin untuk perbandingan wilayah
         $adminCitizenData = $this->getCitizenDataByNik($citizenService, Auth::user()->nik);
@@ -49,7 +51,7 @@ class MobileUsersController extends Controller
         $adminSubDistrictId = $adminCitizenData['sub_district_id'] ?? null;
 
         // 5. Mapping data untuk setiap penduduk
-        $mapped = $penduduks->getCollection()->map(function ($penduduk) use ($citizenService, $wilayahService, $adminVillageId, $adminProvinceId, $adminDistrictId, $adminSubDistrictId) {
+        $mapped = $penduduksBase->map(function ($penduduk) use ($citizenService, $wilayahService, $adminVillageId, $adminProvinceId, $adminDistrictId, $adminSubDistrictId) {
             // 6. Ambil data lengkap dari CitizenService menggunakan NIK
             $citizenData = $this->getCitizenDataByNik($citizenService, $penduduk->nik);
             
@@ -83,11 +85,23 @@ class MobileUsersController extends Controller
             return $obj;
         })->filter(); // Remove null values
 
-        // 8. Replace collection dengan data yang sudah di-mapping dan difilter
-        $penduduks->setCollection($mapped);
+        // 8. Bangun paginator manual agar selalu 10/item per halaman setelah filter
+        $currentPage = (int) max(1, (int) $request->get('page', 1));
+        $total = $mapped->count();
+        $items = $mapped->slice(($currentPage - 1) * $perPage, $perPage)->values();
+        $paginator = new LengthAwarePaginator(
+            $items,
+            $total,
+            $perPage,
+            $currentPage,
+            [
+                'path' => url()->current(),
+                'query' => $request->query(),
+            ]
+        );
 
         return view('admin.desa.mobile-users.index', [
-            'items' => $penduduks,
+            'items' => $paginator,
             'search' => $search,
         ]);
     }
