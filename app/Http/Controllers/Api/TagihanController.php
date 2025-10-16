@@ -64,6 +64,18 @@
             if ($request->filled('tahun')) {
                 $query->whereYear('tanggal', (int) $request->input('tahun'));
             }
+            if ($request->filled('kategori_id')) {
+                $query->where('kategori_id', $request->input('kategori_id'));
+            }
+            if ($request->filled('sub_kategori_id')) {
+                $query->where('sub_kategori_id', $request->input('sub_kategori_id'));
+            }
+            if ($request->filled('start_date')) {
+                $query->whereDate('tanggal', '>=', $request->input('start_date'));
+            }
+            if ($request->filled('end_date')) {
+                $query->whereDate('tanggal', '<=', $request->input('end_date'));
+            }
 
             $perPage = (int) $request->input('per_page', 10);
             $items = $query->orderByDesc('tanggal')->paginate($perPage)->withQueryString();

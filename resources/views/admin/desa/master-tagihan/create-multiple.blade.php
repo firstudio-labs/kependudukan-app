@@ -75,12 +75,23 @@
                         </div>
                     </div>
 
-                    <!-- Search Penduduk -->
-                    <div class="mb-4">
-                        <input type="text" id="pendudukSearchInput" placeholder="Cari NIK atau nama penduduk..."
-                            class="block w-full p-2 pl-3 pr-10 text-sm text-gray-900 bg-white rounded-lg border border-gray-300 focus:ring-[#7886C7] focus:border-[#7886C7]">
-                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none" style="margin-top: -32px;">
-                            <i class="fa-solid fa-search text-gray-400"></i>
+                    <!-- Filter dan Search Penduduk -->
+                    <div class="mb-4 space-y-3">
+                        <div class="flex flex-wrap gap-3">
+                            <div class="flex-1 min-w-64">
+                                <input type="text" id="pendudukSearchInput" placeholder="Cari NIK atau nama penduduk..."
+                                    class="block w-full p-2 pl-3 pr-10 text-sm text-gray-900 bg-white rounded-lg border border-gray-300 focus:ring-[#7886C7] focus:border-[#7886C7]">
+                                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none" style="margin-top: -32px;">
+                                    <i class="fa-solid fa-search text-gray-400"></i>
+                                </div>
+                            </div>
+                            <div class="flex-shrink-0">
+                                <select id="filterKepalaKeluarga" onchange="filterByKepalaKeluarga()"
+                                    class="block p-2 text-sm text-gray-900 bg-white rounded-lg border border-gray-300 focus:ring-[#7886C7] focus:border-[#7886C7]">
+                                    <option value="all">Semua Penduduk</option>
+                                    <option value="kepala_keluarga">Hanya Kepala Keluarga</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
 
@@ -122,11 +133,12 @@
                                             </div>
                                         </td>
                                     </tr>
-                                    @foreach($members as $penduduk)
+                                    @foreach($members as $index => $penduduk)
                                         <tr class="bg-white border-gray-300 border-b hover:bg-gray-50 penduduk-row kk-row-{{ $kkNumber }}" 
                                             data-name="{{ strtolower($penduduk['full_name'] ?? '') }}" 
                                             data-nik="{{ strtolower($penduduk['nik'] ?? '') }}"
-                                            data-kk="{{ $kkNumber }}">
+                                            data-kk="{{ $kkNumber }}"
+                                            data-kepala-keluarga="{{ $index === 0 ? 'true' : 'false' }}">
                                             <td class="px-4 py-3">
                                                 <input type="checkbox" name="selected_niks[]" value="{{ $penduduk['nik'] ?? '' }}" 
                                                        class="penduduk-checkbox w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500">
@@ -204,18 +216,29 @@
         // Search penduduk
         function filterPenduduk() {
             const searchTerm = document.getElementById('pendudukSearchInput').value.toLowerCase();
+            const kepalaKeluargaFilter = document.getElementById('filterKepalaKeluarga').value;
             const rows = document.querySelectorAll('.penduduk-row');
             const kkHeaders = document.querySelectorAll('.kk-header');
 
-            // Sembunyikan/tampilkan baris penduduk sesuai pencarian
+            // Sembunyikan/tampilkan baris penduduk sesuai pencarian dan filter kepala keluarga
             rows.forEach(row => {
                 const name = row.getAttribute('data-name') || '';
                 const nik = row.getAttribute('data-nik') || '';
-                if (searchTerm === '' || name.includes(searchTerm) || nik.includes(searchTerm)) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
+                const isKepalaKeluarga = row.getAttribute('data-kepala-keluarga') === 'true';
+                
+                let shouldShow = true;
+                
+                // Filter berdasarkan pencarian
+                if (searchTerm !== '' && !name.includes(searchTerm) && !nik.includes(searchTerm)) {
+                    shouldShow = false;
                 }
+                
+                // Filter berdasarkan kepala keluarga
+                if (kepalaKeluargaFilter === 'kepala_keluarga' && !isKepalaKeluarga) {
+                    shouldShow = false;
+                }
+                
+                row.style.display = shouldShow ? '' : 'none';
             });
 
             // Sembunyikan header KK jika semua anggota tersembunyi
@@ -227,6 +250,11 @@
             });
 
             updateSelectedCount();
+        }
+
+        // Filter berdasarkan kepala keluarga
+        function filterByKepalaKeluarga() {
+            filterPenduduk();
         }
 
         // Toggle semua checkbox
@@ -301,6 +329,12 @@
                 searchInput.addEventListener('input', filterPenduduk);
             }
             
+            // Filter kepala keluarga
+            const kepalaKeluargaFilter = document.getElementById('filterKepalaKeluarga');
+            if (kepalaKeluargaFilter) {
+                kepalaKeluargaFilter.addEventListener('change', filterByKepalaKeluarga);
+            }
+            
             // Checkbox change events
             const checkboxes = document.querySelectorAll('.penduduk-checkbox');
             checkboxes.forEach(checkbox => {
@@ -319,8 +353,23 @@
                         // Tampilkan kembali baris, tapi tetap hormati filter aktif
                         const name = r.getAttribute('data-name') || '';
                         const nik = r.getAttribute('data-nik') || '';
+                        const isKepalaKeluarga = r.getAttribute('data-kepala-keluarga') === 'true';
                         const term = document.getElementById('pendudukSearchInput').value.toLowerCase();
-                        r.style.display = (term === '' || name.includes(term) || nik.includes(term)) ? '' : 'none';
+                        const kepalaKeluargaFilter = document.getElementById('filterKepalaKeluarga').value;
+                        
+                        let shouldShow = true;
+                        
+                        // Filter berdasarkan pencarian
+                        if (term !== '' && !name.includes(term) && !nik.includes(term)) {
+                            shouldShow = false;
+                        }
+                        
+                        // Filter berdasarkan kepala keluarga
+                        if (kepalaKeluargaFilter === 'kepala_keluarga' && !isKepalaKeluarga) {
+                            shouldShow = false;
+                        }
+                        
+                        r.style.display = shouldShow ? '' : 'none';
                     }
                 });
                 updateSelectedCount();

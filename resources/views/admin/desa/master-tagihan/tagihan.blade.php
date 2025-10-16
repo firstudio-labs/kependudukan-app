@@ -113,6 +113,37 @@
                             class="block p-2 pl-3 w-64 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500">
                     </div>
                     <div class="flex flex-col">
+                        <label class="text-xs text-gray-600 mb-1">Kategori</label>
+                        <select name="filter_kategori" id="filterKategoriSelect" onchange="loadFilterSubKategoris()"
+                            class="block p-2 w-48 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Semua Kategori</option>
+                            @foreach($kategoris as $kategori)
+                                <option value="{{ $kategori->id }}" {{ request('filter_kategori') == $kategori->id ? 'selected' : '' }}>
+                                    {{ $kategori->nama_kategori }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="flex flex-col">
+                        <label class="text-xs text-gray-600 mb-1">Sub Kategori</label>
+                        <select name="filter_sub_kategori" id="filterSubKategoriSelect"
+                            class="block p-2 w-48 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Semua Sub Kategori</option>
+                            @if(request('filter_kategori'))
+                                @php
+                                    $selectedKategori = $kategoris->firstWhere('id', request('filter_kategori'));
+                                @endphp
+                                @if($selectedKategori && $selectedKategori->subKategoris)
+                                    @foreach($selectedKategori->subKategoris as $subKategori)
+                                        <option value="{{ $subKategori->id }}" {{ request('filter_sub_kategori') == $subKategori->id ? 'selected' : '' }}>
+                                            {{ $subKategori->nama_sub_kategori }}
+                                        </option>
+                                    @endforeach
+                                @endif
+                            @endif
+                        </select>
+                    </div>
+                    <div class="flex flex-col">
                         <label class="text-xs text-gray-600 mb-1">Tanggal dari</label>
                         <input type="date" name="start_date" value="{{ request('start_date') }}"
                             class="block p-2 w-44 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500">
@@ -379,6 +410,29 @@
             });
         }
 
+        // Fungsi untuk memuat sub kategori berdasarkan kategori yang dipilih di filter
+        function loadFilterSubKategoris() {
+            const kategoriId = document.getElementById('filterKategoriSelect').value;
+            const subKategoriSelect = document.getElementById('filterSubKategoriSelect');
+            subKategoriSelect.innerHTML = '<option value="">Semua Sub Kategori</option>';
+            
+            if (kategoriId) {
+                fetch(`/admin/desa/master-tagihan/sub-kategoris/${kategoriId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        data.forEach(subKategori => {
+                            const option = document.createElement('option');
+                            option.value = subKategori.id;
+                            option.textContent = subKategori.nama_sub_kategori;
+                            subKategoriSelect.appendChild(option);
+                        });
+                    })
+                    .catch(() => {
+                        console.log('Gagal memuat sub kategori');
+                    });
+            }
+        }
+
         // Event listener untuk search input
         document.addEventListener('DOMContentLoaded', function() {
             const searchInput = document.getElementById('pendudukSearchInput');
@@ -386,6 +440,12 @@
                 searchInput.addEventListener('input', filterPenduduk);
                 // Pastikan semua opsi penduduk ditampilkan saat halaman dimuat
                 filterPenduduk();
+            }
+            
+            // Inisialisasi filter sub kategori jika ada kategori yang sudah dipilih
+            const filterKategoriSelect = document.getElementById('filterKategoriSelect');
+            if (filterKategoriSelect && filterKategoriSelect.value) {
+                loadFilterSubKategoris();
             }
         });
     </script>

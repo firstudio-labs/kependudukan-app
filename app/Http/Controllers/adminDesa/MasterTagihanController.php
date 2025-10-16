@@ -72,6 +72,8 @@ class MasterTagihanController extends Controller
         $villagesId = $user->villages_id;
 
         $searchTagihan = $request->input('search_tagihan');
+        $filterKategori = $request->input('filter_kategori');
+        $filterSubKategori = $request->input('filter_sub_kategori');
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
 
@@ -116,6 +118,17 @@ class MasterTagihanController extends Controller
                   ->orWhereIn('nik', $nikPool);
             });
         }
+        
+        // Filter kategori (opsional)
+        if (!empty($filterKategori)) {
+            $tagihansQuery->where('kategori_id', $filterKategori);
+        }
+        
+        // Filter sub kategori (opsional)
+        if (!empty($filterSubKategori)) {
+            $tagihansQuery->where('sub_kategori_id', $filterSubKategori);
+        }
+        
         // Filter tanggal (opsional)
         if (!empty($startDate) && !empty($endDate)) {
             $tagihansQuery->whereDate('tanggal', '>=', $startDate)
@@ -156,8 +169,8 @@ class MasterTagihanController extends Controller
             // abaikan fallback error; tampilan akan tetap menampilkan NIK
         }
 
-        // Get kategoris for dropdowns
-        $kategoris = KategoriTagihan::orderBy('nama_kategori')->get();
+        // Get kategoris for dropdowns with subKategoris relationship
+        $kategoris = KategoriTagihan::with('subKategoris')->orderBy('nama_kategori')->get();
 
         return view('admin.desa.master-tagihan.tagihan', compact(
             'kategoris', 
