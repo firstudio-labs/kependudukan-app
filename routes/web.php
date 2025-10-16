@@ -916,6 +916,7 @@ Route::middleware(['auth:web', 'role:admin desa'])->group(function () {
 
     // Mobile Users routes
     Route::get('/admin/desa/mobile-users', [\App\Http\Controllers\adminDesa\MobileUsersController::class, 'index'])->name('admin.desa.mobile-users.index');
+    Route::get('/admin/desa/mobile-users/{nik}', [\App\Http\Controllers\adminDesa\MobileUsersController::class, 'show'])->name('admin.desa.mobile-users.show');
 });
 
 // Route untuk operator - menggunakan web guard

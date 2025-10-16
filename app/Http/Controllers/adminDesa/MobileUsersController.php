@@ -92,6 +92,32 @@ class MobileUsersController extends Controller
         ]);
     }
 
+    public function show(string $nik, CitizenService $citizenService, WilayahService $wilayahService)
+    {
+        $this->authorizeAdminDesa();
+
+        $citizenData = $this->getCitizenDataByNik($citizenService, $nik);
+        if (!$citizenData) {
+            abort(404);
+        }
+
+        // Fallback ke database lokal jika ada data yang tidak lengkap
+        $local = Penduduk::where('nik', $nik)->first();
+
+        $wilayah = $this->getWilayahNames($wilayahService, $citizenData);
+
+        $item = (object) [
+            'nik' => $nik,
+            'full_name' => $citizenData['full_name'] ?? ($citizenData['nama_lengkap'] ?? '-'),
+            'no_hp' => $citizenData['no_hp'] ?? ($local->no_hp ?? null),
+            'kk' => $citizenData['kk'] ?? ($citizenData['no_kk'] ?? ($local->no_kk ?? null)),
+            'wilayah' => $wilayah,
+            'raw' => $citizenData,
+        ];
+
+        return view('admin.desa.mobile-users.show', compact('item'));
+    }
+
     /**
      * Ambil data lengkap penduduk dari CitizenService berdasarkan NIK
      */

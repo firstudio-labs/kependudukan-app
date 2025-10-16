@@ -18,10 +18,7 @@
                         <th class="px-6 py-3">NIK</th>
                         <th class="px-6 py-3">Nama</th>
                         <th class="px-6 py-3">No HP</th>
-                        <th class="px-6 py-3">Provinsi</th>
-                        <th class="px-6 py-3">Kabupaten</th>
-                        <th class="px-6 py-3">Kecamatan</th>
-                        <th class="px-6 py-3">Desa</th>
+                        <th class="px-6 py-3 w-24">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -31,10 +28,9 @@
                             <td class="px-6 py-4">{{ $row->nik }}</td>
                             <td class="px-6 py-4">{{ $row->full_name ?? '-' }}</td>
                             <td class="px-6 py-4">{{ $row->no_hp }}</td>
-                            <td class="px-6 py-4">{{ $row->wilayah['provinsi'] ?? '-' }}</td>
-                            <td class="px-6 py-4">{{ $row->wilayah['kabupaten'] ?? '-' }}</td>
-                            <td class="px-6 py-4">{{ $row->wilayah['kecamatan'] ?? '-' }}</td>
-                            <td class="px-6 py-4">{{ $row->wilayah['desa'] ?? '-' }}</td>
+                            <td class="px-6 py-4">
+                                <a href="{{ route('admin.desa.mobile-users.show', $row->nik) }}" class="px-3 py-1 text-xs rounded bg-[#7886C7] text-white hover:bg-[#2D336B]">Detail</a>
+                            </td>
                         </tr>
                     @empty
                         <tr>
