@@ -432,6 +432,12 @@
                                 </a>
                             </li>
                             <li>
+                                <a href="{{ route('admin.desa.datakk.create') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                                                                                                {{ request()->routeIs('admin.desa.datakk.create') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                    <span>Tambah Data KK</span>
+                                </a>
+                            </li>
+                            <li>
                                 <a href="{{ route('admin.desa.biodata-approval.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
                                                                                                                             {{ request()->routeIs('admin.desa.biodata-approval.*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Approval Biodata</span>
@@ -440,24 +446,59 @@
                         </ul>
                     </li>
 
-                    <!-- Tambah Data KK (menu terpisah) -->
-                    <li class="-ml-5">
-                        <a href="{{ route('admin.desa.datakk.create') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                {{ request()->routeIs('admin.desa.datakk.create') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
-                            <i class="fa-solid fa-plus text-lg transition-all duration-300"></i>
-                            <span>Tambah Data KK</span>
-                        </a>
-                    </li>
+                    
 
-                    <!-- Master Lapor Desa -->
+                    <!-- Informasi Desa Dropdown -->
                     <li class="-ml-5">
-                        <a href="{{ route('admin.desa.datamaster.lapordesa.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                        {{ request()->routeIs('admin.desa.datamaster.lapordesa.*')
-                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
-                            <i class="fa-solid fa-bullhorn text-lg transition-all duration-300"></i>
-                            <span>Master Lapor Desa</span>
-                        </a>
+                        <button type="button"
+                            class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
+                            onclick="toggleDropdown('informasiDesaDropdown')">
+                            <i class="fa-solid fa-circle-info text-lg transition-all duration-300"></i>
+                            <span>Informasi Desa</span>
+                            <i id="dropdown-icon-informasi-desa" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
+                        </button>
+                        <ul id="informasiDesaDropdown" class="hidden space-y-2 pl-6">
+                            <li>
+                                <a href="{{ route('admin.desa.berita-desa.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                    {{ request()->routeIs('admin.desa.berita-desa.*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                    <span>Berita Desa</span>
+                                </a>
+                            </li>
+                            <li>
+                                <button type="button"
+                                    class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
+                                    onclick="toggleDropdown('informasiLaporDesaDropdown')">
+                                    <span>Lapor Desa</span>
+                                    <i id="dropdown-icon-informasi-lapor" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
+                                </button>
+                                <ul id="informasiLaporDesaDropdown" class="hidden space-y-2 pl-6">
+                                    <li>
+                                        <a href="{{ route('admin.desa.datamaster.lapordesa.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                            {{ request()->routeIs('admin.desa.datamaster.lapordesa.*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                            <span>Master Lapor Desa</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ route('admin.desa.laporan-desa.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                            {{ request()->routeIs('admin.desa.laporan-desa.*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                            <span>Daftar Laporan Desa</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li>
+                                <a href="{{ route('admin.desa.agenda.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                    {{ request()->routeIs('admin.desa.agenda.*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                    <span>Agenda Desa</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('admin.desa.pengumuman.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                    {{ request()->routeIs('admin.desa.pengumuman.*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                    <span>Pengumuman</span>
+                                </a>
+                            </li>
+                        </ul>
                     </li>
                     <!-- Master Surat  -->
                     <li class="-ml-5">
@@ -557,108 +598,63 @@
                         </ul>
                     </li>
 
-                    <!-- Laporan Desa -->
-                    <li class="-ml-5">
-                        <a href="{{ route('admin.desa.laporan-desa.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                                    {{ request()->routeIs('admin.desa.laporan-desa.*')
-                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
-                            <i class="fa-solid fa-clipboard-list text-lg transition-all duration-300"></i>
-                            <span>Laporan Desa</span>
-                        </a>
-                    </li>
-
-                    <!-- Berita Desa -->
-                    <li class="-ml-5">
-                        <a href="{{ route('admin.desa.berita-desa.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                            {{ request()->routeIs('admin.desa.berita-desa.*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
-                            <i class="fa-solid fa-newspaper text-lg transition-all duration-300"></i>
-                            <span>Berita Desa</span>
-                        </a>
-                    </li>
-
-                    <!-- Agenda Desa -->
-                    <li class="-ml-5">
-                        <a href="{{ route('admin.desa.agenda.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                        {{ request()->routeIs('admin.desa.agenda.*')
-                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
-                            <i class="fa-solid fa-calendar-days text-lg transition-all duration-300"></i>
-                            <span>Agenda Desa</span>
-                        </a>
-                    </li>
-
-                    <!-- Usaha Desa -->
-                    <li class="-ml-5">
-                        <a href="{{ route('admin.desa.usaha.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                        {{ request()->routeIs('admin.desa.usaha.*')
-                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
-                            <i class="fa-solid fa-store text-lg transition-all duration-300"></i>
-                            <span>Usaha Desa</span>
-                        </a>
-                    </li>
-
-                    <!-- Warungku: daftar informasi usaha seluruh penduduk desa -->
-                    <li class="-ml-5">
-                        <a href="{{ route('admin.desa.warungku.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                        {{ request()->routeIs('admin.desa.warungku.*')
-                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
-                            <i class="fa-solid fa-basket-shopping text-lg transition-all duration-300"></i>
-                            <span>Warungku</span>
-                        </a>
-                    </li>
-
-                    <!-- Sarana Umum -->
+                    <!-- Profil Desa Dropdown -->
                     <li class="-ml-5">
                         <button type="button"
                             class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
-                            onclick="toggleDropdown('saranaUmumDropdown')">
-                            <i class="fa-solid fa-building text-lg transition-all duration-300"></i>
-                            <span>Sarana Umum</span>
-                            <i id="dropdown-icon-sarana-umum" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
+                            onclick="toggleDropdown('profilDesaDropdown')">
+                            <i class="fa-solid fa-home text-lg transition-all duration-300"></i>
+                            <span>Profil Desa</span>
+                            <i id="dropdown-icon-profil-desa" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
                         </button>
-                        <ul id="saranaUmumDropdown" class="hidden space-y-2 pl-6">
+                        <ul id="profilDesaDropdown" class="hidden space-y-2 pl-6">
                             <li>
-                                <a href="{{ route('admin.desa.kategori-sarana.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                                                    {{ request()->routeIs('admin.desa.kategori-sarana.*')
-                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
-                                    <span>Kategori Sarana</span>
+                                <a href="{{ route('admin.desa.usaha.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                    {{ request()->routeIs('admin.desa.usaha.*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                    <span>Usaha Desa</span>
                                 </a>
                             </li>
                             <li>
-                                <a href="{{ route('admin.desa.sarana-umum.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                                                    {{ request()->routeIs('admin.desa.sarana-umum.*')
-                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
-                                    <span>Sarana Umum</span>
+                                <button type="button"
+                                    class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
+                                    onclick="toggleDropdown('profilSaranaDropdown')">
+                                    <span>Kategori & Sarana Umum</span>
+                                    <i id="dropdown-icon-profil-sarana" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
+                                </button>
+                                <ul id="profilSaranaDropdown" class="hidden space-y-2 pl-6">
+                                    <li>
+                                        <a href="{{ route('admin.desa.kategori-sarana.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                            {{ request()->routeIs('admin.desa.kategori-sarana.*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                            <span>Kategori Sarana</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ route('admin.desa.sarana-umum.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                            {{ request()->routeIs('admin.desa.sarana-umum.*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                            <span>Sarana Umum</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li>
+                                <a href="{{ route('admin.desa.warungku.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                    {{ request()->routeIs('admin.desa.warungku.*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                    <span>Warungku</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('admin.desa.kesenian-budaya.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                    {{ request()->routeIs('admin.desa.kesenian-budaya.*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                    <span>Kesenian & Budaya</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('admin.desa.abdes.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                    {{ request()->routeIs('admin.desa.abdes.*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                    <span>APBDES</span>
                                 </a>
                             </li>
                         </ul>
-                    </li>
-
-                    <!-- Kesenian & Budaya -->
-                    <li class="-ml-5">
-                        <a href="{{ route('admin.desa.kesenian-budaya.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                        {{ request()->routeIs('admin.desa.kesenian-budaya.*')
-                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
-                            <i class="fa-solid fa-masks-theater text-lg transition-all duration-300"></i>
-                            <span>Kesenian & Budaya</span>
-                        </a>
-                    </li>
-
-                    <!-- APBDes -->
-                    <li class="-ml-5">
-                        <a href="{{ route('admin.desa.abdes.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                        {{ request()->routeIs('admin.desa.abdes.*')
-                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
-                            <i class="fa-solid fa-sack-dollar text-lg transition-all duration-300"></i>
-                            <span>APBDES</span>
-                        </a>
                     </li>
 
                     <!-- Master Tagihan (dropdown) -->
@@ -690,16 +686,7 @@
                         </ul>
                     </li>
 
-                    <!-- Pengumuman -->
-                    <li class="-ml-5">
-                        <a href="{{ route('admin.desa.pengumuman.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                                    {{ request()->routeIs('admin.desa.pengumuman.*')
-                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
-                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
-                            <i class="fa-solid fa-bullhorn text-lg transition-all duration-300"></i>
-                            <span>Pengumuman</span>
-                        </a>
-                    </li>
+                    
 
                     <!-- Pengguna Mobile -->
                     <li class="-ml-5">
