@@ -98,7 +98,7 @@
                                 <select id="filterKepalaKeluarga" onchange="filterByKepalaKeluarga()"
                                     class="block p-2 text-sm text-gray-900 bg-white rounded-lg border border-gray-300 focus:ring-[#7886C7] focus:border-[#7886C7]">
                                     <option value="all">Semua Penduduk</option>
-                                    <option value="kepala_keluarga">Hanya Kepala Keluarga</option>
+                                    <option value="kepala_keluarga" selected>Hanya Kepala Keluarga</option>
                                 </select>
                             </div>
                         </div>
@@ -380,6 +380,9 @@
             
             // Initial count update
             updateSelectedCount();
+
+            // Default tampilan: hanya Kepala Keluarga
+            filterPenduduk();
         });
 
         // Form validation sebelum submit
