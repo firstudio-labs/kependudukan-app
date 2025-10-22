@@ -33,7 +33,7 @@ class MobileUsersController extends Controller
             
             // Filter berdasarkan search jika ada
             if ($search) {
-                $allCitizens = array_filter($allCitizens, function($citizen) use ($search) {
+                $allCitizens = collect($allCitizens)->filter(function($citizen) use ($search) {
                     $nik = $citizen['nik'] ?? '';
                     $noHp = $citizen['no_hp'] ?? '';
                     $fullName = $citizen['full_name'] ?? '';
@@ -41,16 +41,16 @@ class MobileUsersController extends Controller
                     return str_contains(strtolower($nik), strtolower($search)) ||
                            str_contains(strtolower($noHp), strtolower($search)) ||
                            str_contains(strtolower($fullName), strtolower($search));
-                });
+                })->values()->all();
                 
                 \Log::info("After search filter: " . count($allCitizens) . " citizens");
             }
             
             // Filter hanya yang memiliki no_hp
-            $allCitizens = array_filter($allCitizens, function($citizen) {
+            $allCitizens = collect($allCitizens)->filter(function($citizen) {
                 $noHp = $citizen['no_hp'] ?? '';
                 return !empty($noHp) && $noHp !== '';
-            });
+            })->values()->all();
             
             \Log::info("After no_hp filter: " . count($allCitizens) . " citizens");
             
