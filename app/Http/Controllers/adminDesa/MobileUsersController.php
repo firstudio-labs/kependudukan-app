@@ -33,7 +33,15 @@ class MobileUsersController extends Controller
 
             do {
                 $resp = $citizenService->getCitizensByVillageId($adminVillageId, $pageIndex, $fetchLimit);
-                $chunk = $resp['data']['citizens'] ?? [];
+                $chunkRaw = $resp['data']['citizens'] ?? [];
+                // Pastikan bentuknya array biasa sebelum di-merge
+                if ($chunkRaw instanceof \Illuminate\Support\Collection) {
+                    $chunk = $chunkRaw->toArray();
+                } else if (is_array($chunkRaw)) {
+                    $chunk = $chunkRaw;
+                } else {
+                    $chunk = [];
+                }
                 if (!empty($chunk)) {
                     $allCitizens = array_merge($allCitizens, $chunk);
                 }
