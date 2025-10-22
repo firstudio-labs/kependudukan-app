@@ -25,17 +25,37 @@ class MobileUsersController extends Controller
         $perPage = 10;
         
         try {
-            // Ambil semua penduduk dari desa admin menggunakan CitizenService
-            $citizensResponse = $citizenService->getCitizensByVillageId($adminVillageId, 1, 1000);
-            $allCitizens = $citizensResponse['data']['citizens'] ?? [];
+            // Ambil semua penduduk dari desa admin menggunakan CitizenService (loop pagination)
+            $fetchLimit = 1000;
+            $pageIndex = 1;
+            $allCitizens = [];
+            $safetyPageCap = 200; // hard cap agar tidak infinite loop
+
+            do {
+                $resp = $citizenService->getCitizensByVillageId($adminVillageId, $pageIndex, $fetchLimit);
+                $chunk = $resp['data']['citizens'] ?? [];
+                if (!empty($chunk)) {
+                    $allCitizens = array_merge($allCitizens, $chunk);
+                }
+                $pageIndex++;
+                // stop jika kurang dari limit (berarti halaman terakhir) atau melewati cap
+            } while (!empty($chunk) && count($chunk) === $fetchLimit && $pageIndex <= $safetyPageCap);
+
+            \Log::info("Loaded total " . count($allCitizens) . " citizens in village {$adminVillageId} across " . ($pageIndex - 1) . " pages");
             
-            \Log::info("Found " . count($allCitizens) . " citizens in village {$adminVillageId}");
-            
+            // Siapkan mapping no_hp dari DB lokal sebagai fallback
+            try {
+                $nikList = collect($allCitizens)->pluck('nik')->filter()->values();
+                $localPhones = \App\Models\Penduduk::whereIn('nik', $nikList)->pluck('no_hp', 'nik');
+            } catch (\Throwable $e) {
+                $localPhones = collect();
+            }
+
             // Filter berdasarkan search jika ada
             if ($search) {
-                $allCitizens = collect($allCitizens)->filter(function($citizen) use ($search) {
+                $allCitizens = collect($allCitizens)->filter(function($citizen) use ($search, $localPhones) {
                     $nik = $citizen['nik'] ?? '';
-                    $noHp = $citizen['no_hp'] ?? '';
+                    $noHp = $citizen['no_hp'] ?? ($citizen['telephone'] ?? ($localPhones[$nik] ?? ''));
                     $fullName = $citizen['full_name'] ?? '';
                     
                     return str_contains(strtolower($nik), strtolower($search)) ||
@@ -47,8 +67,9 @@ class MobileUsersController extends Controller
             }
             
             // Filter hanya yang memiliki no_hp
-            $allCitizens = collect($allCitizens)->filter(function($citizen) {
-                $noHp = $citizen['no_hp'] ?? '';
+            $allCitizens = collect($allCitizens)->filter(function($citizen) use ($localPhones) {
+                $nik = $citizen['nik'] ?? '';
+                $noHp = $citizen['no_hp'] ?? ($citizen['telephone'] ?? ($localPhones[$nik] ?? ''));
                 return !empty($noHp) && $noHp !== '';
             })->values()->all();
             
@@ -60,11 +81,12 @@ class MobileUsersController extends Controller
         }
 
         // 2. Mapping data untuk setiap penduduk
-        $mapped = collect($allCitizens)->map(function ($citizen) use ($wilayahService) {
+        $mapped = collect($allCitizens)->map(function ($citizen) use ($wilayahService, $localPhones) {
             $obj = new \stdClass();
             $obj->nik = $citizen['nik'] ?? '';
             $obj->full_name = $citizen['full_name'] ?? $citizen['nama_lengkap'] ?? '-';
-            $obj->no_hp = $citizen['no_hp'] ?? '';
+            $nik = $citizen['nik'] ?? '';
+            $obj->no_hp = $citizen['no_hp'] ?? ($citizen['telephone'] ?? ($localPhones[$nik] ?? ''));
             $obj->wilayah = $this->getWilayahNames($wilayahService, $citizen);
             return $obj;
         });
