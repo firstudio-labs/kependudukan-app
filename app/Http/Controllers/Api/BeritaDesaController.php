@@ -143,11 +143,17 @@ class BeritaDesaController extends Controller
                 return response()->json(['status' => 'error', 'message' => 'Data desa tidak ditemukan untuk akun ini'], 422);
             }
 
+            // Pastikan user_id tidak null
+            if (!$tokenOwner->id) {
+                return response()->json(['status' => 'error', 'message' => 'User ID tidak ditemukan'], 422);
+            }
+
             $data = [
                 'judul' => $request->input('judul'),
                 'deskripsi' => $request->input('deskripsi'),
                 'komentar' => $request->input('komentar'),
-                'user_id' => $tokenOwner->id ?? null,
+                'user_id' => $tokenOwner->id,
+                'nik_penduduk' => $nik, // Tambahkan NIK penduduk
                 'province_id' => $provinceId ? (int) $provinceId : null,
                 'districts_id' => $districtId ? (int) $districtId : null,
                 'sub_districts_id' => $subDistrictId ? (int) $subDistrictId : null,
@@ -175,6 +181,12 @@ class BeritaDesaController extends Controller
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json(['status' => 'error', 'message' => 'Validasi gagal', 'errors' => $e->errors()], 422);
         } catch (\Exception $e) {
+            \Log::error('BeritaDesa store error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'request_data' => $request->all(),
+                'nik' => $nik ?? null,
+                'village_id' => $villageId ?? null
+            ]);
             return response()->json(['status' => 'error', 'message' => 'Gagal menyimpan berita: ' . $e->getMessage()], 500);
         }
     }
