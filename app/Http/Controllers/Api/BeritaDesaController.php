@@ -131,29 +131,55 @@ class BeritaDesaController extends Controller
             ]);
 
             $nik = $tokenOwner->nik ?? null;
+            \Log::info('BeritaDesa store - NIK: ' . $nik);
+            
             $citizenData = $nik ? $citizenService->getCitizenByNIK($nik) : null;
+            \Log::info('BeritaDesa store - CitizenService response: ', ['citizenData' => $citizenData]);
+            
             $payload = is_array($citizenData) ? ($citizenData['data'] ?? $citizenData) : [];
+            \Log::info('BeritaDesa store - Payload: ', ['payload' => $payload]);
 
             $provinceId = $payload['province_id'] ?? $payload['provinsi_id'] ?? null;
             $districtId = $payload['district_id'] ?? $payload['districts_id'] ?? null;
             $subDistrictId = $payload['sub_district_id'] ?? $payload['sub_districts_id'] ?? null;
             $villageId = $payload['villages_id'] ?? $payload['village_id'] ?? null;
+            
+            \Log::info('BeritaDesa store - Wilayah IDs: ', [
+                'provinceId' => $provinceId,
+                'districtId' => $districtId,
+                'subDistrictId' => $subDistrictId,
+                'villageId' => $villageId
+            ]);
 
             if (!$villageId) {
                 return response()->json(['status' => 'error', 'message' => 'Data desa tidak ditemukan untuk akun ini'], 422);
             }
 
-            // Pastikan user_id tidak null
-            if (!$tokenOwner->id) {
-                return response()->json(['status' => 'error', 'message' => 'User ID tidak ditemukan'], 422);
+            // Cari user_id dari tabel users yang memiliki villages_id yang sama dengan penduduk
+            $user = \App\Models\User::where('villages_id', $villageId)->first();
+            
+            if (!$user) {
+                \Log::error('Tidak ada user dengan villages_id yang sama', [
+                    'village_id' => $villageId,
+                    'nik' => $nik,
+                    'token_owner' => $tokenOwner
+                ]);
+                return response()->json(['status' => 'error', 'message' => 'Tidak ada user admin desa untuk desa ini'], 422);
             }
+
+            \Log::info('User ditemukan untuk villages_id', [
+                'village_id' => $villageId,
+                'user_id' => $user->id,
+                'user_role' => $user->role,
+                'nik' => $nik
+            ]);
 
             $data = [
                 'judul' => $request->input('judul'),
                 'deskripsi' => $request->input('deskripsi'),
                 'komentar' => $request->input('komentar'),
-                'user_id' => $tokenOwner->id,
-                'nik_penduduk' => $nik, // Tambahkan NIK penduduk
+                'user_id' => $user->id, // Gunakan user_id dari admin desa yang memiliki villages_id yang sama
+                'nik_penduduk' => $nik, // NIK penduduk yang membuat berita
                 'province_id' => $provinceId ? (int) $provinceId : null,
                 'districts_id' => $districtId ? (int) $districtId : null,
                 'sub_districts_id' => $subDistrictId ? (int) $subDistrictId : null,
@@ -431,6 +457,243 @@ class BeritaDesaController extends Controller
         }
         
         return $wilayah;
+    }
+
+    /**
+     * Test method untuk debugging CitizenService dan WilayahService
+     */
+    public function testServices(Request $request, CitizenService $citizenService)
+    {
+        try {
+            $nik = $request->input('nik');
+            if (!$nik) {
+                return response()->json(['status' => 'error', 'message' => 'NIK required'], 400);
+            }
+
+            \Log::info('Testing Services for NIK: ' . $nik);
+            
+            // Test CitizenService
+            $citizenData = $citizenService->getCitizenByNIK($nik);
+            \Log::info('CitizenService response: ', ['citizenData' => $citizenData]);
+            
+            $payload = is_array($citizenData) ? ($citizenData['data'] ?? $citizenData) : [];
+            $provinceId = $payload['province_id'] ?? $payload['provinsi_id'] ?? null;
+            $districtId = $payload['district_id'] ?? $payload['districts_id'] ?? null;
+            $subDistrictId = $payload['sub_district_id'] ?? $payload['sub_districts_id'] ?? null;
+            $villageId = $payload['villages_id'] ?? $payload['village_id'] ?? null;
+            
+            \Log::info('Extracted wilayah IDs: ', [
+                'provinceId' => $provinceId,
+                'districtId' => $districtId,
+                'subDistrictId' => $subDistrictId,
+                'villageId' => $villageId
+            ]);
+            
+            // Test WilayahService
+            $wilayahTest = [];
+            
+            if ($provinceId) {
+                try {
+                    $provinces = $this->wilayahService->getProvinces();
+                    \Log::info('Provinces response: ', ['provinces' => $provinces]);
+                    
+                    $province = collect($provinces)->firstWhere('id', (int) $provinceId);
+                    $wilayahTest['provinsi'] = $province ? $province['name'] : 'Not found';
+                } catch (\Exception $e) {
+                    \Log::error('Province error: ' . $e->getMessage());
+                    $wilayahTest['provinsi'] = 'Error: ' . $e->getMessage();
+                }
+            }
+            
+            if ($districtId && $provinceId) {
+                try {
+                    $provinces = $this->wilayahService->getProvinces();
+                    $provinceData = collect($provinces)->firstWhere('id', (int) $provinceId);
+                    
+                    if ($provinceData && isset($provinceData['code'])) {
+                        $kabupaten = $this->wilayahService->getKabupaten($provinceData['code']);
+                        \Log::info('Kabupaten response: ', ['kabupaten' => $kabupaten]);
+                        
+                        $kabupatenData = collect($kabupaten)->firstWhere('id', (int) $districtId);
+                        $wilayahTest['kabupaten'] = $kabupatenData ? $kabupatenData['name'] : 'Not found';
+                    } else {
+                        $wilayahTest['kabupaten'] = 'Province code not found';
+                    }
+                } catch (\Exception $e) {
+                    \Log::error('Kabupaten error: ' . $e->getMessage());
+                    $wilayahTest['kabupaten'] = 'Error: ' . $e->getMessage();
+                }
+            }
+            
+            if ($subDistrictId && $districtId && $provinceId) {
+                try {
+                    $provinces = $this->wilayahService->getProvinces();
+                    $provinceData = collect($provinces)->firstWhere('id', (int) $provinceId);
+                    
+                    if ($provinceData && isset($provinceData['code'])) {
+                        $kabupaten = $this->wilayahService->getKabupaten($provinceData['code']);
+                        $kabupatenData = collect($kabupaten)->firstWhere('id', (int) $districtId);
+                        
+                        if ($kabupatenData && isset($kabupatenData['code'])) {
+                            $kecamatan = $this->wilayahService->getKecamatan($kabupatenData['code']);
+                            \Log::info('Kecamatan response: ', ['kecamatan' => $kecamatan]);
+                            
+                            $kecamatanData = collect($kecamatan)->firstWhere('id', (int) $subDistrictId);
+                            $wilayahTest['kecamatan'] = $kecamatanData ? $kecamatanData['name'] : 'Not found';
+                        } else {
+                            $wilayahTest['kecamatan'] = 'Kabupaten code not found';
+                        }
+                    } else {
+                        $wilayahTest['kecamatan'] = 'Province code not found';
+                    }
+                } catch (\Exception $e) {
+                    \Log::error('Kecamatan error: ' . $e->getMessage());
+                    $wilayahTest['kecamatan'] = 'Error: ' . $e->getMessage();
+                }
+            }
+            
+            if ($villageId && $subDistrictId && $districtId && $provinceId) {
+                try {
+                    $provinces = $this->wilayahService->getProvinces();
+                    $provinceData = collect($provinces)->firstWhere('id', (int) $provinceId);
+                    
+                    if ($provinceData && isset($provinceData['code'])) {
+                        $kabupaten = $this->wilayahService->getKabupaten($provinceData['code']);
+                        $kabupatenData = collect($kabupaten)->firstWhere('id', (int) $districtId);
+                        
+                        if ($kabupatenData && isset($kabupatenData['code'])) {
+                            $kecamatan = $this->wilayahService->getKecamatan($kabupatenData['code']);
+                            $kecamatanData = collect($kecamatan)->firstWhere('id', (int) $subDistrictId);
+                            
+                            if ($kecamatanData && isset($kecamatanData['code'])) {
+                                $desa = $this->wilayahService->getDesa($kecamatanData['code']);
+                                \Log::info('Desa response: ', ['desa' => $desa]);
+                                
+                                $desaData = collect($desa)->firstWhere('id', (int) $villageId);
+                                $wilayahTest['desa'] = $desaData ? $desaData['name'] : 'Not found';
+                            } else {
+                                $wilayahTest['desa'] = 'Kecamatan code not found';
+                            }
+                        } else {
+                            $wilayahTest['desa'] = 'Kabupaten code not found';
+                        }
+                    } else {
+                        $wilayahTest['desa'] = 'Province code not found';
+                    }
+                } catch (\Exception $e) {
+                    \Log::error('Desa error: ' . $e->getMessage());
+                    $wilayahTest['desa'] = 'Error: ' . $e->getMessage();
+                }
+            }
+            
+            return response()->json([
+                'status' => 'success',
+                'nik' => $nik,
+                'citizenData' => $citizenData,
+                'payload' => $payload,
+                'wilayahIds' => [
+                    'provinceId' => $provinceId,
+                    'districtId' => $districtId,
+                    'subDistrictId' => $subDistrictId,
+                    'villageId' => $villageId
+                ],
+                'wilayahTest' => $wilayahTest
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Services test error: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ], 500);
+        }
+    }
+
+    /**
+     * Debug method untuk mengecek user data dan villages_id
+     */
+    public function debugUser(Request $request, CitizenService $citizenService)
+    {
+        try {
+            $tokenOwner = $request->attributes->get('token_owner');
+            
+            if (!$tokenOwner) {
+                return response()->json(['status' => 'error', 'message' => 'No token owner'], 401);
+            }
+
+            // Ambil NIK penduduk dan cari village_id
+            $nik = $tokenOwner->nik ?? null;
+            $citizenData = $nik ? $citizenService->getCitizenByNIK($nik) : null;
+            $payload = is_array($citizenData) ? ($citizenData['data'] ?? $citizenData) : [];
+            $villageId = $payload['villages_id'] ?? $payload['village_id'] ?? null;
+
+            // Cek apakah user ada di database dengan ID dari token
+            $userInDb = \App\Models\User::where('id', $tokenOwner->id)->first();
+            
+            // Cek apakah ada user dengan NIK yang sama
+            $userByNik = \App\Models\User::where('nik', $tokenOwner->nik)->first();
+            
+            // Cek user dengan villages_id yang sama (admin desa)
+            $adminDesa = $villageId ? \App\Models\User::where('villages_id', $villageId)->first() : null;
+            
+            // Cek semua user dengan villages_id yang sama
+            $allAdminsDesa = $villageId ? \App\Models\User::where('villages_id', $villageId)->get() : collect();
+
+            return response()->json([
+                'status' => 'success',
+                'tokenOwner' => [
+                    'id' => $tokenOwner->id,
+                    'nik' => $tokenOwner->nik,
+                    'role' => $tokenOwner->role ?? 'unknown',
+                    'email' => $tokenOwner->email ?? 'unknown'
+                ],
+                'citizenData' => [
+                    'nik' => $nik,
+                    'villageId' => $villageId,
+                    'payload' => $payload
+                ],
+                'userInDb' => $userInDb ? [
+                    'id' => $userInDb->id,
+                    'nik' => $userInDb->nik,
+                    'role' => $userInDb->role,
+                    'email' => $userInDb->email,
+                    'villages_id' => $userInDb->villages_id,
+                    'created_at' => $userInDb->created_at
+                ] : null,
+                'userByNik' => $userByNik ? [
+                    'id' => $userByNik->id,
+                    'nik' => $userByNik->nik,
+                    'role' => $userByNik->role,
+                    'email' => $userByNik->email,
+                    'villages_id' => $userByNik->villages_id
+                ] : null,
+                'adminDesa' => $adminDesa ? [
+                    'id' => $adminDesa->id,
+                    'nik' => $adminDesa->nik,
+                    'role' => $adminDesa->role,
+                    'email' => $adminDesa->email,
+                    'villages_id' => $adminDesa->villages_id
+                ] : null,
+                'allAdminsDesa' => $allAdminsDesa->map(function($user) {
+                    return [
+                        'id' => $user->id,
+                        'nik' => $user->nik,
+                        'role' => $user->role,
+                        'email' => $user->email,
+                        'villages_id' => $user->villages_id
+                    ];
+                })
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Debug user error: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ], 500);
+        }
     }
 }
 
