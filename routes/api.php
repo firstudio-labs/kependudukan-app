@@ -139,10 +139,6 @@ Route::middleware(ApiTokenOwnerMiddleware::class)->group(function () {
             ->name('user.berita-desa.send-approval');
         Route::get('/berita-desa/{id}', [BeritaDesaController::class, 'show'])
             ->name('user.berita-desa.show');
-        Route::get('/berita-desa-test', [BeritaDesaController::class, 'testServices'])
-            ->name('user.berita-desa.test');
-        Route::get('/debug-user', [BeritaDesaController::class, 'debugUser'])
-            ->name('user.debug-user');
 
         // pengumuman
         Route::get('/pengumuman', [ApiPengumumanController::class, 'index'])
