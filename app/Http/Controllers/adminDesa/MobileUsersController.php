@@ -51,10 +51,16 @@ class MobileUsersController extends Controller
 
             \Log::info("Loaded total " . count($allCitizens) . " citizens in village {$adminVillageId} across " . ($pageIndex - 1) . " pages");
             
-            // Siapkan mapping no_hp dari DB lokal sebagai fallback
+            // Siapkan mapping no_hp HANYA dari DB lokal (tanpa menggunakan telephone dari API)
             try {
-                $nikList = collect($allCitizens)->pluck('nik')->filter()->values();
-                $localPhones = \App\Models\Penduduk::whereIn('nik', $nikList)->pluck('no_hp', 'nik');
+                $localPhones = \App\Models\Penduduk::whereNotNull('no_hp')
+                    ->where('no_hp', '!=', '')
+                    ->pluck('no_hp', 'nik');
+                // Filter valid minimal 8 digit
+                $localPhones = collect($localPhones)->filter(function($noHp) {
+                    $digits = preg_replace('/\D+/', '', (string) $noHp);
+                    return strlen($digits) >= 8;
+                });
             } catch (\Throwable $e) {
                 $localPhones = collect();
             }
@@ -63,7 +69,7 @@ class MobileUsersController extends Controller
             if ($search) {
                 $allCitizens = collect($allCitizens)->filter(function($citizen) use ($search, $localPhones) {
                     $nik = $citizen['nik'] ?? '';
-                    $noHp = $citizen['no_hp'] ?? ($citizen['telephone'] ?? ($localPhones[$nik] ?? ''));
+                    $noHp = $localPhones[$nik] ?? '';
                     $fullName = $citizen['full_name'] ?? '';
                     
                     return str_contains(strtolower($nik), strtolower($search)) ||
@@ -74,11 +80,10 @@ class MobileUsersController extends Controller
                 \Log::info("After search filter: " . count($allCitizens) . " citizens");
             }
             
-            // Filter hanya yang memiliki no_hp
+            // Filter hanya yang memiliki no_hp yang valid di DB lokal
             $allCitizens = collect($allCitizens)->filter(function($citizen) use ($localPhones) {
                 $nik = $citizen['nik'] ?? '';
-                $noHp = $citizen['no_hp'] ?? ($citizen['telephone'] ?? ($localPhones[$nik] ?? ''));
-                return !empty($noHp) && $noHp !== '';
+                return isset($localPhones[$nik]) && trim((string)$localPhones[$nik]) !== '';
             })->values()->all();
             
             \Log::info("After no_hp filter: " . count($allCitizens) . " citizens");
@@ -94,7 +99,7 @@ class MobileUsersController extends Controller
             $obj->nik = $citizen['nik'] ?? '';
             $obj->full_name = $citizen['full_name'] ?? $citizen['nama_lengkap'] ?? '-';
             $nik = $citizen['nik'] ?? '';
-            $obj->no_hp = $citizen['no_hp'] ?? ($citizen['telephone'] ?? ($localPhones[$nik] ?? ''));
+            $obj->no_hp = $localPhones[$nik] ?? '';
             $obj->wilayah = $this->getWilayahNames($wilayahService, $citizen);
             return $obj;
         });
