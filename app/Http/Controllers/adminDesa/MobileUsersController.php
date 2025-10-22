@@ -18,74 +18,58 @@ class MobileUsersController extends Controller
 
         $adminVillageId = Auth::user()->villages_id;
         $search = $request->get('search');
+        
+        \Log::info("MobileUsersController - Admin Village ID: {$adminVillageId}, Search: {$search}");
 
-        // 1. Ambil data penduduk dari tabel penduduk yang memiliki no_hp (tidak NULL)
-        $query = Penduduk::whereNotNull('no_hp')
-            ->where('no_hp', '!=', '');
-
-        // 2. Filter berdasarkan search (NIK atau no_hp)
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('nik', 'like', "%{$search}%")
-                  ->orWhere('no_hp', 'like', "%{$search}%");
+        // 1. Ambil data penduduk dari CitizenService berdasarkan villages_id admin
+        $perPage = 10;
+        
+        try {
+            // Ambil semua penduduk dari desa admin menggunakan CitizenService
+            $citizensResponse = $citizenService->getCitizensByVillageId($adminVillageId, 1, 1000);
+            $allCitizens = $citizensResponse['data']['citizens'] ?? [];
+            
+            \Log::info("Found " . count($allCitizens) . " citizens in village {$adminVillageId}");
+            
+            // Filter berdasarkan search jika ada
+            if ($search) {
+                $allCitizens = array_filter($allCitizens, function($citizen) use ($search) {
+                    $nik = $citizen['nik'] ?? '';
+                    $noHp = $citizen['no_hp'] ?? '';
+                    $fullName = $citizen['full_name'] ?? '';
+                    
+                    return str_contains(strtolower($nik), strtolower($search)) ||
+                           str_contains(strtolower($noHp), strtolower($search)) ||
+                           str_contains(strtolower($fullName), strtolower($search));
+                });
+                
+                \Log::info("After search filter: " . count($allCitizens) . " citizens");
+            }
+            
+            // Filter hanya yang memiliki no_hp
+            $allCitizens = array_filter($allCitizens, function($citizen) {
+                $noHp = $citizen['no_hp'] ?? '';
+                return !empty($noHp) && $noHp !== '';
             });
-        }
-
-        // 3. Ambil data dasar lebih besar lalu paginate SETELAH filter wilayah
-        $perPage = 10; // target tampilan per halaman
-        $baseTake = 1000; // ambil cukup besar untuk memastikan hasil setelah filter
-        $penduduksBase = $query->limit($baseTake)->get();
-
-        // 4. Ambil data admin untuk perbandingan wilayah
-        $adminCitizenData = $this->getCitizenDataByNik($citizenService, Auth::user()->nik);
-        if (!$adminCitizenData) {
-            // Jika data admin tidak ditemukan, return empty data
-            return view('admin.desa.mobile-users.index', [
-                'items' => $penduduks,
-                'search' => $search,
-            ]);
-        }
-
-        $adminProvinceId = $adminCitizenData['province_id'] ?? null;
-        $adminDistrictId = $adminCitizenData['district_id'] ?? null;
-        $adminSubDistrictId = $adminCitizenData['sub_district_id'] ?? null;
-
-        // 5. Mapping data untuk setiap penduduk
-        $mapped = $penduduksBase->map(function ($penduduk) use ($citizenService, $wilayahService, $adminVillageId, $adminProvinceId, $adminDistrictId, $adminSubDistrictId) {
-            // 6. Ambil data lengkap dari CitizenService menggunakan NIK
-            $citizenData = $this->getCitizenDataByNik($citizenService, $penduduk->nik);
             
-            // 7. Cek apakah data wilayah dari CitizenService sama dengan admin
-            if (!$citizenData) {
-                return null; // Skip jika data tidak ditemukan
-            }
+            \Log::info("After no_hp filter: " . count($allCitizens) . " citizens");
+            
+        } catch (\Exception $e) {
+            \Log::error("Error getting citizens by village ID: " . $e->getMessage());
+            $allCitizens = [];
+        }
 
-            $pendudukProvinceId = $citizenData['province_id'] ?? null;
-            $pendudukDistrictId = $citizenData['district_id'] ?? null;
-            $pendudukSubDistrictId = $citizenData['sub_district_id'] ?? null;
-            $pendudukVillageId = $citizenData['village_id'] ?? null;
-
-            // Cek apakah penduduk dan admin dari wilayah yang sama (provinsi, kabupaten, kecamatan, desa)
-            if ($pendudukProvinceId != $adminProvinceId || 
-                $pendudukDistrictId != $adminDistrictId || 
-                $pendudukSubDistrictId != $adminSubDistrictId || 
-                $pendudukVillageId != $adminVillageId) {
-                return null; // Skip jika bukan dari wilayah yang sama
-            }
-
+        // 2. Mapping data untuk setiap penduduk
+        $mapped = collect($allCitizens)->map(function ($citizen) use ($wilayahService) {
             $obj = new \stdClass();
-            $obj->nik = $penduduk->nik;
-            // 8. Ambil fullname dari CitizenService (prioritas) atau fallback ke database lokal
-            $obj->full_name = $citizenData['full_name'] ?? $citizenData['nama_lengkap'] ?? $penduduk->nama_lengkap ?? $penduduk->nama ?? '-';
-            $obj->no_hp = $penduduk->no_hp;
-            
-            // 9. Ambil nama wilayah dari CitizenService (prioritas) atau WilayahService (fallback)
-            $obj->wilayah = $this->getWilayahNames($wilayahService, $citizenData);
-
+            $obj->nik = $citizen['nik'] ?? '';
+            $obj->full_name = $citizen['full_name'] ?? $citizen['nama_lengkap'] ?? '-';
+            $obj->no_hp = $citizen['no_hp'] ?? '';
+            $obj->wilayah = $this->getWilayahNames($wilayahService, $citizen);
             return $obj;
-        })->filter(); // Remove null values
+        });
 
-        // 8. Bangun paginator manual agar selalu 10/item per halaman setelah filter
+        // 3. Bangun paginator manual
         $currentPage = (int) max(1, (int) $request->get('page', 1));
         $total = $mapped->count();
         $items = $mapped->slice(($currentPage - 1) * $perPage, $perPage)->values();
@@ -142,9 +126,11 @@ class MobileUsersController extends Controller
             $response = $citizenService->getCitizenByNIK($nik);
             
             if (isset($response['data'])) {
+                \Log::info("Successfully retrieved citizen data for NIK: {$nik}");
                 return $response['data'];
             }
             
+            \Log::warning("No data found for NIK: {$nik}");
             return null;
         } catch (\Exception $e) {
             \Log::error("Error getting citizen data for NIK {$nik}: " . $e->getMessage());
