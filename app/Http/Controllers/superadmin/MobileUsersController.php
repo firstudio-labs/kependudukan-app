@@ -329,11 +329,24 @@ class MobileUsersController extends Controller
     {
         $this->authorizeSuperadmin();
 
+        // Validasi level dan ID
+        if (!in_array($level, ['province', 'district', 'subdistrict', 'village'])) {
+            abort(404, 'Level tidak valid');
+        }
+
+        if (!$id || !is_numeric($id)) {
+            abort(404, 'ID tidak valid');
+        }
+
+        \Log::info("MobileUsersController - showDetail called with level: {$level}, id: {$id}");
+
         // Ambil semua data penduduk dengan no_hp
         $allCitizens = $this->getAllMobileUsers($citizenService);
         
         // Filter berdasarkan level dan ID
         $filteredCitizens = $this->filterCitizensByLevel($allCitizens, $level, $id, $wilayahService);
+        
+        \Log::info("MobileUsersController - showDetail filtered citizens count: " . count($filteredCitizens));
         
         // Siapkan mapping no_hp dari DB lokal
         $localPhones = \App\Models\Penduduk::whereNotNull('no_hp')
@@ -856,28 +869,39 @@ class MobileUsersController extends Controller
      */
     private function filterCitizensByLevel($allCitizens, $level, $id, $wilayahService)
     {
+        $id = (int) $id; // Pastikan ID adalah integer
+        
         switch ($level) {
             case 'province':
-                return collect($allCitizens)->filter(function($citizen) use ($id) {
-                    return isset($citizen['province_id']) && $citizen['province_id'] == $id;
+                $filtered = collect($allCitizens)->filter(function($citizen) use ($id) {
+                    return isset($citizen['province_id']) && (int)$citizen['province_id'] === $id;
                 })->values()->all();
+                \Log::info("MobileUsersController - filterCitizensByLevel province {$id}: " . count($filtered) . " citizens");
+                return $filtered;
                 
             case 'district':
-                return collect($allCitizens)->filter(function($citizen) use ($id) {
-                    return isset($citizen['district_id']) && $citizen['district_id'] == $id;
+                $filtered = collect($allCitizens)->filter(function($citizen) use ($id) {
+                    return isset($citizen['district_id']) && (int)$citizen['district_id'] === $id;
                 })->values()->all();
+                \Log::info("MobileUsersController - filterCitizensByLevel district {$id}: " . count($filtered) . " citizens");
+                return $filtered;
                 
             case 'subdistrict':
-                return collect($allCitizens)->filter(function($citizen) use ($id) {
-                    return isset($citizen['sub_district_id']) && $citizen['sub_district_id'] == $id;
+                $filtered = collect($allCitizens)->filter(function($citizen) use ($id) {
+                    return isset($citizen['sub_district_id']) && (int)$citizen['sub_district_id'] === $id;
                 })->values()->all();
+                \Log::info("MobileUsersController - filterCitizensByLevel subdistrict {$id}: " . count($filtered) . " citizens");
+                return $filtered;
                 
             case 'village':
-                return collect($allCitizens)->filter(function($citizen) use ($id) {
-                    return isset($citizen['village_id']) && $citizen['village_id'] == $id;
+                $filtered = collect($allCitizens)->filter(function($citizen) use ($id) {
+                    return isset($citizen['village_id']) && (int)$citizen['village_id'] === $id;
                 })->values()->all();
+                \Log::info("MobileUsersController - filterCitizensByLevel village {$id}: " . count($filtered) . " citizens");
+                return $filtered;
                 
             default:
+                \Log::warning("MobileUsersController - filterCitizensByLevel unknown level: {$level}");
                 return [];
         }
     }
@@ -888,10 +912,20 @@ class MobileUsersController extends Controller
     private function getLevelInfo($level, $id, $wilayahService)
     {
         try {
+            $id = (int) $id; // Pastikan ID adalah integer
+            
             switch ($level) {
                 case 'province':
                     $provinces = $wilayahService->getProvinces();
                     $province = collect($provinces)->firstWhere('id', $id);
+                    if (!$province) {
+                        \Log::warning("MobileUsersController - getLevelInfo province not found: {$id}");
+                        return [
+                            'type' => 'province',
+                            'name' => 'Provinsi Tidak Ditemukan',
+                            'breadcrumb' => 'Provinsi Tidak Ditemukan'
+                        ];
+                    }
                     return [
                         'type' => 'province',
                         'name' => $province['name'] ?? 'Provinsi',
@@ -915,6 +949,14 @@ class MobileUsersController extends Controller
                     }
                     
                     $district = collect($districts)->firstWhere('id', $id);
+                    if (!$district) {
+                        \Log::warning("MobileUsersController - getLevelInfo district not found: {$id}");
+                        return [
+                            'type' => 'district',
+                            'name' => 'Kabupaten/Kota Tidak Ditemukan',
+                            'breadcrumb' => 'Kabupaten/Kota Tidak Ditemukan'
+                        ];
+                    }
                     return [
                         'type' => 'district',
                         'name' => $district['name'] ?? 'Kabupaten/Kota',
@@ -943,6 +985,14 @@ class MobileUsersController extends Controller
                     }
                     
                     $subDistrict = collect($subDistricts)->firstWhere('id', $id);
+                    if (!$subDistrict) {
+                        \Log::warning("MobileUsersController - getLevelInfo subdistrict not found: {$id}");
+                        return [
+                            'type' => 'subdistrict',
+                            'name' => 'Kecamatan Tidak Ditemukan',
+                            'breadcrumb' => 'Kecamatan Tidak Ditemukan'
+                        ];
+                    }
                     return [
                         'type' => 'subdistrict',
                         'name' => $subDistrict['name'] ?? 'Kecamatan',
@@ -976,6 +1026,14 @@ class MobileUsersController extends Controller
                     }
                     
                     $village = collect($villages)->firstWhere('id', $id);
+                    if (!$village) {
+                        \Log::warning("MobileUsersController - getLevelInfo village not found: {$id}");
+                        return [
+                            'type' => 'village',
+                            'name' => 'Desa/Kelurahan Tidak Ditemukan',
+                            'breadcrumb' => 'Desa/Kelurahan Tidak Ditemukan'
+                        ];
+                    }
                     return [
                         'type' => 'village',
                         'name' => $village['name'] ?? 'Desa/Kelurahan',

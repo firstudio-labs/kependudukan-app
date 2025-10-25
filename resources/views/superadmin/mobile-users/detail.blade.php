@@ -21,7 +21,6 @@
                         <th class="px-6 py-3">Kabupaten/Kota</th>
                         <th class="px-6 py-3">Kecamatan</th>
                         <th class="px-6 py-3">Desa/Kelurahan</th>
-                        <th class="px-6 py-3 w-24">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -36,13 +35,10 @@
                             <td class="px-6 py-4">{{ $row->wilayah['kabupaten'] ?? '-' }}</td>
                             <td class="px-6 py-4">{{ $row->wilayah['kecamatan'] ?? '-' }}</td>
                             <td class="px-6 py-4">{{ $row->wilayah['desa'] ?? '-' }}</td>
-                            <td class="px-6 py-4">
-                                <a href="{{ route('superadmin.mobile-users.show', $row->nik) }}" class="px-3 py-1 text-xs rounded bg-[#7886C7] text-white hover:bg-[#2D336B]">Detail</a>
-                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="10" class="px-6 py-6 text-center text-gray-500">Tidak ada data pengguna mobile.</td>
+                            <td colspan="9" class="px-6 py-6 text-center text-gray-500">Tidak ada data pengguna mobile.</td>
                         </tr>
                     @endforelse
                 </tbody>
