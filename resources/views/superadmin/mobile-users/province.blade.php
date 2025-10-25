@@ -18,7 +18,7 @@
                     <select name="province_id" id="province_id" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
                         <option value="">Semua Provinsi</option>
                         @foreach($provincesList as $prov)
-                            <option value="{{ $prov['id'] }}" {{ $provinceId == $prov['id'] ? 'selected' : '' }}>
+                            <option value="{{ $prov['id'] }}" {{ ($provinceId ?? null) == $prov['id'] ? 'selected' : '' }}>
                                 {{ $prov['name'] }}
                             </option>
                         @endforeach
@@ -28,7 +28,7 @@
                 <!-- Kabupaten/Kota -->
                 <div>
                     <label for="district_id" class="block text-sm font-medium text-gray-700 mb-1">Pilih Kabupaten/Kota</label>
-                    <select name="district_id" id="district_id" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" {{ !$provinceId ? 'disabled' : '' }}>
+                    <select name="district_id" id="district_id" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" {{ !($provinceId ?? null) ? 'disabled' : '' }}>
                         <option value="">Semua Kabupaten/Kota</option>
                     </select>
                 </div>
@@ -36,7 +36,7 @@
                 <!-- Kecamatan -->
                 <div>
                     <label for="sub_district_id" class="block text-sm font-medium text-gray-700 mb-1">Pilih Kecamatan</label>
-                    <select name="sub_district_id" id="sub_district_id" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" {{ !$districtId ? 'disabled' : '' }}>
+                    <select name="sub_district_id" id="sub_district_id" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" {{ !($districtId ?? null) ? 'disabled' : '' }}>
                         <option value="">Semua Kecamatan</option>
                     </select>
                 </div>
@@ -44,7 +44,7 @@
                 <!-- Desa/Kelurahan -->
                 <div>
                     <label for="village_id" class="block text-sm font-medium text-gray-700 mb-1">Pilih Desa/Kelurahan</label>
-                    <select name="village_id" id="village_id" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" {{ !$subDistrictId ? 'disabled' : '' }}>
+                    <select name="village_id" id="village_id" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" {{ !($subDistrictId ?? null) ? 'disabled' : '' }}>
                         <option value="">Semua Desa/Kelurahan</option>
                     </select>
                 </div>
@@ -159,7 +159,7 @@
                                     const option = document.createElement('option');
                                     option.value = district.id;
                                     option.textContent = district.name;
-                                    if (district.id == '{{ $districtId }}') {
+                                    if (district.id == '{{ $districtId ?? '' }}') {
                                         option.selected = true;
                                     }
                                     districtSelect.appendChild(option);
@@ -197,7 +197,7 @@
                                     const option = document.createElement('option');
                                     option.value = subDistrict.id;
                                     option.textContent = subDistrict.name;
-                                    if (subDistrict.id == '{{ $subDistrictId }}') {
+                                    if (subDistrict.id == '{{ $subDistrictId ?? '' }}') {
                                         option.selected = true;
                                     }
                                     subDistrictSelect.appendChild(option);
@@ -235,7 +235,7 @@
                                     const option = document.createElement('option');
                                     option.value = village.id;
                                     option.textContent = village.name;
-                                    if (village.id == '{{ $villageId }}') {
+                                    if (village.id == '{{ $villageId ?? '' }}') {
                                         option.selected = true;
                                     }
                                     villageSelect.appendChild(option);
