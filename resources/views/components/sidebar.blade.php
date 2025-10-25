@@ -367,6 +367,17 @@
                         </a>
                     </li>
 
+                    <!-- Pengguna Mobile (Superadmin) -->
+                    <li class="-ml-5">
+                        <a href="{{ route('superadmin.mobile-users.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                                                                                                {{ request()->routeIs('superadmin.mobile-users.*')
+                    ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]'
+                    : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                            <i class="fa-solid fa-mobile-screen-button text-lg transition-all duration-300"></i>
+                            <span>Pengguna Mobile</span>
+                        </a>
+                    </li>
+
                     <!-- Add Logout Button for Superadmin -->
                     <li class="-ml-5 mt-8">
                         <form method="POST" action="{{ route('logout') }}">

@@ -323,6 +323,68 @@ class WarungkuController extends Controller
         return response()->json(['data' => $wilayahService->getDesa($subDistrictCode)]);
     }
 
+    // API Wilayah untuk Filter - berdasarkan ID
+    public function getDistrictsByProvince(Request $request, WilayahService $wilayahService)
+    {
+        $provinceId = $request->get('province_id');
+        if (!$provinceId) {
+            return response()->json(['data' => []]);
+        }
+
+        $provinces = $wilayahService->getProvinces();
+        $province = collect($provinces)->firstWhere('id', $provinceId);
+        
+        if (!$province) {
+            return response()->json(['data' => []]);
+        }
+
+        $districts = $wilayahService->getKabupaten($province['code']);
+        return response()->json($districts);
+    }
+
+    public function getSubDistrictsByDistrict(Request $request, WilayahService $wilayahService)
+    {
+        $districtId = $request->get('district_id');
+        if (!$districtId) {
+            return response()->json(['data' => []]);
+        }
+
+        $provinces = $wilayahService->getProvinces();
+        foreach ($provinces as $province) {
+            $districts = $wilayahService->getKabupaten($province['code']);
+            $district = collect($districts)->firstWhere('id', $districtId);
+            if ($district) {
+                $subDistricts = $wilayahService->getKecamatan($district['code']);
+                return response()->json($subDistricts);
+            }
+        }
+
+        return response()->json(['data' => []]);
+    }
+
+    public function getVillagesBySubDistrict(Request $request, WilayahService $wilayahService)
+    {
+        $subDistrictId = $request->get('sub_district_id');
+        if (!$subDistrictId) {
+            return response()->json(['data' => []]);
+        }
+
+        $provinces = $wilayahService->getProvinces();
+        foreach ($provinces as $province) {
+            $districts = $wilayahService->getKabupaten($province['code']);
+            foreach ($districts as $district) {
+                $subDistricts = $wilayahService->getKecamatan($district['code']);
+                $subDistrict = collect($subDistricts)->firstWhere('id', $subDistrictId);
+                if ($subDistrict) {
+                    $villages = $wilayahService->getDesa($subDistrict['code']);
+                    return response()->json($villages);
+                }
+            }
+        }
+
+        return response()->json(['data' => []]);
+    }
+
     // Dropdown khusus form: klasifikasi list
     public function klasifikasiList()
     {

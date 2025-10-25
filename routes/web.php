@@ -461,6 +461,21 @@ Route::middleware(['auth:web', 'role:superadmin'])->group(function () {
     Route::delete('/superadmin/berita-desa/{id}', [SuperadminBeritaDesaController::class, 'destroy'])
         ->name('superadmin.berita-desa.destroy');
 
+    // Pengguna Mobile untuk Superadmin
+    Route::get('/superadmin/pengguna-mobile', [\App\Http\Controllers\superadmin\MobileUsersController::class, 'index'])
+        ->name('superadmin.mobile-users.index');
+    Route::get('/superadmin/pengguna-mobile/provinsi/{provinceId}', [\App\Http\Controllers\superadmin\MobileUsersController::class, 'showProvince'])
+        ->name('superadmin.mobile-users.province');
+    Route::get('/superadmin/pengguna-mobile/provinsi/{provinceId}/kabupaten/{districtId}', [\App\Http\Controllers\superadmin\MobileUsersController::class, 'showDistrict'])
+        ->name('superadmin.mobile-users.district');
+    Route::get('/superadmin/pengguna-mobile/provinsi/{provinceId}/kabupaten/{districtId}/kecamatan/{subDistrictId}', [\App\Http\Controllers\superadmin\MobileUsersController::class, 'showSubDistrict'])
+        ->name('superadmin.mobile-users.subdistrict');
+    Route::get('/superadmin/pengguna-mobile/provinsi/{provinceId}/kabupaten/{districtId}/kecamatan/{subDistrictId}/desa/{villageId}', [\App\Http\Controllers\superadmin\MobileUsersController::class, 'showVillage'])
+        ->name('superadmin.mobile-users.village');
+    Route::get('/superadmin/pengguna-mobile/detail/{level}/{id}', [\App\Http\Controllers\superadmin\MobileUsersController::class, 'showDetail'])
+        ->name('superadmin.mobile-users.detail');
+    Route::get('/superadmin/pengguna-mobile/{nik}', [\App\Http\Controllers\superadmin\MobileUsersController::class, 'show'])
+        ->name('superadmin.mobile-users.show');
 
 });
 

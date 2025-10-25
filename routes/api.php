@@ -172,6 +172,11 @@ Route::middleware(ApiTokenOwnerMiddleware::class)->group(function () {
         Route::get('/warungku/wilayah/sub-districts/{districtCode}', [ApiWarungkuController::class, 'wilayahSubDistricts'])->name('user.api.warungku.wilayah.sub_districts');
         Route::get('/warungku/wilayah/villages/{subDistrictCode}', [ApiWarungkuController::class, 'wilayahVillages'])->name('user.api.warungku.wilayah.villages');
 
+        // API Wilayah untuk Filter
+        Route::get('/wilayah/kabupaten-by-province', [ApiWarungkuController::class, 'getDistrictsByProvince'])->name('api.wilayah.districts.by.province');
+        Route::get('/wilayah/kecamatan-by-kabupaten', [ApiWarungkuController::class, 'getSubDistrictsByDistrict'])->name('api.wilayah.subdistricts.by.district');
+        Route::get('/wilayah/desa-by-kecamatan', [ApiWarungkuController::class, 'getVillagesBySubDistrict'])->name('api.wilayah.villages.by.subdistrict');
+
         // Pemerintah Desa (berdasarkan desa user login)
         Route::get('/pemerintah-desa', [PemerintahDesaController::class, 'show'])->name('user.api.pemerintah-desa.show');
 
