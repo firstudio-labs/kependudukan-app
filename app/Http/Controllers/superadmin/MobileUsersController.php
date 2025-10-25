@@ -401,10 +401,52 @@ class MobileUsersController extends Controller
         // Ambil informasi level untuk breadcrumb
         $levelInfo = $this->getLevelInfo($level, $id, $wilayahService);
 
+        // Ambil data untuk form filter
+        $provinces = $wilayahService->getProvinces();
+        $districts = [];
+        $subDistricts = [];
+        $villages = [];
+
+        // Ambil filter parameters dari request
+        $provinceId = $request->get('province_id');
+        $districtId = $request->get('district_id');
+        $subDistrictId = $request->get('sub_district_id');
+        $villageId = $request->get('village_id');
+
+        // Load data berdasarkan filter yang dipilih
+        if ($provinceId) {
+            $province = collect($provinces)->firstWhere('id', $provinceId);
+            if ($province) {
+                $districts = $wilayahService->getKabupaten($province['code']);
+            }
+        }
+
+        if ($districtId && !empty($districts)) {
+            $district = collect($districts)->firstWhere('id', $districtId);
+            if ($district) {
+                $subDistricts = $wilayahService->getKecamatan($district['code']);
+            }
+        }
+
+        if ($subDistrictId && !empty($subDistricts)) {
+            $subDistrict = collect($subDistricts)->firstWhere('id', $subDistrictId);
+            if ($subDistrict) {
+                $villages = $wilayahService->getDesa($subDistrict['code']);
+            }
+        }
+
         return view('superadmin.mobile-users.detail', [
             'items' => $paginator,
             'level' => $level,
             'levelInfo' => $levelInfo,
+            'provincesList' => $provinces,
+            'districts' => $districts,
+            'subDistricts' => $subDistricts,
+            'villages' => $villages,
+            'provinceId' => $provinceId,
+            'districtId' => $districtId,
+            'subDistrictId' => $subDistrictId,
+            'villageId' => $villageId,
         ]);
     }
 

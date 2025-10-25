@@ -90,8 +90,22 @@
             </table>
         </div>
 
-        <div class="mt-4">
-            {{ $districts->withQueryString()->links() }}
+        <!-- Pagination -->
+        <div class="mt-6 bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
+                <div class="text-sm text-gray-700">
+                    <span class="font-medium text-gray-900">Menampilkan</span> 
+                    <span class="font-semibold text-[#7886C7]">{{ $districts->firstItem() ?? 0 }}</span>
+                    <span class="font-medium text-gray-900">sampai</span> 
+                    <span class="font-semibold text-[#7886C7]">{{ $districts->lastItem() ?? 0 }}</span>
+                    <span class="font-medium text-gray-900">dari</span> 
+                    <span class="font-semibold text-[#7886C7]">{{ $districts->total() }}</span>
+                    <span class="font-medium text-gray-900">hasil</span>
+                </div>
+                <div class="flex items-center justify-center sm:justify-end">
+                    {{ $districts->withQueryString()->links() }}
+                </div>
+            </div>
         </div>
     </div>
 
