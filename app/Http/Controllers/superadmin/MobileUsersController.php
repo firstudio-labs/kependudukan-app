@@ -220,6 +220,14 @@ class MobileUsersController extends Controller
             'district' => $district,
             'subDistrict' => $subDistrict,
             'villages' => $paginator,
+            'provincesList' => $provinces,
+            'districts' => $districts,
+            'subDistricts' => $subDistricts,
+            'villagesList' => $villages,
+            'provinceId' => $provinceId,
+            'districtId' => $districtId,
+            'subDistrictId' => $subDistrictId,
+            'villageId' => null,
         ]);
     }
 
