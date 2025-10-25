@@ -52,6 +52,9 @@ class MobileUsersController extends Controller
             ]
         );
 
+        // Debug: Log data yang akan dikirim ke view
+        \Log::info("MobileUsersController - index - Sample province stats: " . json_encode(array_slice($provinceStats, 0, 3)));
+        
         return view('superadmin.mobile-users.index', [
             'provinces' => $paginator,
             'provincesList' => $provinces,
@@ -289,14 +292,14 @@ class MobileUsersController extends Controller
         })->values()->all();
 
         // Mapping data untuk setiap penduduk
-        $mapped = collect($mobileUsers)->map(function ($citizen) use ($wilayahService, $localPhones) {
+        $mapped = collect($mobileUsers)->map(function ($citizen) use ($wilayahCache, $localPhones) {
             $obj = new \stdClass();
             $obj->nik = $citizen['nik'] ?? '';
             $obj->full_name = $citizen['full_name'] ?? $citizen['nama_lengkap'] ?? '-';
             $nik = $citizen['nik'] ?? '';
             $obj->no_hp = $localPhones[$nik] ?? '';
             $obj->kk = $citizen['kk'] ?? $citizen['no_kk'] ?? '-';
-            $obj->wilayah = $this->getWilayahNames($wilayahService, $citizen);
+            $obj->wilayah = $this->getWilayahNamesFromCache($wilayahCache, $citizen);
             return $obj;
         });
 
@@ -358,15 +361,24 @@ class MobileUsersController extends Controller
             return strlen($digits) >= 8;
         });
 
+        // Filter hanya yang memiliki no_hp yang valid di DB lokal
+        $mobileUsers = collect($filteredCitizens)->filter(function($citizen) use ($localPhones) {
+            $nik = $citizen['nik'] ?? '';
+            return isset($localPhones[$nik]) && trim((string)$localPhones[$nik]) !== '';
+        })->values()->all();
+
+        // Pre-load semua data wilayah untuk menghindari N+1 query problem
+        $wilayahCache = $this->preloadWilayahData($wilayahService, $mobileUsers);
+
         // Mapping data untuk setiap penduduk
-        $mapped = collect($filteredCitizens)->map(function ($citizen) use ($wilayahService, $localPhones) {
+        $mapped = collect($mobileUsers)->map(function ($citizen) use ($wilayahCache, $localPhones) {
             $obj = new \stdClass();
             $obj->nik = $citizen['nik'] ?? '';
             $obj->full_name = $citizen['full_name'] ?? $citizen['nama_lengkap'] ?? '-';
             $nik = $citizen['nik'] ?? '';
             $obj->no_hp = $localPhones[$nik] ?? '';
             $obj->kk = $citizen['kk'] ?? $citizen['no_kk'] ?? '-';
-            $obj->wilayah = $this->getWilayahNames($wilayahService, $citizen);
+            $obj->wilayah = $this->getWilayahNamesFromCache($wilayahCache, $citizen);
             return $obj;
         });
 
@@ -541,6 +553,10 @@ class MobileUsersController extends Controller
             
             \Log::info("MobileUsersController - calculateProvinceStats - Province {$province['name']} (ID: {$provinceId}) - Citizens in province: " . $citizensInProvince->count());
             
+            // Debug: Check sample NIKs in this province
+            $sampleNiks = $citizensInProvince->take(3)->pluck('nik')->toArray();
+            \Log::info("MobileUsersController - calculateProvinceStats - Sample NIKs in province {$province['name']}: " . implode(', ', $sampleNiks));
+            
             // Hitung yang memiliki no_hp valid
             $count = $citizensInProvince->filter(function($citizen) use ($localPhones) {
                 $nik = $citizen['nik'] ?? '';
@@ -686,7 +702,7 @@ class MobileUsersController extends Controller
             return $citizen['village_id'] ?? 'unknown';
         });
         
-        \Log::info("MobileUsersController - calculateVillageStats - Province ID: {$provinceId}, District ID: {$districtId}, SubDistrict ID: {$subDistrictId} - Villages found in data: " . $citizensByVillage->keys()->implode(', '));
+        \Log::info("MobileUsersController - calculateVillageStats - Province ID: {$provinceId}, District ID: {$districtId}, SubDistrict ID: {$subDistrictId} - Villages found in data: " . $citizensByVillage->count());
         
         foreach ($villages as $village) {
             $villageId = $village['id'];
@@ -710,6 +726,143 @@ class MobileUsersController extends Controller
         }
         
         return $stats;
+    }
+
+    /**
+     * Pre-load semua data wilayah untuk menghindari N+1 query problem
+     */
+    private function preloadWilayahData(WilayahService $wilayahService, $citizens)
+    {
+        $cache = [
+            'provinces' => [],
+            'districts' => [],
+            'subDistricts' => [],
+            'villages' => []
+        ];
+
+        try {
+            // Load semua provinces sekali saja
+            $cache['provinces'] = $wilayahService->getProvinces();
+            
+            // Collect semua unique province IDs
+            $provinceIds = collect($citizens)->pluck('province_id')->filter()->unique()->values();
+            
+            // Load districts untuk setiap province
+            foreach ($provinceIds as $provinceId) {
+                $province = collect($cache['provinces'])->firstWhere('id', $provinceId);
+                if ($province && isset($province['code'])) {
+                    $cache['districts'][$provinceId] = $wilayahService->getKabupaten($province['code']);
+                }
+            }
+            
+            // Collect semua unique district IDs
+            $districtIds = collect($citizens)->pluck('district_id')->filter()->unique()->values();
+            
+            // Load sub-districts untuk setiap district
+            foreach ($districtIds as $districtId) {
+                $citizen = collect($citizens)->firstWhere('district_id', $districtId);
+                if ($citizen && isset($citizen['province_id'])) {
+                    $provinceId = $citizen['province_id'];
+                    if (isset($cache['districts'][$provinceId])) {
+                        $district = collect($cache['districts'][$provinceId])->firstWhere('id', $districtId);
+                        if ($district && isset($district['code'])) {
+                            $cache['subDistricts'][$districtId] = $wilayahService->getKecamatan($district['code']);
+                        }
+                    }
+                }
+            }
+            
+            // Collect semua unique sub-district IDs
+            $subDistrictIds = collect($citizens)->pluck('sub_district_id')->filter()->unique()->values();
+            
+            // Load villages untuk setiap sub-district
+            foreach ($subDistrictIds as $subDistrictId) {
+                $citizen = collect($citizens)->firstWhere('sub_district_id', $subDistrictId);
+                if ($citizen && isset($citizen['district_id'])) {
+                    $districtId = $citizen['district_id'];
+                    if (isset($cache['subDistricts'][$districtId])) {
+                        $subDistrict = collect($cache['subDistricts'][$districtId])->firstWhere('id', $subDistrictId);
+                        if ($subDistrict && isset($subDistrict['code'])) {
+                            $cache['villages'][$subDistrictId] = $wilayahService->getDesa($subDistrict['code']);
+                        }
+                    }
+                }
+            }
+            
+        } catch (\Exception $e) {
+            \Log::error('Error preloading wilayah data: ' . $e->getMessage());
+        }
+
+        return $cache;
+    }
+
+    /**
+     * Ambil nama wilayah dari cache yang sudah di-preload
+     */
+    private function getWilayahNamesFromCache($cache, $citizenData)
+    {
+        if (!$citizenData) {
+            return [
+                'provinsi' => '-',
+                'kabupaten' => '-',
+                'kecamatan' => '-',
+                'desa' => '-',
+            ];
+        }
+
+        $wilayah = [];
+
+        // Get province name
+        if (isset($citizenData['province_id']) && $citizenData['province_id']) {
+            $province = collect($cache['provinces'])->firstWhere('id', (int) $citizenData['province_id']);
+            $wilayah['provinsi'] = $province['name'] ?? 'Provinsi ID: ' . $citizenData['province_id'];
+        }
+
+        // Get district name
+        if (isset($citizenData['district_id']) && $citizenData['district_id'] && isset($citizenData['province_id']) && $citizenData['province_id']) {
+            $provinceId = (int) $citizenData['province_id'];
+            $districtId = (int) $citizenData['district_id'];
+            
+            if (isset($cache['districts'][$provinceId])) {
+                $district = collect($cache['districts'][$provinceId])->firstWhere('id', $districtId);
+                $wilayah['kabupaten'] = $district['name'] ?? 'Kabupaten ID: ' . $districtId;
+            } else {
+                $wilayah['kabupaten'] = 'Kabupaten ID: ' . $districtId;
+            }
+        }
+
+        // Get sub-district name
+        if (isset($citizenData['sub_district_id']) && $citizenData['sub_district_id'] && isset($citizenData['district_id']) && $citizenData['district_id']) {
+            $districtId = (int) $citizenData['district_id'];
+            $subDistrictId = (int) $citizenData['sub_district_id'];
+            
+            if (isset($cache['subDistricts'][$districtId])) {
+                $subDistrict = collect($cache['subDistricts'][$districtId])->firstWhere('id', $subDistrictId);
+                $wilayah['kecamatan'] = $subDistrict['name'] ?? 'Kecamatan ID: ' . $subDistrictId;
+            } else {
+                $wilayah['kecamatan'] = 'Kecamatan ID: ' . $subDistrictId;
+            }
+        }
+
+        // Get village name
+        if (isset($citizenData['village_id']) && $citizenData['village_id'] && isset($citizenData['sub_district_id']) && $citizenData['sub_district_id']) {
+            $subDistrictId = (int) $citizenData['sub_district_id'];
+            $villageId = (int) $citizenData['village_id'];
+            
+            if (isset($cache['villages'][$subDistrictId])) {
+                $village = collect($cache['villages'][$subDistrictId])->firstWhere('id', $villageId);
+                $wilayah['desa'] = $village['name'] ?? 'Desa ID: ' . $villageId;
+            } else {
+                $wilayah['desa'] = 'Desa ID: ' . $villageId;
+            }
+        }
+
+        return [
+            'provinsi' => $wilayah['provinsi'] ?? '-',
+            'kabupaten' => $wilayah['kabupaten'] ?? '-',
+            'kecamatan' => $wilayah['kecamatan'] ?? '-',
+            'desa' => $wilayah['desa'] ?? '-',
+        ];
     }
 
     /**
@@ -1269,15 +1422,18 @@ class MobileUsersController extends Controller
             return strlen($digits) >= 8;
         });
 
+        // Pre-load semua data wilayah untuk menghindari N+1 query problem
+        $wilayahCache = $this->preloadWilayahData($wilayahService, $mobileUsers);
+
         // Mapping data untuk setiap penduduk
-        $mapped = collect($mobileUsers)->map(function ($citizen) use ($wilayahService, $localPhones) {
+        $mapped = collect($mobileUsers)->map(function ($citizen) use ($wilayahCache, $localPhones) {
             $obj = new \stdClass();
             $obj->nik = $citizen['nik'] ?? '';
             $obj->full_name = $citizen['full_name'] ?? $citizen['nama_lengkap'] ?? '-';
             $nik = $citizen['nik'] ?? '';
             $obj->no_hp = $localPhones[$nik] ?? '';
             $obj->kk = $citizen['kk'] ?? $citizen['no_kk'] ?? '-';
-            $obj->wilayah = $this->getWilayahNames($wilayahService, $citizen);
+            $obj->wilayah = $this->getWilayahNamesFromCache($wilayahCache, $citizen);
             return $obj;
         });
 
@@ -1367,15 +1523,18 @@ class MobileUsersController extends Controller
         
         \Log::info("MobileUsersController - After local phone filter: " . count($mobileUsers));
 
+        // Pre-load semua data wilayah untuk menghindari N+1 query problem
+        $wilayahCache = $this->preloadWilayahData($wilayahService, $mobileUsers);
+
         // Mapping data untuk setiap penduduk
-        $mapped = collect($mobileUsers)->map(function ($citizen) use ($wilayahService, $localPhones) {
+        $mapped = collect($mobileUsers)->map(function ($citizen) use ($wilayahCache, $localPhones) {
             $obj = new \stdClass();
             $obj->nik = $citizen['nik'] ?? '';
             $obj->full_name = $citizen['full_name'] ?? $citizen['nama_lengkap'] ?? '-';
             $nik = $citizen['nik'] ?? '';
             $obj->no_hp = $localPhones[$nik] ?? '';
             $obj->kk = $citizen['kk'] ?? $citizen['no_kk'] ?? '-';
-            $obj->wilayah = $this->getWilayahNames($wilayahService, $citizen);
+            $obj->wilayah = $this->getWilayahNamesFromCache($wilayahCache, $citizen);
             return $obj;
         });
 
@@ -1466,15 +1625,18 @@ class MobileUsersController extends Controller
         
         \Log::info("MobileUsersController - After local phone filter: " . count($mobileUsers));
 
+        // Pre-load semua data wilayah untuk menghindari N+1 query problem
+        $wilayahCache = $this->preloadWilayahData($wilayahService, $mobileUsers);
+
         // Mapping data untuk setiap penduduk (seperti admin desa)
-        $mapped = collect($mobileUsers)->map(function ($citizen) use ($wilayahService, $localPhones) {
+        $mapped = collect($mobileUsers)->map(function ($citizen) use ($wilayahCache, $localPhones) {
             $obj = new \stdClass();
             $obj->nik = $citizen['nik'] ?? '';
             $obj->full_name = $citizen['full_name'] ?? $citizen['nama_lengkap'] ?? '-';
             $nik = $citizen['nik'] ?? '';
             $obj->no_hp = $localPhones[$nik] ?? '';
             $obj->kk = $citizen['kk'] ?? $citizen['no_kk'] ?? '-';
-            $obj->wilayah = $this->getWilayahNames($wilayahService, $citizen);
+            $obj->wilayah = $this->getWilayahNamesFromCache($wilayahCache, $citizen);
             return $obj;
         });
 
