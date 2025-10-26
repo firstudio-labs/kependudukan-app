@@ -228,7 +228,7 @@ class DataKKController extends Controller
                 return redirect()->route('admin.desa.datakk.index')->with('success', 'Data KK berhasil diperbarui!');
             }
             return redirect()->route('superadmin.datakk.index')->with('success', 'Data KK berhasil diperbarui!');
-        }else { 
+        }else {
             return redirect()->back()->with('error', $response['message']);
         }
     }
@@ -1167,6 +1167,64 @@ class DataKKController extends Controller
             }
             return redirect()->route('superadmin.datakk.index')
                 ->with('error', 'Gagal memperbarui data: ' . $e->getMessage());
+        }
+    }
+
+    public function checkKK(Request $request)
+    {
+        try {
+            $kk = $request->input('kk');
+
+            if (!$kk || strlen($kk) !== 16) {
+                return response()->json([
+                    'exists' => false,
+                    'message' => 'Nomor KK tidak valid'
+                ]);
+            }
+
+            // Cek apakah KK sudah ada menggunakan service
+            $kkData = $this->citizenServiceV2->getHeadOfFamilyByKk($kk);
+
+            // Log data yang diterima untuk debugging
+            Log::info('KK Check - Data dari API:', [
+                'kk' => $kk,
+                'has_data' => isset($kkData['data']),
+                'province_id' => $kkData['data']['province_id'] ?? 'Not found',
+                'district_id' => $kkData['data']['district_id'] ?? 'Not found',
+                'sub_district_id' => $kkData['data']['sub_district_id'] ?? 'Not found',
+                'village_id' => $kkData['data']['village_id'] ?? 'Not found',
+                'full_data' => $kkData['data'] ?? 'No data'
+            ]);
+
+            if ($kkData && isset($kkData['data'])) {
+                // Ambil data anggota keluarga juga
+                $familyMembers = $this->citizenService->getFamilyMembersByKK($kk);
+
+                Log::info('KK Check - Response akan dikirim:', [
+                    'exists' => true,
+                    'family_members_count' => isset($familyMembers['data']) ? count($familyMembers['data']) : 0,
+                ]);
+
+                return response()->json([
+                    'exists' => true,
+                    'kk_data' => $kkData['data'],
+                    'family_members' => isset($familyMembers['data']) ? $familyMembers['data'] : []
+                ]);
+            }
+
+            return response()->json([
+                'exists' => false,
+                'message' => 'Data KK tidak ditemukan'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error checking KK: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'exists' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ]);
         }
     }
 }

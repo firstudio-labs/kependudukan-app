@@ -47,7 +47,7 @@
                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-lg p-2" required>
                         <option value="">Pilih Provinsi</option>
                         @foreach($provinces as $province)
-                            <option value="{{ $province['code'] }}">{{ $province['name'] }}</option>
+                            <option value="{{ $province['code'] }}" data-id="{{ $province['id'] }}">{{ $province['name'] }}</option>
                         @endforeach
                     </select>
                     <input type="hidden" name="province_id" id="province_id">
@@ -448,19 +448,7 @@
                         </select>
                     </div>
 
-                    <!-- Status Perkawinan -->
-                    <div>
-                        <label for="marital_status" class="block text-sm font-medium text-gray-700">Status Perkawinan</label>
-                        <select id="marital_status" name="marital_status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2">
-                            <option value="">Pilih Status</option>
-                            <option value="1" selected>Belum Kawin</option>
-                            <option value="2">Kawin Tercatat</option>
-                            <option value="3">Kawin Belum Tercatat</option>
-                            <option value="4">Cerai Hidup Tercatat</option>
-                            <option value="5">Cerai Hidup Belum Tercatat</option>
-                            <option value="6">Cerai Mati</option>
-                        </select>
-                    </div>
+
 
                     <!-- Kelainan Fisik & Mental -->
                     <div>
@@ -874,6 +862,272 @@
 
                 return kkData;
             }
+
+            // Auto-check KK when input is complete (16 digits)
+kkInput.addEventListener('input', function() {
+    const kkValue = this.value;
+
+    // Check if KK is 16 digits
+    if (kkValue.length === 16) {
+        checkKKExists(kkValue);
+    } else {
+        // Clear form if KK is not complete
+        clearKKForm();
+    }
+});
+
+// Function to check if KK exists
+async function checkKKExists(kk) {
+    try {
+        // Show loading indicator
+        kkInput.style.borderColor = '#FFA500';
+        kkInput.disabled = true;
+
+        const response = await fetch(`{{ route('superadmin.datakk.check-kk') }}?kk=${kk}`);
+        const data = await response.json();
+
+        // Re-enable KK input
+        kkInput.disabled = false;
+        kkInput.style.backgroundColor = '#FFFFFF';
+
+        if (data.exists) {
+            Swal.fire({
+                icon: 'info',
+                title: 'Data KK Ditemukan',
+                text: 'Data KK sudah terdaftar. Form akan diisi otomatis.',
+                confirmButtonText: 'OK',
+                timer: 2000,
+                showConfirmButton: false
+            });
+
+            fillFormWithKKData(data.kk_data, data.family_members);
+            kkInput.style.borderColor = '#10B981';
+        } else {
+            Swal.fire({
+                icon: 'success',
+                title: 'Nomor KK Baru',
+                text: 'Nomor KK belum terdaftar. Silakan lengkapi form di bawah.',
+                confirmButtonText: 'OK',
+                timer: 2000,
+                showConfirmButton: false
+            });
+
+            kkInput.style.borderColor = '#3B82F6';
+        }
+
+    } catch (error) {
+        console.error('Error checking KK:', error);
+        kkInput.style.borderColor = '#EF4444';
+        kkInput.disabled = false;
+        kkInput.style.backgroundColor = '#FFFFFF';
+
+        Swal.fire({
+            icon: 'error',
+            title: 'Kesalahan',
+            text: 'Gagal memeriksa nomor KK. Silakan coba lagi.',
+            confirmButtonText: 'OK'
+        });
+    }
+}
+
+// Function to fill form with existing KK data
+function fillFormWithKKData(kkData, familyMembers) {
+    if (kkData.address) document.getElementById('address').value = kkData.address;
+    if (kkData.postal_code) document.getElementById('postal_code').value = kkData.postal_code;
+    if (kkData.rt) document.getElementById('rt').value = kkData.rt;
+    if (kkData.rw) document.getElementById('rw').value = kkData.rw;
+    if (kkData.hamlet || kkData.dusun) document.getElementById('dusun').value = kkData.hamlet || kkData.dusun;
+
+    if (kkData.foreign_address || kkData.alamat_luar_negeri) {
+        document.getElementById('foreign_address').value = kkData.foreign_address || kkData.alamat_luar_negeri;
+    }
+    if (kkData.city || kkData.kota) document.getElementById('city').value = kkData.city || kkData.kota;
+    if (kkData.state || kkData.negara_bagian) document.getElementById('state').value = kkData.state || kkData.negara_bagian;
+    if (kkData.country || kkData.negara) document.getElementById('country').value = kkData.country || kkData.negara;
+    if (kkData.foreign_postal_code || kkData.kode_pos_luar_negeri) {
+        document.getElementById('foreign_postal_code').value = kkData.foreign_postal_code || kkData.kode_pos_luar_negeri;
+    }
+
+    if (kkData.province_id) document.getElementById('province_id').value = kkData.province_id;
+    if (kkData.district_id) document.getElementById('district_id').value = kkData.district_id;
+    if (kkData.sub_district_id) document.getElementById('sub_district_id').value = kkData.sub_district_id;
+    if (kkData.village_id) document.getElementById('village_id').value = kkData.village_id;
+
+    if (kkData.province_id) {
+        const provinceSelect = document.getElementById('province_code');
+        let provinceCode = null;
+
+        for (let i = 0; i < provinceSelect.options.length; i++) {
+            const option = provinceSelect.options[i];
+            if (option.getAttribute('data-id') == kkData.province_id) {
+                provinceCode = option.value;
+                break;
+            }
+        }
+
+        if (provinceCode) {
+            $('#province_code').val(provinceCode);
+            $('#province_code').trigger('change');
+
+            if (kkData.district_id) {
+                loadAndSelectByDataId('#district_code', kkData.district_id, function() {
+                    if (kkData.sub_district_id) {
+                        loadAndSelectByDataId('#sub_district_code', kkData.sub_district_id, function() {
+                            if (kkData.village_id) {
+                                loadAndSelectByDataId('#village_code', kkData.village_id);
+                            }
+                        });
+                    }
+                });
+            }
+        }
+    }
+
+    if (familyMembers && familyMembers.length > 0) {
+        displayExistingFamilyMembers(familyMembers);
+    }
+}
+
+// Helper function to load data and select by matching data-id
+function loadAndSelectByDataId(selectId, targetId, callback) {
+    const select = $(selectId);
+    const url = getBaseUrl();
+    let endpoint = '';
+
+    if (selectId === '#district_code') {
+        endpoint = `/location/districts/${$('#province_code').val()}`;
+    } else if (selectId === '#sub_district_code') {
+        endpoint = `/location/sub-districts/${$('#district_code').val()}`;
+    } else if (selectId === '#village_code') {
+        endpoint = `/location/villages/${$('#sub_district_code').val()}`;
+    }
+
+    $.get(`${url}${endpoint}`)
+        .done(function(data) {
+            if (data && data.length > 0) {
+                let html = `<option value="">Pilih</option>`;
+                data.forEach(item => {
+                    html += `<option value="${item.code}" data-id="${item.id}">${item.name}</option>`;
+                });
+                select.html(html);
+
+                const matchingOption = data.find(item => item.id == targetId);
+                if (matchingOption) {
+                    select.val(matchingOption.code);
+                    const hiddenIdField = selectId.replace('_code', '_id');
+                    $(hiddenIdField).val(targetId);
+                }
+
+                select.prop('disabled', false);
+                select.trigger('change');
+
+                if (callback) {
+                    callback();
+                }
+            }
+        })
+        .fail(function() {
+            console.error(`Failed to load data for ${selectId}`);
+            if (callback) callback();
+        });
+}
+
+// Function to display existing family members
+function displayExistingFamilyMembers(members) {
+    const container = document.getElementById('familyMembersContainer');
+    const emptyMessage = document.getElementById('emptyFamilyMessage');
+
+    if (emptyMessage) {
+        emptyMessage.style.display = 'none';
+    }
+
+    let html = '<div class="space-y-2">';
+
+    members.forEach((member, index) => {
+        const genderText = member.gender == 1 ? 'Laki-laki' : 'Perempuan';
+        const familyStatusText = getFamilyStatusText(member.family_status || member.status);
+        const ttl = member.birth_place && member.birth_date
+            ? `${member.birth_place}, ${formatDate(member.birth_date)}`
+            : '-';
+
+        html += `
+            <div class="bg-white p-3 rounded border border-gray-200 mb-2">
+                <div class="flex justify-between items-start">
+                    <div class="flex-1">
+                        <p class="font-semibold text-gray-900">${member.full_name || '-'}</p>
+                        <div class="text-sm text-gray-600 mt-1">
+                            <p>NIK: ${member.nik || '-'}</p>
+                            <p>JK: ${genderText} | TTL: ${ttl}</p>
+                            <p class="font-medium">Hubungan: ${familyStatusText}</p>
+                        </div>
+                    </div>
+                    <span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded font-semibold">
+                        ${familyStatusText}
+                    </span>
+                </div>
+            </div>
+        `;
+    });
+
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+// Helper function to format date
+function formatDate(dateString) {
+    if (!dateString) return '';
+    try {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return dateString;
+        return date.toLocaleDateString('id-ID', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        });
+    } catch (e) {
+        return dateString;
+    }
+}
+
+// Helper function to get family status text
+function getFamilyStatusText(status) {
+    if (typeof status === 'string') {
+        return status.toUpperCase();
+    }
+
+    const statusMap = {
+        1: 'ANAK',
+        2: 'KEPALA KELUARGA',
+        3: 'ISTRI',
+        4: 'ORANG TUA',
+        5: 'MERTUA',
+        6: 'CUCU',
+        7: 'FAMILI LAIN'
+    };
+    return statusMap[status] || 'Lainnya';
+}
+
+// Function to clear form when KK changes
+function clearKKForm() {
+    document.getElementById('address').value = '';
+    document.getElementById('postal_code').value = '';
+    document.getElementById('rt').value = '';
+    document.getElementById('rw').value = '';
+    document.getElementById('dusun').value = '';
+    document.getElementById('foreign_address').value = '';
+    document.getElementById('city').value = '';
+    document.getElementById('state').value = '';
+    document.getElementById('country').value = '';
+    document.getElementById('foreign_postal_code').value = '';
+
+    $('#province_code').val('');
+    $('#district_code').val('').prop('disabled', true);
+    $('#sub_district_code').val('').prop('disabled', true);
+    $('#village_code').val('').prop('disabled', true);
+
+    const container = document.getElementById('familyMembersContainer');
+    container.innerHTML = '<div class="text-gray-500 italic text-sm" id="emptyFamilyMessage">Pilih No KK untuk melihat anggota keluarga</div>';
+}
 
             // Add event listener for province_code dropdown
             $('#province_code').on('change', function() {

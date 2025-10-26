@@ -59,20 +59,20 @@
                     </li>
 
 
-                   
 
-                    
 
-                    
 
-                    
 
-                    
 
-                    
 
-                    
-                    
+
+
+
+
+
+
+
+
 
                     <!-- Replace single Master User with Master Users dropdown -->
                     <li class="-ml-5">
@@ -128,7 +128,7 @@
                         <a href="{{ route('superadmin.datakk.create') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
                                                                                                                                                 {{ request()->routeIs('superadmin.datakk.create') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                             <i class="fa-solid fa-plus text-lg transition-all duration-300"></i>
-                            <span>Tambah Data KK</span>
+                            <span>Tambah Data KK & Biodata</span>
                         </a>
                     </li>
 
@@ -162,7 +162,7 @@
                         </ul>
                     </li>
 
-                    
+
 
                     <!-- In your sidebar component or layout -->
                     <li class="-ml-5">
@@ -445,7 +445,7 @@
                             <li>
                                 <a href="{{ route('admin.desa.datakk.create') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
                                                                                                                 {{ request()->routeIs('admin.desa.datakk.create') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
-                                    <span>Tambah Data KK</span>
+                                    <span>Tambah Data KK & Biodata</span>
                                 </a>
                             </li>
                             <li>
@@ -457,7 +457,7 @@
                         </ul>
                     </li>
 
-                    
+
 
                     <!-- Informasi Desa Dropdown -->
                     <li class="-ml-5">
@@ -697,7 +697,7 @@
                         </ul>
                     </li>
 
-                    
+
 
                     <!-- Pengguna Mobile -->
                     <li class="-ml-5">
