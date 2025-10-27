@@ -1431,7 +1431,7 @@ function addEditButton() {
 
                             // Marital details
                             marital_status: document.getElementById('marital_status').value || '',
-                            marital_certificate: document.getElementById('marital_status').value || '',
+                            marital_certificate: document.getElementById('marital_certificate').value || '',
                             marital_certificate_no: document.getElementById('marital_certificate_no').value || '',
                             marriage_date: document.getElementById('marriage_date').value || '',
 

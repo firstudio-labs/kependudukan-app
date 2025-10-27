@@ -760,7 +760,7 @@ class DataKKController extends Controller
      */
     private function processNullableFields(&$data)
     {
-        $nullableIntegerFields = ['marital_status', 'marital_certificate', 'divorce_certificate', 'postal_code'];
+        $nullableIntegerFields = ['marital_status', 'divorce_certificate', 'postal_code'];
         foreach ($nullableIntegerFields as $field) {
             $data[$field] = empty($data[$field]) ? 0 : (int) $data[$field];
         }
@@ -815,7 +815,8 @@ class DataKKController extends Controller
             'mental_disorders',
             'disabilities',
             'education_status',
-            'job_type_id'
+            'job_type_id',
+            'marital_certificate',
         ];
         foreach ($integerFields as $field) {
             if (isset($data[$field])) {

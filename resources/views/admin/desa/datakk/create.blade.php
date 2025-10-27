@@ -601,11 +601,8 @@
                     const field = document.getElementById(fieldId);
                     if (field) {
                         if (field.tagName === 'SELECT') {
-                            field.selectedIndex = 0; // Reset to first option
-
-                            // Handle specific default values
-                            if (fieldId === 'birth_certificate' || fieldId === 'marital_certificate' ||
-                                fieldId === 'divorce_certificate') {
+                            // Reset default values FIRST before selecting index 0
+                            if (fieldId === 'marital_certificate' || fieldId === 'birth_certificate' || fieldId === 'divorce_certificate') {
                                 field.value = '2'; // "Tidak Ada"
                             } else if (fieldId === 'blood_type') {
                                 field.value = '13'; // "Tidak Tahu"
@@ -619,6 +616,8 @@
                                 field.value = '2'; // "WNI"
                             } else if (fieldId === 'status') {
                                 field.value = 'Active';
+                            } else {
+                                field.selectedIndex = 0; // Default untuk field lain
                             }
                         } else {
                             field.value = '';
