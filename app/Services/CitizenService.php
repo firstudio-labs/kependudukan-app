@@ -448,16 +448,23 @@ class CitizenService
 
     public function getCitizenByNIK($nik)
     {
-        try {
-            // Convert to integer to ensure consistent format
-            $nik = (int) $nik;
+        // Convert to integer to ensure consistent format
+        $nik = (int) $nik;
+        $cacheKey = "citizen_by_nik_{$nik}";
+        $ttl = now()->addMinutes(config('cache.citizen_by_nik_ttl', 15));
 
+        if (Cache::has($cacheKey)) {
+            return Cache::get($cacheKey);
+        }
+
+        try {
             $response = Http::withHeaders([
                 'X-API-Key' => $this->apiKey,
             ])->get("{$this->baseUrl}/api/citizens/{$nik}");
 
             if ($response->successful()) {
                 $result = $response->json();
+                Cache::put($cacheKey, $result, $ttl);
                 return $result;
             } else {
                 Log::error('API request failed for NIK: ' . $nik . ', Status: ' . $response->status());
@@ -829,6 +836,8 @@ class CitizenService
     private function clearCitizenCaches($nik, $data)
     {
         try {
+            $this->clearCacheByNIK($nik);
+
             // Clear family members cache if KK is updated
             if (isset($data['kk'])) {
                 Cache::forget("family_members_kk_{$data['kk']}");
@@ -851,6 +860,11 @@ class CitizenService
 
             foreach ($cachePatterns as $pattern) {
                 $this->clearCacheByPattern($pattern);
+            }
+
+            $villageId = $data['village_id'] ?? $data['villages_id'] ?? null;
+            if ($villageId) {
+                $this->clearVillageCaches((int) $villageId);
             }
         } catch (\Exception $e) {
             Log::error('Error clearing citizen caches: ' . $e->getMessage());
@@ -1121,6 +1135,21 @@ class CitizenService
         }
     }
 
+    private function clearVillageCaches(int $villageId): void
+    {
+        $keys = [
+            "pemerintah_desa_summary_{$villageId}",
+            "citizen_stats_gender_{$villageId}",
+            "citizen_stats_age_groups_{$villageId}",
+            "citizen_stats_education_{$villageId}",
+            "citizen_stats_religion_{$villageId}",
+        ];
+
+        foreach ($keys as $key) {
+            Cache::forget($key);
+        }
+    }
+
     /**
      * Konversi koordinat menjadi alamat lengkap menggunakan reverse geocoding
      */
@@ -1267,120 +1296,130 @@ class CitizenService
 
     public function getGenderStatsByVillage($villageId)
     {
-        try {
-            $response = Http::withHeaders([
-                'X-API-Key' => $this->apiKey,
-            ])->get("{$this->baseUrl}/api/all-citizens");
+        $cacheKey = "citizen_stats_gender_{$villageId}";
+        $ttl = $this->getCitizenStatsCacheTtl();
 
-            if ($response->successful()) {
-                $data = $response->json();
+        return Cache::remember($cacheKey, $ttl, function () use ($villageId) {
+            try {
+                $response = Http::withHeaders([
+                    'X-API-Key' => $this->apiKey,
+                ])->get("{$this->baseUrl}/api/all-citizens");
 
-                $citizens = collect($data['data'])
-                    ->where('village_id', $villageId);
+                if ($response->successful()) {
+                    $data = $response->json();
 
-                // Count male with various gender formats
-                $maleCount = $citizens->filter(function ($citizen) {
-                    $gender = strtolower(trim($citizen['gender'] ?? ''));
-                    return in_array($gender, ['l', 'laki-laki', 'Laki-laki', 'LAKI-LAKI, laki laki', 'LAKI LAKI', 'Laki laki', 'male', 'm']);
-                })->count();
+                    $citizens = collect($data['data'])
+                        ->where('village_id', $villageId);
 
-                // Count female with various gender formats
-                $femaleCount = $citizens->filter(function ($citizen) {
-                    $gender = strtolower(trim($citizen['gender'] ?? ''));
-                    return in_array($gender, ['p', 'perempuan', 'female', 'f']);
-                })->count();
+                    $maleCount = $citizens->filter(function ($citizen) {
+                        $gender = strtolower(trim($citizen['gender'] ?? ''));
+                        return in_array($gender, ['l', 'laki-laki', 'Laki-laki', 'LAKI-LAKI, laki laki', 'LAKI LAKI', 'Laki laki', 'male', 'm']);
+                    })->count();
 
-                return [
-                    'male' => $maleCount,
-                    'female' => $femaleCount,
-                    'total' => $citizens->count()
-                ];
-            } else {
+                    $femaleCount = $citizens->filter(function ($citizen) {
+                        $gender = strtolower(trim($citizen['gender'] ?? ''));
+                        return in_array($gender, ['p', 'perempuan', 'female', 'f']);
+                    })->count();
+
+                    return [
+                        'male' => $maleCount,
+                        'female' => $femaleCount,
+                        'total' => $citizens->count()
+                    ];
+                }
+
                 Log::error('API request failed when fetching gender stats by village ID', [
                     'status_code' => $response->status(),
                     'village_id' => $villageId
                 ]);
 
-                // Fallback to local database if API fails
+                return $this->getGenderStatsByVillageFromLocal($villageId);
+            } catch (\Exception $e) {
+                Log::error('Error getting gender stats by village: ' . $e->getMessage());
                 return $this->getGenderStatsByVillageFromLocal($villageId);
             }
-        } catch (\Exception $e) {
-            Log::error('Error getting gender stats by village: ' . $e->getMessage());
-            return $this->getGenderStatsByVillageFromLocal($villageId);
-        }
+        });
+    }
+
+    private function getCitizenStatsCacheTtl()
+    {
+        return now()->addMinutes(config('cache.citizen_stats_ttl', 15));
     }
 
     public function getAgeGroupStatsByVillage($villageId)
     {
-        try {
-            $response = Http::withHeaders([
-                'X-API-Key' => $this->apiKey,
-            ])->get("{$this->baseUrl}/api/all-citizens");
+        $cacheKey = "citizen_stats_age_groups_{$villageId}";
+        $ttl = $this->getCitizenStatsCacheTtl();
 
-            if ($response->successful()) {
-                $data = $response->json();
+        return Cache::remember($cacheKey, $ttl, function () use ($villageId) {
+            try {
+                $response = Http::withHeaders([
+                    'X-API-Key' => $this->apiKey,
+                ])->get("{$this->baseUrl}/api/all-citizens");
 
-                $citizens = collect($data['data'])
-                    ->where('village_id', $villageId);
+                if ($response->successful()) {
+                    $data = $response->json();
 
-                $now = now();
-                $groups = [
-                    '0_17' => 0,
-                    '18_30' => 0,
-                    '31_45' => 0,
-                    '46_60' => 0,
-                    '61_plus' => 0,
-                ];
+                    $citizens = collect($data['data'])
+                        ->where('village_id', $villageId);
 
-                foreach ($citizens as $citizen) {
-                    $age = null;
+                    $now = now();
+                    $groups = [
+                        '0_17' => 0,
+                        '18_30' => 0,
+                        '31_45' => 0,
+                        '46_60' => 0,
+                        '61_plus' => 0,
+                    ];
 
-                    // Try multiple possible keys for date of birth or age
-                    $dob = $citizen['birth_date'] ?? $citizen['tanggal_lahir'] ?? $citizen['tgl_lahir'] ?? $citizen['date_of_birth'] ?? null;
-                    if ($dob) {
-                        try {
-                            $age = \Carbon\Carbon::parse($dob)->diffInYears($now);
-                        } catch (\Exception $e) {
-                            $age = null;
+                    foreach ($citizens as $citizen) {
+                        $age = null;
+
+                        $dob = $citizen['birth_date'] ?? $citizen['tanggal_lahir'] ?? $citizen['tgl_lahir'] ?? $citizen['date_of_birth'] ?? null;
+                        if ($dob) {
+                            try {
+                                $age = \Carbon\Carbon::parse($dob)->diffInYears($now);
+                            } catch (\Exception $e) {
+                                $age = null;
+                            }
+                        }
+                        if ($age === null) {
+                            $age = $citizen['age'] ?? $citizen['umur'] ?? null;
+                            if (is_string($age)) {
+                                $age = (int) preg_replace('/[^0-9]/', '', $age);
+                            }
+                        }
+
+                        if ($age === null || $age < 0 || $age > 130) {
+                            continue;
+                        }
+
+                        if ($age <= 17) {
+                            $groups['0_17']++;
+                        } elseif ($age <= 30) {
+                            $groups['18_30']++;
+                        } elseif ($age <= 45) {
+                            $groups['31_45']++;
+                        } elseif ($age <= 60) {
+                            $groups['46_60']++;
+                        } else {
+                            $groups['61_plus']++;
                         }
                     }
-                    if ($age === null) {
-                        $age = $citizen['age'] ?? $citizen['umur'] ?? null;
-                        if (is_string($age)) {
-                            $age = (int) preg_replace('/[^0-9]/', '', $age);
-                        }
-                    }
 
-                    if ($age === null || $age < 0 || $age > 130) {
-                        continue;
-                    }
+                    $total = array_sum($groups);
 
-                    if ($age <= 17) {
-                        $groups['0_17']++;
-                    } elseif ($age <= 30) {
-                        $groups['18_30']++;
-                    } elseif ($age <= 45) {
-                        $groups['31_45']++;
-                    } elseif ($age <= 60) {
-                        $groups['46_60']++;
-                    } else {
-                        $groups['61_plus']++;
-                    }
+                    return [
+                        'groups' => $groups,
+                        'total_with_age' => $total,
+                    ];
                 }
 
-                $total = array_sum($groups);
-
-                return [
-                    'groups' => $groups,
-                    'total_with_age' => $total,
-                ];
+                return $this->getAgeGroupStatsByVillageFromLocal($villageId);
+            } catch (\Exception $e) {
+                return $this->getAgeGroupStatsByVillageFromLocal($villageId);
             }
-
-            // fallback to local
-            return $this->getAgeGroupStatsByVillageFromLocal($villageId);
-        } catch (\Exception $e) {
-            return $this->getAgeGroupStatsByVillageFromLocal($villageId);
-        }
+        });
     }
 
     private function getAgeGroupStatsByVillageFromLocal($villageId)
@@ -1453,64 +1492,66 @@ class CitizenService
 
     public function getEducationStatsByVillage($villageId)
     {
-        // Define all possible education categories based on the form options
-        $allEducationCategories = [
-            'tidak/belum sekolah',
-            'belum tamat sd/sederajat',
-            'tamat sd/sederajat',
-            'sltp/smp/sederajat',
-            'slta/sma/sederajat',
-            'diploma i/ii',
-            'akademi/diploma iii/ sarjana muda',
-            'diploma iv/ strata i/ strata ii',
-            'strata iii',
-            'lainnya'
-        ];
+        $cacheKey = "citizen_stats_education_{$villageId}";
+        $ttl = $this->getCitizenStatsCacheTtl();
 
-        try {
-            $response = Http::withHeaders([
-                'X-API-Key' => $this->apiKey,
-            ])->get("{$this->baseUrl}/api/all-citizens");
+        return Cache::remember($cacheKey, $ttl, function () use ($villageId) {
+            $allEducationCategories = [
+                'tidak/belum sekolah',
+                'belum tamat sd/sederajat',
+                'tamat sd/sederajat',
+                'sltp/smp/sederajat',
+                'slta/sma/sederajat',
+                'diploma i/ii',
+                'akademi/diploma iii/ sarjana muda',
+                'diploma iv/ strata i/ strata ii',
+                'strata iii',
+                'lainnya'
+            ];
 
-            if ($response->successful()) {
-                $data = $response->json();
+            try {
+                $response = Http::withHeaders([
+                    'X-API-Key' => $this->apiKey,
+                ])->get("{$this->baseUrl}/api/all-citizens");
 
-                $citizens = collect($data['data'])
-                    ->where('village_id', $villageId);
+                if ($response->successful()) {
+                    $data = $response->json();
 
-                // Initialize all categories with 0
-                $groups = [];
-                foreach ($allEducationCategories as $category) {
-                    $groups[$category] = 0;
-                }
+                    $citizens = collect($data['data'])
+                        ->where('village_id', $villageId);
 
-                foreach ($citizens as $citizen) {
-                    // Hanya gunakan kolom education_status dari Citizen Service
-                    $edu = $citizen['education_status'] ?? null;
-
-                    if (!$edu || (is_string($edu) && trim($edu) === '')) {
-                        $key = 'tidak/belum sekolah'; // Default to first category instead of unknown
-                    } else {
-                        $key = $this->normalizeEducation((string) $edu);
+                    $groups = [];
+                    foreach ($allEducationCategories as $category) {
+                        $groups[$category] = 0;
                     }
 
-                    if (isset($groups[$key])) {
-                        $groups[$key]++;
+                    foreach ($citizens as $citizen) {
+                        $edu = $citizen['education_status'] ?? null;
+
+                        if (!$edu || (is_string($edu) && trim($edu) === '')) {
+                            $key = 'tidak/belum sekolah';
+                        } else {
+                            $key = $this->normalizeEducation((string) $edu);
+                        }
+
+                        if (isset($groups[$key])) {
+                            $groups[$key]++;
+                        }
                     }
+
+                    $total = array_sum($groups);
+
+                    return [
+                        'groups' => $groups,
+                        'total_with_education' => $total,
+                    ];
                 }
 
-                $total = array_sum($groups);
-
-                return [
-                    'groups' => $groups,
-                    'total_with_education' => $total,
-                ];
+                return $this->getEducationStatsByVillageFromLocal($villageId);
+            } catch (\Exception $e) {
+                return $this->getEducationStatsByVillageFromLocal($villageId);
             }
-
-            return $this->getEducationStatsByVillageFromLocal($villageId);
-        } catch (\Exception $e) {
-            return $this->getEducationStatsByVillageFromLocal($villageId);
-        }
+        });
     }
 
     private function getEducationStatsByVillageFromLocal($villageId)
@@ -1627,51 +1668,54 @@ class CitizenService
 
     public function getReligionStatsByVillage($villageId)
     {
-        // Define all possible religion categories based on the form options
-        $allReligionCategories = [
-            'islam',
-            'kristen',
-            'katolik',
-            'hindu',
-            'buddha',
-            'konghucu',
-            'lainnya'
-        ];
+        $cacheKey = "citizen_stats_religion_{$villageId}";
+        $ttl = $this->getCitizenStatsCacheTtl();
 
-        try {
-            $response = Http::withHeaders([
-                'X-API-Key' => $this->apiKey,
-            ])->get("{$this->baseUrl}/api/all-citizens");
+        return Cache::remember($cacheKey, $ttl, function () use ($villageId) {
+            $allReligionCategories = [
+                'islam',
+                'kristen',
+                'katolik',
+                'hindu',
+                'buddha',
+                'konghucu',
+                'lainnya'
+            ];
 
-            if ($response->successful()) {
-                $data = $response->json();
-                $citizens = collect($data['data'])->where('village_id', $villageId);
+            try {
+                $response = Http::withHeaders([
+                    'X-API-Key' => $this->apiKey,
+                ])->get("{$this->baseUrl}/api/all-citizens");
 
-                // Initialize all categories with 0
-                $groups = [];
-                foreach ($allReligionCategories as $category) {
-                    $groups[$category] = 0;
-                }
+                if ($response->successful()) {
+                    $data = $response->json();
+                    $citizens = collect($data['data'])->where('village_id', $villageId);
 
-                foreach ($citizens as $citizen) {
-                    $rel = $citizen['religion'] ?? $citizen['agama'] ?? null;
-                    $key = $this->normalizeReligion((string) ($rel ?? ''));
-                    if (isset($groups[$key])) {
-                        $groups[$key]++;
+                    $groups = [];
+                    foreach ($allReligionCategories as $category) {
+                        $groups[$category] = 0;
                     }
+
+                    foreach ($citizens as $citizen) {
+                        $rel = $citizen['religion'] ?? $citizen['agama'] ?? null;
+                        $key = $this->normalizeReligion((string) ($rel ?? ''));
+                        if (isset($groups[$key])) {
+                            $groups[$key]++;
+                        }
+                    }
+
+                    $total = array_sum($groups);
+                    return [
+                        'groups' => $groups,
+                        'total_with_religion' => $total,
+                    ];
                 }
 
-                $total = array_sum($groups);
-                return [
-                    'groups' => $groups,
-                    'total_with_religion' => $total,
-                ];
+                return $this->getReligionStatsByVillageFromLocal($villageId);
+            } catch (\Exception $e) {
+                return $this->getReligionStatsByVillageFromLocal($villageId);
             }
-
-            return $this->getReligionStatsByVillageFromLocal($villageId);
-        } catch (\Exception $e) {
-            return $this->getReligionStatsByVillageFromLocal($villageId);
-        }
+        });
     }
 
     private function getReligionStatsByVillageFromLocal($villageId)
