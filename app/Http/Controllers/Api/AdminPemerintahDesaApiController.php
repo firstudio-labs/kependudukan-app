@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use App\Models\User;
 use App\Models\KepalaDesa;
 use App\Models\PerangkatDesa;
@@ -85,7 +84,7 @@ class AdminPemerintahDesaApiController extends Controller
             $religionStats = $allStats['religion'] ?? ['groups' => [], 'total_with_religion' => 0];
         } catch (\Exception $e) {
             // Fallback jika terjadi error
-            Log::error('Error getting village stats: ' . $e->getMessage(), [
+            \Log::error('Error getting village stats: ' . $e->getMessage(), [
                 'village_id' => $villageId,
                 'trace' => $e->getTraceAsString()
             ]);
