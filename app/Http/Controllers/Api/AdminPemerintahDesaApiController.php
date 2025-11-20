@@ -74,11 +74,9 @@ class AdminPemerintahDesaApiController extends Controller
             return asset('storage/' . ltrim($path, '/'));
         };
 
-        // Statistik penduduk desa dari CitizenService - menggunakan single API call untuk optimasi
+        // Statistik penduduk desa dari CitizenService - menggunakan getAllVillageStats untuk optimasi (1 API call instead of 4)
         $citizenService = app(CitizenService::class);
         $allStats = $citizenService->getAllVillageStats($villageId);
-        
-        // Extract individual stats dari hasil optimized call
         $genderStats = $allStats['gender'] ?? ['male' => 0, 'female' => 0, 'total' => 0];
         $ageGroupStats = $allStats['age'] ?? ['groups' => ['0_17' => 0, '18_30' => 0, '31_45' => 0, '46_60' => 0, '61_plus' => 0], 'total_with_age' => 0];
         $educationStats = $allStats['education'] ?? ['groups' => [], 'total_with_education' => 0];
