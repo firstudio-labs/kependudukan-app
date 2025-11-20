@@ -1756,15 +1756,31 @@ class CitizenService
         $cache = $this->cacheStore();
 
         if (!$useCache) {
-            return $this->buildAllVillageStats($villageId);
+            $result = $this->buildAllVillageStats($villageId);
+            // Clear cache jika hasilnya kosong untuk memaksa refresh
+            if (($result['gender']['total'] ?? 0) == 0) {
+                $cache->forget($cacheKey);
+            }
+            return $result;
         }
 
         if ($cache->has($cacheKey)) {
-            return $cache->get($cacheKey);
+            $cached = $cache->get($cacheKey);
+            // Validasi cache - jika kosong, rebuild
+            if (($cached['gender']['total'] ?? 0) > 0) {
+                return $cached;
+            } else {
+                // Cache kosong, hapus dan rebuild
+                $cache->forget($cacheKey);
+            }
         }
 
         $payload = $this->buildAllVillageStats($villageId);
-        $cache->forever($cacheKey, $payload);
+        
+        // Hanya cache jika ada data
+        if (($payload['gender']['total'] ?? 0) > 0) {
+            $cache->forever($cacheKey, $payload);
+        }
 
         return $payload;
     }
@@ -1786,7 +1802,29 @@ class CitizenService
 
             if ($response->successful()) {
                 $data = $response->json();
-                $citizens = collect($data['data'] ?? [])->where('village_id', $villageId);
+                
+                // Handle berbagai struktur response
+                $allCitizens = [];
+                if (isset($data['data']) && is_array($data['data'])) {
+                    $allCitizens = $data['data'];
+                } elseif (isset($data['citizens']) && is_array($data['citizens'])) {
+                    $allCitizens = $data['citizens'];
+                } elseif (is_array($data) && !isset($data['data']) && !isset($data['citizens'])) {
+                    $allCitizens = $data;
+                }
+
+                // Filter berdasarkan village_id atau villages_id
+                $citizens = collect($allCitizens)->filter(function ($citizen) use ($villageId) {
+                    $citizenVillageId = $citizen['village_id'] ?? $citizen['villages_id'] ?? null;
+                    return $citizenVillageId == $villageId;
+                });
+
+                // Log untuk debugging
+                Log::info('Building village stats', [
+                    'village_id' => $villageId,
+                    'total_citizens_found' => $citizens->count(),
+                    'total_citizens_in_response' => count($allCitizens)
+                ]);
 
                 // Hitung semua statistik dari data yang sama
                 $genderStats = $this->calculateGenderStats($citizens);
@@ -1794,12 +1832,29 @@ class CitizenService
                 $educationStats = $this->calculateEducationStats($citizens);
                 $religionStats = $this->calculateReligionStats($citizens);
 
-                return [
+                $result = [
                     'gender' => $genderStats,
                     'age' => $ageStats,
                     'education' => $educationStats,
                     'religion' => $religionStats,
                 ];
+
+                // Jika semua statistik 0, coba fallback ke local
+                if ($genderStats['total'] == 0 && $ageStats['total_with_age'] == 0) {
+                    Log::warning('All stats are 0, trying local fallback', [
+                        'village_id' => $villageId,
+                        'api_result' => $result
+                    ]);
+                    return $this->getAllVillageStatsFromLocal($villageId);
+                }
+
+                return $result;
+            } else {
+                Log::error('API request failed when fetching all village stats', [
+                    'status_code' => $response->status(),
+                    'village_id' => $villageId,
+                    'response_body' => substr($response->body(), 0, 500)
+                ]);
             }
         } catch (\Exception $e) {
             Log::error('Error getting all village stats: ' . $e->getMessage(), [
@@ -1989,6 +2044,11 @@ class CitizenService
                 ->select(['gender', 'tanggal_lahir', 'tgl_lahir', 'birth_date', 'umur', 'age', 'education_status', 'religion', 'agama'])
                 ->get();
             
+            Log::info('Getting stats from local database', [
+                'village_id' => $villageId,
+                'citizens_count' => $citizens->count()
+            ]);
+            
             $citizensCollection = $citizens->map(function ($citizen) {
                 return [
                     'gender' => $citizen->gender,
@@ -1999,14 +2059,25 @@ class CitizenService
                 ];
             });
 
-            return [
+            $result = [
                 'gender' => $this->calculateGenderStats($citizensCollection),
                 'age' => $this->calculateAgeStats($citizensCollection),
                 'education' => $this->calculateEducationStats($citizensCollection),
                 'religion' => $this->calculateReligionStats($citizensCollection),
             ];
+
+            Log::info('Local stats calculated', [
+                'village_id' => $villageId,
+                'gender_total' => $result['gender']['total'],
+                'age_total' => $result['age']['total_with_age']
+            ]);
+
+            return $result;
         } catch (\Exception $e) {
-            Log::error('Error getting all village stats from local: ' . $e->getMessage());
+            Log::error('Error getting all village stats from local: ' . $e->getMessage(), [
+                'village_id' => $villageId,
+                'trace' => $e->getTraceAsString()
+            ]);
             return [
                 'gender' => ['male' => 0, 'female' => 0, 'total' => 0],
                 'age' => ['groups' => ['0_17' => 0, '18_30' => 0, '31_45' => 0, '46_60' => 0, '61_plus' => 0], 'total_with_age' => 0],
