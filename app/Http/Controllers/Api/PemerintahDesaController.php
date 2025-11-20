@@ -75,81 +75,12 @@ class PemerintahDesaController extends Controller
             return asset('storage/' . ltrim($path, '/'));
         };
 
-        // Statistik penduduk desa dari CitizenService - optimasi: 1 API call untuk semua statistik
-        try {
-            $citizenService = app(CitizenService::class);
-            $allStats = $citizenService->getAllVillageStats($villageId);
-            $genderStats = $allStats['gender'] ?? ['male' => 0, 'female' => 0, 'total' => 0];
-            $ageGroupStats = $allStats['age'] ?? ['groups' => ['0_17' => 0, '18_30' => 0, '31_45' => 0, '46_60' => 0, '61_plus' => 0], 'total_with_age' => 0];
-            
-            // Default education stats dengan struktur lengkap
-            $defaultEducation = [
-                'groups' => [
-                    'tidak/belum sekolah' => 0,
-                    'belum tamat sd/sederajat' => 0,
-                    'tamat sd/sederajat' => 0,
-                    'sltp/smp/sederajat' => 0,
-                    'slta/sma/sederajat' => 0,
-                    'diploma i/ii' => 0,
-                    'akademi/diploma iii/ sarjana muda' => 0,
-                    'diploma iv/ strata i/ strata ii' => 0,
-                    'strata iii' => 0,
-                    'lainnya' => 0
-                ],
-                'total_with_education' => 0
-            ];
-            $educationStats = $allStats['education'] ?? $defaultEducation;
-            
-            // Default religion stats dengan struktur lengkap
-            $defaultReligion = [
-                'groups' => [
-                    'islam' => 0,
-                    'kristen' => 0,
-                    'katolik' => 0,
-                    'hindu' => 0,
-                    'buddha' => 0,
-                    'konghucu' => 0,
-                    'lainnya' => 0
-                ],
-                'total_with_religion' => 0
-            ];
-            $religionStats = $allStats['religion'] ?? $defaultReligion;
-        } catch (\Exception $e) {
-            // Fallback jika terjadi error
-            \Log::error('Error getting village stats in PemerintahDesaController: ' . $e->getMessage(), [
-                'village_id' => $villageId,
-                'trace' => $e->getTraceAsString()
-            ]);
-            $genderStats = ['male' => 0, 'female' => 0, 'total' => 0];
-            $ageGroupStats = ['groups' => ['0_17' => 0, '18_30' => 0, '31_45' => 0, '46_60' => 0, '61_plus' => 0], 'total_with_age' => 0];
-            $educationStats = [
-                'groups' => [
-                    'tidak/belum sekolah' => 0,
-                    'belum tamat sd/sederajat' => 0,
-                    'tamat sd/sederajat' => 0,
-                    'sltp/smp/sederajat' => 0,
-                    'slta/sma/sederajat' => 0,
-                    'diploma i/ii' => 0,
-                    'akademi/diploma iii/ sarjana muda' => 0,
-                    'diploma iv/ strata i/ strata ii' => 0,
-                    'strata iii' => 0,
-                    'lainnya' => 0
-                ],
-                'total_with_education' => 0
-            ];
-            $religionStats = [
-                'groups' => [
-                    'islam' => 0,
-                    'kristen' => 0,
-                    'katolik' => 0,
-                    'hindu' => 0,
-                    'buddha' => 0,
-                    'konghucu' => 0,
-                    'lainnya' => 0
-                ],
-                'total_with_religion' => 0
-            ];
-        }
+        // Statistik penduduk desa dari CitizenService
+        $citizenService = app(CitizenService::class);
+        $genderStats = $citizenService->getGenderStatsByVillage($villageId); // harapkan ['male' => x, 'female' => y]
+        $ageGroupStats = $citizenService->getAgeGroupStatsByVillage($villageId); // statistik umur
+        $educationStats = $citizenService->getEducationStatsByVillage($villageId); // statistik pendidikan
+        $religionStats = $citizenService->getReligionStatsByVillage($villageId); // statistik agama
         
         // Klasifikasi & jenis dari barang warungku milik penduduk di desa tersebut
         $informasiUsahaIds = InformasiUsaha::where('villages_id', $villageId)->pluck('id');
