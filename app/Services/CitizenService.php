@@ -1709,11 +1709,15 @@ class CitizenService
     public function getAllVillageStats(int $villageId): array
     {
         $cacheKey = "village_stats_all_{$villageId}";
-        $cache = $this->cacheStore();
-
-        // Check cache first - cache untuk 2 jam untuk mengurangi beban API
-        if ($cache->has($cacheKey)) {
-            return $cache->get($cacheKey);
+        
+        try {
+            $cache = $this->cacheStore();
+            // Check cache first - cache untuk 2 jam untuk mengurangi beban API
+            if ($cache->has($cacheKey)) {
+                return $cache->get($cacheKey);
+            }
+        } catch (\Exception $e) {
+            Log::warning('Cache store error, continuing without cache: ' . $e->getMessage());
         }
 
         try {
@@ -1724,7 +1728,27 @@ class CitizenService
 
             if ($response->successful()) {
                 $data = $response->json();
-                $citizens = collect($data['data'])->where('village_id', $villageId);
+                
+                // Handle different response structures
+                $citizensData = null;
+                if (isset($data['data']) && is_array($data['data'])) {
+                    $citizensData = $data['data'];
+                } elseif (isset($data['citizens']) && is_array($data['citizens'])) {
+                    $citizensData = $data['citizens'];
+                } elseif (is_array($data) && !isset($data['status'])) {
+                    // Direct array of citizens
+                    $citizensData = $data;
+                }
+
+                if ($citizensData === null || empty($citizensData)) {
+                    Log::warning('Invalid or empty response structure from API', [
+                        'village_id' => $villageId,
+                        'response_keys' => array_keys($data ?? [])
+                    ]);
+                    throw new \Exception('Invalid API response structure');
+                }
+
+                $citizens = collect($citizensData)->where('village_id', $villageId);
 
                 // Hitung semua statistik dari data yang sama
                 $genderStats = $this->calculateGenderStats($citizens);
@@ -1740,26 +1764,50 @@ class CitizenService
                 ];
 
                 // Cache untuk 2 jam (7200 detik)
-                $cache->put($cacheKey, $payload, now()->addHours(2));
+                try {
+                    $cache = $this->cacheStore();
+                    $cache->put($cacheKey, $payload, now()->addHours(2));
+                } catch (\Exception $e) {
+                    Log::warning('Failed to cache village stats: ' . $e->getMessage());
+                }
+                
                 return $payload;
             } else {
                 Log::warning('API request failed for all village stats', [
                     'village_id' => $villageId,
-                    'status' => $response->status()
+                    'status' => $response->status(),
+                    'response_body' => substr($response->body(), 0, 500)
                 ]);
             }
         } catch (\Exception $e) {
             Log::error('Error getting all village stats: ' . $e->getMessage(), [
                 'village_id' => $villageId,
-                'exception' => get_class($e)
+                'exception' => get_class($e),
+                'trace' => $e->getTraceAsString()
             ]);
         }
 
         // Fallback ke database lokal
-        $payload = $this->getAllVillageStatsFromLocal($villageId);
-        // Cache fallback data juga untuk 30 menit
-        $cache->put($cacheKey, $payload, now()->addMinutes(30));
-        return $payload;
+        try {
+            $payload = $this->getAllVillageStatsFromLocal($villageId);
+            // Cache fallback data juga untuk 30 menit
+            try {
+                $cache = $this->cacheStore();
+                $cache->put($cacheKey, $payload, now()->addMinutes(30));
+            } catch (\Exception $e) {
+                Log::warning('Failed to cache fallback stats: ' . $e->getMessage());
+            }
+            return $payload;
+        } catch (\Exception $e) {
+            Log::error('Error in fallback getAllVillageStatsFromLocal: ' . $e->getMessage());
+            // Return default empty stats
+            return [
+                'gender' => ['male' => 0, 'female' => 0, 'total' => 0],
+                'age' => ['groups' => ['0_17' => 0, '18_30' => 0, '31_45' => 0, '46_60' => 0, '61_plus' => 0], 'total_with_age' => 0],
+                'education' => ['groups' => [], 'total_with_education' => 0],
+                'religion' => ['groups' => [], 'total_with_religion' => 0],
+            ];
+        }
     }
 
     /**
