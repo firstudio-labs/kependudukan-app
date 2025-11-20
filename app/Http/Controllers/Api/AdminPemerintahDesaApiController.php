@@ -52,20 +52,34 @@ class AdminPemerintahDesaApiController extends Controller
             return response()->json(['message' => 'villages_id tidak ditemukan pada akun admin'], 422);
         }
 
-        // user pemerintah desa (tabel users) pada desa yang sama
-        $pemerintah = User::query()->where('villages_id', $villageId)->get([
-            'id','nama','username','role','no_hp','foto_pengguna','alamat','tag_lokasi',
-            'province_id','districts_id','sub_districts_id','villages_id'
-        ]);
+        // user pemerintah desa (tabel users) pada desa yang sama - optimasi dengan select spesifik
+        $pemerintah = User::query()
+            ->where('villages_id', $villageId)
+            ->select([
+                'id','nama','username','role','no_hp','foto_pengguna','alamat','tag_lokasi',
+                'province_id','districts_id','sub_districts_id','villages_id'
+            ])
+            ->get();
 
-        // entitas terkait user_id
+        // Optimasi: ambil user_ids sekali untuk digunakan di semua query
         $userIds = $pemerintah->pluck('id');
-        $kepalaDesa = KepalaDesa::whereIn('user_id', $userIds)->get();
+        
+        // entitas terkait user_id - optimasi dengan select spesifik
+        $kepalaDesa = KepalaDesa::whereIn('user_id', $userIds)
+            ->select(['id', 'user_id', 'nama', 'foto'])
+            ->get();
         $perangkatDesa = PerangkatDesa::whereIn('user_id', $userIds)->get();
         $dataWilayah = DataWilayah::whereIn('user_id', $userIds)->get();
-        $usahaDesa = UsahaDesa::whereIn('user_id', $userIds)->get();
-        $saranaUmum = SaranaUmum::with('kategori')->whereIn('user_id', $userIds)->get();
-        $kesenianBudaya = KesenianBudaya::whereIn('user_id', $userIds)->get();
+        $usahaDesa = UsahaDesa::whereIn('user_id', $userIds)
+            ->select(['id', 'user_id', 'jenis', 'nama', 'ijin', 'tahun_didirikan', 'ketua', 'foto'])
+            ->get();
+        $saranaUmum = SaranaUmum::with('kategori')
+            ->whereIn('user_id', $userIds)
+            ->select(['id', 'user_id', 'kategori_sarana_id', 'nama_sarana', 'tag_lokasi', 'alamat', 'kontak', 'foto'])
+            ->get();
+        $kesenianBudaya = KesenianBudaya::whereIn('user_id', $userIds)
+            ->select(['id', 'user_id', 'jenis', 'nama', 'tag_lokasi', 'alamat', 'kontak', 'foto'])
+            ->get();
         $abdes = Abdes::whereIn('user_id', $userIds)->get();
 
         $toUrl = function ($path) {
@@ -74,12 +88,25 @@ class AdminPemerintahDesaApiController extends Controller
             return asset('storage/' . ltrim($path, '/'));
         };
 
-        // Statistik penduduk desa dari CitizenService
+        // Statistik penduduk desa dari CitizenService - menggunakan getAllVillageStats untuk optimasi (1 API call instead of 4)
         $citizenService = app(CitizenService::class);
-        $genderStats = $citizenService->getGenderStatsByVillage($villageId); // harapkan ['male' => x, 'female' => y]
-        $ageGroupStats = $citizenService->getAgeGroupStatsByVillage($villageId); // statistik umur
-        $educationStats = $citizenService->getEducationStatsByVillage($villageId); // statistik pendidikan
-        $religionStats = $citizenService->getReligionStatsByVillage($villageId); // statistik agama
+        try {
+            $allStats = $citizenService->getAllVillageStats($villageId);
+            $genderStats = $allStats['gender'] ?? ['male' => 0, 'female' => 0, 'total' => 0];
+            $ageGroupStats = $allStats['age'] ?? ['groups' => ['0_17' => 0, '18_30' => 0, '31_45' => 0, '46_60' => 0, '61_plus' => 0], 'total_with_age' => 0];
+            $educationStats = $allStats['education'] ?? ['groups' => [], 'total_with_education' => 0];
+            $religionStats = $allStats['religion'] ?? ['groups' => [], 'total_with_religion' => 0];
+        } catch (\Exception $e) {
+            // Fallback jika terjadi error
+            \Log::error('Error getting village stats: ' . $e->getMessage(), [
+                'village_id' => $villageId,
+                'trace' => $e->getTraceAsString()
+            ]);
+            $genderStats = ['male' => 0, 'female' => 0, 'total' => 0];
+            $ageGroupStats = ['groups' => ['0_17' => 0, '18_30' => 0, '31_45' => 0, '46_60' => 0, '61_plus' => 0], 'total_with_age' => 0];
+            $educationStats = ['groups' => [], 'total_with_education' => 0];
+            $religionStats = ['groups' => [], 'total_with_religion' => 0];
+        }
         
         // Klasifikasi & jenis dari barang warungku milik penduduk di desa tersebut
         $informasiUsahaIds = InformasiUsaha::where('villages_id', $villageId)->pluck('id');
