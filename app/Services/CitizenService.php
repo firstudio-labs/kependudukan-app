@@ -1302,8 +1302,21 @@ class CitizenService
             if ($response->successful()) {
                 $data = $response->json();
 
-                $citizens = collect($data['data'])
-                    ->where('village_id', $villageId);
+                // Extract citizens array - handle different response structures
+                $allCitizens = [];
+                if (isset($data['data']) && is_array($data['data'])) {
+                    $allCitizens = $data['data'];
+                } elseif (isset($data['citizens']) && is_array($data['citizens'])) {
+                    $allCitizens = $data['citizens'];
+                } elseif (is_array($data)) {
+                    $allCitizens = $data;
+                }
+
+                // Filter by village_id or villages_id (handle both field names)
+                $citizens = collect($allCitizens)->filter(function ($citizen) use ($villageId) {
+                    $vId = $citizen['village_id'] ?? $citizen['villages_id'] ?? null;
+                    return $vId == $villageId;
+                });
 
                 // Count male with various gender formats
                 $maleCount = $citizens->filter(function ($citizen) {
@@ -1364,8 +1377,21 @@ class CitizenService
             if ($response->successful()) {
                 $data = $response->json();
 
-                $citizens = collect($data['data'])
-                    ->where('village_id', $villageId);
+                // Extract citizens array - handle different response structures
+                $allCitizens = [];
+                if (isset($data['data']) && is_array($data['data'])) {
+                    $allCitizens = $data['data'];
+                } elseif (isset($data['citizens']) && is_array($data['citizens'])) {
+                    $allCitizens = $data['citizens'];
+                } elseif (is_array($data)) {
+                    $allCitizens = $data;
+                }
+
+                // Filter by village_id or villages_id (handle both field names)
+                $citizens = collect($allCitizens)->filter(function ($citizen) use ($villageId) {
+                    $vId = $citizen['village_id'] ?? $citizen['villages_id'] ?? null;
+                    return $vId == $villageId;
+                });
 
                 $now = now();
                 $groups = [
@@ -1537,8 +1563,21 @@ class CitizenService
             if ($response->successful()) {
                 $data = $response->json();
 
-                $citizens = collect($data['data'])
-                    ->where('village_id', $villageId);
+                // Extract citizens array - handle different response structures
+                $allCitizens = [];
+                if (isset($data['data']) && is_array($data['data'])) {
+                    $allCitizens = $data['data'];
+                } elseif (isset($data['citizens']) && is_array($data['citizens'])) {
+                    $allCitizens = $data['citizens'];
+                } elseif (is_array($data)) {
+                    $allCitizens = $data;
+                }
+
+                // Filter by village_id or villages_id (handle both field names)
+                $citizens = collect($allCitizens)->filter(function ($citizen) use ($villageId) {
+                    $vId = $citizen['village_id'] ?? $citizen['villages_id'] ?? null;
+                    return $vId == $villageId;
+                });
 
                 // Initialize all categories with 0
                 $groups = [];
@@ -1726,7 +1765,22 @@ class CitizenService
 
             if ($response->successful()) {
                 $data = $response->json();
-                $citizens = collect($data['data'])->where('village_id', $villageId);
+
+                // Extract citizens array - handle different response structures
+                $allCitizens = [];
+                if (isset($data['data']) && is_array($data['data'])) {
+                    $allCitizens = $data['data'];
+                } elseif (isset($data['citizens']) && is_array($data['citizens'])) {
+                    $allCitizens = $data['citizens'];
+                } elseif (is_array($data)) {
+                    $allCitizens = $data;
+                }
+
+                // Filter by village_id or villages_id (handle both field names)
+                $citizens = collect($allCitizens)->filter(function ($citizen) use ($villageId) {
+                    $vId = $citizen['village_id'] ?? $citizen['villages_id'] ?? null;
+                    return $vId == $villageId;
+                });
 
                 // Initialize all categories with 0
                 $groups = [];
@@ -1904,7 +1958,33 @@ class CitizenService
 
             if ($response->successful()) {
                 $data = $response->json();
-                $citizens = collect($data['data'])->where('village_id', $villageId);
+
+                // Extract citizens array - handle different response structures
+                $allCitizens = [];
+                if (isset($data['data']) && is_array($data['data'])) {
+                    $allCitizens = $data['data'];
+                } elseif (isset($data['citizens']) && is_array($data['citizens'])) {
+                    $allCitizens = $data['citizens'];
+                } elseif (is_array($data)) {
+                    $allCitizens = $data;
+                }
+
+                // Filter by village_id or villages_id (handle both field names)
+                $citizens = collect($allCitizens)->filter(function ($citizen) use ($villageId) {
+                    $vId = $citizen['village_id'] ?? $citizen['villages_id'] ?? null;
+                    return $vId == $villageId;
+                });
+
+                Log::info('Building all village stats', [
+                    'village_id' => $villageId,
+                    'total_citizens' => count($allCitizens),
+                    'filtered_citizens' => $citizens->count(),
+                    'sample_citizen_keys' => $citizens->first() ? array_keys($citizens->first()) : null,
+                    'sample_village_id_fields' => $citizens->first() ? [
+                        'village_id' => $citizens->first()['village_id'] ?? 'not_set',
+                        'villages_id' => $citizens->first()['villages_id'] ?? 'not_set'
+                    ] : null
+                ]);
 
                 // Hitung semua statistik dari data yang sama
                 $genderStats = $this->calculateGenderStats($citizens);
@@ -1912,15 +1992,35 @@ class CitizenService
                 $educationStats = $this->calculateEducationStats($citizens);
                 $religionStats = $this->calculateReligionStats($citizens);
 
-                return [
+                $result = [
                     'gender' => $genderStats,
                     'age' => $ageStats,
                     'education' => $educationStats,
                     'religion' => $religionStats,
                 ];
+
+                // Log warning jika tidak ada data yang ditemukan
+                if ($citizens->count() === 0) {
+                    Log::warning('No citizens found for village_id in getAllVillageStats', [
+                        'village_id' => $villageId,
+                        'total_citizens_in_response' => count($allCitizens),
+                        'response_structure' => array_keys($data ?? [])
+                    ]);
+                }
+
+                return $result;
+            } else {
+                Log::error('API request failed for getAllVillageStats', [
+                    'status_code' => $response->status(),
+                    'village_id' => $villageId,
+                    'response_body' => substr($response->body(), 0, 500)
+                ]);
             }
         } catch (\Exception $e) {
-            Log::error('Error getting all village stats: ' . $e->getMessage());
+            Log::error('Error getting all village stats: ' . $e->getMessage(), [
+                'village_id' => $villageId,
+                'trace' => $e->getTraceAsString()
+            ]);
         }
 
         // Fallback ke database lokal
