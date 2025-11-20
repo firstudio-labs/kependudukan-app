@@ -1313,10 +1313,14 @@ class CitizenService
                     $allCitizens = $data;
                 }
 
-                // Filter berdasarkan village_id atau villages_id
-                $citizens = collect($allCitizens)->filter(function ($citizen) use ($villageId) {
+                // Filter berdasarkan village_id atau villages_id dengan type casting
+                $villageIdInt = (int) $villageId;
+                $citizens = collect($allCitizens)->filter(function ($citizen) use ($villageIdInt) {
                     $citizenVillageId = $citizen['village_id'] ?? $citizen['villages_id'] ?? null;
-                    return $citizenVillageId == $villageId;
+                    if ($citizenVillageId === null) {
+                        return false;
+                    }
+                    return (int) $citizenVillageId === $villageIdInt;
                 });
 
                 return $this->calculateGenderStats($citizens);
@@ -1374,10 +1378,14 @@ class CitizenService
                     $allCitizens = $data;
                 }
 
-                // Filter berdasarkan village_id atau villages_id
-                $citizens = collect($allCitizens)->filter(function ($citizen) use ($villageId) {
+                // Filter berdasarkan village_id atau villages_id dengan type casting
+                $villageIdInt = (int) $villageId;
+                $citizens = collect($allCitizens)->filter(function ($citizen) use ($villageIdInt) {
                     $citizenVillageId = $citizen['village_id'] ?? $citizen['villages_id'] ?? null;
-                    return $citizenVillageId == $villageId;
+                    if ($citizenVillageId === null) {
+                        return false;
+                    }
+                    return (int) $citizenVillageId === $villageIdInt;
                 });
 
                 return $this->calculateAgeStats($citizens);
@@ -1498,10 +1506,14 @@ class CitizenService
                     $allCitizens = $data;
                 }
 
-                // Filter berdasarkan village_id atau villages_id
-                $citizens = collect($allCitizens)->filter(function ($citizen) use ($villageId) {
+                // Filter berdasarkan village_id atau villages_id dengan type casting
+                $villageIdInt = (int) $villageId;
+                $citizens = collect($allCitizens)->filter(function ($citizen) use ($villageIdInt) {
                     $citizenVillageId = $citizen['village_id'] ?? $citizen['villages_id'] ?? null;
-                    return $citizenVillageId == $villageId;
+                    if ($citizenVillageId === null) {
+                        return false;
+                    }
+                    return (int) $citizenVillageId === $villageIdInt;
                 });
 
                 return $this->calculateEducationStats($citizens);
@@ -1665,10 +1677,14 @@ class CitizenService
                     $allCitizens = $data;
                 }
 
-                // Filter berdasarkan village_id atau villages_id
-                $citizens = collect($allCitizens)->filter(function ($citizen) use ($villageId) {
+                // Filter berdasarkan village_id atau villages_id dengan type casting
+                $villageIdInt = (int) $villageId;
+                $citizens = collect($allCitizens)->filter(function ($citizen) use ($villageIdInt) {
                     $citizenVillageId = $citizen['village_id'] ?? $citizen['villages_id'] ?? null;
-                    return $citizenVillageId == $villageId;
+                    if ($citizenVillageId === null) {
+                        return false;
+                    }
+                    return (int) $citizenVillageId === $villageIdInt;
                 });
 
                 return $this->calculateReligionStats($citizens);
@@ -1867,16 +1883,29 @@ class CitizenService
                 }
 
                 // Filter berdasarkan village_id atau villages_id (fleksibel untuk berbagai format API)
-                $citizens = collect($allCitizens)->filter(function ($citizen) use ($villageId) {
+                // Pastikan type casting untuk perbandingan yang benar
+                $villageIdInt = (int) $villageId;
+                $citizens = collect($allCitizens)->filter(function ($citizen) use ($villageIdInt) {
                     $citizenVillageId = $citizen['village_id'] ?? $citizen['villages_id'] ?? null;
-                    return $citizenVillageId == $villageId;
+                    if ($citizenVillageId === null) {
+                        return false;
+                    }
+                    // Convert ke int untuk perbandingan yang benar
+                    return (int) $citizenVillageId === $villageIdInt;
                 });
 
-                // Log untuk debugging
+                // Log untuk debugging dengan sample data
+                $sampleCitizen = $allCitizens[0] ?? null;
                 Log::info('Building village stats', [
                     'village_id' => $villageId,
+                    'village_id_type' => gettype($villageId),
                     'total_citizens_found' => $citizens->count(),
-                    'total_citizens_in_response' => count($allCitizens)
+                    'total_citizens_in_response' => count($allCitizens),
+                    'sample_citizen_village_id' => $sampleCitizen['village_id'] ?? $sampleCitizen['villages_id'] ?? 'not_found',
+                    'sample_citizen_village_id_type' => isset($sampleCitizen['village_id']) ? gettype($sampleCitizen['village_id']) : (isset($sampleCitizen['villages_id']) ? gettype($sampleCitizen['villages_id']) : 'not_found'),
+                    'first_5_village_ids' => collect($allCitizens)->take(5)->map(function($c) {
+                        return $c['village_id'] ?? $c['villages_id'] ?? 'null';
+                    })->toArray()
                 ]);
 
                 // Hitung semua statistik dari data yang sama

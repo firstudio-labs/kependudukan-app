@@ -89,13 +89,25 @@ class AdminPemerintahDesaApiController extends Controller
         };
 
         // Statistik penduduk desa dari CitizenService - menggunakan getAllVillageStats untuk optimasi (1 API call instead of 4)
+        // Parameter ?refresh_stats=1 untuk bypass cache jika diperlukan
         $citizenService = app(CitizenService::class);
         try {
-            $allStats = $citizenService->getAllVillageStats($villageId);
+            $useCache = !$request->has('refresh_stats');
+            $allStats = $citizenService->getAllVillageStats($villageId, $useCache);
             $genderStats = $allStats['gender'] ?? ['male' => 0, 'female' => 0, 'total' => 0];
             $ageGroupStats = $allStats['age'] ?? ['groups' => ['0_17' => 0, '18_30' => 0, '31_45' => 0, '46_60' => 0, '61_plus' => 0], 'total_with_age' => 0];
             $educationStats = $allStats['education'] ?? ['groups' => [], 'total_with_education' => 0];
             $religionStats = $allStats['religion'] ?? ['groups' => [], 'total_with_religion' => 0];
+            
+            // Jika statistik masih 0 dan menggunakan cache, coba tanpa cache
+            if ($useCache && $genderStats['total'] == 0 && $ageGroupStats['total_with_age'] == 0) {
+                \Log::warning('Stats are 0 with cache, retrying without cache', ['village_id' => $villageId]);
+                $allStats = $citizenService->getAllVillageStats($villageId, false);
+                $genderStats = $allStats['gender'] ?? $genderStats;
+                $ageGroupStats = $allStats['age'] ?? $ageGroupStats;
+                $educationStats = $allStats['education'] ?? $educationStats;
+                $religionStats = $allStats['religion'] ?? $religionStats;
+            }
         } catch (\Exception $e) {
             // Fallback jika terjadi error
             \Log::error('Error getting village stats: ' . $e->getMessage(), [
