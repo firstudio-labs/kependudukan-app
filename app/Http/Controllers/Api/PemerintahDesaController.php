@@ -62,7 +62,7 @@ class PemerintahDesaController extends Controller
         // Optimasi: ambil user_ids sekali untuk digunakan di semua query
         $userIds = $pemerintah->pluck('id');
         
-        // entitas terkait user_id - optimasi dengan eager loading dan select spesifik
+        // entitas terkait user_id - optimasi dengan select spesifik
         $kepalaDesa = KepalaDesa::whereIn('user_id', $userIds)
             ->select(['id', 'user_id', 'nama', 'foto'])
             ->get();
@@ -71,7 +71,7 @@ class PemerintahDesaController extends Controller
         $usahaDesa = UsahaDesa::whereIn('user_id', $userIds)
             ->select(['id', 'user_id', 'jenis', 'nama', 'ijin', 'tahun_didirikan', 'ketua', 'foto'])
             ->get();
-        // sertakan kategori agar bisa dipakai di response
+        // sertakan kategori agar bisa dipakai di response - optimasi dengan select spesifik
         $saranaUmum = SaranaUmum::with('kategori')
             ->whereIn('user_id', $userIds)
             ->select(['id', 'user_id', 'kategori_sarana_id', 'nama_sarana', 'tag_lokasi', 'alamat', 'kontak', 'foto'])
@@ -88,37 +88,14 @@ class PemerintahDesaController extends Controller
             return asset('storage/' . ltrim($path, '/'));
         };
 
-        // Statistik penduduk desa dari CitizenService - menggunakan getAllVillageStats untuk optimasi (1 API call instead of 4)
-        // Parameter ?refresh_stats=1 untuk bypass cache jika diperlukan
+        // Statistik penduduk desa dari CitizenService - optimasi dengan 1 API call untuk semua statistik
         $citizenService = app(CitizenService::class);
-        try {
-            $useCache = !$request->has('refresh_stats');
-            $allStats = $citizenService->getAllVillageStats($villageId, $useCache);
-            $genderStats = $allStats['gender'] ?? ['male' => 0, 'female' => 0, 'total' => 0];
-            $ageGroupStats = $allStats['age'] ?? ['groups' => ['0_17' => 0, '18_30' => 0, '31_45' => 0, '46_60' => 0, '61_plus' => 0], 'total_with_age' => 0];
-            $educationStats = $allStats['education'] ?? ['groups' => [], 'total_with_education' => 0];
-            $religionStats = $allStats['religion'] ?? ['groups' => [], 'total_with_religion' => 0];
-            
-            // Jika statistik masih 0 dan menggunakan cache, coba tanpa cache
-            if ($useCache && $genderStats['total'] == 0 && $ageGroupStats['total_with_age'] == 0) {
-                \Log::warning('Stats are 0 with cache, retrying without cache', ['village_id' => $villageId]);
-                $allStats = $citizenService->getAllVillageStats($villageId, false);
-                $genderStats = $allStats['gender'] ?? $genderStats;
-                $ageGroupStats = $allStats['age'] ?? $ageGroupStats;
-                $educationStats = $allStats['education'] ?? $educationStats;
-                $religionStats = $allStats['religion'] ?? $religionStats;
-            }
-        } catch (\Exception $e) {
-            // Fallback jika terjadi error
-            \Log::error('Error getting village stats: ' . $e->getMessage(), [
-                'village_id' => $villageId,
-                'trace' => $e->getTraceAsString()
-            ]);
-            $genderStats = ['male' => 0, 'female' => 0, 'total' => 0];
-            $ageGroupStats = ['groups' => ['0_17' => 0, '18_30' => 0, '31_45' => 0, '46_60' => 0, '61_plus' => 0], 'total_with_age' => 0];
-            $educationStats = ['groups' => [], 'total_with_education' => 0];
-            $religionStats = ['groups' => [], 'total_with_religion' => 0];
-        }
+        $useCache = !$request->has('refresh_stats'); // Support ?refresh_stats=1 untuk bypass cache
+        $allStats = $citizenService->getAllVillageStats($villageId, $useCache);
+        $genderStats = $allStats['gender'] ?? ['male' => 0, 'female' => 0, 'total' => 0];
+        $ageGroupStats = $allStats['age'] ?? ['groups' => ['0_17' => 0, '18_30' => 0, '31_45' => 0, '46_60' => 0, '61_plus' => 0], 'total_with_age' => 0];
+        $educationStats = $allStats['education'] ?? ['groups' => [], 'total_with_education' => 0];
+        $religionStats = $allStats['religion'] ?? ['groups' => [], 'total_with_religion' => 0];
         
         // Klasifikasi & jenis dari barang warungku milik penduduk di desa tersebut
         $informasiUsahaIds = InformasiUsaha::where('villages_id', $villageId)->pluck('id');
