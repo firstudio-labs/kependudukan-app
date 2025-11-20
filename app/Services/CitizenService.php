@@ -1867,8 +1867,19 @@ class CitizenService
      * Get all village statistics in one API call (optimized for performance)
      * This method fetches /api/all-citizens once and calculates all stats
      */
-    public function getAllVillageStats(int $villageId, bool $useCache = true): array
+    public function getAllVillageStats($villageId, bool $useCache = true): array
     {
+        // Validasi village_id
+        if (!$villageId || $villageId <= 0) {
+            return [
+                'gender' => ['male' => 0, 'female' => 0, 'total' => 0],
+                'age' => ['groups' => ['0_17' => 0, '18_30' => 0, '31_45' => 0, '46_60' => 0, '61_plus' => 0], 'total_with_age' => 0],
+                'education' => ['groups' => [], 'total_with_education' => 0],
+                'religion' => ['groups' => [], 'total_with_religion' => 0],
+            ];
+        }
+
+        $villageId = (int) $villageId;
         $cacheKey = $this->villageStatsCacheKey('all_stats', $villageId);
         $cache = $this->cacheStore();
         $cacheTTL = now()->addMinutes(30); // Cache selama 30 menit
@@ -1879,7 +1890,8 @@ class CitizenService
 
         $payload = $this->buildAllVillageStats($villageId);
         
-        if ($useCache) {
+        // Pastikan payload memiliki struktur yang benar sebelum di-cache
+        if ($useCache && !empty($payload) && isset($payload['gender']) && isset($payload['age']) && isset($payload['education']) && isset($payload['religion'])) {
             $cache->put($cacheKey, $payload, $cacheTTL);
         }
 
@@ -1896,23 +1908,40 @@ class CitizenService
 
             if ($response->successful()) {
                 $data = $response->json();
-                $citizens = collect($data['data'])->where('village_id', $villageId);
+                
+                // Pastikan data['data'] ada dan merupakan array
+                if (isset($data['data']) && is_array($data['data'])) {
+                    $citizens = collect($data['data'])->where('village_id', $villageId);
 
-                // Hitung semua statistik dari data yang sama
-                $genderStats = $this->calculateGenderStats($citizens);
-                $ageStats = $this->calculateAgeStats($citizens);
-                $educationStats = $this->calculateEducationStats($citizens);
-                $religionStats = $this->calculateReligionStats($citizens);
+                    // Hitung semua statistik dari data yang sama
+                    $genderStats = $this->calculateGenderStats($citizens);
+                    $ageStats = $this->calculateAgeStats($citizens);
+                    $educationStats = $this->calculateEducationStats($citizens);
+                    $religionStats = $this->calculateReligionStats($citizens);
 
-                return [
-                    'gender' => $genderStats,
-                    'age' => $ageStats,
-                    'education' => $educationStats,
-                    'religion' => $religionStats,
-                ];
+                    return [
+                        'gender' => $genderStats,
+                        'age' => $ageStats,
+                        'education' => $educationStats,
+                        'religion' => $religionStats,
+                    ];
+                } else {
+                    Log::warning('Invalid API response structure for all-citizens', [
+                        'village_id' => $villageId,
+                        'response_keys' => array_keys($data ?? [])
+                    ]);
+                }
+            } else {
+                Log::warning('API request failed for all-citizens', [
+                    'village_id' => $villageId,
+                    'status_code' => $response->status()
+                ]);
             }
         } catch (\Exception $e) {
-            Log::error('Error getting all village stats: ' . $e->getMessage());
+            Log::error('Error getting all village stats: ' . $e->getMessage(), [
+                'village_id' => $villageId,
+                'trace' => $e->getTraceAsString()
+            ]);
         }
 
         // Fallback ke database lokal

@@ -32,11 +32,15 @@ class PemerintahDesaController extends Controller
         
         // If village_id is null and user has NIK, try to get it from CitizenService
         if (!$villageId && isset($user->nik)) {
-            $citizenService = app(CitizenService::class);
-            $citizenData = $citizenService->getCitizenByNIK($user->nik);
-            
-            if ($citizenData && isset($citizenData['data']['village_id'])) {
-                $villageId = $citizenData['data']['village_id'];
+            try {
+                $citizenService = app(CitizenService::class);
+                $citizenData = $citizenService->getCitizenByNIK($user->nik);
+                
+                if ($citizenData && isset($citizenData['data']['village_id'])) {
+                    $villageId = $citizenData['data']['village_id'];
+                }
+            } catch (\Exception $e) {
+                \Log::error('Error getting village_id from NIK: ' . $e->getMessage());
             }
         }
 
@@ -76,12 +80,24 @@ class PemerintahDesaController extends Controller
         };
 
         // Statistik penduduk desa dari CitizenService - menggunakan getAllVillageStats untuk optimasi (1 API call instead of 4)
-        $citizenService = app(CitizenService::class);
-        $allStats = $citizenService->getAllVillageStats($villageId);
-        $genderStats = $allStats['gender'] ?? ['male' => 0, 'female' => 0, 'total' => 0];
-        $ageGroupStats = $allStats['age'] ?? ['groups' => ['0_17' => 0, '18_30' => 0, '31_45' => 0, '46_60' => 0, '61_plus' => 0], 'total_with_age' => 0];
-        $educationStats = $allStats['education'] ?? ['groups' => [], 'total_with_education' => 0];
-        $religionStats = $allStats['religion'] ?? ['groups' => [], 'total_with_religion' => 0];
+        try {
+            $citizenService = app(CitizenService::class);
+            $allStats = $citizenService->getAllVillageStats($villageId);
+            $genderStats = $allStats['gender'] ?? ['male' => 0, 'female' => 0, 'total' => 0];
+            $ageGroupStats = $allStats['age'] ?? ['groups' => ['0_17' => 0, '18_30' => 0, '31_45' => 0, '46_60' => 0, '61_plus' => 0], 'total_with_age' => 0];
+            $educationStats = $allStats['education'] ?? ['groups' => [], 'total_with_education' => 0];
+            $religionStats = $allStats['religion'] ?? ['groups' => [], 'total_with_religion' => 0];
+        } catch (\Exception $e) {
+            // Fallback jika terjadi error
+            \Log::error('Error getting village stats: ' . $e->getMessage(), [
+                'village_id' => $villageId,
+                'trace' => $e->getTraceAsString()
+            ]);
+            $genderStats = ['male' => 0, 'female' => 0, 'total' => 0];
+            $ageGroupStats = ['groups' => ['0_17' => 0, '18_30' => 0, '31_45' => 0, '46_60' => 0, '61_plus' => 0], 'total_with_age' => 0];
+            $educationStats = ['groups' => [], 'total_with_education' => 0];
+            $religionStats = ['groups' => [], 'total_with_religion' => 0];
+        }
         
         // Klasifikasi & jenis dari barang warungku milik penduduk di desa tersebut
         $informasiUsahaIds = InformasiUsaha::where('villages_id', $villageId)->pluck('id');
