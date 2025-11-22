@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\BeritaDesa;
+use Illuminate\Support\Facades\Cache;
 
 class AdminBeritaDesaApiController extends Controller
 {
@@ -57,6 +58,10 @@ class AdminBeritaDesaApiController extends Controller
         $validated['villages_id'] = $user->villages_id;
         $validated['status'] = $validated['status'] ?? 'published';
         $berita = BeritaDesa::create($validated);
+        
+        // Clear cache untuk berita desa
+        $this->clearBeritaDesaCache($user->villages_id);
+        
         return response()->json(['success' => true, 'data' => $berita], 201);
     }
 
@@ -84,6 +89,10 @@ class AdminBeritaDesaApiController extends Controller
             'status' => 'nullable|in:archived,published'
         ]);
         $berita->update($validated);
+        
+        // Clear cache untuk berita desa
+        $this->clearBeritaDesaCache($berita->villages_id);
+        
         return response()->json(['success' => true, 'data' => $berita]);
     }
 
@@ -93,7 +102,12 @@ class AdminBeritaDesaApiController extends Controller
         [$ok, $err] = $this->ensureAdminAccess($user);
         if (!$ok) return response()->json(['message' => $err], $err === 'Unauthorized' ? 401 : 403);
         if ((int) $berita->villages_id !== (int) $user->villages_id) return response()->json(['message' => 'Forbidden'], 403);
+        $villageId = $berita->villages_id;
         $berita->delete();
+        
+        // Clear cache untuk berita desa
+        $this->clearBeritaDesaCache($villageId);
+        
         return response()->json(['success' => true]);
     }
 
@@ -105,6 +119,10 @@ class AdminBeritaDesaApiController extends Controller
         if ((int) $berita->villages_id !== (int) $user->villages_id) return response()->json(['message' => 'Forbidden'], 403);
         $berita->status = 'published';
         $berita->save();
+        
+        // Clear cache untuk berita desa
+        $this->clearBeritaDesaCache($berita->villages_id);
+        
         return response()->json(['success' => true, 'data' => $berita]);
     }
 
@@ -116,7 +134,28 @@ class AdminBeritaDesaApiController extends Controller
         if ((int) $berita->villages_id !== (int) $user->villages_id) return response()->json(['message' => 'Forbidden'], 403);
         $berita->status = 'archived';
         $berita->save();
+        
+        // Clear cache untuk berita desa
+        $this->clearBeritaDesaCache($berita->villages_id);
+        
         return response()->json(['success' => true, 'data' => $berita]);
+    }
+
+    /**
+     * Clear cache untuk berita desa berdasarkan village_id
+     */
+    private function clearBeritaDesaCache($villageId)
+    {
+        // Simpan daftar cache keys yang perlu di-clear
+        $cacheKeysList = Cache::get("berita_desa_cache_keys_{$villageId}", []);
+        
+        // Clear semua cache keys yang tersimpan
+        foreach ($cacheKeysList as $key) {
+            Cache::forget($key);
+        }
+        
+        // Reset daftar cache keys
+        Cache::forget("berita_desa_cache_keys_{$villageId}");
     }
 }
 

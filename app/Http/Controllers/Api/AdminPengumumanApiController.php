@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Pengumuman;
+use Illuminate\Support\Facades\Cache;
 
 class AdminPengumumanApiController extends Controller
 {
@@ -57,6 +58,10 @@ class AdminPengumumanApiController extends Controller
         ]);
         $validated['villages_id'] = $user->villages_id;
         $pengumuman = Pengumuman::create($validated);
+        
+        // Clear cache untuk pengumuman
+        $this->clearPengumumanCache($user->villages_id);
+        
         return response()->json(['success' => true, 'data' => $pengumuman], 201);
     }
 
@@ -82,6 +87,10 @@ class AdminPengumumanApiController extends Controller
             'gambar' => 'nullable|string'
         ]);
         $pengumuman->update($validated);
+        
+        // Clear cache untuk pengumuman
+        $this->clearPengumumanCache($pengumuman->villages_id);
+        
         return response()->json(['success' => true, 'data' => $pengumuman]);
     }
 
@@ -91,8 +100,32 @@ class AdminPengumumanApiController extends Controller
         [$ok, $err] = $this->ensureAdminAccess($user);
         if (!$ok) return response()->json(['message' => $err], $err === 'Unauthorized' ? 401 : 403);
         if ((int) $pengumuman->villages_id !== (int) $user->villages_id) return response()->json(['message' => 'Forbidden'], 403);
+        $villageId = $pengumuman->villages_id;
         $pengumuman->delete();
+        
+        // Clear cache untuk pengumuman
+        $this->clearPengumumanCache($villageId);
+        
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * Clear cache untuk pengumuman berdasarkan village_id
+     */
+    private function clearPengumumanCache($villageId)
+    {
+        if (!$villageId) return;
+        
+        // Simpan daftar cache keys yang perlu di-clear
+        $cacheKeysList = Cache::get("pengumuman_cache_keys_{$villageId}", []);
+        
+        // Clear semua cache keys yang tersimpan
+        foreach ($cacheKeysList as $key) {
+            Cache::forget($key);
+        }
+        
+        // Reset daftar cache keys
+        Cache::forget("pengumuman_cache_keys_{$villageId}");
     }
 }
 

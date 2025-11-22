@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use App\Models\AgendaDesa;
+use Illuminate\Support\Facades\Cache;
 
 class AgendaDesaController extends Controller
 {
@@ -48,6 +49,9 @@ class AgendaDesaController extends Controller
         }
 
         $agenda->save();
+
+        // Clear cache untuk agenda desa
+        $this->clearAgendaDesaCache($user->villages_id);
 
         return redirect()->route('admin.desa.agenda.index')->with('success', 'Agenda berhasil dibuat');
     }
@@ -92,6 +96,9 @@ class AgendaDesaController extends Controller
 
         $agenda->save();
 
+        // Clear cache untuk agenda desa
+        $this->clearAgendaDesaCache($agenda->villages_id);
+
         return redirect()->route('admin.desa.agenda.index')->with('success', 'Agenda berhasil diperbarui');
     }
 
@@ -102,8 +109,32 @@ class AgendaDesaController extends Controller
         if ($agenda->gambar && Storage::disk('public')->exists($agenda->gambar)) {
             Storage::disk('public')->delete($agenda->gambar);
         }
+        $villageId = $agenda->villages_id;
         $agenda->delete();
+        
+        // Clear cache untuk agenda desa
+        $this->clearAgendaDesaCache($villageId);
+        
         return redirect()->route('admin.desa.agenda.index')->with('success', 'Agenda berhasil dihapus');
+    }
+
+    /**
+     * Clear cache untuk agenda desa berdasarkan village_id
+     */
+    private function clearAgendaDesaCache($villageId)
+    {
+        if (!$villageId) return;
+        
+        // Simpan daftar cache keys yang perlu di-clear
+        $cacheKeysList = Cache::get("agenda_desa_cache_keys_{$villageId}", []);
+        
+        // Clear semua cache keys yang tersimpan
+        foreach ($cacheKeysList as $key) {
+            Cache::forget($key);
+        }
+        
+        // Reset daftar cache keys
+        Cache::forget("agenda_desa_cache_keys_{$villageId}");
     }
 }
 

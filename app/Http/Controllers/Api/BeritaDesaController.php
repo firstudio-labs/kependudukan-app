@@ -7,6 +7,7 @@ use App\Models\BeritaDesa;
 use Illuminate\Http\Request;
 use App\Services\CitizenService;
 use App\Services\WilayahService;
+use Illuminate\Support\Facades\Cache;
 
 class BeritaDesaController extends Controller
 {
@@ -62,13 +63,24 @@ class BeritaDesaController extends Controller
                 ], 200);
             }
 
+            // Build cache key berdasarkan village_id, search, dan pagination
+            $search = $request->input('search', '');
+            $perPage = $request->input('per_page', 10);
+            $page = $request->input('page', 1);
+            $cacheKey = "berita_desa_index_{$villageId}_{$search}_{$perPage}_{$page}";
+            $useCache = !$request->has('refresh'); // Support ?refresh=1 untuk bypass cache
+
+            // Cek cache terlebih dahulu
+            if ($useCache && Cache::has($cacheKey)) {
+                return response()->json(Cache::get($cacheKey), 200);
+            }
+
             $query = BeritaDesa::query();
             $query->where('villages_id', $villageId)
                   ->where('status', 'published');
 
             // Handle search parameter
-            if ($request->has('search') && !empty($request->search)) {
-                $search = $request->search;
+            if (!empty($search)) {
                 $query->where(function ($q) use ($search) {
                     $q->where('judul', 'like', "%{$search}%")
                         ->orWhere('deskripsi', 'like', "%{$search}%");
@@ -76,7 +88,6 @@ class BeritaDesaController extends Controller
             }
 
             // Handle pagination
-            $perPage = $request->input('per_page', 10);
             $berita = $query->latest()->paginate($perPage);
 
             // Transform data to include gambar_url and wilayah_info
@@ -95,7 +106,7 @@ class BeritaDesaController extends Controller
                 ];
             });
 
-            return response()->json([
+            $response = [
                 'status' => 'success',
                 'data' => $items,
                 'meta' => [
@@ -104,7 +115,19 @@ class BeritaDesaController extends Controller
                     'total' => $berita->total(),
                     'last_page' => $berita->lastPage(),
                 ]
-            ], 200);
+            ];
+
+            // Cache hasil secara permanen (hanya di-clear saat ada perubahan data)
+            Cache::forever($cacheKey, $response);
+            
+            // Simpan cache key ke daftar untuk memudahkan clearing
+            $cacheKeysList = Cache::get("berita_desa_cache_keys_{$villageId}", []);
+            if (!in_array($cacheKey, $cacheKeysList)) {
+                $cacheKeysList[] = $cacheKey;
+                Cache::forever("berita_desa_cache_keys_{$villageId}", $cacheKeysList);
+            }
+
+            return response()->json($response, 200);
 
         } catch (\Exception $e) {
             return response()->json([
@@ -173,6 +196,9 @@ class BeritaDesaController extends Controller
             }
 
             $berita = BeritaDesa::create($data);
+
+            // Clear cache untuk berita desa
+            $this->clearBeritaDesaCache($villageId);
 
             return response()->json([
                 'status' => 'success',
@@ -435,6 +461,21 @@ class BeritaDesaController extends Controller
         return $wilayah;
     }
 
-
+    /**
+     * Clear cache untuk berita desa berdasarkan village_id
+     */
+    private function clearBeritaDesaCache($villageId)
+    {
+        // Simpan daftar cache keys yang perlu di-clear
+        $cacheKeysList = Cache::get("berita_desa_cache_keys_{$villageId}", []);
+        
+        // Clear semua cache keys yang tersimpan
+        foreach ($cacheKeysList as $key) {
+            Cache::forget($key);
+        }
+        
+        // Reset daftar cache keys
+        Cache::forget("berita_desa_cache_keys_{$villageId}");
+    }
 }
 

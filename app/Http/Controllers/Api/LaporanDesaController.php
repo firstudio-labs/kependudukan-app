@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use App\Models\LaporanDesa;
+use Illuminate\Support\Facades\Cache;
 
 class LaporanDesaController extends Controller
 {
@@ -29,6 +30,27 @@ class LaporanDesaController extends Controller
             $tokenOwnerType = $request->attributes->get('token_owner_type');
             $tokenOwnerRole = $request->attributes->get('token_owner_role');
 
+            // Build cache key berdasarkan user dan filter
+            $userId = $tokenOwner->id;
+            $villageId = $tokenOwner->villages_id ?? null;
+            $search = $request->input('search', '');
+            $perPage = $request->input('per_page', 10);
+            $page = $request->input('page', 1);
+            
+            // Cache key berbeda untuk penduduk vs admin
+            if ($tokenOwnerType === 'penduduk') {
+                $cacheKey = "laporan_desa_index_user_{$userId}_{$search}_{$perPage}_{$page}";
+            } else {
+                $cacheKey = "laporan_desa_index_village_{$villageId}_{$search}_{$perPage}_{$page}";
+            }
+            
+            $useCache = !$request->has('refresh'); // Support ?refresh=1 untuk bypass cache
+
+            // Cek cache terlebih dahulu
+            if ($useCache && Cache::has($cacheKey)) {
+                return response()->json(Cache::get($cacheKey), 200);
+            }
+
             $query = LaporanDesa::query();
 
             // Filter based on user role and type
@@ -41,8 +63,7 @@ class LaporanDesaController extends Controller
             }
 
             // Handle search parameter
-            if ($request->has('search') && !empty($request->search)) {
-                $search = $request->search;
+            if (!empty($search)) {
                 $query->where(function ($q) use ($search) {
                     $q->where('judul_laporan', 'like', "%{$search}%")
                         ->orWhere('deskripsi_laporan', 'like', "%{$search}%");
@@ -50,9 +71,6 @@ class LaporanDesaController extends Controller
             }
 
             // Handle pagination
-            $perPage = $request->input('per_page', 10);
-            $page = $request->input('page', 1);
-
             $laporans = $query->orderBy('created_at', 'desc')->paginate($perPage);
 
             // Add gambar_url to each laporan item
@@ -63,10 +81,30 @@ class LaporanDesaController extends Controller
                 return $laporan;
             });
 
-            return response()->json([
+            $response = [
                 'status' => 'success',
                 'data' => $items,
-            ]);
+            ];
+
+            // Cache hasil secara permanen (hanya di-clear saat ada perubahan data)
+            Cache::forever($cacheKey, $response);
+            
+            // Simpan cache key ke daftar untuk memudahkan clearing
+            if ($tokenOwnerType === 'penduduk') {
+                $cacheKeysList = Cache::get("laporan_desa_cache_keys_user_{$userId}", []);
+                if (!in_array($cacheKey, $cacheKeysList)) {
+                    $cacheKeysList[] = $cacheKey;
+                    Cache::forever("laporan_desa_cache_keys_user_{$userId}", $cacheKeysList);
+                }
+            } elseif ($villageId) {
+                $cacheKeysList = Cache::get("laporan_desa_cache_keys_village_{$villageId}", []);
+                if (!in_array($cacheKey, $cacheKeysList)) {
+                    $cacheKeysList[] = $cacheKey;
+                    Cache::forever("laporan_desa_cache_keys_village_{$villageId}", $cacheKeysList);
+                }
+            }
+
+            return response()->json($response);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
@@ -177,6 +215,9 @@ class LaporanDesaController extends Controller
             $data['status'] = 'Menunggu';
 
             $laporanDesa = LaporanDesa::create($data);
+
+            // Clear cache untuk user dan village
+            $this->clearLaporanDesaCache($tokenOwner->id, $data['village_id'] ?? null);
 
             // Add gambar_url if image exists
             if ($laporanDesa->gambar) {
@@ -368,6 +409,9 @@ class LaporanDesaController extends Controller
 
             $laporanDesa->update($data);
 
+            // Clear cache untuk user dan village
+            $this->clearLaporanDesaCache($tokenOwner->id, $laporanDesa->village_id);
+
             // Return the updated model with relative path format for gambar
             $updatedLaporan = $laporanDesa->fresh();
 
@@ -428,7 +472,13 @@ class LaporanDesaController extends Controller
                 Storage::delete('public/' . $laporanDesa->gambar);
             }
 
+            $userId = $laporanDesa->user_id;
+            $villageId = $laporanDesa->village_id;
+            
             $laporanDesa->delete();
+
+            // Clear cache untuk user dan village
+            $this->clearLaporanDesaCache($userId, $villageId);
 
             return response()->json([
                 'status' => 'success',
@@ -445,6 +495,28 @@ class LaporanDesaController extends Controller
                 'status' => 'error',
                 'message' => 'Failed to delete report: ' . $e->getMessage()
             ], 500);
+        }
+    }
+
+    /**
+     * Clear cache untuk laporan desa berdasarkan user_id dan village_id
+     */
+    private function clearLaporanDesaCache($userId, $villageId = null)
+    {
+        // Clear cache untuk user
+        $userCacheKeys = Cache::get("laporan_desa_cache_keys_user_{$userId}", []);
+        foreach ($userCacheKeys as $key) {
+            Cache::forget($key);
+        }
+        Cache::forget("laporan_desa_cache_keys_user_{$userId}");
+
+        // Clear cache untuk village (jika ada)
+        if ($villageId) {
+            $villageCacheKeys = Cache::get("laporan_desa_cache_keys_village_{$villageId}", []);
+            foreach ($villageCacheKeys as $key) {
+                Cache::forget($key);
+            }
+            Cache::forget("laporan_desa_cache_keys_village_{$villageId}");
         }
     }
 
