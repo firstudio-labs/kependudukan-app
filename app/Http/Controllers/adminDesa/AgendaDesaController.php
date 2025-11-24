@@ -8,9 +8,32 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use App\Models\AgendaDesa;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class AgendaDesaController extends Controller
 {
+    protected $cacheStore;
+
+    public function __construct()
+    {
+        $this->cacheStore = $this->getCacheStore();
+    }
+
+    /**
+     * Get cache store - prefer Redis jika tersedia, fallback ke default
+     */
+    private function getCacheStore()
+    {
+        try {
+            if (config('cache.default') === 'redis' || config('cache.stores.redis')) {
+                return Cache::store('redis');
+            }
+        } catch (\Exception $e) {
+            Log::warning('Redis tidak tersedia, menggunakan default cache: ' . $e->getMessage());
+        }
+        return Cache::store(config('cache.default', 'file'));
+    }
+
     public function index()
     {
         $user = Auth::user();
@@ -126,15 +149,15 @@ class AgendaDesaController extends Controller
         if (!$villageId) return;
         
         // Simpan daftar cache keys yang perlu di-clear
-        $cacheKeysList = Cache::get("agenda_desa_cache_keys_{$villageId}", []);
+        $cacheKeysList = $this->cacheStore->get("agenda_desa_cache_keys_{$villageId}", []);
         
         // Clear semua cache keys yang tersimpan
         foreach ($cacheKeysList as $key) {
-            Cache::forget($key);
+            $this->cacheStore->forget($key);
         }
         
         // Reset daftar cache keys
-        Cache::forget("agenda_desa_cache_keys_{$villageId}");
+        $this->cacheStore->forget("agenda_desa_cache_keys_{$villageId}");
     }
 }
 

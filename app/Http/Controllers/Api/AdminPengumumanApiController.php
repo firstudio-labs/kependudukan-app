@@ -7,9 +7,32 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Pengumuman;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class AdminPengumumanApiController extends Controller
 {
+    protected $cacheStore;
+
+    public function __construct()
+    {
+        $this->cacheStore = $this->getCacheStore();
+    }
+
+    /**
+     * Get cache store - prefer Redis jika tersedia, fallback ke default
+     */
+    private function getCacheStore()
+    {
+        try {
+            if (config('cache.default') === 'redis' || config('cache.stores.redis')) {
+                return Cache::store('redis');
+            }
+        } catch (\Exception $e) {
+            Log::warning('Redis tidak tersedia, menggunakan default cache: ' . $e->getMessage());
+        }
+        return Cache::store(config('cache.default', 'file'));
+    }
+
     private function getAdminUser(Request $request)
     {
         return $request->attributes->get('token_owner') ?? Auth::guard('web')->user();
@@ -117,15 +140,15 @@ class AdminPengumumanApiController extends Controller
         if (!$villageId) return;
         
         // Simpan daftar cache keys yang perlu di-clear
-        $cacheKeysList = Cache::get("pengumuman_cache_keys_{$villageId}", []);
+        $cacheKeysList = $this->cacheStore->get("pengumuman_cache_keys_{$villageId}", []);
         
         // Clear semua cache keys yang tersimpan
         foreach ($cacheKeysList as $key) {
-            Cache::forget($key);
+            $this->cacheStore->forget($key);
         }
         
         // Reset daftar cache keys
-        Cache::forget("pengumuman_cache_keys_{$villageId}");
+        $this->cacheStore->forget("pengumuman_cache_keys_{$villageId}");
     }
 }
 

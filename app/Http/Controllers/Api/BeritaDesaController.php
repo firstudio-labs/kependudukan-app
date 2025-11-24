@@ -8,14 +8,35 @@ use Illuminate\Http\Request;
 use App\Services\CitizenService;
 use App\Services\WilayahService;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class BeritaDesaController extends Controller
 {
     protected $wilayahService;
+    protected $cacheStore;
 
     public function __construct(WilayahService $wilayahService)
     {
         $this->wilayahService = $wilayahService;
+        $this->cacheStore = $this->getCacheStore();
+    }
+
+    /**
+     * Get cache store - prefer Redis jika tersedia, fallback ke default
+     */
+    private function getCacheStore()
+    {
+        try {
+            // Coba gunakan Redis jika tersedia
+            if (config('cache.default') === 'redis' || config('cache.stores.redis')) {
+                return Cache::store('redis');
+            }
+        } catch (\Exception $e) {
+            Log::warning('Redis tidak tersedia, menggunakan default cache: ' . $e->getMessage());
+        }
+        
+        // Fallback ke default cache store
+        return Cache::store(config('cache.default', 'file'));
     }
 
     public function index(Request $request, CitizenService $citizenService)
@@ -70,9 +91,9 @@ class BeritaDesaController extends Controller
             $cacheKey = "berita_desa_index_{$villageId}_{$search}_{$perPage}_{$page}";
             $useCache = !$request->has('refresh'); // Support ?refresh=1 untuk bypass cache
 
-            // Cek cache terlebih dahulu
-            if ($useCache && Cache::has($cacheKey)) {
-                return response()->json(Cache::get($cacheKey), 200);
+            // Gunakan cache store yang optimal (Redis jika tersedia)
+            if ($useCache && $this->cacheStore->has($cacheKey)) {
+                return response()->json($this->cacheStore->get($cacheKey), 200);
             }
 
             $query = BeritaDesa::query();
@@ -87,11 +108,19 @@ class BeritaDesaController extends Controller
                 });
             }
 
-            // Handle pagination
-            $berita = $query->latest()->paginate($perPage);
+            // Handle pagination - optimasi dengan select spesifik
+            $berita = $query->select([
+                'id', 'judul', 'deskripsi', 'komentar', 'gambar',
+                'user_id', 'villages_id', 'province_id', 'districts_id', 
+                'sub_districts_id', 'created_at', 'updated_at'
+            ])->latest()->paginate($perPage);
 
-            // Transform data to include gambar_url and wilayah_info
-            $items = collect($berita->items())->map(function ($item) {
+            // Pre-load semua wilayah info yang dibutuhkan untuk menghindari API call berulang
+            $wilayahInfoCache = $this->preloadWilayahInfo($berita->items());
+
+            // Transform data to include gambar_url and wilayah_info (dari cache)
+            $items = collect($berita->items())->map(function ($item) use ($wilayahInfoCache) {
+                $wilayahKey = "{$item->province_id}_{$item->districts_id}_{$item->sub_districts_id}_{$item->villages_id}";
                 return [
                     'id' => $item->id,
                     'judul' => $item->judul,
@@ -100,7 +129,7 @@ class BeritaDesaController extends Controller
                     'gambar' => $item->gambar,
                     'gambar_url' => $item->gambar_url, // URL lengkap gambar
                     'user_id' => $item->user_id,
-                    'wilayah_info' => $this->getWilayahInfo($item), // Added wilayah info
+                    'wilayah_info' => $wilayahInfoCache[$wilayahKey] ?? [], // Dari cache yang sudah di-preload
                     'created_at' => $item->created_at,
                     'updated_at' => $item->updated_at,
                 ];
@@ -117,14 +146,14 @@ class BeritaDesaController extends Controller
                 ]
             ];
 
-            // Cache hasil secara permanen (hanya di-clear saat ada perubahan data)
-            Cache::forever($cacheKey, $response);
+            // Cache hasil secara permanen menggunakan cache store optimal (hanya di-clear saat ada perubahan data)
+            $this->cacheStore->forever($cacheKey, $response);
             
             // Simpan cache key ke daftar untuk memudahkan clearing
-            $cacheKeysList = Cache::get("berita_desa_cache_keys_{$villageId}", []);
+            $cacheKeysList = $this->cacheStore->get("berita_desa_cache_keys_{$villageId}", []);
             if (!in_array($cacheKey, $cacheKeysList)) {
                 $cacheKeysList[] = $cacheKey;
-                Cache::forever("berita_desa_cache_keys_{$villageId}", $cacheKeysList);
+                $this->cacheStore->forever("berita_desa_cache_keys_{$villageId}", $cacheKeysList);
             }
 
             return response()->json($response, 200);
@@ -328,135 +357,198 @@ class BeritaDesaController extends Controller
     }
 
     /**
-     * Get wilayah information for a berita
+     * Pre-load semua wilayah info yang dibutuhkan untuk menghindari API call berulang
+     * Menggunakan cache permanen untuk setiap kombinasi wilayah
      */
-    private function getWilayahInfo($berita)
+    private function preloadWilayahInfo($items)
+    {
+        $wilayahInfoCache = [];
+        $uniqueWilayahKeys = [];
+        
+        // Kumpulkan semua kombinasi wilayah yang unik
+        foreach ($items as $item) {
+            $key = "{$item->province_id}_{$item->districts_id}_{$item->sub_districts_id}_{$item->villages_id}";
+            if (!in_array($key, $uniqueWilayahKeys)) {
+                $uniqueWilayahKeys[] = $key;
+            }
+        }
+        
+        // Load dari cache atau build untuk setiap kombinasi unik
+        foreach ($uniqueWilayahKeys as $key) {
+            $cacheKey = "wilayah_info_{$key}";
+            
+            // Cek cache terlebih dahulu menggunakan cache store optimal
+            if ($this->cacheStore->has($cacheKey)) {
+                $wilayahInfoCache[$key] = $this->cacheStore->get($cacheKey);
+                continue;
+            }
+            
+            // Parse key untuk mendapatkan IDs
+            $parts = explode('_', $key);
+            $provinceId = $parts[0] ?? null;
+            $districtId = $parts[1] ?? null;
+            $subDistrictId = $parts[2] ?? null;
+            $villageId = $parts[3] ?? null;
+            
+            // Build wilayah info dengan cache untuk setiap level
+            $wilayah = $this->buildWilayahInfoCached($provinceId, $districtId, $subDistrictId, $villageId);
+            
+            // Cache hasil secara permanen menggunakan cache store optimal
+            $this->cacheStore->forever($cacheKey, $wilayah);
+            $wilayahInfoCache[$key] = $wilayah;
+        }
+        
+        return $wilayahInfoCache;
+    }
+
+    /**
+     * Build wilayah info dengan cache untuk setiap level (optimasi)
+     * Menggunakan cache store optimal (Redis jika tersedia)
+     */
+    private function buildWilayahInfoCached($provinceId, $districtId, $subDistrictId, $villageId)
     {
         $wilayah = [];
         
-        // Always set fallback first for safety
-        if ($berita->province_id) {
-            $wilayah['provinsi'] = 'Provinsi ID: ' . $berita->province_id;
-            
-            try {
-                $provinces = $this->wilayahService->getProvinces();
-                // Perbaikan: Gunakan 'id' field, bukan 'code' field
-                $province = collect($provinces)->firstWhere('id', (int) $berita->province_id);
-                if ($province && isset($province['name'])) {
-                    $wilayah['provinsi'] = $province['name'];
+        // Cache provinces (sangat jarang berubah) - cache sekali untuk semua
+        if ($provinceId) {
+            $provinceCacheKey = "wilayah_province_{$provinceId}";
+            if ($this->cacheStore->has($provinceCacheKey)) {
+                $wilayah['provinsi'] = $this->cacheStore->get($provinceCacheKey);
+            } else {
+                try {
+                    $provinces = $this->wilayahService->getProvinces();
+                    $province = collect($provinces)->firstWhere('id', (int) $provinceId);
+                    $provinceName = $province['name'] ?? "Provinsi ID: {$provinceId}";
+                    $this->cacheStore->forever($provinceCacheKey, $provinceName);
+                    $wilayah['provinsi'] = $provinceName;
+                } catch (\Exception $e) {
+                    $wilayah['provinsi'] = "Provinsi ID: {$provinceId}";
                 }
-            } catch (\Exception $e) {
-                // Fallback already set, no need to change
             }
         }
         
-        if ($berita->districts_id) {
-            $wilayah['kabupaten'] = 'Kabupaten ID: ' . $berita->districts_id;
-            
-            try {
-                if ($berita->province_id) {
-                    // Cari province dulu untuk mendapatkan code yang benar
+        // Cache kabupaten
+        if ($districtId && $provinceId) {
+            $districtCacheKey = "wilayah_district_{$districtId}";
+            if ($this->cacheStore->has($districtCacheKey)) {
+                $wilayah['kabupaten'] = $this->cacheStore->get($districtCacheKey);
+            } else {
+                try {
                     $provinces = $this->wilayahService->getProvinces();
-                    if (is_array($provinces) && !empty($provinces)) {
-                        $provinceData = collect($provinces)->firstWhere('id', (int) $berita->province_id);
-                        
-                        if ($provinceData && isset($provinceData['code'])) {
-                            $kabupaten = $this->wilayahService->getKabupaten($provinceData['code']);
-                            if (is_array($kabupaten) && !empty($kabupaten)) {
-                                // Perbaikan: Gunakan 'id' field, bukan 'code' field
-                                $kabupatenData = collect($kabupaten)->firstWhere('id', (int) $berita->districts_id);
-                                
-                                if ($kabupatenData && isset($kabupatenData['name'])) {
-                                    $wilayah['kabupaten'] = $kabupatenData['name'];
-                                }
-                            }
-                        }
+                    $provinceData = collect($provinces)->firstWhere('id', (int) $provinceId);
+                    
+                    if ($provinceData && isset($provinceData['code'])) {
+                        $kabupaten = $this->wilayahService->getKabupaten($provinceData['code']);
+                        $kabupatenData = collect($kabupaten)->firstWhere('id', (int) $districtId);
+                        $districtName = $kabupatenData['name'] ?? "Kabupaten ID: {$districtId}";
+                        $this->cacheStore->forever($districtCacheKey, $districtName);
+                        $wilayah['kabupaten'] = $districtName;
+                    } else {
+                        $wilayah['kabupaten'] = "Kabupaten ID: {$districtId}";
                     }
+                } catch (\Exception $e) {
+                    $wilayah['kabupaten'] = "Kabupaten ID: {$districtId}";
                 }
-            } catch (\Exception $e) {
-                // Fallback already set, no need to change
             }
         }
         
-        if ($berita->sub_districts_id) {
-            $wilayah['kecamatan'] = 'Kecamatan ID: ' . $berita->sub_districts_id;
-            
-            try {
-                if ($berita->districts_id && $berita->province_id) {
-                    // Cari province dulu untuk mendapatkan code yang benar
+        // Cache kecamatan
+        if ($subDistrictId && $districtId && $provinceId) {
+            $subDistrictCacheKey = "wilayah_subdistrict_{$subDistrictId}";
+            if ($this->cacheStore->has($subDistrictCacheKey)) {
+                $wilayah['kecamatan'] = $this->cacheStore->get($subDistrictCacheKey);
+            } else {
+                try {
                     $provinces = $this->wilayahService->getProvinces();
-                    if (is_array($provinces) && !empty($provinces)) {
-                        $provinceData = collect($provinces)->firstWhere('id', (int) $berita->province_id);
+                    $provinceData = collect($provinces)->firstWhere('id', (int) $provinceId);
+                    
+                    if ($provinceData && isset($provinceData['code'])) {
+                        $kabupaten = $this->wilayahService->getKabupaten($provinceData['code']);
+                        $kabupatenData = collect($kabupaten)->firstWhere('id', (int) $districtId);
                         
-                        if ($provinceData && isset($provinceData['code'])) {
-                            $kabupaten = $this->wilayahService->getKabupaten($provinceData['code']);
-                            if (is_array($kabupaten) && !empty($kabupaten)) {
-                                // Perbaikan: Gunakan 'id' field, bukan 'code' field
-                                $kabupatenData = collect($kabupaten)->firstWhere('id', (int) $berita->districts_id);
-                                
-                                if ($kabupatenData && isset($kabupatenData['code'])) {
-                                    $kecamatan = $this->wilayahService->getKecamatan($kabupatenData['code']);
-                                    if (is_array($kecamatan) && !empty($kecamatan)) {
-                                        // Perbaikan: Gunakan 'id' field, bukan 'code' field
-                                        $kecamatanData = collect($kecamatan)->firstWhere('id', (int) $berita->sub_districts_id);
-                                        
-                                        if ($kecamatanData && isset($kecamatanData['name'])) {
-                                            $wilayah['kecamatan'] = $kecamatanData['name'];
-                                        }
-                                    }
-                                }
-                            }
+                        if ($kabupatenData && isset($kabupatenData['code'])) {
+                            $kecamatan = $this->wilayahService->getKecamatan($kabupatenData['code']);
+                            $kecamatanData = collect($kecamatan)->firstWhere('id', (int) $subDistrictId);
+                            $subDistrictName = $kecamatanData['name'] ?? "Kecamatan ID: {$subDistrictId}";
+                            $this->cacheStore->forever($subDistrictCacheKey, $subDistrictName);
+                            $wilayah['kecamatan'] = $subDistrictName;
+                        } else {
+                            $wilayah['kecamatan'] = "Kecamatan ID: {$subDistrictId}";
                         }
+                    } else {
+                        $wilayah['kecamatan'] = "Kecamatan ID: {$subDistrictId}";
                     }
+                } catch (\Exception $e) {
+                    $wilayah['kecamatan'] = "Kecamatan ID: {$subDistrictId}";
                 }
-            } catch (\Exception $e) {
-                // Fallback already set, no need to change
             }
         }
         
-        if ($berita->villages_id) {
-            $wilayah['desa'] = 'Desa ID: ' . $berita->villages_id;
-            
-            try {
-                if ($berita->sub_districts_id && $berita->districts_id && $berita->province_id) {
-                    // Cari province dulu untuk mendapatkan code yang benar
+        // Cache desa
+        if ($villageId && $subDistrictId && $districtId && $provinceId) {
+            $villageCacheKey = "wilayah_village_{$villageId}";
+            if ($this->cacheStore->has($villageCacheKey)) {
+                $wilayah['desa'] = $this->cacheStore->get($villageCacheKey);
+            } else {
+                try {
                     $provinces = $this->wilayahService->getProvinces();
-                    if (is_array($provinces) && !empty($provinces)) {
-                        $provinceData = collect($provinces)->firstWhere('id', (int) $berita->province_id);
+                    $provinceData = collect($provinces)->firstWhere('id', (int) $provinceId);
+                    
+                    if ($provinceData && isset($provinceData['code'])) {
+                        $kabupaten = $this->wilayahService->getKabupaten($provinceData['code']);
+                        $kabupatenData = collect($kabupaten)->firstWhere('id', (int) $districtId);
                         
-                        if ($provinceData && isset($provinceData['code'])) {
-                            $kabupaten = $this->wilayahService->getKabupaten($provinceData['code']);
-                            if (is_array($kabupaten) && !empty($kabupaten)) {
-                                // Perbaikan: Gunakan 'id' field, bukan 'code' field
-                                $kabupatenData = collect($kabupaten)->firstWhere('id', (int) $berita->districts_id);
-                                
-                                if ($kabupatenData && isset($kabupatenData['code'])) {
-                                    $kecamatan = $this->wilayahService->getKecamatan($kabupatenData['code']);
-                                    if (is_array($kecamatan) && !empty($kecamatan)) {
-                                        // Perbaikan: Gunakan 'id' field, bukan 'code' field
-                                        $kecamatanData = collect($kecamatan)->firstWhere('id', (int) $berita->sub_districts_id);
-                                        
-                                        if ($kecamatanData && isset($kecamatanData['code'])) {
-                                            $desa = $this->wilayahService->getDesa($kecamatanData['code']);
-                                            if (is_array($desa) && !empty($desa)) {
-                                                // Perbaikan: Gunakan 'id' field, bukan 'code' field
-                                                $desaData = collect($desa)->firstWhere('id', (int) $berita->villages_id);
-                                                
-                                                if ($desaData && isset($desaData['name'])) {
-                                                    $wilayah['desa'] = $desaData['name'];
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
+                        if ($kabupatenData && isset($kabupatenData['code'])) {
+                            $kecamatan = $this->wilayahService->getKecamatan($kabupatenData['code']);
+                            $kecamatanData = collect($kecamatan)->firstWhere('id', (int) $subDistrictId);
+                            
+                            if ($kecamatanData && isset($kecamatanData['code'])) {
+                                $desa = $this->wilayahService->getDesa($kecamatanData['code']);
+                                $desaData = collect($desa)->firstWhere('id', (int) $villageId);
+                                $villageName = $desaData['name'] ?? "Desa ID: {$villageId}";
+                                $this->cacheStore->forever($villageCacheKey, $villageName);
+                                $wilayah['desa'] = $villageName;
+                            } else {
+                                $wilayah['desa'] = "Desa ID: {$villageId}";
                             }
+                        } else {
+                            $wilayah['desa'] = "Desa ID: {$villageId}";
                         }
+                    } else {
+                        $wilayah['desa'] = "Desa ID: {$villageId}";
                     }
+                } catch (\Exception $e) {
+                    $wilayah['desa'] = "Desa ID: {$villageId}";
                 }
-            } catch (\Exception $e) {
-                // Fallback already set, no need to change
             }
         }
+        
+        return $wilayah;
+    }
+
+    /**
+     * Get wilayah information for a berita (untuk single item, tetap menggunakan cache)
+     */
+    private function getWilayahInfo($berita)
+    {
+        $key = "{$berita->province_id}_{$berita->districts_id}_{$berita->sub_districts_id}_{$berita->villages_id}";
+        $cacheKey = "wilayah_info_{$key}";
+        
+        // Cek cache terlebih dahulu menggunakan cache store optimal
+        if ($this->cacheStore->has($cacheKey)) {
+            return $this->cacheStore->get($cacheKey);
+        }
+        
+        // Build dan cache
+        $wilayah = $this->buildWilayahInfoCached(
+            $berita->province_id,
+            $berita->districts_id,
+            $berita->sub_districts_id,
+            $berita->villages_id
+        );
+        
+        // Cache hasil secara permanen menggunakan cache store optimal
+        $this->cacheStore->forever($cacheKey, $wilayah);
         
         return $wilayah;
     }
@@ -467,15 +559,15 @@ class BeritaDesaController extends Controller
     private function clearBeritaDesaCache($villageId)
     {
         // Simpan daftar cache keys yang perlu di-clear
-        $cacheKeysList = Cache::get("berita_desa_cache_keys_{$villageId}", []);
+        $cacheKeysList = $this->cacheStore->get("berita_desa_cache_keys_{$villageId}", []);
         
         // Clear semua cache keys yang tersimpan
         foreach ($cacheKeysList as $key) {
-            Cache::forget($key);
+            $this->cacheStore->forget($key);
         }
         
         // Reset daftar cache keys
-        Cache::forget("berita_desa_cache_keys_{$villageId}");
+        $this->cacheStore->forget("berita_desa_cache_keys_{$villageId}");
     }
 }
 

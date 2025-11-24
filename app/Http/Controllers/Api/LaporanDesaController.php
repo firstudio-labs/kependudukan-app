@@ -14,6 +14,27 @@ use Illuminate\Support\Facades\Cache;
 
 class LaporanDesaController extends Controller
 {
+    protected $cacheStore;
+
+    public function __construct()
+    {
+        $this->cacheStore = $this->getCacheStore();
+    }
+
+    /**
+     * Get cache store - prefer Redis jika tersedia, fallback ke default
+     */
+    private function getCacheStore()
+    {
+        try {
+            if (config('cache.default') === 'redis' || config('cache.stores.redis')) {
+                return Cache::store('redis');
+            }
+        } catch (\Exception $e) {
+            Log::warning('Redis tidak tersedia, menggunakan default cache: ' . $e->getMessage());
+        }
+        return Cache::store(config('cache.default', 'file'));
+    }
 
     public function index(Request $request)
     {
@@ -46,12 +67,17 @@ class LaporanDesaController extends Controller
             
             $useCache = !$request->has('refresh'); // Support ?refresh=1 untuk bypass cache
 
-            // Cek cache terlebih dahulu
-            if ($useCache && Cache::has($cacheKey)) {
-                return response()->json(Cache::get($cacheKey), 200);
+            // Cek cache terlebih dahulu menggunakan cache store optimal
+            if ($useCache && $this->cacheStore->has($cacheKey)) {
+                return response()->json($this->cacheStore->get($cacheKey), 200);
             }
 
-            $query = LaporanDesa::query();
+            // Optimasi query dengan select spesifik
+            $query = LaporanDesa::query()->select([
+                'id', 'user_id', 'village_id', 'lapor_desa_id', 'judul_laporan', 
+                'deskripsi_laporan', 'gambar', 'lokasi', 'tag_lokasi', 'status', 
+                'created_at', 'updated_at'
+            ]);
 
             // Filter based on user role and type
             if ($tokenOwnerType === 'penduduk') {
@@ -86,21 +112,21 @@ class LaporanDesaController extends Controller
                 'data' => $items,
             ];
 
-            // Cache hasil secara permanen (hanya di-clear saat ada perubahan data)
-            Cache::forever($cacheKey, $response);
+            // Cache hasil secara permanen menggunakan cache store optimal (hanya di-clear saat ada perubahan data)
+            $this->cacheStore->forever($cacheKey, $response);
             
             // Simpan cache key ke daftar untuk memudahkan clearing
             if ($tokenOwnerType === 'penduduk') {
-                $cacheKeysList = Cache::get("laporan_desa_cache_keys_user_{$userId}", []);
+                $cacheKeysList = $this->cacheStore->get("laporan_desa_cache_keys_user_{$userId}", []);
                 if (!in_array($cacheKey, $cacheKeysList)) {
                     $cacheKeysList[] = $cacheKey;
-                    Cache::forever("laporan_desa_cache_keys_user_{$userId}", $cacheKeysList);
+                    $this->cacheStore->forever("laporan_desa_cache_keys_user_{$userId}", $cacheKeysList);
                 }
             } elseif ($villageId) {
-                $cacheKeysList = Cache::get("laporan_desa_cache_keys_village_{$villageId}", []);
+                $cacheKeysList = $this->cacheStore->get("laporan_desa_cache_keys_village_{$villageId}", []);
                 if (!in_array($cacheKey, $cacheKeysList)) {
                     $cacheKeysList[] = $cacheKey;
-                    Cache::forever("laporan_desa_cache_keys_village_{$villageId}", $cacheKeysList);
+                    $this->cacheStore->forever("laporan_desa_cache_keys_village_{$villageId}", $cacheKeysList);
                 }
             }
 
@@ -504,19 +530,19 @@ class LaporanDesaController extends Controller
     private function clearLaporanDesaCache($userId, $villageId = null)
     {
         // Clear cache untuk user
-        $userCacheKeys = Cache::get("laporan_desa_cache_keys_user_{$userId}", []);
+        $userCacheKeys = $this->cacheStore->get("laporan_desa_cache_keys_user_{$userId}", []);
         foreach ($userCacheKeys as $key) {
-            Cache::forget($key);
+            $this->cacheStore->forget($key);
         }
-        Cache::forget("laporan_desa_cache_keys_user_{$userId}");
+        $this->cacheStore->forget("laporan_desa_cache_keys_user_{$userId}");
 
         // Clear cache untuk village (jika ada)
         if ($villageId) {
-            $villageCacheKeys = Cache::get("laporan_desa_cache_keys_village_{$villageId}", []);
+            $villageCacheKeys = $this->cacheStore->get("laporan_desa_cache_keys_village_{$villageId}", []);
             foreach ($villageCacheKeys as $key) {
-                Cache::forget($key);
+                $this->cacheStore->forget($key);
             }
-            Cache::forget("laporan_desa_cache_keys_village_{$villageId}");
+            $this->cacheStore->forget("laporan_desa_cache_keys_village_{$villageId}");
         }
     }
 

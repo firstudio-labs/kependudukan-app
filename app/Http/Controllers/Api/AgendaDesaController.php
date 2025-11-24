@@ -7,9 +7,32 @@ use App\Models\AgendaDesa;
 use App\Services\CitizenService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class AgendaDesaController extends Controller
 {
+    protected $cacheStore;
+
+    public function __construct()
+    {
+        $this->cacheStore = $this->getCacheStore();
+    }
+
+    /**
+     * Get cache store - prefer Redis jika tersedia, fallback ke default
+     */
+    private function getCacheStore()
+    {
+        try {
+            if (config('cache.default') === 'redis' || config('cache.stores.redis')) {
+                return Cache::store('redis');
+            }
+        } catch (\Exception $e) {
+            Log::warning('Redis tidak tersedia, menggunakan default cache: ' . $e->getMessage());
+        }
+        return Cache::store(config('cache.default', 'file'));
+    }
+
     public function index(Request $request, CitizenService $citizenService)
     {
         try {
@@ -30,12 +53,17 @@ class AgendaDesaController extends Controller
             $cacheKey = "agenda_desa_index_{$villageId}_{$search}_{$perPage}_{$page}";
             $useCache = !$request->has('refresh'); // Support ?refresh=1 untuk bypass cache
 
-            // Cek cache terlebih dahulu
-            if ($useCache && Cache::has($cacheKey)) {
-                return response()->json(Cache::get($cacheKey), 200);
+            // Cek cache terlebih dahulu menggunakan cache store optimal
+            if ($useCache && $this->cacheStore->has($cacheKey)) {
+                return response()->json($this->cacheStore->get($cacheKey), 200);
             }
 
-            $query = AgendaDesa::query();
+            // Optimasi query dengan select spesifik
+            $query = AgendaDesa::query()->select([
+                'id', 'judul', 'deskripsi', 'alamat', 'tag_lokasi', 'gambar', 
+                'villages_id', 'created_at', 'updated_at'
+            ]);
+            
             if ($villageId) {
                 $query->where('villages_id', (int) $villageId);
             }
@@ -76,15 +104,15 @@ class AgendaDesaController extends Controller
                 ]
             ];
 
-            // Cache hasil secara permanen (hanya di-clear saat ada perubahan data)
-            Cache::forever($cacheKey, $response);
+            // Cache hasil secara permanen menggunakan cache store optimal (hanya di-clear saat ada perubahan data)
+            $this->cacheStore->forever($cacheKey, $response);
             
             // Simpan cache key ke daftar untuk memudahkan clearing
             if ($villageId) {
-                $cacheKeysList = Cache::get("agenda_desa_cache_keys_{$villageId}", []);
+                $cacheKeysList = $this->cacheStore->get("agenda_desa_cache_keys_{$villageId}", []);
                 if (!in_array($cacheKey, $cacheKeysList)) {
                     $cacheKeysList[] = $cacheKey;
-                    Cache::forever("agenda_desa_cache_keys_{$villageId}", $cacheKeysList);
+                    $this->cacheStore->forever("agenda_desa_cache_keys_{$villageId}", $cacheKeysList);
                 }
             }
 
@@ -102,15 +130,15 @@ class AgendaDesaController extends Controller
         if (!$villageId) return;
         
         // Simpan daftar cache keys yang perlu di-clear
-        $cacheKeysList = Cache::get("agenda_desa_cache_keys_{$villageId}", []);
+        $cacheKeysList = $this->cacheStore->get("agenda_desa_cache_keys_{$villageId}", []);
         
         // Clear semua cache keys yang tersimpan
         foreach ($cacheKeysList as $key) {
-            Cache::forget($key);
+            $this->cacheStore->forget($key);
         }
         
         // Reset daftar cache keys
-        Cache::forget("agenda_desa_cache_keys_{$villageId}");
+        $this->cacheStore->forget("agenda_desa_cache_keys_{$villageId}");
     }
 
     public function show(Request $request, $id, CitizenService $citizenService)
