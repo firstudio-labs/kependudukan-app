@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\PreloadCacheJob;
 use App\Models\Pengumuman;
 use App\Services\CitizenService;
 use Illuminate\Http\Request;
@@ -135,6 +136,8 @@ class PengumumanController extends Controller
         
         // Reset daftar cache keys
         $this->cacheStore->forget("pengumuman_cache_keys_{$villageId}");
+
+        PreloadCacheJob::dispatch('pengumuman', (int) $villageId)->delay(now()->addSeconds(5));
     }
 
     public function show(Request $request, $id, CitizenService $citizenService)

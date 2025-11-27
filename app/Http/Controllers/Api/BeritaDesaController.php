@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\PreloadCacheJob;
 use App\Models\BeritaDesa;
 use Illuminate\Http\Request;
 use App\Services\CitizenService;
@@ -568,6 +569,9 @@ class BeritaDesaController extends Controller
         
         // Reset daftar cache keys
         $this->cacheStore->forget("berita_desa_cache_keys_{$villageId}");
+
+        // Warm cache kembali secara asynchronous
+        PreloadCacheJob::dispatch('berita_desa', (int) $villageId)->delay(now()->addSeconds(5));
     }
 }
 

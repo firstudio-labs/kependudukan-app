@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\PreloadCacheJob;
 use App\Models\LaporDesa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -543,6 +544,8 @@ class LaporanDesaController extends Controller
                 $this->cacheStore->forget($key);
             }
             $this->cacheStore->forget("laporan_desa_cache_keys_village_{$villageId}");
+
+            PreloadCacheJob::dispatch('laporan_desa', (int) $villageId)->delay(now()->addSeconds(5));
         }
     }
 

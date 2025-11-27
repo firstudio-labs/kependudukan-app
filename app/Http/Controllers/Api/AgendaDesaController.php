@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\PreloadCacheJob;
 use App\Models\AgendaDesa;
 use App\Services\CitizenService;
 use Illuminate\Http\Request;
@@ -139,6 +140,8 @@ class AgendaDesaController extends Controller
         
         // Reset daftar cache keys
         $this->cacheStore->forget("agenda_desa_cache_keys_{$villageId}");
+
+        PreloadCacheJob::dispatch('agenda_desa', (int) $villageId)->delay(now()->addSeconds(5));
     }
 
     public function show(Request $request, $id, CitizenService $citizenService)

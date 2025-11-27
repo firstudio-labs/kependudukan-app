@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Services\VillageContentService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -31,7 +32,7 @@ class PreloadCacheJob implements ShouldQueue
     /**
      * Execute the job.
      */
-    public function handle()
+    public function handle(VillageContentService $contentService)
     {
         try {
             $this->cacheStore = $this->getCacheStore();
@@ -39,7 +40,7 @@ class PreloadCacheJob implements ShouldQueue
             // Pre-load cache untuk beberapa kombinasi pagination yang umum
             $commonPerPages = [10, 20, 30];
             $commonPages = [1, 2];
-            $commonSearches = ['', 'search'];
+            $commonSearches = [''];
             
             foreach ($commonPerPages as $perPage) {
                 foreach ($commonPages as $page) {
@@ -50,10 +51,21 @@ class PreloadCacheJob implements ShouldQueue
                         if ($this->cacheStore->has($cacheKey)) {
                             continue;
                         }
-                        
-                        // Dispatch job untuk load data (akan di-handle oleh controller logic)
-                        // Atau bisa langsung load di sini jika perlu
-                        Log::info("PreloadCacheJob: Pre-loading cache for {$cacheKey}");
+
+                        $response = $this->buildResponse($contentService, $search, $perPage, $page);
+                        if (!$response) {
+                            continue;
+                        }
+
+                        $this->cacheStore->forever($cacheKey, $response);
+
+                        $cacheKeysList = $this->cacheStore->get("{$this->type}_cache_keys_{$this->villageId}", []);
+                        if (!in_array($cacheKey, $cacheKeysList)) {
+                            $cacheKeysList[] = $cacheKey;
+                            $this->cacheStore->forever("{$this->type}_cache_keys_{$this->villageId}", $cacheKeysList);
+                        }
+
+                        Log::info("PreloadCacheJob: cache populated for {$cacheKey}");
                     }
                 }
             }
@@ -78,6 +90,26 @@ class PreloadCacheJob implements ShouldQueue
             Log::warning('Redis tidak tersedia di job, menggunakan default cache: ' . $e->getMessage());
         }
         return Cache::store(config('cache.default', 'file'));
+    }
+
+    private function buildResponse(VillageContentService $contentService, string $search, int $perPage, int $page): ?array
+    {
+        switch ($this->type) {
+            case 'berita_desa':
+            case 'berita':
+                return $contentService->buildBeritaIndex($this->villageId, $search, $perPage, $page);
+            case 'pengumuman':
+                return $contentService->buildPengumumanIndex($this->villageId, $search, $perPage, $page);
+            case 'agenda_desa':
+            case 'agenda':
+                return $contentService->buildAgendaIndex($this->villageId, $search, $perPage, $page);
+            case 'laporan_desa':
+            case 'laporan':
+                return $contentService->buildLaporanIndexForVillage($this->villageId, $search, $perPage, $page);
+            default:
+                Log::warning("PreloadCacheJob: unknown type {$this->type}");
+                return null;
+        }
     }
 }
 
