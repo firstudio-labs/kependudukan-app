@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Pengumuman;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use App\Jobs\PreloadCacheJob;
 
 class AdminPengumumanApiController extends Controller
 {
@@ -85,6 +86,9 @@ class AdminPengumumanApiController extends Controller
         // Clear cache untuk pengumuman
         $this->clearPengumumanCache($user->villages_id);
         
+        // Dispatch job untuk pre-warm cache di background
+        PreloadCacheJob::dispatch('pengumuman', $user->villages_id)->onQueue('default');
+        
         return response()->json(['success' => true, 'data' => $pengumuman], 201);
     }
 
@@ -113,6 +117,9 @@ class AdminPengumumanApiController extends Controller
         
         // Clear cache untuk pengumuman
         $this->clearPengumumanCache($pengumuman->villages_id);
+        
+        // Dispatch job untuk pre-warm cache di background
+        PreloadCacheJob::dispatch('pengumuman', $pengumuman->villages_id)->onQueue('default');
         
         return response()->json(['success' => true, 'data' => $pengumuman]);
     }

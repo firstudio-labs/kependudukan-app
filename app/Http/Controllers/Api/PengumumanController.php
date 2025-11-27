@@ -8,6 +8,7 @@ use App\Services\CitizenService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use App\Jobs\PreloadCacheJob;
 
 class PengumumanController extends Controller
 {

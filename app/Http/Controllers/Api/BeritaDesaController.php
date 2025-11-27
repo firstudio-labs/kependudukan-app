@@ -9,6 +9,7 @@ use App\Services\CitizenService;
 use App\Services\WilayahService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use App\Jobs\PreloadWilayahInfoJob;
 
 class BeritaDesaController extends Controller
 {
@@ -115,13 +116,41 @@ class BeritaDesaController extends Controller
                 'sub_districts_id', 'created_at', 'updated_at'
             ])->latest()->paginate($perPage);
 
+            // Cek apakah user ingin include wilayah_info (default: true untuk backward compatibility)
+            $includeWilayah = $request->input('include_wilayah', '1') !== '0';
+            
             // Pre-load semua wilayah info yang dibutuhkan untuk menghindari API call berulang
-            $wilayahInfoCache = $this->preloadWilayahInfo($berita->items());
+            // Gunakan queue untuk pre-load jika tidak urgent
+            if ($includeWilayah) {
+                // Jika cache miss, dispatch job untuk pre-load di background
+                if (!$this->cacheStore->has($cacheKey)) {
+                    // Pre-load wilayah info secara sync untuk response pertama
+                    $wilayahInfoCache = $this->preloadWilayahInfo($berita->items());
+                    
+                    // Dispatch job untuk pre-load cache untuk halaman berikutnya
+                    $itemsForQueue = collect($berita->items())->map(function ($item) {
+                        return [
+                            'province_id' => $item->province_id,
+                            'districts_id' => $item->districts_id,
+                            'sub_districts_id' => $item->sub_districts_id,
+                            'villages_id' => $item->villages_id,
+                        ];
+                    })->toArray();
+                    
+                    PreloadWilayahInfoJob::dispatch($itemsForQueue)->onQueue('default');
+                } else {
+                    // Jika cache hit, load dari cache
+                    $wilayahInfoCache = $this->preloadWilayahInfo($berita->items());
+                }
+            } else {
+                // Skip wilayah info jika tidak diminta
+                $wilayahInfoCache = [];
+            }
 
             // Transform data to include gambar_url and wilayah_info (dari cache)
-            $items = collect($berita->items())->map(function ($item) use ($wilayahInfoCache) {
+            $items = collect($berita->items())->map(function ($item) use ($wilayahInfoCache, $includeWilayah) {
                 $wilayahKey = "{$item->province_id}_{$item->districts_id}_{$item->sub_districts_id}_{$item->villages_id}";
-                return [
+                $data = [
                     'id' => $item->id,
                     'judul' => $item->judul,
                     'deskripsi' => $item->deskripsi,
@@ -129,10 +158,16 @@ class BeritaDesaController extends Controller
                     'gambar' => $item->gambar,
                     'gambar_url' => $item->gambar_url, // URL lengkap gambar
                     'user_id' => $item->user_id,
-                    'wilayah_info' => $wilayahInfoCache[$wilayahKey] ?? [], // Dari cache yang sudah di-preload
                     'created_at' => $item->created_at,
                     'updated_at' => $item->updated_at,
                 ];
+                
+                // Hanya tambahkan wilayah_info jika diminta
+                if ($includeWilayah) {
+                    $data['wilayah_info'] = $wilayahInfoCache[$wilayahKey] ?? [];
+                }
+                
+                return $data;
             });
 
             $response = [
