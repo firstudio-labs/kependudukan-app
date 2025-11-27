@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\AgendaDesa;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
-use App\Jobs\PreloadCacheJob;
 
 class AgendaDesaController extends Controller
 {
@@ -76,9 +75,6 @@ class AgendaDesaController extends Controller
 
         // Clear cache untuk agenda desa
         $this->clearAgendaDesaCache($user->villages_id);
-        
-        // Dispatch job untuk pre-warm cache di background
-        PreloadCacheJob::dispatch('agenda_desa', $user->villages_id)->onQueue('default');
 
         return redirect()->route('admin.desa.agenda.index')->with('success', 'Agenda berhasil dibuat');
     }
@@ -125,9 +121,6 @@ class AgendaDesaController extends Controller
 
         // Clear cache untuk agenda desa
         $this->clearAgendaDesaCache($agenda->villages_id);
-        
-        // Dispatch job untuk pre-warm cache di background
-        PreloadCacheJob::dispatch('agenda_desa', $agenda->villages_id)->onQueue('default');
 
         return redirect()->route('admin.desa.agenda.index')->with('success', 'Agenda berhasil diperbarui');
     }

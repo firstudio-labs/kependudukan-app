@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use App\Models\LaporanDesa;
 use Illuminate\Support\Facades\Cache;
-use App\Jobs\PreloadCacheJob;
 
 class LaporanDesaController extends Controller
 {
@@ -245,11 +244,6 @@ class LaporanDesaController extends Controller
 
             // Clear cache untuk user dan village
             $this->clearLaporanDesaCache($tokenOwner->id, $data['village_id'] ?? null);
-            
-            // Dispatch job untuk pre-warm cache di background
-            if (isset($data['village_id'])) {
-                PreloadCacheJob::dispatch('laporan_desa', $data['village_id'])->onQueue('default');
-            }
 
             // Add gambar_url if image exists
             if ($laporanDesa->gambar) {

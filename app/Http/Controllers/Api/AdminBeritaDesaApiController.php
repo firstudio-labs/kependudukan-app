@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\BeritaDesa;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
-use App\Jobs\PreloadCacheJob;
 
 class AdminBeritaDesaApiController extends Controller
 {
@@ -86,9 +85,6 @@ class AdminBeritaDesaApiController extends Controller
         // Clear cache untuk berita desa
         $this->clearBeritaDesaCache($user->villages_id);
         
-        // Dispatch job untuk pre-warm cache di background
-        PreloadCacheJob::dispatch('berita_desa', $user->villages_id)->onQueue('default');
-        
         return response()->json(['success' => true, 'data' => $berita], 201);
     }
 
@@ -119,9 +115,6 @@ class AdminBeritaDesaApiController extends Controller
         
         // Clear cache untuk berita desa
         $this->clearBeritaDesaCache($berita->villages_id);
-        
-        // Dispatch job untuk pre-warm cache di background
-        PreloadCacheJob::dispatch('berita_desa', $berita->villages_id)->onQueue('default');
         
         return response()->json(['success' => true, 'data' => $berita]);
     }
