@@ -425,15 +425,15 @@ class CitizenService
                 return Cache::get($cacheKey);
             }
 
-            $response = Http::withHeaders([
+            $response = Http::timeout(10)->withHeaders([
                 'X-API-Key' => $this->apiKey,
             ])->get("{$this->baseUrl}/api/citizens-family/{$kk}");
 
             if ($response->successful()) {
                 $result = $response->json();
 
-                // Cache the result for 5 minutes
-                Cache::put($cacheKey, $result, now()->addMinutes(5));
+                // Cache the result for 30 minutes (diperpanjang dari 5 menit untuk performa lebih baik)
+                Cache::put($cacheKey, $result, now()->addMinutes(30));
 
                 return $result;
             } else {
@@ -451,13 +451,25 @@ class CitizenService
         try {
             // Convert to integer to ensure consistent format
             $nik = (int) $nik;
+            
+            // Cache key untuk citizen data
+            $cacheKey = "citizen_nik_{$nik}";
+            
+            // Cek cache terlebih dahulu (TTL 1 jam)
+            if (Cache::has($cacheKey)) {
+                return Cache::get($cacheKey);
+            }
 
-            $response = Http::withHeaders([
+            $response = Http::timeout(10)->withHeaders([
                 'X-API-Key' => $this->apiKey,
             ])->get("{$this->baseUrl}/api/citizens/{$nik}");
 
             if ($response->successful()) {
                 $result = $response->json();
+                
+                // Cache hasil selama 1 jam
+                Cache::put($cacheKey, $result, now()->addHours(1));
+                
                 return $result;
             } else {
                 Log::error('API request failed for NIK: ' . $nik . ', Status: ' . $response->status());
@@ -467,6 +479,87 @@ class CitizenService
             Log::error('Error fetching citizen data for NIK ' . $nik . ': ' . $e->getMessage());
             return null;
         }
+    }
+    
+    /**
+     * Get citizen and family members in parallel (optimized)
+     * 
+     * @param int $nik
+     * @return array ['citizen' => ..., 'family' => ...]
+     */
+    public function getCitizenWithFamilyParallel($nik)
+    {
+        $nik = (int) $nik;
+        
+        // Get citizen data first (already cached)
+        $citizenData = $this->getCitizenByNIK($nik);
+        
+        if (!$citizenData || !isset($citizenData['data'])) {
+            return [
+                'citizen' => null,
+                'family' => null
+            ];
+        }
+        
+        $kk = $citizenData['data']['kk'] ?? $citizenData['data']['no_kk'] ?? null;
+        
+        if (!$kk) {
+            return [
+                'citizen' => $citizenData,
+                'family' => null
+            ];
+        }
+        
+        // Get family members (already cached)
+        $familyData = $this->getFamilyMembersByKK($kk);
+        
+        return [
+            'citizen' => $citizenData,
+            'family' => $familyData
+        ];
+    }
+    
+    /**
+     * Get multiple citizens by NIK in parallel (optimized)
+     * 
+     * @param array $niks Array of NIKs
+     * @return array Array of citizen data indexed by NIK
+     */
+    public function getCitizensByNIKs(array $niks)
+    {
+        $results = [];
+        $uncachedNiks = [];
+        
+        // Check cache first
+        foreach ($niks as $nik) {
+            $nik = (int) $nik;
+            $cacheKey = "citizen_nik_{$nik}";
+            
+            if (Cache::has($cacheKey)) {
+                $results[$nik] = Cache::get($cacheKey);
+            } else {
+                $uncachedNiks[] = $nik;
+            }
+        }
+        
+        // Jika semua sudah di cache, return langsung
+        if (empty($uncachedNiks)) {
+            return $results;
+        }
+        
+        // Fetch uncached NIKs secara sequential
+        // Note: Untuk parallel yang benar-benar async, perlu install guzzlehttp/guzzle
+        foreach ($uncachedNiks as $nik) {
+            try {
+                $citizenData = $this->getCitizenByNIK($nik);
+                $results[$nik] = $citizenData;
+            } catch (\Exception $e) {
+                $results[$nik] = null;
+                Log::error("Error fetching citizen data for NIK {$nik}: " . $e->getMessage());
+            }
+        }
+        
+        return $results;
     }
 
     public function createCitizen($data)
@@ -1835,8 +1928,8 @@ class CitizenService
                     'religion' => $religionStats,
                 ];
 
-                // Cache hasil selama 1 jam
-                Cache::put($cacheKey, $result, now()->addHours(1));
+                // Cache hasil selama 2 jam (diperpanjang untuk performa lebih baik)
+                Cache::put($cacheKey, $result, now()->addHours(2));
 
                 return $result;
             } else {

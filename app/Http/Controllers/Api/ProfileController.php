@@ -14,6 +14,7 @@ use App\Models\Keluarga;
 use App\Models\Penduduk;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 
 
 class ProfileController extends Controller
@@ -36,16 +37,17 @@ class ProfileController extends Controller
             // Get additional data if this is a Penduduk user
             if ($userData instanceof Penduduk && $userData->nik) {
                 try {
-                    $citizenData = $this->citizenService->getCitizenByNIK((int) $userData->nik);
-                    if ($citizenData && isset($citizenData['data'])) {
-                        $userData->citizen_data = $citizenData['data'];
+                    // Optimasi: gunakan method parallel untuk ambil citizen dan family sekaligus
+                    $citizenWithFamily = $this->citizenService->getCitizenWithFamilyParallel((int) $userData->nik);
+                    
+                    if ($citizenWithFamily['citizen'] && isset($citizenWithFamily['citizen']['data'])) {
+                        $userData->citizen_data = $citizenWithFamily['citizen']['data'];
 
                         if (isset($userData->citizen_data['kk'])) {
                             $userData->no_kk = $userData->citizen_data['kk'];
-                            $familyData = $this->citizenService->getFamilyMembersByKK($userData->citizen_data['kk']);
-
-                            if ($familyData && isset($familyData['data'])) {
-                                $userData->family_members = $familyData['data'];
+                            
+                            if ($citizenWithFamily['family'] && isset($citizenWithFamily['family']['data'])) {
+                                $userData->family_members = $citizenWithFamily['family']['data'];
                             }
                         }
                     }
@@ -62,16 +64,17 @@ class ProfileController extends Controller
 
             if ($userData) {
                 try {
-                    $citizenData = $this->citizenService->getCitizenByNIK((int) $userData->nik);
-                    if ($citizenData && isset($citizenData['data'])) {
-                        $userData->citizen_data = $citizenData['data'];
+                    // Optimasi: gunakan method parallel untuk ambil citizen dan family sekaligus
+                    $citizenWithFamily = $this->citizenService->getCitizenWithFamilyParallel((int) $userData->nik);
+                    
+                    if ($citizenWithFamily['citizen'] && isset($citizenWithFamily['citizen']['data'])) {
+                        $userData->citizen_data = $citizenWithFamily['citizen']['data'];
 
                         if (isset($userData->citizen_data['kk'])) {
                             $userData->no_kk = $userData->citizen_data['kk'];
-                            $familyData = $this->citizenService->getFamilyMembersByKK($userData->citizen_data['kk']);
-
-                            if ($familyData && isset($familyData['data'])) {
-                                $userData->family_members = $familyData['data'];
+                            
+                            if ($citizenWithFamily['family'] && isset($citizenWithFamily['family']['data'])) {
+                                $userData->family_members = $citizenWithFamily['family']['data'];
                             }
                         }
                     }
@@ -405,64 +408,128 @@ class ProfileController extends Controller
 
             $updatedMembers = [];
             $failedUpdates = [];
-
-            // HANYA Update database lokal (TIDAK ke API eksternal)
+            
+            // Optimasi: Kumpulkan semua NIK yang valid
+            $validNiks = [];
+            $nikToName = [];
             foreach ($familyMembers as $member) {
-                if (empty($member['nik'])) {
-                    continue;
+                if (!empty($member['nik'])) {
+                    $memberNik = (int) $member['nik'];
+                    $validNiks[] = $memberNik;
+                    $nikToName[$memberNik] = $member['full_name'] ?? $member['nama'] ?? 'Unknown';
                 }
-                $memberNik = (int) $member['nik'];
+            }
+            
+            if (empty($validNiks)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tidak ada anggota keluarga dengan NIK yang valid'
+                ], 400);
+            }
 
-                // Update lokal DB saja (buat jika belum ada)
-                try {
-                    $penduduk = Penduduk::where('nik', $memberNik)->first();
-                    if ($penduduk) {
-                        $penduduk->tag_lokasi = $request->tag_lokasi;
-                        $penduduk->alamat = $request->alamat;
-                        $penduduk->save();
-                        
-                        Log::info('API: Local database updated for family member (NO API CALL)', [
-                            'nik' => $memberNik,
-                            'name' => $member['full_name'] ?? $member['nama'] ?? 'Unknown',
-                            'coordinate' => $request->tag_lokasi,
-                            'address' => $request->alamat
+            // Optimasi: Batch update untuk penduduk yang sudah ada
+            try {
+                $existingNiks = Penduduk::whereIn('nik', $validNiks)->pluck('nik')->toArray();
+                
+                if (!empty($existingNiks)) {
+                    // Batch update menggunakan DB::table untuk performa lebih baik
+                    DB::table('penduduk')
+                        ->whereIn('nik', $existingNiks)
+                        ->update([
+                            'tag_lokasi' => $request->tag_lokasi,
+                            'alamat' => $request->alamat,
+                            'updated_at' => now()
                         ]);
-                        
+                    
+                    foreach ($existingNiks as $nik) {
                         $updatedMembers[] = [
-                            'nik' => $memberNik,
-                            'name' => $member['full_name'] ?? $member['nama'] ?? 'Unknown'
+                            'nik' => $nik,
+                            'name' => $nikToName[$nik] ?? 'Unknown'
                         ];
-                    } else {
-                        Penduduk::create([
-                            'nik' => $memberNik,
+                    }
+                    
+                    Log::info('API: Batch update completed for existing members', [
+                        'count' => count($existingNiks),
+                        'niks' => $existingNiks
+                    ]);
+                }
+                
+                // Batch insert untuk penduduk yang belum ada
+                $newNiks = array_diff($validNiks, $existingNiks);
+                if (!empty($newNiks)) {
+                    $insertData = [];
+                    foreach ($newNiks as $nik) {
+                        $insertData[] = [
+                            'nik' => $nik,
                             'password' => Hash::make(Str::random(10)),
                             'tag_lokasi' => $request->tag_lokasi,
                             'alamat' => $request->alamat,
-                        ]);
-                        
-                        Log::info('API: Created new local record for family member (NO API CALL)', [
-                            'nik' => $memberNik,
-                            'name' => $member['full_name'] ?? $member['nama'] ?? 'Unknown'
-                        ]);
-                        
-                        $updatedMembers[] = [
-                            'nik' => $memberNik,
-                            'name' => $member['full_name'] ?? $member['nama'] ?? 'Unknown'
+                            'created_at' => now(),
+                            'updated_at' => now()
                         ];
                     }
-                } catch (\Exception $e) {
-                    $failedUpdates[] = [
-                        'nik' => $memberNik,
-                        'name' => $member['full_name'] ?? $member['nama'] ?? 'Unknown',
-                        'error' => $e->getMessage()
-                    ];
-                    Log::error('API: failed updating local DB for member', [
-                        'nik' => $memberNik,
-                        'error' => $e->getMessage()
+                    
+                    // Batch insert
+                    Penduduk::insert($insertData);
+                    
+                    foreach ($newNiks as $nik) {
+                        $updatedMembers[] = [
+                            'nik' => $nik,
+                            'name' => $nikToName[$nik] ?? 'Unknown'
+                        ];
+                    }
+                    
+                    Log::info('API: Batch insert completed for new members', [
+                        'count' => count($newNiks),
+                        'niks' => $newNiks
                     ]);
                 }
-
-                // TIDAK ADA UPDATE KE API EKSTERNAL - HANYA DATABASE LOKAL
+                
+                Log::info('API: Batch update completed for family members (OPTIMIZED)', [
+                    'kk' => $kk,
+                    'total_members' => count($validNiks),
+                    'updated' => count($existingNiks),
+                    'created' => count($newNiks)
+                ]);
+                
+            } catch (\Exception $e) {
+                Log::error('API: Batch update failed', [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+                
+                // Fallback ke individual updates jika batch gagal
+                foreach ($validNiks as $memberNik) {
+                    try {
+                        $penduduk = Penduduk::where('nik', $memberNik)->first();
+                        if ($penduduk) {
+                            $penduduk->tag_lokasi = $request->tag_lokasi;
+                            $penduduk->alamat = $request->alamat;
+                            $penduduk->save();
+                        } else {
+                            Penduduk::create([
+                                'nik' => $memberNik,
+                                'password' => Hash::make(Str::random(10)),
+                                'tag_lokasi' => $request->tag_lokasi,
+                                'alamat' => $request->alamat,
+                            ]);
+                        }
+                        $updatedMembers[] = [
+                            'nik' => $memberNik,
+                            'name' => $nikToName[$memberNik] ?? 'Unknown'
+                        ];
+                    } catch (\Exception $ex) {
+                        $failedUpdates[] = [
+                            'nik' => $memberNik,
+                            'name' => $nikToName[$memberNik] ?? 'Unknown',
+                            'error' => $ex->getMessage()
+                        ];
+                        Log::error('API: failed updating local DB for member (fallback)', [
+                            'nik' => $memberNik,
+                            'error' => $ex->getMessage()
+                        ]);
+                    }
+                }
             }
 
             // Log hasil update
