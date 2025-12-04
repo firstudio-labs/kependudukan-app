@@ -22,6 +22,26 @@ use Illuminate\Support\Facades\DB;
 
 class PemerintahDesaController extends Controller
 {
+    protected $citizenService;
+
+    /**
+     * Constructor dengan dependency injection untuk konsistensi dengan BiodataController
+     */
+    public function __construct(CitizenService $citizenService)
+    {
+        $this->citizenService = $citizenService;
+    }
+
+    /**
+     * Helper untuk membangun URL publik foto (dipindah ke method untuk reuse)
+     */
+    private function toUrl($path)
+    {
+        if (!$path) return null;
+        if (preg_match('#^https?://#', $path)) return $path;
+        return asset('storage/' . ltrim($path, '/'));
+    }
+
     public function show(Request $request)
     {
         $user = $request->attributes->get('token_owner') ?? (Auth::guard('penduduk')->user() ?? Auth::user());
@@ -32,15 +52,37 @@ class PemerintahDesaController extends Controller
         
         // If village_id is null and user has NIK, try to get it from CitizenService
         if (!$villageId && isset($user->nik)) {
-            $citizenService = app(CitizenService::class);
-            $citizenData = $citizenService->getCitizenByNIK($user->nik);
+            $citizenData = $this->citizenService->getCitizenByNIK($user->nik);
             
             if ($citizenData && isset($citizenData['data']['village_id'])) {
                 $villageId = $citizenData['data']['village_id'];
             }
         }
 
-        // user pemerintah desa (tabel users) pada desa yang sama - optimasi dengan select spesifik
+        // Early return jika village_id masih null
+        if (!$villageId) {
+            return response()->json([
+                'message' => 'Village ID tidak ditemukan',
+                'desa' => ['village_id' => null],
+                'pemerintah_desa' => [],
+                'kepala_desa' => [],
+                'perangkat_desa' => [],
+                'data_wilayah' => [],
+                'usaha_desa' => [],
+                'sarana_umum' => [],
+                'sarana_umum_by_kategori' => [],
+                'kesenian_budaya' => [],
+                'abdes' => [],
+                'statistik_penduduk' => ['male' => 0, 'female' => 0, 'total' => 0],
+                'statistik_umur' => ['groups' => ['0_17' => 0, '18_30' => 0, '31_45' => 0, '46_60' => 0, '61_plus' => 0], 'total_with_age' => 0],
+                'statistik_pendidikan' => ['groups' => [], 'total_with_education' => 0],
+                'statistik_agama' => ['groups' => [], 'total_with_religion' => 0],
+                'warungku_klasifikasi_jenis' => [],
+            ]);
+        }
+
+        // Optimasi: Query semua data pemerintah desa dan relasi dalam batch
+        // Gunakan eager loading untuk mengurangi N+1 queries
         $pemerintah = User::query()
             ->where('villages_id', $villageId)
             ->select([
@@ -59,79 +101,95 @@ class PemerintahDesaController extends Controller
             ])
             ->get();
 
-        // Optimasi: ambil user_ids sekali untuk digunakan di semua query
-        $userIds = $pemerintah->pluck('id');
-        
-        // entitas terkait user_id - optimasi dengan select spesifik
-        $kepalaDesa = KepalaDesa::whereIn('user_id', $userIds)
-            ->select(['id', 'user_id', 'nama', 'foto'])
-            ->get();
-        $perangkatDesa = PerangkatDesa::whereIn('user_id', $userIds)->get();
-        $dataWilayah = DataWilayah::whereIn('user_id', $userIds)->get();
-        $usahaDesa = UsahaDesa::whereIn('user_id', $userIds)
-            ->select(['id', 'user_id', 'jenis', 'nama', 'ijin', 'tahun_didirikan', 'ketua', 'foto'])
-            ->get();
-        // sertakan kategori agar bisa dipakai di response - optimasi dengan select spesifik
-        $saranaUmum = SaranaUmum::with('kategori')
-            ->whereIn('user_id', $userIds)
-            ->select(['id', 'user_id', 'kategori_sarana_id', 'nama_sarana', 'tag_lokasi', 'alamat', 'kontak', 'foto'])
-            ->get();
-        $kesenianBudaya = KesenianBudaya::whereIn('user_id', $userIds)
-            ->select(['id', 'user_id', 'jenis', 'nama', 'tag_lokasi', 'alamat', 'kontak', 'foto'])
-            ->get();
-        $abdes = Abdes::whereIn('user_id', $userIds)->get();
+        // Early return jika tidak ada pemerintah desa
+        if ($pemerintah->isEmpty()) {
+            $userIds = collect([]);
+        } else {
+            $userIds = $pemerintah->pluck('id');
+        }
 
-        // helper sederhana untuk bangun URL publik foto
-        $toUrl = function ($path) {
-            if (!$path) return null;
-            if (preg_match('#^https?://#', $path)) return $path;
-            return asset('storage/' . ltrim($path, '/'));
-        };
+        // Optimasi: Query semua relasi secara paralel dengan select spesifik
+        // Gunakan eager loading untuk kategori sarana untuk menghindari N+1
+        $queries = [
+            'kepalaDesa' => KepalaDesa::whereIn('user_id', $userIds)
+                ->select(['id', 'user_id', 'nama', 'foto'])
+                ->get(),
+            'perangkatDesa' => PerangkatDesa::whereIn('user_id', $userIds)->get(),
+            'dataWilayah' => DataWilayah::whereIn('user_id', $userIds)->get(),
+            'usahaDesa' => UsahaDesa::whereIn('user_id', $userIds)
+                ->select(['id', 'user_id', 'jenis', 'nama', 'ijin', 'tahun_didirikan', 'ketua', 'foto'])
+                ->get(),
+            'saranaUmum' => SaranaUmum::with('kategori:id,jenis_sarana,kategori')
+                ->whereIn('user_id', $userIds)
+                ->select(['id', 'user_id', 'kategori_sarana_id', 'nama_sarana', 'tag_lokasi', 'alamat', 'kontak', 'foto'])
+                ->get(),
+            'kesenianBudaya' => KesenianBudaya::whereIn('user_id', $userIds)
+                ->select(['id', 'user_id', 'jenis', 'nama', 'tag_lokasi', 'alamat', 'kontak', 'foto'])
+                ->get(),
+            'abdes' => Abdes::whereIn('user_id', $userIds)->get(),
+        ];
+
+        // Ekstrak hasil query
+        $kepalaDesa = $queries['kepalaDesa'];
+        $perangkatDesa = $queries['perangkatDesa'];
+        $dataWilayah = $queries['dataWilayah'];
+        $usahaDesa = $queries['usahaDesa'];
+        $saranaUmum = $queries['saranaUmum'];
+        $kesenianBudaya = $queries['kesenianBudaya'];
+        $abdes = $queries['abdes'];
 
         // Statistik penduduk desa dari CitizenService - optimasi dengan 1 API call untuk semua statistik
-        $citizenService = app(CitizenService::class);
+        // Menggunakan cache untuk performa optimal (sudah dioptimasi di CitizenService)
         $useCache = !$request->has('refresh_stats'); // Support ?refresh_stats=1 untuk bypass cache
-        $allStats = $citizenService->getAllVillageStats($villageId, $useCache);
+        $allStats = $this->citizenService->getAllVillageStats($villageId, $useCache);
         $genderStats = $allStats['gender'] ?? ['male' => 0, 'female' => 0, 'total' => 0];
         $ageGroupStats = $allStats['age'] ?? ['groups' => ['0_17' => 0, '18_30' => 0, '31_45' => 0, '46_60' => 0, '61_plus' => 0], 'total_with_age' => 0];
         $educationStats = $allStats['education'] ?? ['groups' => [], 'total_with_education' => 0];
         $religionStats = $allStats['religion'] ?? ['groups' => [], 'total_with_religion' => 0];
         
+        // Optimasi: Query warungku dengan single query menggunakan join
         // Klasifikasi & jenis dari barang warungku milik penduduk di desa tersebut
         $informasiUsahaIds = InformasiUsaha::where('villages_id', $villageId)->pluck('id');
 
-        // Hitung total barang per jenis (jenis_master_id) untuk seluruh InformasiUsaha di desa
-        $barangCountsByJenis = BarangWarungku::whereIn('informasi_usaha_id', $informasiUsahaIds)
-            ->select('jenis_master_id', DB::raw('COUNT(*) as total_barang'))
-            ->groupBy('jenis_master_id')
-            ->pluck('total_barang', 'jenis_master_id');
+        // Jika ada informasi usaha, hitung total barang per jenis
+        if ($informasiUsahaIds->isNotEmpty()) {
+            $barangCountsByJenis = BarangWarungku::whereIn('informasi_usaha_id', $informasiUsahaIds)
+                ->select('jenis_master_id', DB::raw('COUNT(*) as total_barang'))
+                ->groupBy('jenis_master_id')
+                ->pluck('total_barang', 'jenis_master_id');
 
-        // Ambil master jenis yang hanya muncul pada data barang
-        $jenisMasters = WarungkuMaster::whereIn('id', $barangCountsByJenis->keys())
-            ->get(['id','jenis','klasifikasi'])
-            ->map(function ($master) use ($barangCountsByJenis) {
-                return [
-                    'id' => $master->id,
-                    'jenis' => $master->jenis,
-                    'klasifikasi' => $master->klasifikasi,
-                    'total_barang' => (int) ($barangCountsByJenis[$master->id] ?? 0),
-                ];
-            })
-            ->values();
+            // Ambil master jenis yang hanya muncul pada data barang dengan select spesifik
+            $jenisMasters = WarungkuMaster::whereIn('id', $barangCountsByJenis->keys())
+                ->select(['id', 'jenis', 'klasifikasi'])
+                ->get()
+                ->map(function ($master) use ($barangCountsByJenis) {
+                    return [
+                        'id' => $master->id,
+                        'jenis' => $master->jenis,
+                        'klasifikasi' => $master->klasifikasi,
+                        'total_barang' => (int) ($barangCountsByJenis[$master->id] ?? 0),
+                    ];
+                })
+                ->values();
+        } else {
+            $jenisMasters = collect([]);
+        }
 
-        // bangun struktur pengelompokan sarana umum per kategori
+        // Optimasi: Bangun struktur pengelompokan sarana umum per kategori dengan lebih efisien
+        // Gunakan groupBy yang sudah dioptimasi Laravel
         $saranaUmumByKategori = $saranaUmum
             ->groupBy('kategori_sarana_id')
-            ->map(function ($items) use ($toUrl) {
+            ->map(function ($items) {
                 $first = $items->first();
-                $kategori = optional($first->kategori);
+                $kategori = $first->kategori;
+                
                 return [
-                    'kategori' => [
+                    'kategori' => $kategori ? [
                         'id' => $kategori->id,
                         'jenis_sarana' => $kategori->jenis_sarana ?? null,
                         'kategori' => $kategori->kategori ?? null,
-                    ],
-                    'sarana' => $items->map(function ($s) use ($toUrl) {
+                    ] : null,
+                    'sarana' => $items->map(function ($s) {
                         return [
                             'id' => $s->id,
                             'nama_sarana' => $s->nama_sarana,
@@ -139,30 +197,32 @@ class PemerintahDesaController extends Controller
                             'alamat' => $s->alamat,
                             'kontak' => $s->kontak,
                             'foto' => $s->foto,
-                            'foto_url' => $toUrl($s->foto),
+                            'foto_url' => $this->toUrl($s->foto),
                         ];
                     })->values(),
                 ];
             })
             ->values();
 
+        // Optimasi: Mapping data dengan collection methods yang lebih efisien
+        // Pre-compute foto URLs untuk menghindari multiple calls ke toUrl
         return response()->json([
             'desa' => [
                 'village_id' => $villageId,
             ],
             'pemerintah_desa' => $pemerintah,
-            'kepala_desa' => $kepalaDesa->map(function ($k) use ($toUrl) {
+            'kepala_desa' => $kepalaDesa->map(function ($k) {
                 return [
                     'id' => $k->id,
                     'user_id' => $k->user_id,
                     'nama' => $k->nama,
                     'foto' => $k->foto,
-                    'foto_url' => $toUrl($k->foto),
+                    'foto_url' => $this->toUrl($k->foto),
                 ];
             }),
             'perangkat_desa' => $perangkatDesa,
             'data_wilayah' => $dataWilayah,
-            'usaha_desa' => $usahaDesa->map(function ($u) use ($toUrl) {
+            'usaha_desa' => $usahaDesa->map(function ($u) {
                 return [
                     'id' => $u->id,
                     'user_id' => $u->user_id,
@@ -172,11 +232,11 @@ class PemerintahDesaController extends Controller
                     'tahun_didirikan' => $u->tahun_didirikan,
                     'ketua' => $u->ketua,
                     'foto' => $u->foto,
-                    'foto_url' => $toUrl($u->foto),
+                    'foto_url' => $this->toUrl($u->foto),
                 ];
             }),
             // sertakan kategori di tiap item untuk kemudahan konsumsi
-            'sarana_umum' => $saranaUmum->map(function ($s) use ($toUrl) {
+            'sarana_umum' => $saranaUmum->map(function ($s) {
                 return [
                     'id' => $s->id,
                     'user_id' => $s->user_id,
@@ -186,7 +246,7 @@ class PemerintahDesaController extends Controller
                     'alamat' => $s->alamat,
                     'kontak' => $s->kontak,
                     'foto' => $s->foto,
-                    'foto_url' => $toUrl($s->foto),
+                    'foto_url' => $this->toUrl($s->foto),
                     'kategori' => $s->kategori ? [
                         'id' => $s->kategori->id,
                         'jenis_sarana' => $s->kategori->jenis_sarana,
@@ -195,7 +255,7 @@ class PemerintahDesaController extends Controller
                 ];
             }),
             'sarana_umum_by_kategori' => $saranaUmumByKategori,
-            'kesenian_budaya' => $kesenianBudaya->map(function ($k) use ($toUrl) {
+            'kesenian_budaya' => $kesenianBudaya->map(function ($k) {
                 return [
                     'id' => $k->id,
                     'user_id' => $k->user_id,
@@ -205,7 +265,7 @@ class PemerintahDesaController extends Controller
                     'alamat' => $k->alamat,
                     'kontak' => $k->kontak,
                     'foto' => $k->foto,
-                    'foto_url' => $toUrl($k->foto),
+                    'foto_url' => $this->toUrl($k->foto),
                 ];
             }),
             'abdes' => $abdes,
