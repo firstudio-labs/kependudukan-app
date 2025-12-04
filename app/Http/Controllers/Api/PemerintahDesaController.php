@@ -15,7 +15,7 @@ use App\Models\Abdes;
 use App\Models\InformasiUsaha;
 use App\Models\BarangWarungku;
 use App\Models\WarungkuMaster;
-use App\Services\CitizenService;
+use App\Services\CitizenServiceV2;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -88,14 +88,30 @@ class PemerintahDesaController extends Controller
             return asset('storage/' . ltrim($path, '/'));
         };
 
-        // Statistik penduduk desa dari CitizenService - optimasi dengan 1 API call untuk semua statistik
-        $citizenService = app(CitizenService::class);
-        $useCache = !$request->has('refresh_stats'); // Support ?refresh_stats=1 untuk bypass cache
-        $allStats = $citizenService->getAllVillageStats($villageId, $useCache);
-        $genderStats = $allStats['gender'] ?? ['male' => 0, 'female' => 0, 'total' => 0];
-        $ageGroupStats = $allStats['age'] ?? ['groups' => ['0_17' => 0, '18_30' => 0, '31_45' => 0, '46_60' => 0, '61_plus' => 0], 'total_with_age' => 0];
-        $educationStats = $allStats['education'] ?? ['groups' => [], 'total_with_education' => 0];
-        $religionStats = $allStats['religion'] ?? ['groups' => [], 'total_with_religion' => 0];
+        // Statistik penduduk desa dari CitizenServiceV2
+        // NOTE: CitizenServiceV2 saat ini belum memiliki method agregasi seperti getAllVillageStats,
+        // sehingga untuk sementara statistik dikosongkan agar kompatibel dengan struktur respons.
+        // Implementasi perhitungan statistik dapat ditambahkan di CitizenServiceV2 jika diperlukan.
+        $citizenService = app(CitizenServiceV2::class);
+        $genderStats = ['male' => 0, 'female' => 0, 'total' => 0];
+        $ageGroupStats = [
+            'groups' => [
+                '0_17' => 0,
+                '18_30' => 0,
+                '31_45' => 0,
+                '46_60' => 0,
+                '61_plus' => 0,
+            ],
+            'total_with_age' => 0,
+        ];
+        $educationStats = [
+            'groups' => [],
+            'total_with_education' => 0,
+        ];
+        $religionStats = [
+            'groups' => [],
+            'total_with_religion' => 0,
+        ];
         
         // Klasifikasi & jenis dari barang warungku milik penduduk di desa tersebut
         $informasiUsahaIds = InformasiUsaha::where('villages_id', $villageId)->pluck('id');
