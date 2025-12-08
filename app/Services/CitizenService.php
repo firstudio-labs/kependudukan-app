@@ -419,29 +419,70 @@ class CitizenService
     {
         try {
             $cacheKey = "family_members_kk_{$kk}";
+            // Cache key untuk stale data (fallback jika API gagal)
+            $staleCacheKey = "family_members_kk_stale_{$kk}";
 
-            // Try to get from cache first
+            // Try to get from cache first (TTL 24 jam untuk mobile app)
             if (Cache::has($cacheKey)) {
                 return Cache::get($cacheKey);
             }
 
-            $response = Http::timeout(10)->withHeaders([
-                'X-API-Key' => $this->apiKey,
-            ])->get("{$this->baseUrl}/api/citizens-family/{$kk}");
+            // Jika cache expired, coba ambil stale cache sebagai fallback
+            $staleData = Cache::get($staleCacheKey);
 
-            if ($response->successful()) {
-                $result = $response->json();
+            // Coba fetch data baru dari API dengan timeout lebih lama dan retry
+            try {
+                $response = Http::timeout(30) // Perpanjang timeout menjadi 30 detik
+                    ->retry(2, 1000) // Retry 2 kali dengan delay 1 detik
+                    ->withHeaders([
+                        'X-API-Key' => $this->apiKey,
+                    ])->get("{$this->baseUrl}/api/citizens-family/{$kk}");
 
-                // Cache the result for 30 minutes (diperpanjang dari 5 menit untuk performa lebih baik)
-                Cache::put($cacheKey, $result, now()->addMinutes(30));
+                if ($response->successful()) {
+                    $result = $response->json();
 
-                return $result;
-            } else {
-                Log::error('API request failed when fetching family members: ' . $response->status());
+                    // Cache hasil selama 24 jam (lebih lama untuk mobile app)
+                    Cache::put($cacheKey, $result, now()->addHours(24));
+                    
+                    // Simpan juga sebagai stale cache (30 hari) untuk fallback jika API gagal di masa depan
+                    Cache::put($staleCacheKey, $result, now()->addDays(30));
+
+                    return $result;
+                } else {
+                    Log::error('API request failed when fetching family members: ' . $response->status());
+                    
+                    // Jika API gagal tapi ada stale data, gunakan stale data sebagai fallback
+                    if ($staleData) {
+                        Log::info('Using stale cache data for family KK: ' . $kk . ' due to API failure');
+                        return $staleData;
+                    }
+                    
+                    return null;
+                }
+            } catch (\Illuminate\Http\Client\ConnectionException $e) {
+                // Timeout atau connection error
+                Log::warning('API connection timeout/error for family KK: ' . $kk . ' - ' . $e->getMessage());
+                
+                // Gunakan stale data jika ada
+                if ($staleData) {
+                    Log::info('Using stale cache data for family KK: ' . $kk . ' due to connection timeout');
+                    return $staleData;
+                }
+                
+                return null;
+            } catch (\Exception $e) {
+                Log::error('Error fetching family members data: ' . $e->getMessage());
+                
+                // Gunakan stale data jika ada
+                if ($staleData) {
+                    Log::info('Using stale cache data for family KK: ' . $kk . ' due to exception');
+                    return $staleData;
+                }
+                
                 return null;
             }
         } catch (\Exception $e) {
-            Log::error('Error fetching family members data: ' . $e->getMessage());
+            Log::error('Error in getFamilyMembersByKK for KK ' . $kk . ': ' . $e->getMessage());
             return null;
         }
     }
@@ -454,29 +495,70 @@ class CitizenService
             
             // Cache key untuk citizen data
             $cacheKey = "citizen_nik_{$nik}";
+            // Cache key untuk stale data (fallback jika API gagal)
+            $staleCacheKey = "citizen_nik_stale_{$nik}";
             
-            // Cek cache terlebih dahulu (TTL 1 jam)
+            // Cek cache terlebih dahulu (TTL 24 jam untuk mobile app)
             if (Cache::has($cacheKey)) {
                 return Cache::get($cacheKey);
             }
 
-            $response = Http::timeout(10)->withHeaders([
-                'X-API-Key' => $this->apiKey,
-            ])->get("{$this->baseUrl}/api/citizens/{$nik}");
+            // Jika cache expired, coba ambil stale cache sebagai fallback
+            $staleData = Cache::get($staleCacheKey);
+            
+            // Coba fetch data baru dari API dengan timeout lebih lama dan retry
+            try {
+                $response = Http::timeout(30) // Perpanjang timeout menjadi 30 detik
+                    ->retry(2, 1000) // Retry 2 kali dengan delay 1 detik
+                    ->withHeaders([
+                        'X-API-Key' => $this->apiKey,
+                    ])->get("{$this->baseUrl}/api/citizens/{$nik}");
 
-            if ($response->successful()) {
-                $result = $response->json();
+                if ($response->successful()) {
+                    $result = $response->json();
+                    
+                    // Cache hasil selama 24 jam (lebih lama untuk mobile app)
+                    Cache::put($cacheKey, $result, now()->addHours(24));
+                    
+                    // Simpan juga sebagai stale cache (30 hari) untuk fallback jika API gagal di masa depan
+                    Cache::put($staleCacheKey, $result, now()->addDays(30));
+                    
+                    return $result;
+                } else {
+                    Log::error('API request failed for NIK: ' . $nik . ', Status: ' . $response->status());
+                    
+                    // Jika API gagal tapi ada stale data, gunakan stale data sebagai fallback
+                    if ($staleData) {
+                        Log::info('Using stale cache data for NIK: ' . $nik . ' due to API failure');
+                        return $staleData;
+                    }
+                    
+                    return null;
+                }
+            } catch (\Illuminate\Http\Client\ConnectionException $e) {
+                // Timeout atau connection error
+                Log::warning('API connection timeout/error for NIK: ' . $nik . ' - ' . $e->getMessage());
                 
-                // Cache hasil selama 1 jam
-                Cache::put($cacheKey, $result, now()->addHours(1));
+                // Gunakan stale data jika ada
+                if ($staleData) {
+                    Log::info('Using stale cache data for NIK: ' . $nik . ' due to connection timeout');
+                    return $staleData;
+                }
                 
-                return $result;
-            } else {
-                Log::error('API request failed for NIK: ' . $nik . ', Status: ' . $response->status());
+                return null;
+            } catch (\Exception $e) {
+                Log::error('Error fetching citizen data for NIK ' . $nik . ': ' . $e->getMessage());
+                
+                // Gunakan stale data jika ada
+                if ($staleData) {
+                    Log::info('Using stale cache data for NIK: ' . $nik . ' due to exception');
+                    return $staleData;
+                }
+                
                 return null;
             }
         } catch (\Exception $e) {
-            Log::error('Error fetching citizen data for NIK ' . $nik . ': ' . $e->getMessage());
+            Log::error('Error in getCitizenByNIK for NIK ' . $nik . ': ' . $e->getMessage());
             return null;
         }
     }
