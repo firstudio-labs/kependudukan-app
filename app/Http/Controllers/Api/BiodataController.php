@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\CitizenService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
@@ -64,7 +65,7 @@ class BiodataController extends Controller
                 }
             }
 
-            // Get jobs for dropdown (optional list)
+            // Get jobs for dropdown (optional list) - sudah di-cache di JobService
             $jobs = [];
             try {
                 $jobs = app(\App\Services\JobService::class)->getAllJobs();
@@ -72,14 +73,24 @@ class BiodataController extends Controller
                 Log::warning('Failed to retrieve jobs list: ' . $e->getMessage());
             }
 
-            // Informasi Usaha: cari milik user atau satu KK
+            // Informasi Usaha: cari milik user atau satu KK - dengan cache
             $informasiUsaha = null;
             try {
-                $informasiUsaha = \App\Models\InformasiUsaha::where('penduduk_id', $user->id)->first();
-                if (!$informasiUsaha && !empty($citizenData['kk'])) {
-                    $informasiUsaha = \App\Models\InformasiUsaha::where('kk', $citizenData['kk'])->first();
+                $cacheKey = "informasi_usaha_user_{$user->id}";
+                if (!empty($citizenData['kk'])) {
+                    $cacheKey = "informasi_usaha_kk_{$citizenData['kk']}";
                 }
+                
+                // Cek cache terlebih dahulu (TTL 24 jam)
+                $informasiUsaha = Cache::remember($cacheKey, now()->addHours(24), function () use ($user, $citizenData) {
+                    $usaha = \App\Models\InformasiUsaha::where('penduduk_id', $user->id)->first();
+                    if (!$usaha && !empty($citizenData['kk'])) {
+                        $usaha = \App\Models\InformasiUsaha::where('kk', $citizenData['kk'])->first();
+                    }
+                    return $usaha;
+                });
             } catch (\Exception $e) {
+                Log::warning('Failed to retrieve informasi usaha: ' . $e->getMessage());
                 $informasiUsaha = null;
             }
 
