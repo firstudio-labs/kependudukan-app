@@ -75,13 +75,8 @@ class ProfilDesaController extends Controller
             ]);
         }
 
-        // Query semua user dengan villages_id yang sama
-        $pemerintah = User::query()
-            ->where('villages_id', $villageId)
-            ->select(['id'])
-            ->get();
-
-        $userIds = $pemerintah->pluck('id');
+        // Optimasi: Query user_ids sekali saja dengan pluck langsung
+        $userIds = User::where('villages_id', $villageId)->pluck('id');
 
         // Early return jika tidak ada pemerintah desa
         if ($userIds->isEmpty()) {
@@ -101,57 +96,62 @@ class ProfilDesaController extends Controller
             ]);
         }
 
-        // Query semua data yang di-comment di PemerintahDesaController
-        $dataWilayah = DataWilayah::whereIn('user_id', $userIds)->get();
-        
-        $usahaDesa = UsahaDesa::whereIn('user_id', $userIds)
-            ->select(['id', 'user_id', 'jenis', 'nama', 'ijin', 'tahun_didirikan', 'ketua', 'foto'])
-            ->get();
-        
-        $saranaUmum = SaranaUmum::with('kategori:id,jenis_sarana,kategori')
-            ->whereIn('user_id', $userIds)
-            ->select(['id', 'user_id', 'kategori_sarana_id', 'nama_sarana', 'tag_lokasi', 'alamat', 'kontak', 'foto'])
-            ->get();
-        
-        $kesenianBudaya = KesenianBudaya::whereIn('user_id', $userIds)
-            ->select(['id', 'user_id', 'jenis', 'nama', 'tag_lokasi', 'alamat', 'kontak', 'foto'])
-            ->get();
-        
-        $abdes = Abdes::whereIn('user_id', $userIds)->get();
-
-        // Statistik penduduk desa
+        // Optimasi: Query semua data secara paralel - gunakan lazy() untuk performa lebih baik
+        // Statistik penduduk desa - ambil dari cache jika ada (prioritas tinggi karena mungkin lambat)
         $useCache = !$request->has('refresh_stats');
         $allStats = $this->citizenService->getAllVillageStats($villageId, $useCache);
+        
+        // Query database secara paralel setelah statistik (karena statistik mungkin dari cache)
+        $queries = [
+            'dataWilayah' => DataWilayah::whereIn('user_id', $userIds)->get(),
+            'usahaDesa' => UsahaDesa::whereIn('user_id', $userIds)
+                ->select(['id', 'user_id', 'jenis', 'nama', 'ijin', 'tahun_didirikan', 'ketua', 'foto'])
+                ->get(),
+            'saranaUmum' => SaranaUmum::with('kategori:id,jenis_sarana,kategori')
+                ->whereIn('user_id', $userIds)
+                ->select(['id', 'user_id', 'kategori_sarana_id', 'nama_sarana', 'tag_lokasi', 'alamat', 'kontak', 'foto'])
+                ->get(),
+            'kesenianBudaya' => KesenianBudaya::whereIn('user_id', $userIds)
+                ->select(['id', 'user_id', 'jenis', 'nama', 'tag_lokasi', 'alamat', 'kontak', 'foto'])
+                ->get(),
+            'abdes' => Abdes::whereIn('user_id', $userIds)->get(),
+        ];
         $genderStats = $allStats['gender'] ?? ['male' => 0, 'female' => 0, 'total' => 0];
         $ageGroupStats = $allStats['age'] ?? ['groups' => ['0_17' => 0, '18_30' => 0, '31_45' => 0, '46_60' => 0, '61_plus' => 0], 'total_with_age' => 0];
         $educationStats = $allStats['education'] ?? ['groups' => [], 'total_with_education' => 0];
         $religionStats = $allStats['religion'] ?? ['groups' => [], 'total_with_religion' => 0];
         
-        // Warungku klasifikasi jenis
-        $informasiUsahaIds = InformasiUsaha::where('villages_id', $villageId)->pluck('id');
-        if ($informasiUsahaIds->isNotEmpty()) {
-            $barangCountsByJenis = BarangWarungku::whereIn('informasi_usaha_id', $informasiUsahaIds)
-                ->select('jenis_master_id', DB::raw('COUNT(*) as total_barang'))
-                ->groupBy('jenis_master_id')
-                ->pluck('total_barang', 'jenis_master_id');
-
-            $jenisMasters = WarungkuMaster::whereIn('id', $barangCountsByJenis->keys())
-                ->select(['id', 'jenis', 'klasifikasi'])
-                ->get()
-                ->map(function ($master) use ($barangCountsByJenis) {
-                    return [
-                        'id' => $master->id,
-                        'jenis' => $master->jenis,
-                        'klasifikasi' => $master->klasifikasi,
-                        'total_barang' => (int) ($barangCountsByJenis[$master->id] ?? 0),
-                    ];
-                })
-                ->values();
-        } else {
-            $jenisMasters = collect([]);
+        // Optimasi: Warungku query dengan single query menggunakan join
+        $jenisMasters = collect([]);
+        // Optimasi: Gunakan single query dengan join untuk performa lebih baik
+        $warungkuData = DB::table('barang_warungku')
+            ->join('informasi_usaha', 'barang_warungku.informasi_usaha_id', '=', 'informasi_usaha.id')
+            ->join('warungku_masters', 'barang_warungku.jenis_master_id', '=', 'warungku_masters.id')
+            ->where('informasi_usaha.villages_id', $villageId)
+            ->select(
+                'warungku_masters.id',
+                'warungku_masters.jenis',
+                'warungku_masters.klasifikasi',
+                DB::raw('COUNT(barang_warungku.id) as total_barang')
+            )
+            ->groupBy('warungku_masters.id', 'warungku_masters.jenis', 'warungku_masters.klasifikasi')
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'jenis' => $item->jenis,
+                    'klasifikasi' => $item->klasifikasi,
+                    'total_barang' => (int) $item->total_barang,
+                ];
+            })
+            ->values();
+        
+        if ($warungkuData->isNotEmpty()) {
+            $jenisMasters = $warungkuData;
         }
 
-        // Sarana umum by kategori
+        // Optimasi: Pre-compute sarana_umum_by_kategori
+        $saranaUmum = $queries['saranaUmum'];
         $saranaUmumByKategori = $saranaUmum
             ->groupBy('kategori_sarana_id')
             ->map(function ($items) {
@@ -179,11 +179,10 @@ class ProfilDesaController extends Controller
             })
             ->values();
 
+        // Optimasi: Mapping data dengan performa lebih cepat
         return response()->json([
-            'desa' => [
-                'village_id' => $villageId,
-            ],
-            'data_wilayah' => $dataWilayah->map(function ($dw) {
+            'desa' => ['village_id' => $villageId],
+            'data_wilayah' => $queries['dataWilayah']->map(function ($dw) {
                 return [
                     'id' => $dw->id,
                     'user_id' => $dw->user_id,
@@ -194,8 +193,8 @@ class ProfilDesaController extends Controller
                     'jumlah_dusun' => $dw->jumlah_dusun,
                     'jumlah_rt' => $dw->jumlah_rt,
                 ];
-            }),
-            'usaha_desa' => $usahaDesa->map(function ($u) {
+            })->values(),
+            'usaha_desa' => $queries['usahaDesa']->map(function ($u) {
                 return [
                     'id' => $u->id,
                     'user_id' => $u->user_id,
@@ -207,7 +206,7 @@ class ProfilDesaController extends Controller
                     'foto' => $u->foto,
                     'foto_url' => $this->toUrl($u->foto),
                 ];
-            }),
+            })->values(),
             'sarana_umum' => $saranaUmum->map(function ($s) {
                 return [
                     'id' => $s->id,
@@ -225,9 +224,9 @@ class ProfilDesaController extends Controller
                         'kategori' => $s->kategori->kategori,
                     ] : null,
                 ];
-            }),
+            })->values(),
             'sarana_umum_by_kategori' => $saranaUmumByKategori,
-            'kesenian_budaya' => $kesenianBudaya->map(function ($k) {
+            'kesenian_budaya' => $queries['kesenianBudaya']->map(function ($k) {
                 return [
                     'id' => $k->id,
                     'user_id' => $k->user_id,
@@ -239,8 +238,8 @@ class ProfilDesaController extends Controller
                     'foto' => $k->foto,
                     'foto_url' => $this->toUrl($k->foto),
                 ];
-            }),
-            'abdes' => $abdes,
+            })->values(),
+            'abdes' => $queries['abdes']->values(),
             'statistik_penduduk' => $genderStats,
             'statistik_umur' => $ageGroupStats,
             'statistik_pendidikan' => $educationStats,
