@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\PengumumanController as ApiPengumumanController;
 use App\Http\Controllers\Api\AgendaDesaController;
 use App\Http\Controllers\Api\WarungkuController as ApiWarungkuController;
 use App\Http\Controllers\Api\PemerintahDesaController;
+use App\Http\Controllers\Api\ProfilDesaController;
 use App\Http\Controllers\Api\TagihanController as ApiTagihanController;
 use App\Http\Controllers\Api\AdminTagihanController;
 use App\Http\Controllers\Api\AdminPengumumanApiController;
@@ -179,6 +180,9 @@ Route::middleware(ApiTokenOwnerMiddleware::class)->group(function () {
 
         // Pemerintah Desa (berdasarkan desa user login)
         Route::get('/pemerintah-desa', [PemerintahDesaController::class, 'show'])->name('user.api.pemerintah-desa.show');
+
+        // Profil Desa (berdasarkan desa user login) - endpoint untuk data yang di-comment di PemerintahDesaController
+        Route::get('/profil-desa', [ProfilDesaController::class, 'show'])->name('user.api.profil-desa.show');
 
         // Tagihan penduduk (berdasarkan NIK user)
         Route::get('/tagihan', [ApiTagihanController::class, 'index'])->name('user.api.tagihan.index');
