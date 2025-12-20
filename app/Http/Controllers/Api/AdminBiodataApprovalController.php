@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Cache;
 
 class AdminBiodataApprovalController extends Controller
 {
@@ -192,6 +193,11 @@ class AdminBiodataApprovalController extends Controller
 				'reviewed_by' => $user->id,
 				'reviewer_note' => $request->reviewer_note,
 			]);
+
+			// Invalidate cache citizen data karena data telah berubah
+			// Ambil KK dari current_data atau requested_changes
+			$kk = $profileRequest->current_data['kk'] ?? $profileRequest->requested_changes['kk'] ?? null;
+			$this->invalidateCitizenCache($profileRequest->nik, $kk);
 
 			return response()->json([
 				'status' => 'SUCCESS',
@@ -517,5 +523,32 @@ class AdminBiodataApprovalController extends Controller
 		}
 
 		return $summary;
+	}
+
+	/**
+	 * Invalidate cache terkait citizen data
+	 */
+	private function invalidateCitizenCache($nik, $kk = null)
+	{
+		try {
+			$nik = (int) $nik;
+			$citizenCacheKey = "citizen_nik_{$nik}";
+			$citizenStaleCacheKey = "citizen_nik_stale_{$nik}";
+			
+			Cache::forget($citizenCacheKey);
+			Cache::forget($citizenStaleCacheKey);
+			
+			// Invalidate cache family members jika ada KK
+			if ($kk) {
+				$familyCacheKey = "family_members_kk_{$kk}";
+				$familyStaleCacheKey = "family_members_kk_stale_{$kk}";
+				Cache::forget($familyCacheKey);
+				Cache::forget($familyStaleCacheKey);
+			}
+			
+			Log::info('Citizen cache invalidated after approval', ['nik' => $nik, 'kk' => $kk]);
+		} catch (\Exception $e) {
+			Log::error('Error invalidating citizen cache: ' . $e->getMessage());
+		}
 	}
 }

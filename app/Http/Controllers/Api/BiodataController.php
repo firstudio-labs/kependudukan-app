@@ -73,7 +73,7 @@ class BiodataController extends Controller
                 Log::warning('Failed to retrieve jobs list: ' . $e->getMessage());
             }
 
-            // Informasi Usaha: cari milik user atau satu KK - dengan cache
+            // Informasi Usaha: cari milik user atau satu KK - dengan cache (tidak expired kecuali data berubah)
             $informasiUsaha = null;
             try {
                 $cacheKey = "informasi_usaha_user_{$user->id}";
@@ -81,8 +81,9 @@ class BiodataController extends Controller
                     $cacheKey = "informasi_usaha_kk_{$citizenData['kk']}";
                 }
                 
-                // Cek cache terlebih dahulu (TTL 24 jam)
-                $informasiUsaha = Cache::remember($cacheKey, now()->addHours(24), function () use ($user, $citizenData) {
+                // Cache tanpa expired (hanya di-invalidate saat data berubah)
+                // Gunakan TTL sangat lama (1 tahun) sebagai fallback safety
+                $informasiUsaha = Cache::remember($cacheKey, now()->addYear(), function () use ($user, $citizenData) {
                     $usaha = \App\Models\InformasiUsaha::where('penduduk_id', $user->id)->first();
                     if (!$usaha && !empty($citizenData['kk'])) {
                         $usaha = \App\Models\InformasiUsaha::where('kk', $citizenData['kk'])->first();
@@ -561,6 +562,47 @@ class BiodataController extends Controller
                 return 'Permintaan ditolak oleh admin desa';
             default:
                 return 'Status tidak diketahui';
+        }
+    }
+
+    /**
+     * Invalidate cache terkait biodata
+     * Dipanggil saat data berubah untuk menghapus cache yang sudah tidak valid
+     */
+    private function invalidateBiodataCache($nik, $kk = null, $userId = null)
+    {
+        try {
+            // Invalidate cache citizen data
+            $citizenCacheKey = "citizen_nik_{$nik}";
+            $citizenStaleCacheKey = "citizen_nik_stale_{$nik}";
+            Cache::forget($citizenCacheKey);
+            Cache::forget($citizenStaleCacheKey);
+
+            // Invalidate cache family members jika ada KK
+            if ($kk) {
+                $familyCacheKey = "family_members_kk_{$kk}";
+                $familyStaleCacheKey = "family_members_kk_stale_{$kk}";
+                Cache::forget($familyCacheKey);
+                Cache::forget($familyStaleCacheKey);
+            }
+
+            // Invalidate cache informasi usaha
+            if ($userId) {
+                $usahaCacheKey = "informasi_usaha_user_{$userId}";
+                Cache::forget($usahaCacheKey);
+            }
+            if ($kk) {
+                $usahaCacheKey = "informasi_usaha_kk_{$kk}";
+                Cache::forget($usahaCacheKey);
+            }
+
+            Log::info('Biodata cache invalidated', [
+                'nik' => $nik,
+                'kk' => $kk,
+                'user_id' => $userId
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error invalidating biodata cache: ' . $e->getMessage());
         }
     }
 }

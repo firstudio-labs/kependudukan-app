@@ -6,6 +6,8 @@ use Illuminate\Support\ServiceProvider;
 use Carbon\Carbon;
 use Intervention\Image\ImageManager;
 use Intervention\Image\ImageManagerStatic;
+use App\Models\InformasiUsaha;
+use App\Observers\InformasiUsahaObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -27,5 +29,8 @@ class AppServiceProvider extends ServiceProvider
     {
         // Set default timezone to Indonesia
         date_default_timezone_set('Asia/Jakarta');
+
+        // Register model observers
+        InformasiUsaha::observe(InformasiUsahaObserver::class);
     }
 }
