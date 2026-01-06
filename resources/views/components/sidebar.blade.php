@@ -951,33 +951,39 @@
             // Force reflow to ensure the element is rendered
             void dropdown.offsetWidth;
             // Apply animation
-            dropdown.style.height = '0';
+            dropdown.style.maxHeight = '0';
+            dropdown.style.opacity = '0';
             dropdown.style.overflow = 'hidden';
             // Force reflow again
             void dropdown.offsetWidth;
             // Animate to full height
-            dropdown.style.height = dropdown.scrollHeight + 'px';
+            dropdown.style.maxHeight = dropdown.scrollHeight + 'px';
+            dropdown.style.opacity = '1';
 
-            // After animation completes, remove the inline height to maintain layout
+            // After animation completes, remove the inline max-height to maintain layout
             setTimeout(() => {
                 if (!dropdown.classList.contains('hidden')) {
-                    dropdown.style.removeProperty('height');
+                    dropdown.style.removeProperty('maxHeight');
+                    dropdown.style.removeProperty('opacity');
                     dropdown.style.overflow = 'visible';
                 }
             }, 300);
         } else {
             // Hide dropdown with animation
-            dropdown.style.height = dropdown.scrollHeight + 'px';
+            dropdown.style.maxHeight = dropdown.scrollHeight + 'px';
+            dropdown.style.opacity = '1';
             dropdown.style.overflow = 'hidden';
             // Force reflow
             void dropdown.offsetWidth;
             // Animate to 0
-            dropdown.style.height = '0';
+            dropdown.style.maxHeight = '0';
+            dropdown.style.opacity = '0';
 
             // After animation completes, hide the element
             setTimeout(() => {
                 dropdown.classList.add('hidden');
-                dropdown.style.removeProperty('height');
+                dropdown.style.removeProperty('maxHeight');
+                dropdown.style.removeProperty('opacity');
                 dropdown.style.removeProperty('overflow');
             }, 300);
         }
