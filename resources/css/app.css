@@ -36,11 +36,22 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 180px;
+    max-width: 190px;
     display: inline-block;
 }
 
 /* Ensure sidebar has proper width for all content */
 #sidebar {
     min-width: 256px;
+    width: 256px;
+}
+
+/* Ensure submenu items have proper spacing */
+#sidebar ul ul li {
+    padding-left: 0;
+}
+
+#sidebar ul ul li a,
+#sidebar ul ul li button {
+    padding-left: 1rem !important;
 }
