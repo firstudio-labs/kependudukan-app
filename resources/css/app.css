@@ -29,3 +29,18 @@
     padding-top: 0.25rem;
     padding-bottom: 0.25rem;
 }
+
+/* Ensure menu text doesn't get cut off */
+#sidebar ul li a span,
+#sidebar ul li button span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 180px;
+    display: inline-block;
+}
+
+/* Ensure sidebar has proper width for all content */
+#sidebar {
+    min-width: 256px;
+}

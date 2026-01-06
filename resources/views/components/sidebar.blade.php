@@ -708,26 +708,26 @@
                         </button>
                         <ul id="pendudukDropdown" class="hidden space-y-2 pl-6 transition-all duration-300 ease-in-out overflow-hidden">
                             <li>
-                                <a href="{{ route('admin.desa.biodata.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                            {{ request()->routeIs('admin.desa.biodata.index') || request()->routeIs('admin.desa.biodata.edit') || request()->routeIs('admin.desa.biodata.update') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                <a href="{{ route('admin.desa.biodata.index') }}"
+                                    class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 {{ request()->routeIs('admin.desa.biodata.index') || request()->routeIs('admin.desa.biodata.edit') || request()->routeIs('admin.desa.biodata.update') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Biodata</span>
                                 </a>
                             </li>
                             <li>
-                                <a href="{{ route('admin.desa.datakk.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                            {{ request()->routeIs('admin.desa.datakk.index') || request()->routeIs('admin.desa.datakk.edit') || request()->routeIs('admin.desa.datakk.update') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                <a href="{{ route('admin.desa.datakk.index') }}"
+                                    class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 {{ request()->routeIs('admin.desa.datakk.index') || request()->routeIs('admin.desa.datakk.edit') || request()->routeIs('admin.desa.datakk.update') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Data KK</span>
                                 </a>
                             </li>
                             <li>
-                                <a href="{{ route('admin.desa.datakk.create') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                {{ request()->routeIs('admin.desa.datakk.create') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                <a href="{{ route('admin.desa.datakk.create') }}"
+                                    class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 {{ request()->routeIs('admin.desa.datakk.create') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Tambah Data KK & Biodata</span>
                                 </a>
                             </li>
                             <li>
-                                <a href="{{ route('admin.desa.biodata-approval.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                            {{ request()->routeIs('admin.desa.biodata-approval.*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                <a href="{{ route('admin.desa.biodata-approval.index') }}"
+                                    class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 {{ request()->routeIs('admin.desa.biodata-approval.*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Approval Biodata</span>
                                 </a>
                             </li>
@@ -775,14 +775,14 @@
                                 </ul>
                             </li>
                             <li>
-                                <a href="{{ route('admin.desa.agenda.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                    {{ request()->routeIs('admin.desa.agenda.*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                <a href="{{ route('admin.desa.agenda.index') }}"
+                                    class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 {{ request()->routeIs('admin.desa.agenda.*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Agenda Desa</span>
                                 </a>
                             </li>
                             <li>
-                                <a href="{{ route('admin.desa.pengumuman.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                    {{ request()->routeIs('admin.desa.pengumuman.*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                <a href="{{ route('admin.desa.pengumuman.index') }}"
+                                    class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 {{ request()->routeIs('admin.desa.pengumuman.*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Pengumuman</span>
                                 </a>
                             </li>
@@ -843,50 +843,43 @@
                             </li>
                             <li>
                                 <a href="{{ route('admin.desa.surat.ahli-waris.index') }}"
-                                    class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                                                    {{ request()->routeIs('admin.desa.surat.ahli-waris*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                    class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 {{ request()->routeIs('admin.desa.surat.ahli-waris*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Surat Ahli Waris</span>
                                 </a>
                             </li>
                             {{-- <li>
                                 <a href="{{ route('admin.desa.surat.kelahiran.index') }}"
-                                    class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                                                    {{ request()->routeIs('admin.desa.surat.kelahiran*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                    class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 {{ request()->routeIs('admin.desa.surat.kelahiran*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Surat Kelahiran</span>
                                 </a>
                             </li> --}}
                             {{-- <li>
                                 <a href="{{ route('admin.desa.surat.kematian.index') }}"
-                                    class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                                                    {{ request()->routeIs('admin.desa.surat.kematian*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                    class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 {{ request()->routeIs('admin.desa.surat.kematian*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Surat Kematian</span>
                                 </a>
                             </li> --}}
                             <li>
                                 <a href="{{ route('admin.desa.surat.keramaian.index') }}"
-                                    class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                                                    {{ request()->routeIs('admin.desa.surat.keramaian*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                    class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 {{ request()->routeIs('admin.desa.surat.keramaian*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Izin Keramaian</span>
                                 </a>
                             </li>
                             <li>
                                 <a href="{{ route('admin.desa.surat.rumah-sewa.index') }}"
-                                    class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                                                    {{ request()->routeIs('admin.desa.surat.rumah-sewa*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                    class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 {{ request()->routeIs('admin.desa.surat.rumah-sewa*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Surat Rumah Sewa</span>
                                 </a>
                             </li>
                             <li>
                                 <a href="{{ route('admin.desa.buku-tamu.index') }}"
-                                    class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                                                    {{ request()->routeIs('admin.desa.buku-tamu*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                    class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 {{ request()->routeIs('admin.desa.buku-tamu*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Buku Tamu</span>
                                 </a>
                             </li>
                             {{-- <li>
                                 <a href="{{ route('admin.desa.surat.pengantar-ktp.index') }}"
-                                    class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
-                                                                                                                                                                    {{ request()->routeIs('admin.desa.surat.pengantar-ktp*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                    class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 {{ request()->routeIs('admin.desa.surat.pengantar-ktp*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
                                     <span>Pengantar KTP</span>
                                 </a>
                             </li> --}}
