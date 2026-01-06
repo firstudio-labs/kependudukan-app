@@ -983,15 +983,18 @@
             dropdown._hideTimeout = null;
         }
 
-        // Simple toggle without complex animations
+        // Smooth toggle with proper timing
         if (isHidden) {
-            // Show dropdown
+            // Show dropdown with smooth animation
             dropdown.classList.remove('hidden');
-            dropdown.classList.add('dropdown-open');
+            // Add delay to make opening animation visible and smooth
+            setTimeout(() => {
+                dropdown.classList.add('dropdown-open');
+            }, 100); // Longer delay for better visibility of opening animation
         } else {
-            // Hide dropdown
+            // Hide dropdown with smooth animation
             dropdown.classList.remove('dropdown-open');
-            // Use timeout to allow CSS transition to complete
+            // Use timeout to allow CSS transition to complete before hiding
             dropdown._hideTimeout = setTimeout(() => {
                 dropdown.classList.add('hidden');
                 dropdown._hideTimeout = null;
