@@ -35,6 +35,21 @@
     <div class="p-4 mt-14">
         <h1 class="text-2xl font-bold text-gray-800 mb-6">Master Tagihan</h1>
 
+        <!-- Alert Messages -->
+        @if(session('success'))
+            <div class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
+                <i class="fa-solid fa-check-circle mr-2"></i>
+                {{ session('success') }}
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+                <i class="fa-solid fa-exclamation-triangle mr-2"></i>
+                {{ session('error') }}
+            </div>
+        @endif
+
         <!-- Kategori Section -->
         <div class="bg-white rounded-lg shadow-md p-6 mb-6">
             <div class="flex justify-between items-center mb-4">
@@ -97,11 +112,12 @@
                                             title="Edit kategori">
                                             <i class="fa-solid fa-edit"></i>
                                         </button>
-                                        <form method="POST" action="{{ route('admin.desa.master-tagihan.kategori.destroy', $kategori->id) }}" 
-                                            class="inline" onsubmit="return confirm('Yakin ingin menghapus kategori ini?')">
+                                        <form method="POST" action="{{ route('admin.desa.master-tagihan.kategori.destroy', $kategori->id) }}"
+                                            class="inline" onsubmit="return confirmDeleteKategori()">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="text-red-600 hover:text-red-800 p-1 rounded hover:bg-red-100" 
+                                            <input type="hidden" name="kategori_name" value="{{ $kategori->nama_kategori }}">
+                                            <button type="submit" class="text-red-600 hover:text-red-800 p-1 rounded hover:bg-red-100"
                                                 title="Hapus kategori">
                                                 <i class="fa-solid fa-trash"></i>
                                             </button>
@@ -199,11 +215,12 @@
                                             title="Edit sub kategori">
                                             <i class="fa-solid fa-edit"></i>
                                         </button>
-                                        <form method="POST" action="{{ route('admin.desa.master-tagihan.sub-kategori.destroy', $subKategori->id) }}" 
-                                            class="inline" onsubmit="return confirm('Yakin ingin menghapus sub kategori ini?')">
+                                        <form method="POST" action="{{ route('admin.desa.master-tagihan.sub-kategori.destroy', $subKategori->id) }}"
+                                            class="inline" onsubmit="return confirmDeleteSubKategori()">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="text-red-600 hover:text-red-800 p-1 rounded hover:bg-red-100" 
+                                            <input type="hidden" name="sub_kategori_name" value="{{ $subKategori->nama_sub_kategori }}">
+                                            <button type="submit" class="text-red-600 hover:text-red-800 p-1 rounded hover:bg-red-100"
                                                 title="Hapus sub kategori">
                                                 <i class="fa-solid fa-trash"></i>
                                             </button>
@@ -291,6 +308,21 @@
 
 
     <script>
+        // Confirmation functions
+        function confirmDeleteKategori() {
+            const form = event.target.closest('form');
+            const kategoriName = form.querySelector('input[name="kategori_name"]').value;
+
+            return confirm(`PERINGATAN: Menghapus kategori "${kategoriName}" dapat menyebabkan error jika kategori ini masih digunakan oleh tagihan atau sub kategori.\n\nYakin ingin melanjutkan?`);
+        }
+
+        function confirmDeleteSubKategori() {
+            const form = event.target.closest('form');
+            const subKategoriName = form.querySelector('input[name="sub_kategori_name"]').value;
+
+            return confirm(`PERINGATAN: Menghapus sub kategori "${subKategoriName}" dapat menyebabkan error jika sub kategori ini masih digunakan oleh tagihan.\n\nYakin ingin melanjutkan?`);
+        }
+
         // Toggle functions
         function toggleKategoriForm() {
             const form = document.getElementById('kategoriForm');

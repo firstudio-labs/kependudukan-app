@@ -207,6 +207,19 @@ class MasterTagihanController extends Controller
     public function destroyKategori($id)
     {
         $kategori = KategoriTagihan::findOrFail($id);
+
+        // Cek apakah kategori masih digunakan oleh sub kategori atau tagihan
+        $subKategoriCount = $kategori->subKategoris()->count();
+        $tagihanCount = $kategori->tagihans()->count();
+
+        if ($tagihanCount > 0) {
+            return redirect()->back()->with('error', "Kategori '{$kategori->nama_kategori}' tidak dapat dihapus karena masih digunakan oleh {$tagihanCount} tagihan. Hapus semua tagihan yang menggunakan kategori ini terlebih dahulu.");
+        }
+
+        if ($subKategoriCount > 0) {
+            return redirect()->back()->with('error', "Kategori '{$kategori->nama_kategori}' tidak dapat dihapus karena masih memiliki {$subKategoriCount} sub kategori. Hapus semua sub kategori terlebih dahulu.");
+        }
+
         $kategori->delete();
         return redirect()->back()->with('success', 'Kategori berhasil dihapus');
     }
@@ -239,6 +252,14 @@ class MasterTagihanController extends Controller
     public function destroySubKategori($id)
     {
         $subKategori = SubKategoriTagihan::findOrFail($id);
+
+        // Cek apakah sub kategori masih digunakan oleh tagihan
+        $tagihanCount = $subKategori->tagihans()->count();
+
+        if ($tagihanCount > 0) {
+            return redirect()->back()->with('error', "Sub kategori '{$subKategori->nama_sub_kategori}' tidak dapat dihapus karena masih digunakan oleh {$tagihanCount} tagihan. Hapus semua tagihan yang menggunakan sub kategori ini terlebih dahulu.");
+        }
+
         $subKategori->delete();
         return redirect()->back()->with('success', 'Sub kategori berhasil dihapus');
     }
