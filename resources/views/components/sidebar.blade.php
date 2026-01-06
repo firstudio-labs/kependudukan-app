@@ -28,11 +28,11 @@
 <style>
     /* Smooth dropdown animations */
     #sidebar ul li {
-        transition: transform 0.3s ease;
+        transition: margin-bottom 0.3s ease, transform 0.3s ease;
     }
 
     #sidebar ul li ul {
-        transition: all 0.3s ease-in-out;
+        transition: max-height 0.3s ease, opacity 0.3s ease;
         position: relative;
         z-index: 10;
         overflow: hidden;
@@ -42,7 +42,6 @@
     #sidebar ul li ul li {
         opacity: 1 !important;
         visibility: visible !important;
-        transform: translateY(0);
     }
 
     /* Ensure dropdown icons rotate smoothly */
@@ -54,12 +53,10 @@
         transform: rotate(180deg);
     }
 
-    /* Additional smooth animations for better UX */
+    /* Initial state for hidden dropdowns */
     #sidebar ul li ul.hidden {
         max-height: 0 !important;
         opacity: 0 !important;
-        transform: scaleY(0) !important;
-        transform-origin: top;
     }
 
     /* Force submenu visibility */
@@ -88,7 +85,7 @@
         class="fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-transform -translate-x-full bg-white border-r border-gray-200 sm:translate-x-0"
         aria-label="Sidebar">
         <div class="h-full px-3 pb-4 overflow-y-auto bg-white">
-            <ul class="space-y-2 font-medium text-sm flex flex-col">
+            <ul class="space-y-2 font-medium text-sm flex flex-col relative">
                 {{-- Menu berdasarkan role --}}
                 @if ($user->role == 'superadmin')
                     <li class="-ml-5">
@@ -941,9 +938,9 @@
 <script>
     function toggleDropdown(id) {
         const dropdown = document.getElementById(id);
+        if (!dropdown) return;
+
         const isHidden = dropdown.classList.contains('hidden');
-        const dropdownParent = dropdown.parentElement;
-        const sidebarList = dropdown.closest('ul');
 
         // Handle specific dropdown icons based on their ID
         const iconMap = {
@@ -963,93 +960,68 @@
             'userWarungkuDropdown': 'dropdown-icon-user-warungku'
         };
 
-        if (iconMap[id]) {
-            const icon = document.getElementById(iconMap[id]);
+        const iconId = iconMap[id];
+        if (iconId) {
+            const icon = document.getElementById(iconId);
             if (icon) {
                 icon.classList.toggle('rotate-180');
             }
         }
 
-        // Get all sibling elements that come after this dropdown's parent
-        const allItems = Array.from(sidebarList.children);
-        const currentIndex = allItems.indexOf(dropdownParent);
-        const itemsAfter = allItems.slice(currentIndex + 1);
+        // Reset all inline styles
+        dropdown.style.transition = '';
+        dropdown.style.maxHeight = '';
+        dropdown.style.opacity = '';
+        dropdown.style.overflow = '';
+        dropdown.style.visibility = '';
 
         if (isHidden) {
             // Show dropdown with smooth animation
             dropdown.classList.remove('hidden');
+            dropdown.style.overflow = 'hidden';
+            dropdown.style.maxHeight = '0px';
+            dropdown.style.opacity = '0';
+            dropdown.style.visibility = 'visible';
 
-            // Force reflow to ensure accurate measurements
+            // Force reflow
             void dropdown.offsetWidth;
 
             const targetHeight = dropdown.scrollHeight;
 
-            // Set initial state for animation
-            dropdown.style.maxHeight = '0px';
-            dropdown.style.opacity = '0';
-            dropdown.style.overflow = 'hidden';
-
-            // Force another reflow
-            void dropdown.offsetWidth;
-
-            // Start the expand animation
-            dropdown.style.transition = 'max-height 0.3s ease, opacity 0.3s ease';
+            // Apply smooth transition
+            dropdown.style.transition = 'max-height 0.3s ease-in-out, opacity 0.3s ease-in-out';
             dropdown.style.maxHeight = targetHeight + 'px';
             dropdown.style.opacity = '1';
 
-            // Move items below downward with smooth animation
+            // Clean up after animation
             setTimeout(() => {
-                itemsAfter.forEach(item => {
-                    item.style.transition = 'transform 0.3s ease';
-                    item.style.transform = `translateY(${targetHeight}px)`;
-                });
-            }, 50);
-
-            // Clean up after animation completes
-            setTimeout(() => {
-                dropdown.style.overflow = 'visible';
-                dropdown.style.maxHeight = 'none'; // Allow natural height
+                dropdown.style.overflow = '';
+                dropdown.style.maxHeight = '';
+                dropdown.style.transition = '';
             }, 300);
 
         } else {
             // Hide dropdown with smooth animation
-            const currentHeight = dropdown.scrollHeight;
+            dropdown.style.overflow = 'hidden';
+            dropdown.style.maxHeight = dropdown.scrollHeight + 'px';
 
-            // First, move items back up
-            itemsAfter.forEach(item => {
-                item.style.transition = 'transform 0.3s ease';
-                item.style.transform = 'translateY(0)';
-            });
+            // Force reflow
+            void dropdown.offsetWidth;
 
-            // Then collapse the dropdown
+            dropdown.style.transition = 'max-height 0.3s ease-in-out, opacity 0.3s ease-in-out';
+            dropdown.style.maxHeight = '0px';
+            dropdown.style.opacity = '0';
+
+            // Hide after animation
             setTimeout(() => {
-                dropdown.style.transition = 'max-height 0.3s ease, opacity 0.3s ease';
-                dropdown.style.maxHeight = currentHeight + 'px';
-                dropdown.style.overflow = 'hidden';
-
-                // Force reflow
-                void dropdown.offsetWidth;
-
-                dropdown.style.maxHeight = '0px';
-                dropdown.style.opacity = '0';
-
-                // Hide completely after animation
-                setTimeout(() => {
-                    dropdown.classList.add('hidden');
-
-                    // Reset all inline styles
-                    dropdown.style.removeProperty('max-height');
-                    dropdown.style.removeProperty('opacity');
-                    dropdown.style.removeProperty('overflow');
-                    dropdown.style.removeProperty('transition');
-
-                    // Reset transforms on items after
-                    itemsAfter.forEach(item => {
-                        item.style.removeProperty('transform');
-                        item.style.removeProperty('transition');
-                    });
-                }, 300);
-            }, 50);
+                dropdown.classList.add('hidden');
+                // Reset all styles
+                dropdown.style.transition = '';
+                dropdown.style.maxHeight = '';
+                dropdown.style.opacity = '';
+                dropdown.style.overflow = '';
+                dropdown.style.visibility = '';
+            }, 300);
         }
     }
 
@@ -1097,50 +1069,42 @@
                 dropdown.classList.remove('hidden');
                 if (icon) icon.classList.add('rotate-180');
 
-                // Apply animation for auto-opened dropdowns
+                // Apply smooth expansion without affecting other elements
                 setTimeout(() => {
                     const targetHeight = dropdown.scrollHeight;
                     dropdown.style.maxHeight = targetHeight + 'px';
                     dropdown.style.opacity = '1';
                     dropdown.style.visibility = 'visible';
-                    dropdown.style.overflow = 'visible'; // Changed to visible to show content
-                    dropdown.style.position = 'relative';
-                    dropdown.style.zIndex = '10';
-                    dropdown.style.display = 'block';
+                    dropdown.style.overflow = 'visible';
 
-                    // Get items after this dropdown and move them down
-                    const dropdownParent = dropdown.parentElement;
-                    const sidebarList = dropdown.closest('ul');
-                    const allItems = Array.from(sidebarList.children);
-                    const currentIndex = allItems.indexOf(dropdownParent);
-                    const itemsAfter = allItems.slice(currentIndex + 1);
-
-                    itemsAfter.forEach(item => {
-                        item.style.transform = `translateY(${targetHeight}px)`;
-                        item.style.transition = 'transform 0.3s ease';
-                    });
+                    // Clean up after animation
+                    setTimeout(() => {
+                        dropdown.style.maxHeight = '';
+                    }, 300);
                 }, 10);
             }
         };
 
-        // Check each dropdown
-        checkDropdownForActiveItems('pendudukDropdown', 'dropdown-icon-penduduk');
-        checkDropdownForActiveItems('suratDropdown', 'dropdown-icon-surat');
-        checkDropdownForActiveItems('wilayahDropdown', 'dropdown-icon-wilayah');
-        checkDropdownForActiveItems('masterSuratDropdown', 'dropdown-icon-master-surat');
-        checkDropdownForActiveItems('masterUsersDropdown', 'dropdown-icon-master-users');
-        checkDropdownForActiveItems('kelolaAsetDropdown', 'dropdown-icon-kelola-aset');
-        checkDropdownForActiveItems('masterKeperluanDropdown', 'dropdown-icon-master-keperluan');
-        checkDropdownForActiveItems('profilSaranaDropdown', 'dropdown-icon-profil-sarana');
-        checkDropdownForActiveItems('informasiLaporDesaDropdown', 'dropdown-icon-informasi-lapor');
-        checkDropdownForActiveItems('profilDesaDropdown', 'dropdown-icon-profil-desa');
-        checkDropdownForActiveItems('informasiDesaDropdown', 'dropdown-icon-informasi-desa');
-        checkDropdownForActiveItems('masterTagihanDropdown', 'dropdown-icon-master-tagihan');
+        // Check each dropdown for auto-open
+        const dropdownsToCheck = [
+            ['pendudukDropdown', 'dropdown-icon-penduduk'],
+            ['suratDropdown', 'dropdown-icon-surat'],
+            ['wilayahDropdown', 'dropdown-icon-wilayah'],
+            ['masterSuratDropdown', 'dropdown-icon-master-surat'],
+            ['masterUsersDropdown', 'dropdown-icon-master-users'],
+            ['kelolaAsetDropdown', 'dropdown-icon-kelola-aset'],
+            ['masterKeperluanDropdown', 'dropdown-icon-master-keperluan'],
+            ['profilSaranaDropdown', 'dropdown-icon-profil-sarana'],
+            ['informasiLaporDesaDropdown', 'dropdown-icon-informasi-lapor'],
+            ['profilDesaDropdown', 'dropdown-icon-profil-desa'],
+            ['informasiDesaDropdown', 'dropdown-icon-informasi-desa'],
+            ['masterTagihanDropdown', 'dropdown-icon-master-tagihan'],
+            ['userBeritaDropdown', 'dropdown-icon-user-berita'],
+            ['userWarungkuDropdown', 'dropdown-icon-user-warungku']
+        ];
 
-        // User Warungku dropdown auto-open
-        checkDropdownForActiveItems('userWarungkuDropdown', 'dropdown-icon-user-warungku');
-        checkDropdownForActiveItems('userWarungkuDropdownUser', 'dropdown-icon-user-warungku-user');
-        checkDropdownForActiveItems('userWarungkuDropdownUserBlock', 'dropdown-icon-user-warungku-user-block');
-        checkDropdownForActiveItems('userWarungkuUser', 'dropdown-icon-user-warungku-user2');
+        dropdownsToCheck.forEach(([dropdownId, iconId]) => {
+            checkDropdownForActiveItems(dropdownId, iconId);
+        });
     });
 </script>
