@@ -629,6 +629,7 @@
                                 <button type="button"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
                                     onclick="toggleDropdown('profilSaranaDropdown')">
+                                    <i class="fa-solid fa-building text-lg transition-all duration-300"></i>
                                     <span>Kategori & Sarana Umum</span>
                                     <i id="dropdown-icon-profil-sarana" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
                                 </button>
@@ -636,12 +637,14 @@
                                     <li>
                                         <a href="{{ route('admin.desa.kategori-sarana.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
                                             {{ request()->routeIs('admin.desa.kategori-sarana.*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                            <i class="fa-solid fa-tag text-sm transition-all duration-300"></i>
                                             <span>Kategori Sarana</span>
                                         </a>
                                     </li>
                                     <li>
                                         <a href="{{ route('admin.desa.sarana-umum.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
                                             {{ request()->routeIs('admin.desa.sarana-umum.*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                            <i class="fa-solid fa-map-marker-alt text-sm transition-all duration-300"></i>
                                             <span>Sarana Umum</span>
                                         </a>
                                     </li>
@@ -898,6 +901,7 @@
 <script>
     function toggleDropdown(id) {
         const dropdown = document.getElementById(id);
+        const isHidden = dropdown.classList.contains('hidden');
 
         // Handle specific dropdown icons based on their ID
         if (id === 'pendudukDropdown') {
@@ -921,9 +925,53 @@
         } else if (id === 'kelolaAsetDropdown') {
             const icon = document.getElementById('dropdown-icon-kelola-aset');
             icon.classList.toggle('rotate-180');
+        } else if (id === 'profilSaranaDropdown') {
+            const icon = document.getElementById('dropdown-icon-profil-sarana');
+            icon.classList.toggle('rotate-180');
+        } else if (id === 'informasiLaporDesaDropdown') {
+            const icon = document.getElementById('dropdown-icon-informasi-lapor');
+            icon.classList.toggle('rotate-180');
+        } else if (id === 'profilDesaDropdown') {
+            const icon = document.getElementById('dropdown-icon-profil-desa');
+            icon.classList.toggle('rotate-180');
+        } else if (id === 'informasiDesaDropdown') {
+            const icon = document.getElementById('dropdown-icon-informasi-desa');
+            icon.classList.toggle('rotate-180');
+        } else if (id === 'masterTagihanDropdown') {
+            const icon = document.getElementById('dropdown-icon-master-tagihan');
+            icon.classList.toggle('rotate-180');
+        } else if (id === 'userBeritaDropdown') {
+            const icon = document.getElementById('dropdown-icon-user-berita');
+            icon.classList.toggle('rotate-180');
+        } else if (id === 'userWarungkuDropdown') {
+            const icon = document.getElementById('dropdown-icon-user-warungku');
+            icon.classList.toggle('rotate-180');
         }
 
-        dropdown.classList.toggle('hidden');
+        if (isHidden) {
+            // Show dropdown with animation
+            dropdown.classList.remove('hidden');
+            // Small timeout to ensure the element is rendered before applying animation
+            setTimeout(() => {
+                dropdown.style.maxHeight = dropdown.scrollHeight + 'px';
+            }, 10);
+        } else {
+            // Hide dropdown with animation
+            dropdown.style.maxHeight = dropdown.scrollHeight + 'px';
+            // Trigger reflow to ensure the max-height is applied
+            void dropdown.offsetWidth;
+            dropdown.style.maxHeight = '0';
+            dropdown.style.opacity = '0';
+            dropdown.style.visibility = 'hidden';
+
+            setTimeout(() => {
+                dropdown.classList.add('hidden');
+                // Reset inline styles when hidden
+                dropdown.style.removeProperty('max-height');
+                dropdown.style.removeProperty('opacity');
+                dropdown.style.removeProperty('visibility');
+            }, 300); // Match the CSS transition duration
+        }
     }
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -968,6 +1016,10 @@
 
             if (hasActiveChild) {
                 dropdown.classList.remove('hidden');
+                // Apply animation for auto-opened dropdowns
+                setTimeout(() => {
+                    dropdown.style.maxHeight = dropdown.scrollHeight + 'px';
+                }, 10);
                 if (icon) icon.classList.add('rotate-180');
             }
         };
@@ -980,6 +1032,11 @@
         checkDropdownForActiveItems('masterUsersDropdown', 'dropdown-icon-master-users');
         checkDropdownForActiveItems('kelolaAsetDropdown', 'dropdown-icon-kelola-aset');
         checkDropdownForActiveItems('masterKeperluanDropdown', 'dropdown-icon-master-keperluan');
+        checkDropdownForActiveItems('profilSaranaDropdown', 'dropdown-icon-profil-sarana');
+        checkDropdownForActiveItems('informasiLaporDesaDropdown', 'dropdown-icon-informasi-lapor');
+        checkDropdownForActiveItems('profilDesaDropdown', 'dropdown-icon-profil-desa');
+        checkDropdownForActiveItems('informasiDesaDropdown', 'dropdown-icon-informasi-desa');
+        checkDropdownForActiveItems('masterTagihanDropdown', 'dropdown-icon-master-tagihan');
 
         // User Warungku dropdown auto-open
         checkDropdownForActiveItems('userWarungkuDropdown', 'dropdown-icon-user-warungku');

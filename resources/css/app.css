@@ -1,2 +1,17 @@
 @import "tailwindcss";
 @source "../views";
+
+/* Sidebar dropdown animations */
+#sidebar ul ul {
+    max-height: 0;
+    opacity: 0;
+    visibility: hidden;
+    overflow: hidden;
+    transition: max-height 0.3s ease, opacity 0.3s ease, visibility 0.3s ease;
+}
+
+/* Ensure proper styling for dropdown items */
+#sidebar ul ul li a,
+#sidebar ul ul li button {
+    transition: all 0.2s ease;
+}
