@@ -986,10 +986,27 @@
         if (isHidden) {
             // Show dropdown with animation
             dropdown.classList.remove('hidden');
-            // Force reflow
-            void dropdown.offsetWidth;
 
+            // Temporarily make it visible to measure height
+            dropdown.style.display = 'block';
+            dropdown.style.opacity = '0';
+            dropdown.style.visibility = 'visible';
+            dropdown.style.maxHeight = 'none';
+            dropdown.style.overflow = 'visible';
+
+            // Force reflow and measure height
+            void dropdown.offsetWidth;
             const targetHeight = dropdown.scrollHeight;
+
+            // Reset for animation
+            dropdown.style.display = '';
+            dropdown.style.maxHeight = '0';
+            dropdown.style.opacity = '0';
+            dropdown.style.visibility = 'hidden';
+            dropdown.style.overflow = 'hidden';
+
+            // Force reflow again
+            void dropdown.offsetWidth;
 
             // Apply animation
             dropdown.style.maxHeight = targetHeight + 'px';
@@ -1081,21 +1098,30 @@
                 dropdown.classList.remove('hidden');
                 if (icon) icon.classList.add('rotate-180');
 
-                // Apply animation for auto-opened dropdowns
+                // Measure height properly for auto-opened dropdowns
+                dropdown.style.display = 'block';
+                dropdown.style.opacity = '0';
+                dropdown.style.visibility = 'visible';
+                dropdown.style.maxHeight = 'none';
+                dropdown.style.overflow = 'visible';
+
+                void dropdown.offsetWidth;
+                const targetHeight = dropdown.scrollHeight;
+
+                dropdown.style.display = '';
+                dropdown.style.maxHeight = targetHeight + 'px';
+                dropdown.style.opacity = '1';
+                dropdown.style.visibility = 'visible';
+                dropdown.style.overflow = 'hidden';
+
+                // Get items after this dropdown and move them down
+                const dropdownParent = dropdown.parentElement;
+                const sidebarList = dropdown.closest('ul');
+                const allItems = Array.from(sidebarList.children);
+                const currentIndex = allItems.indexOf(dropdownParent);
+                const itemsAfter = allItems.slice(currentIndex + 1);
+
                 setTimeout(() => {
-                    const targetHeight = dropdown.scrollHeight;
-                    dropdown.style.maxHeight = targetHeight + 'px';
-                    dropdown.style.opacity = '1';
-                    dropdown.style.visibility = 'visible';
-                    dropdown.style.overflow = 'hidden';
-
-                    // Get items after this dropdown and move them down
-                    const dropdownParent = dropdown.parentElement;
-                    const sidebarList = dropdown.closest('ul');
-                    const allItems = Array.from(sidebarList.children);
-                    const currentIndex = allItems.indexOf(dropdownParent);
-                    const itemsAfter = allItems.slice(currentIndex + 1);
-
                     itemsAfter.forEach(item => {
                         item.style.transform = `translateY(${targetHeight}px)`;
                         item.style.transition = 'transform 0.3s ease';
