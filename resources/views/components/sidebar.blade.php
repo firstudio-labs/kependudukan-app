@@ -35,12 +35,14 @@
         transition: all 0.3s ease-in-out;
         position: relative;
         z-index: 10;
+        overflow: hidden;
     }
 
     /* Ensure dropdown content is visible */
     #sidebar ul li ul li {
         opacity: 1 !important;
         visibility: visible !important;
+        transform: translateY(0);
     }
 
     /* Ensure dropdown icons rotate smoothly */
@@ -50,6 +52,14 @@
 
     .rotate-180 {
         transform: rotate(180deg);
+    }
+
+    /* Additional smooth animations for better UX */
+    #sidebar ul li ul.hidden {
+        max-height: 0 !important;
+        opacity: 0 !important;
+        transform: scaleY(0) !important;
+        transform-origin: top;
     }
 
     /* Force submenu visibility */
@@ -936,48 +946,28 @@
         const sidebarList = dropdown.closest('ul');
 
         // Handle specific dropdown icons based on their ID
-        if (id === 'pendudukDropdown') {
-            const icon = document.getElementById('dropdown-icon-penduduk');
-            icon.classList.toggle('rotate-180');
-        } else if (id === 'wilayahDropdown') {
-            const icon = document.getElementById('dropdown-icon-wilayah');
-            icon.classList.toggle('rotate-180');
-        } else if (id === 'suratDropdown') {
-            const icon = document.getElementById('dropdown-icon-surat');
-            icon.classList.toggle('rotate-180');
-        } else if (id === 'masterSuratDropdown') {
-            const icon = document.getElementById('dropdown-icon-master-surat');
-            icon.classList.toggle('rotate-180');
-        } else if (id === 'masterUsersDropdown') {
-            const icon = document.getElementById('dropdown-icon-master-users');
-            icon.classList.toggle('rotate-180');
-        } else if (id === 'masterKeperluanDropdown') {
-            const icon = document.getElementById('dropdown-icon-master-keperluan');
-            icon.classList.toggle('rotate-180');
-        } else if (id === 'kelolaAsetDropdown') {
-            const icon = document.getElementById('dropdown-icon-kelola-aset');
-            icon.classList.toggle('rotate-180');
-        } else if (id === 'profilSaranaDropdown') {
-            const icon = document.getElementById('dropdown-icon-profil-sarana');
-            icon.classList.toggle('rotate-180');
-        } else if (id === 'informasiLaporDesaDropdown') {
-            const icon = document.getElementById('dropdown-icon-informasi-lapor');
-            icon.classList.toggle('rotate-180');
-        } else if (id === 'profilDesaDropdown') {
-            const icon = document.getElementById('dropdown-icon-profil-desa');
-            icon.classList.toggle('rotate-180');
-        } else if (id === 'informasiDesaDropdown') {
-            const icon = document.getElementById('dropdown-icon-informasi-desa');
-            icon.classList.toggle('rotate-180');
-        } else if (id === 'masterTagihanDropdown') {
-            const icon = document.getElementById('dropdown-icon-master-tagihan');
-            icon.classList.toggle('rotate-180');
-        } else if (id === 'userBeritaDropdown') {
-            const icon = document.getElementById('dropdown-icon-user-berita');
-            icon.classList.toggle('rotate-180');
-        } else if (id === 'userWarungkuDropdown') {
-            const icon = document.getElementById('dropdown-icon-user-warungku');
-            icon.classList.toggle('rotate-180');
+        const iconMap = {
+            'pendudukDropdown': 'dropdown-icon-penduduk',
+            'wilayahDropdown': 'dropdown-icon-wilayah',
+            'suratDropdown': 'dropdown-icon-surat',
+            'masterSuratDropdown': 'dropdown-icon-master-surat',
+            'masterUsersDropdown': 'dropdown-icon-master-users',
+            'masterKeperluanDropdown': 'dropdown-icon-master-keperluan',
+            'kelolaAsetDropdown': 'dropdown-icon-kelola-aset',
+            'profilSaranaDropdown': 'dropdown-icon-profil-sarana',
+            'informasiLaporDesaDropdown': 'dropdown-icon-informasi-lapor',
+            'profilDesaDropdown': 'dropdown-icon-profil-desa',
+            'informasiDesaDropdown': 'dropdown-icon-informasi-desa',
+            'masterTagihanDropdown': 'dropdown-icon-master-tagihan',
+            'userBeritaDropdown': 'dropdown-icon-user-berita',
+            'userWarungkuDropdown': 'dropdown-icon-user-warungku'
+        };
+
+        if (iconMap[id]) {
+            const icon = document.getElementById(iconMap[id]);
+            if (icon) {
+                icon.classList.toggle('rotate-180');
+            }
         }
 
         // Get all sibling elements that come after this dropdown's parent
@@ -985,70 +975,80 @@
         const currentIndex = allItems.indexOf(dropdownParent);
         const itemsAfter = allItems.slice(currentIndex + 1);
 
-        // Remove animation classes to reset
-        dropdown.style.removeProperty('max-height');
-        dropdown.style.removeProperty('opacity');
-        dropdown.style.removeProperty('visibility');
-        dropdown.style.removeProperty('overflow');
-
-        // Reset transforms on items after
-        itemsAfter.forEach(item => {
-            item.style.transform = 'translateY(0)';
-        });
-
         if (isHidden) {
-            // Show dropdown with animation
+            // Show dropdown with smooth animation
             dropdown.classList.remove('hidden');
-            // Force reflow
+
+            // Force reflow to ensure accurate measurements
             void dropdown.offsetWidth;
 
             const targetHeight = dropdown.scrollHeight;
 
-            // Apply animation - ensure all properties are set
+            // Set initial state for animation
+            dropdown.style.maxHeight = '0px';
+            dropdown.style.opacity = '0';
+            dropdown.style.overflow = 'hidden';
+
+            // Force another reflow
+            void dropdown.offsetWidth;
+
+            // Start the expand animation
+            dropdown.style.transition = 'max-height 0.3s ease, opacity 0.3s ease';
             dropdown.style.maxHeight = targetHeight + 'px';
             dropdown.style.opacity = '1';
-            dropdown.style.visibility = 'visible';
-            dropdown.style.overflow = 'visible'; // Changed to visible to show content
-            dropdown.style.position = 'relative';
-            dropdown.style.zIndex = '10';
-            dropdown.style.display = 'block';
 
-            // Animate items below downward
+            // Move items below downward with smooth animation
             setTimeout(() => {
                 itemsAfter.forEach(item => {
-                    item.style.transform = `translateY(${targetHeight}px)`;
                     item.style.transition = 'transform 0.3s ease';
+                    item.style.transform = `translateY(${targetHeight}px)`;
                 });
-            }, 10);
+            }, 50);
+
+            // Clean up after animation completes
+            setTimeout(() => {
+                dropdown.style.overflow = 'visible';
+                dropdown.style.maxHeight = 'none'; // Allow natural height
+            }, 300);
+
         } else {
-            // Animate items back up first
+            // Hide dropdown with smooth animation
+            const currentHeight = dropdown.scrollHeight;
+
+            // First, move items back up
             itemsAfter.forEach(item => {
-                item.style.transform = 'translateY(0)';
                 item.style.transition = 'transform 0.3s ease';
+                item.style.transform = 'translateY(0)';
             });
 
-            // Hide dropdown with animation after a small delay
+            // Then collapse the dropdown
             setTimeout(() => {
-                dropdown.style.maxHeight = '0';
+                dropdown.style.transition = 'max-height 0.3s ease, opacity 0.3s ease';
+                dropdown.style.maxHeight = currentHeight + 'px';
+                dropdown.style.overflow = 'hidden';
+
+                // Force reflow
+                void dropdown.offsetWidth;
+
+                dropdown.style.maxHeight = '0px';
                 dropdown.style.opacity = '0';
-                dropdown.style.visibility = 'hidden';
 
+                // Hide completely after animation
                 setTimeout(() => {
-                    if (dropdown.style.maxHeight === '0px' || parseFloat(dropdown.style.maxHeight) === 0) {
-                        dropdown.classList.add('hidden');
-                        // Reset inline styles when hidden
-                        dropdown.style.removeProperty('max-height');
-                        dropdown.style.removeProperty('opacity');
-                        dropdown.style.removeProperty('visibility');
-                        dropdown.style.removeProperty('overflow');
+                    dropdown.classList.add('hidden');
 
-                        // Reset transforms
-                        itemsAfter.forEach(item => {
-                            item.style.removeProperty('transform');
-                            item.style.removeProperty('transition');
-                        });
-                    }
-                }, 300); // Match the CSS transition duration
+                    // Reset all inline styles
+                    dropdown.style.removeProperty('max-height');
+                    dropdown.style.removeProperty('opacity');
+                    dropdown.style.removeProperty('overflow');
+                    dropdown.style.removeProperty('transition');
+
+                    // Reset transforms on items after
+                    itemsAfter.forEach(item => {
+                        item.style.removeProperty('transform');
+                        item.style.removeProperty('transition');
+                    });
+                }, 300);
             }, 50);
         }
     }
