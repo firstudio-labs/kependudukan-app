@@ -118,7 +118,7 @@
                     <li class="-ml-5">
                         <button type="button"
                             class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
-                            onclick="toggleDropdown('masterUsersDropdown')">
+                            onclick="toggleDropdown('masterUsersDropdown', event)">
                             <i class="fa-solid fa-users text-lg transition-all duration-300"></i>
                             <span>Master Users</span>
                             <i id="dropdown-icon-master-users"
@@ -141,7 +141,7 @@
                     <li class="-ml-5">
                         <button type="button"
                             class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
-                            onclick="toggleDropdown('pendudukDropdown')">
+                            onclick="toggleDropdown('pendudukDropdown', event)">
                             <i class="fa-solid fa-id-card text-lg transition-all duration-300"></i>
                             <span>Master Penduduk</span>
                             <i id="dropdown-icon-penduduk"
@@ -176,7 +176,7 @@
                     <li class="-ml-5">
                         <button type="button"
                             class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
-                            onclick="toggleDropdown('kelolaAsetDropdown')">
+                            onclick="toggleDropdown('kelolaAsetDropdown', event)">
                             <i class="fa-solid fa-boxes-stacked text-lg transition-all duration-300"></i>
                             <span>Kelola Aset</span>
                             <i id="dropdown-icon-kelola-aset"
@@ -219,7 +219,7 @@
                     <li class="-ml-5">
                         <button type="button"
                             class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
-                            onclick="toggleDropdown('suratDropdown')">
+                            onclick="toggleDropdown('suratDropdown', event)">
                             <i class="fa-solid fa-envelope text-lg transition-all duration-300"></i>
                             <span>Surat</span>
                             <i id="dropdown-icon-surat"
@@ -310,7 +310,7 @@
                     <li class="-ml-5">
                         <button type="button"
                             class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
-                            onclick="toggleDropdown('masterSuratDropdown')">
+                            onclick="toggleDropdown('masterSuratDropdown', event)">
                             <i class="fa-solid fa-file-signature text-lg transition-all duration-300"></i>
                             <span>Master Surat</span>
                             <i id="dropdown-icon-master-surat"
@@ -332,7 +332,7 @@
                     <li class="-ml-5">
                         <button type="button"
                             class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
-                            onclick="toggleDropdown('masterKeperluanDropdown')">
+                            onclick="toggleDropdown('masterKeperluanDropdown', event)">
                             <i class="fa-solid fa-clipboard-list text-lg transition-all duration-300"></i>
                             <span>Master Keperluan</span>
                             <i id="dropdown-icon-master-keperluan"
@@ -354,7 +354,7 @@
                     <li class="-ml-5">
                         <button type="button"
                             class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
-                            onclick="toggleDropdown('wilayahDropdown')">
+                            onclick="toggleDropdown('wilayahDropdown', event)">
                             <i class="fa-solid fa-map text-lg transition-all duration-300"></i>
                             <span>Master Wilayah</span>
                             <i id="dropdown-icon-wilayah"
@@ -463,7 +463,7 @@
                     <li class="-ml-5">
                         <button type="button"
                             class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
-                            onclick="toggleDropdown('pendudukDropdown')">
+                            onclick="toggleDropdown('pendudukDropdown', event)">
                             <i class="fa-solid fa-id-card text-lg transition-all duration-300"></i>
                             <span>Master Penduduk</span>
                             <i id="dropdown-icon-penduduk"
@@ -503,7 +503,7 @@
                     <li class="-ml-5">
                         <button type="button"
                             class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
-                            onclick="toggleDropdown('informasiDesaDropdown')">
+                            onclick="toggleDropdown('informasiDesaDropdown', event)">
                             <i class="fa-solid fa-circle-info text-lg transition-all duration-300"></i>
                             <span>Informasi Desa</span>
                             <i id="dropdown-icon-informasi-desa" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
@@ -518,7 +518,7 @@
                             <li>
                                 <button type="button"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
-                                    onclick="toggleDropdown('informasiLaporDesaDropdown')">
+                                    onclick="toggleDropdown('informasiLaporDesaDropdown', event)">
                                     <span>Lapor Desa</span>
                                     <i id="dropdown-icon-informasi-lapor" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
                                 </button>
@@ -555,7 +555,7 @@
                     <li class="-ml-5">
                         <button type="button"
                             class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
-                            onclick="toggleDropdown('suratDropdown')">
+                            onclick="toggleDropdown('suratDropdown', event)">
                             <i class="fa-solid fa-envelope text-lg transition-all duration-300"></i>
                             <span>Surat</span>
                             <i id="dropdown-icon-surat"
@@ -653,7 +653,7 @@
                     <li class="-ml-5">
                         <button type="button"
                             class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
-                            onclick="toggleDropdown('profilDesaDropdown')">
+                            onclick="toggleDropdown('profilDesaDropdown', event)">
                             <i class="fa-solid fa-home text-lg transition-all duration-300"></i>
                             <span>Profil Desa</span>
                             <i id="dropdown-icon-profil-desa" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
@@ -668,7 +668,7 @@
                             <li>
                                 <button type="button"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
-                                    onclick="toggleDropdown('profilSaranaDropdown')">
+                                    onclick="toggleDropdown('profilSaranaDropdown', event)">
                                     <span>Kategori & Sarana Umum</span>
                                     <i id="dropdown-icon-profil-sarana" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
                                 </button>
@@ -712,7 +712,7 @@
                     <li class="-ml-5">
                         <button type="button"
                             class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
-                            onclick="toggleDropdown('masterTagihanDropdown')">
+                            onclick="toggleDropdown('masterTagihanDropdown', event)">
                             <i class="fa-solid fa-receipt text-lg transition-all duration-300"></i>
                             <span>Master Tagihan</span>
                             <i id="dropdown-icon-master-tagihan" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
@@ -858,7 +858,7 @@
                     <li class="-ml-5">
                         <button type="button"
                             class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
-                            onclick="toggleDropdown('userBeritaDropdown')">
+                            onclick="toggleDropdown('userBeritaDropdown', event)">
                             <i class="fa-solid fa-newspaper text-lg transition-all duration-300"></i>
                             <span>Berita Desa</span>
                             <i id="dropdown-icon-user-berita" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
@@ -897,7 +897,7 @@
                     <li class="-ml-5">
                         <button type="button"
                             class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
-                            onclick="toggleDropdown('userWarungkuDropdown')">
+                            onclick="toggleDropdown('userWarungkuDropdown', event)">
                             <i class="fa-solid fa-store text-lg transition-all duration-300"></i>
                             <span>Warungku</span>
                             <i id="dropdown-icon-user-warungku" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
@@ -936,7 +936,11 @@
 @endif
 
 <script>
-    function toggleDropdown(id) {
+    function toggleDropdown(id, event) {
+        if (event) {
+            event.stopPropagation();
+        }
+
         const dropdown = document.getElementById(id);
         if (!dropdown) return;
 
@@ -1038,22 +1042,8 @@
             }
         });
 
-        // Initialize user dropdown menu
-        const userMenuButton = document.querySelector('[data-dropdown-toggle="dropdown-user"]');
-        const userMenu = document.getElementById('dropdown-user');
-
-        if (userMenuButton && userMenu) {
-            userMenuButton.addEventListener('click', () => {
-                userMenu.classList.toggle('hidden');
-            });
-
-            // Close menu when clicking outside
-            document.addEventListener('click', (event) => {
-                if (!userMenuButton.contains(event.target) && !userMenu.contains(event.target)) {
-                    userMenu.classList.add('hidden');
-                }
-            });
-        }
+        // Note: User dropdown menu initialization removed from sidebar
+        // This code was interfering with sidebar dropdown functionality
 
         // Auto-open dropdowns if a child link is active
         const checkDropdownForActiveItems = (dropdownId, iconId) => {
