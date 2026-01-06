@@ -32,27 +32,33 @@
         transform-origin: top;
     }
 
-    /* Smooth dropdown container animations */
+    /* Smooth dropdown container animations with protrusion effect */
     #sidebar ul li ul {
         transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         position: relative;
         z-index: 10;
         overflow: hidden;
-        transform: scaleY(0);
-        transform-origin: top;
+        transform: scaleY(0) translateX(-8px) perspective(1000px) rotateY(-5deg);
+        transform-origin: top left;
         opacity: 0;
         max-height: 0;
         padding: 0;
         margin: 0;
+        border-radius: 0 0 8px 8px;
+        box-shadow: -4px 4px 12px rgba(0, 0, 0, 0.1);
     }
 
-    /* Active/open state for dropdowns */
+    /* Active/open state for dropdowns with enhanced protrusion */
     #sidebar ul li ul.dropdown-open {
-        transform: scaleY(1);
+        transform: scaleY(1) translateX(0) perspective(1000px) rotateY(0deg);
         opacity: 1;
         max-height: 500px; /* Sufficient height for content */
         padding: 0.5rem 0;
         margin: 0.5rem 0;
+        box-shadow: 4px 8px 20px rgba(45, 51, 107, 0.15),
+                    0 4px 12px rgba(0, 0, 0, 0.1),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(45, 51, 107, 0.1);
     }
 
     /* Smooth icon rotation with bounce effect */
@@ -94,18 +100,123 @@
         transform: translateY(0);
     }
 
-    /* Enhanced nested dropdown animations */
+    /* Enhanced nested dropdown animations and visual hierarchy */
     #sidebar ul li ul li ul {
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        transform: scaleY(0) translateX(-10px);
+        transform: scaleY(0) translateX(-15px);
         opacity: 0;
         max-height: 0;
+        margin-left: 1rem !important;
+        position: relative;
     }
 
     #sidebar ul li ul li ul.dropdown-open {
         transform: scaleY(1) translateX(0);
         opacity: 1;
         max-height: 500px;
+    }
+
+    /* Visual indicators for submenu hierarchy */
+    #sidebar ul li ul {
+        border-left: 3px solid transparent;
+        background: linear-gradient(135deg, rgba(45, 51, 107, 0.05) 0%, rgba(74, 86, 166, 0.03) 100%);
+        backdrop-filter: blur(1px);
+    }
+
+    #sidebar ul li ul.dropdown-open {
+        border-left: 3px solid rgba(45, 51, 107, 0.3);
+        background: linear-gradient(135deg, rgba(45, 51, 107, 0.08) 0%, rgba(74, 86, 166, 0.05) 100%);
+        box-shadow: inset 0 2px 4px rgba(45, 51, 107, 0.1);
+    }
+
+    /* Enhanced submenu items styling */
+    #sidebar ul li ul li {
+        position: relative;
+        padding-left: 0.25rem;
+    }
+
+    #sidebar ul li ul li::before {
+        content: '';
+        position: absolute;
+        left: -0.5rem;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 6px;
+        height: 6px;
+        background: rgba(45, 51, 107, 0.4);
+        border-radius: 50%;
+        opacity: 0;
+        transition: all 0.3s ease;
+    }
+
+    #sidebar ul li ul.dropdown-open li::before {
+        opacity: 1;
+        animation: fadeInDot 0.4s ease-out forwards;
+    }
+
+    @keyframes fadeInDot {
+        0% {
+            opacity: 0;
+            transform: translateY(-50%) scale(0);
+        }
+        50% {
+            opacity: 0.7;
+            transform: translateY(-50%) scale(1.2);
+        }
+        100% {
+            opacity: 1;
+            transform: translateY(-50%) scale(1);
+        }
+    }
+
+    /* Submenu depth indicators */
+    #sidebar ul li ul li ul li::before {
+        background: rgba(74, 86, 166, 0.5);
+        width: 4px;
+        height: 4px;
+    }
+
+    /* Enhanced hover effects for submenu items */
+    #sidebar ul li ul li a:hover {
+        background: linear-gradient(135deg, rgba(45, 51, 107, 0.1) 0%, rgba(74, 86, 166, 0.08) 100%);
+        transform: translateX(6px);
+        box-shadow: 0 2px 8px rgba(45, 51, 107, 0.15);
+    }
+
+    #sidebar ul li ul li button:hover {
+        background: linear-gradient(135deg, rgba(45, 51, 107, 0.1) 0%, rgba(74, 86, 166, 0.08) 100%);
+        transform: translateX(6px);
+        box-shadow: 0 2px 8px rgba(45, 51, 107, 0.15);
+    }
+
+    /* Level 2 submenu specific styling */
+    .submenu-level-2 {
+        border-left: 2px solid rgba(74, 86, 166, 0.2) !important;
+        background: linear-gradient(135deg, rgba(74, 86, 166, 0.04) 0%, rgba(45, 51, 107, 0.02) 100%) !important;
+        margin-left: 0.5rem !important;
+    }
+
+    .submenu-level-2.dropdown-open {
+        border-left: 2px solid rgba(74, 86, 166, 0.4) !important;
+        background: linear-gradient(135deg, rgba(74, 86, 166, 0.06) 0%, rgba(45, 51, 107, 0.04) 100%) !important;
+        box-shadow: inset 0 1px 3px rgba(74, 86, 166, 0.1);
+    }
+
+    /* Enhanced visual hierarchy indicators */
+    #sidebar ul li ul li::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: linear-gradient(to bottom, rgba(45, 51, 107, 0.1), transparent);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    #sidebar ul li ul.dropdown-open li:hover::after {
+        opacity: 1;
     }
 
     /* Loading state animation */
@@ -123,6 +234,49 @@
         transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
+    /* Submenu protrusion indicators */
+    #sidebar ul li ul::before {
+        content: '';
+        position: absolute;
+        top: -4px;
+        left: 1rem;
+        width: 0;
+        height: 0;
+        border-left: 6px solid transparent;
+        border-right: 6px solid transparent;
+        border-bottom: 6px solid rgba(45, 51, 107, 0.1);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    #sidebar ul li ul.dropdown-open::before {
+        opacity: 1;
+    }
+
+    /* Enhanced depth effect for nested submenus */
+    #sidebar ul li ul li ul {
+        transform: scaleY(0) translateX(-12px) translateZ(-10px) rotateY(-3deg);
+        box-shadow: -6px 6px 16px rgba(0, 0, 0, 0.08);
+        margin-left: 1.5rem !important;
+    }
+
+    #sidebar ul li ul li ul.dropdown-open {
+        transform: scaleY(1) translateX(0) translateZ(0) rotateY(0deg);
+        box-shadow: 6px 12px 24px rgba(74, 86, 166, 0.12),
+                    0 6px 16px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Pulse effect for active submenu indicators */
+    @keyframes submenuPulse {
+        0% { box-shadow: 0 0 0 0 rgba(45, 51, 107, 0.4); }
+        70% { box-shadow: 0 0 0 3px rgba(45, 51, 107, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(45, 51, 107, 0); }
+    }
+
+    .submenu-active {
+        animation: submenuPulse 2s infinite;
+    }
+
     /* Enhanced mobile responsiveness */
     @media (max-width: 768px) {
         #sidebar ul li ul {
@@ -134,6 +288,16 @@
 
         #sidebar ul li a:hover, #sidebar ul li button:hover {
             transform: translateX(2px);
+        }
+
+        /* Reduce 3D effects on mobile for performance */
+        #sidebar ul li ul {
+            transform: scaleY(0) translateX(-4px);
+            transform-origin: top;
+        }
+
+        #sidebar ul li ul.dropdown-open {
+            transform: scaleY(1) translateX(0);
         }
     }
 </style>
@@ -595,7 +759,7 @@
                                     <span>Lapor Desa</span>
                                     <i id="dropdown-icon-informasi-lapor" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
                                 </button>
-                                <ul id="informasiLaporDesaDropdown" class="hidden space-y-2 pl-6 transition-all duration-300 ease-in-out overflow-hidden">
+                                <ul id="informasiLaporDesaDropdown" class="hidden space-y-2 pl-8 transition-all duration-300 ease-in-out overflow-hidden submenu-level-2">
                                     <li>
                                         <a href="{{ route('admin.desa.datamaster.lapordesa.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
                                             {{ request()->routeIs('admin.desa.datamaster.lapordesa.*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
@@ -1024,7 +1188,7 @@
 
         const isHidden = dropdown.classList.contains('hidden');
 
-        // Handle specific dropdown icons based on their ID
+        // Handle specific dropdown icons based on their ID with enhanced visual feedback
         const iconMap = {
             'pendudukDropdown': 'dropdown-icon-penduduk',
             'wilayahDropdown': 'dropdown-icon-wilayah',
@@ -1041,6 +1205,18 @@
             'userBeritaDropdown': 'dropdown-icon-user-berita',
             'userWarungkuDropdown': 'dropdown-icon-user-warungku'
         };
+
+        // Enhanced visual feedback for parent menu items
+        const parentButton = event ? event.target.closest('button[data-dropdown]') : null;
+        if (parentButton) {
+            if (isHidden) {
+                parentButton.style.background = 'linear-gradient(135deg, rgba(45, 51, 107, 0.08) 0%, rgba(74, 86, 166, 0.05) 100%)';
+                parentButton.style.boxShadow = 'inset 0 2px 4px rgba(45, 51, 107, 0.1)';
+            } else {
+                parentButton.style.background = '';
+                parentButton.style.boxShadow = '';
+            }
+        }
 
         const iconId = iconMap[id];
         if (iconId) {
@@ -1066,8 +1242,13 @@
         }
 
         if (isHidden) {
-            // Show dropdown with enhanced animation
+            // Show dropdown with enhanced protrusion animation
             dropdown.classList.remove('hidden');
+
+            // Add visual feedback to parent button
+            if (parentButton) {
+                parentButton.classList.add('submenu-active');
+            }
 
             // Force reflow to ensure animation starts properly
             dropdown.offsetHeight;
@@ -1076,10 +1257,12 @@
             dropdown._animationTimeout = setTimeout(() => {
                 dropdown.classList.add('dropdown-open');
 
-                // Animate individual items with staggered delay
+                // Animate individual items with staggered delay and protrusion effect
                 const items = dropdown.querySelectorAll('li');
                 items.forEach((item, index) => {
                     item.style.setProperty('--item-index', index);
+                    // Add slight delay for each item to create wave effect
+                    item.style.animationDelay = `${index * 50}ms`;
                     // Force reflow for each item
                     item.offsetHeight;
                 });
@@ -1088,10 +1271,16 @@
             // Hide dropdown with smooth animation
             dropdown.classList.remove('dropdown-open');
 
+            // Remove visual feedback from parent button
+            if (parentButton) {
+                parentButton.classList.remove('submenu-active');
+            }
+
             // Reset individual item animations
             const items = dropdown.querySelectorAll('li');
             items.forEach((item) => {
                 item.style.setProperty('--item-index', '0');
+                item.style.animationDelay = '';
             });
 
             // Use timeout to allow CSS transition to complete before hiding
@@ -1149,26 +1338,34 @@
             if (hasActiveChild) {
                 dropdown.classList.remove('hidden');
 
+                // Add visual feedback to parent button
+                const parentBtn = document.querySelector(`button[data-dropdown="${dropdownId}"]`);
+                if (parentBtn) {
+                    parentBtn.classList.add('submenu-active');
+                }
+
                 // Force reflow for smooth animation
                 dropdown.offsetHeight;
 
-                // Smoothly open the dropdown
+                // Smoothly open the dropdown with protrusion effect
                 setTimeout(() => {
                     dropdown.classList.add('dropdown-open');
 
-                    // Animate individual items
+                    // Animate individual items with protrusion
                     const items = dropdown.querySelectorAll('li');
                     items.forEach((item, index) => {
                         item.style.setProperty('--item-index', index);
+                        item.style.animationDelay = `${index * 50}ms`;
                         // Force reflow for each item
                         item.offsetHeight;
                     });
 
-                    // Rotate icon smoothly
+                    // Rotate icon smoothly with enhanced effect
                     if (icon) {
                         icon.style.transform = 'rotate(180deg) scale(1.1)';
+                        icon.style.filter = 'drop-shadow(0 2px 4px rgba(45, 51, 107, 0.3))';
                     }
-                }, 50); // Small delay for better visual effect
+                }, 100); // Slightly longer delay for page load effect
             }
         };
 
