@@ -876,6 +876,13 @@
                                     <span>Surat Rumah Sewa</span>
                                 </a>
                             </li>
+                            <li>
+                                <a href="{{ route('admin.desa.buku-tamu.index') }}"
+                                    class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
+                                                                                                                                                                    {{ request()->routeIs('admin.desa.buku-tamu*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
+                                    <span>Buku Tamu</span>
+                                </a>
+                            </li>
                             {{-- <li>
                                 <a href="{{ route('admin.desa.surat.pengantar-ktp.index') }}"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300

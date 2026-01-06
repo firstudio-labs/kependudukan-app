@@ -36,7 +36,9 @@ class BukuTamuController extends Controller
      */
     public function adminIndex(Request $request)
     {
-        $query = BukuTamu::query();
+        $user = \Illuminate\Support\Facades\Auth::user();
+
+        $query = BukuTamu::query()->where('village_id', $user->villages_id);
 
         // Search functionality
         if ($request->filled('search')) {
@@ -68,7 +70,8 @@ class BukuTamuController extends Controller
      */
     public function show($id)
     {
-        $bukuTamu = BukuTamu::findOrFail($id);
+        $user = \Illuminate\Support\Facades\Auth::user();
+        $bukuTamu = BukuTamu::where('id', $id)->where('village_id', $user->villages_id)->firstOrFail();
 
         // Handle foto data - check if it already has data URL prefix
         $fotoData = null;
@@ -116,7 +119,8 @@ class BukuTamuController extends Controller
     public function destroy($id)
     {
         try {
-            $bukuTamu = BukuTamu::findOrFail($id);
+            $user = \Illuminate\Support\Facades\Auth::user();
+            $bukuTamu = BukuTamu::where('id', $id)->where('village_id', $user->villages_id)->firstOrFail();
             $bukuTamu->delete();
 
             return redirect()->route('admin.desa.buku-tamu.index')
