@@ -25,6 +25,26 @@
     </div>
 </nav>
 
+<style>
+    /* Smooth dropdown animations */
+    #sidebar ul li {
+        transition: transform 0.3s ease;
+    }
+
+    #sidebar ul li ul {
+        transition: all 0.3s ease-in-out;
+    }
+
+    /* Ensure dropdown icons rotate smoothly */
+    #sidebar ul li button i.fa-chevron-down {
+        transition: transform 0.3s ease;
+    }
+
+    .rotate-180 {
+        transform: rotate(180deg);
+    }
+</style>
+
 @php
     // Initialize user variable to avoid undefined variable error
     $user = null;
@@ -45,7 +65,7 @@
         class="fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-transform -translate-x-full bg-white border-r border-gray-200 sm:translate-x-0"
         aria-label="Sidebar">
         <div class="h-full px-3 pb-4 overflow-y-auto bg-white">
-            <ul class="space-y-2 font-medium text-sm">
+            <ul class="space-y-2 font-medium text-sm flex flex-col">
                 {{-- Menu berdasarkan role --}}
                 @if ($user->role == 'superadmin')
                     <li class="-ml-5">
@@ -84,7 +104,7 @@
                             <i id="dropdown-icon-master-users"
                                 class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
                         </button>
-                        <ul id="masterUsersDropdown" class="hidden space-y-2 pl-6">
+                        <ul id="masterUsersDropdown" class="hidden space-y-2 pl-6 transition-all duration-300 ease-in-out overflow-hidden">
                             <!-- Users submenu -->
                             <li>
                                 <a href="{{ route('superadmin.datamaster.user.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
@@ -107,7 +127,7 @@
                             <i id="dropdown-icon-penduduk"
                                 class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
                         </button>
-                        <ul id="pendudukDropdown" class="hidden space-y-2 pl-6">
+                        <ul id="pendudukDropdown" class="hidden space-y-2 pl-6 transition-all duration-300 ease-in-out overflow-hidden">
                             <li>
                                 <a href="{{ route('superadmin.biodata.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
                                                                                                                                                                         {{ request()->routeIs('superadmin.biodata.index') || request()->routeIs('superadmin.biodata.create') || request()->routeIs('superadmin.biodata.edit') || request()->routeIs('superadmin.biodata.update') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
@@ -142,7 +162,7 @@
                             <i id="dropdown-icon-kelola-aset"
                                 class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
                         </button>
-                        <ul id="kelolaAsetDropdown" class="hidden space-y-2 pl-6">
+                        <ul id="kelolaAsetDropdown" class="hidden space-y-2 pl-6 transition-all duration-300 ease-in-out overflow-hidden">
                             <li>
                                 <a href="{{ route('superadmin.datamaster.klasifikasi.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
                                                                                                                                                                                             {{ request()->routeIs('superadmin.datamaster.klasifikasi*')
@@ -185,7 +205,7 @@
                             <i id="dropdown-icon-surat"
                                 class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
                         </button>
-                        <ul id="suratDropdown" class="hidden space-y-2 pl-6">
+                        <ul id="suratDropdown" class="hidden space-y-2 pl-6 transition-all duration-300 ease-in-out overflow-hidden">
                             <li>
                                 <a href="{{ route('superadmin.surat.administrasi.index') }}"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
@@ -276,7 +296,7 @@
                             <i id="dropdown-icon-master-surat"
                                 class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
                         </button>
-                        <ul id="masterSuratDropdown" class="hidden space-y-2 pl-6">
+                        <ul id="masterSuratDropdown" class="hidden space-y-2 pl-6 transition-all duration-300 ease-in-out overflow-hidden">
                             <li>
                                 <a href="{{ route('superadmin.datamaster.surat.penandatangan.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
                                                                                                                                                                         {{ request()->routeIs('superadmin.datamaster.surat.penandatangan*')
@@ -298,7 +318,7 @@
                             <i id="dropdown-icon-master-keperluan"
                                 class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
                         </button>
-                        <ul id="masterKeperluanDropdown" class="hidden space-y-2 pl-6">
+                        <ul id="masterKeperluanDropdown" class="hidden space-y-2 pl-6 transition-all duration-300 ease-in-out overflow-hidden">
                             <li>
                                 <a href="{{ route('superadmin.datamaster.masterkeperluan.keperluan.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
                                                                                                                                                                         {{ request()->routeIs('superadmin.datamaster.masterkeperluan.keperluan*')
@@ -320,7 +340,7 @@
                             <i id="dropdown-icon-wilayah"
                                 class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
                         </button>
-                        <ul id="wilayahDropdown" class="hidden space-y-2 pl-6">
+                        <ul id="wilayahDropdown" class="hidden space-y-2 pl-6 transition-all duration-300 ease-in-out overflow-hidden">
                             <li>
                                 <a href="{{ route('superadmin.datamaster.wilayah.provinsi.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
                                                                                                                                                                         {{ request()->routeIs('superadmin.datamaster.wilayah.provinsi*')
@@ -429,7 +449,7 @@
                             <i id="dropdown-icon-penduduk"
                                 class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
                         </button>
-                        <ul id="pendudukDropdown" class="hidden space-y-2 pl-6">
+                        <ul id="pendudukDropdown" class="hidden space-y-2 pl-6 transition-all duration-300 ease-in-out overflow-hidden">
                             <li>
                                 <a href="{{ route('admin.desa.biodata.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
                                                                                                                             {{ request()->routeIs('admin.desa.biodata.index') || request()->routeIs('admin.desa.biodata.edit') || request()->routeIs('admin.desa.biodata.update') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
@@ -468,7 +488,7 @@
                             <span>Informasi Desa</span>
                             <i id="dropdown-icon-informasi-desa" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
                         </button>
-                        <ul id="informasiDesaDropdown" class="hidden space-y-2 pl-6">
+                        <ul id="informasiDesaDropdown" class="hidden space-y-2 pl-6 transition-all duration-300 ease-in-out overflow-hidden">
                             <li>
                                 <a href="{{ route('admin.desa.berita-desa.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
                                     {{ request()->routeIs('admin.desa.berita-desa.*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
@@ -482,7 +502,7 @@
                                     <span>Lapor Desa</span>
                                     <i id="dropdown-icon-informasi-lapor" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
                                 </button>
-                                <ul id="informasiLaporDesaDropdown" class="hidden space-y-2 pl-6">
+                                <ul id="informasiLaporDesaDropdown" class="hidden space-y-2 pl-6 transition-all duration-300 ease-in-out overflow-hidden">
                                     <li>
                                         <a href="{{ route('admin.desa.datamaster.lapordesa.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
                                             {{ request()->routeIs('admin.desa.datamaster.lapordesa.*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
@@ -521,7 +541,7 @@
                             <i id="dropdown-icon-surat"
                                 class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
                         </button>
-                        <ul id="suratDropdown" class="hidden space-y-2 pl-6">
+                        <ul id="suratDropdown" class="hidden space-y-2 pl-6 transition-all duration-300 ease-in-out overflow-hidden">
                             <li>
                                 <a href="{{ route('admin.desa.surat.index') }}"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
@@ -618,7 +638,7 @@
                             <span>Profil Desa</span>
                             <i id="dropdown-icon-profil-desa" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
                         </button>
-                        <ul id="profilDesaDropdown" class="hidden space-y-2 pl-6">
+                        <ul id="profilDesaDropdown" class="hidden space-y-2 pl-6 transition-all duration-300 ease-in-out overflow-hidden">
                             <li>
                                 <a href="{{ route('admin.desa.usaha.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
                                     {{ request()->routeIs('admin.desa.usaha.*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
@@ -627,12 +647,12 @@
                             </li>
                             <li>
                                 <button type="button"
-                                class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
+                                    class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
                                     onclick="toggleDropdown('profilSaranaDropdown')">
-                                    <span>Master Sarana Umum</span>
+                                    <span>Kategori & Sarana Umum</span>
                                     <i id="dropdown-icon-profil-sarana" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
                                 </button>
-                                <ul id="profilSaranaDropdown" class="hidden space-y-2 pl-6">
+                                <ul id="profilSaranaDropdown" class="hidden space-y-2 pl-6 transition-all duration-300 ease-in-out overflow-hidden">
                                     <li>
                                         <a href="{{ route('admin.desa.kategori-sarana.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
                                             {{ request()->routeIs('admin.desa.kategori-sarana.*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
@@ -677,7 +697,7 @@
                             <span>Master Tagihan</span>
                             <i id="dropdown-icon-master-tagihan" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
                         </button>
-                        <ul id="masterTagihanDropdown" class="hidden space-y-2 pl-6">
+                        <ul id="masterTagihanDropdown" class="hidden space-y-2 pl-6 transition-all duration-300 ease-in-out overflow-hidden">
                             <li>
                                 <a href="{{ route('admin.desa.master-tagihan.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
                                                                                                                             {{ request()->routeIs('admin.desa.master-tagihan.index')
@@ -823,7 +843,7 @@
                             <span>Berita Desa</span>
                             <i id="dropdown-icon-user-berita" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
                         </button>
-                        <ul id="userBeritaDropdown" class="hidden space-y-2 pl-6">
+                        <ul id="userBeritaDropdown" class="hidden space-y-2 pl-6 transition-all duration-300 ease-in-out overflow-hidden">
                             <li>
                                 <a href="{{ route('user.berita-desa.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
                                                                                                                         {{ request()->routeIs('user.berita-desa.index')
@@ -862,7 +882,7 @@
                             <span>Warungku</span>
                             <i id="dropdown-icon-user-warungku" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
                         </button>
-                        <ul id="userWarungkuDropdown" class="hidden space-y-2 pl-6">
+                        <ul id="userWarungkuDropdown" class="hidden space-y-2 pl-6 transition-all duration-300 ease-in-out overflow-hidden">
                             <li>
                                 <a href="{{ route('user.warungku.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
                                                                                                                         {{ request()->routeIs('user.warungku.index') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
@@ -899,6 +919,8 @@
     function toggleDropdown(id) {
         const dropdown = document.getElementById(id);
         const isHidden = dropdown.classList.contains('hidden');
+        const dropdownParent = dropdown.parentElement;
+        const sidebarList = dropdown.closest('ul');
 
         // Handle specific dropdown icons based on their ID
         if (id === 'pendudukDropdown') {
@@ -945,47 +967,73 @@
             icon.classList.toggle('rotate-180');
         }
 
+        // Get all sibling elements that come after this dropdown's parent
+        const allItems = Array.from(sidebarList.children);
+        const currentIndex = allItems.indexOf(dropdownParent);
+        const itemsAfter = allItems.slice(currentIndex + 1);
+
+        // Remove animation classes to reset
+        dropdown.style.removeProperty('max-height');
+        dropdown.style.removeProperty('opacity');
+        dropdown.style.removeProperty('visibility');
+        dropdown.style.removeProperty('overflow');
+
+        // Reset transforms on items after
+        itemsAfter.forEach(item => {
+            item.style.transform = 'translateY(0)';
+        });
+
         if (isHidden) {
             // Show dropdown with animation
             dropdown.classList.remove('hidden');
-            // Force reflow to ensure the element is rendered
-            void dropdown.offsetWidth;
-            // Apply animation
-            dropdown.style.maxHeight = '0';
-            dropdown.style.opacity = '0';
-            dropdown.style.overflow = 'hidden';
-            // Force reflow again
-            void dropdown.offsetWidth;
-            // Animate to full height
-            dropdown.style.maxHeight = dropdown.scrollHeight + 'px';
-            dropdown.style.opacity = '1';
-
-            // After animation completes, remove the inline max-height to maintain layout
-            setTimeout(() => {
-                if (!dropdown.classList.contains('hidden')) {
-                    dropdown.style.removeProperty('maxHeight');
-                    dropdown.style.removeProperty('opacity');
-                    dropdown.style.overflow = 'visible';
-                }
-            }, 300);
-        } else {
-            // Hide dropdown with animation
-            dropdown.style.maxHeight = dropdown.scrollHeight + 'px';
-            dropdown.style.opacity = '1';
-            dropdown.style.overflow = 'hidden';
             // Force reflow
             void dropdown.offsetWidth;
-            // Animate to 0
-            dropdown.style.maxHeight = '0';
-            dropdown.style.opacity = '0';
 
-            // After animation completes, hide the element
+            const targetHeight = dropdown.scrollHeight;
+
+            // Apply animation
+            dropdown.style.maxHeight = targetHeight + 'px';
+            dropdown.style.opacity = '1';
+            dropdown.style.visibility = 'visible';
+            dropdown.style.overflow = 'hidden';
+
+            // Animate items below downward
             setTimeout(() => {
-                dropdown.classList.add('hidden');
-                dropdown.style.removeProperty('maxHeight');
-                dropdown.style.removeProperty('opacity');
-                dropdown.style.removeProperty('overflow');
-            }, 300);
+                itemsAfter.forEach(item => {
+                    item.style.transform = `translateY(${targetHeight}px)`;
+                    item.style.transition = 'transform 0.3s ease';
+                });
+            }, 10);
+        } else {
+            // Animate items back up first
+            itemsAfter.forEach(item => {
+                item.style.transform = 'translateY(0)';
+                item.style.transition = 'transform 0.3s ease';
+            });
+
+            // Hide dropdown with animation after a small delay
+            setTimeout(() => {
+                dropdown.style.maxHeight = '0';
+                dropdown.style.opacity = '0';
+                dropdown.style.visibility = 'hidden';
+
+                setTimeout(() => {
+                    if (dropdown.style.maxHeight === '0px' || parseFloat(dropdown.style.maxHeight) === 0) {
+                        dropdown.classList.add('hidden');
+                        // Reset inline styles when hidden
+                        dropdown.style.removeProperty('max-height');
+                        dropdown.style.removeProperty('opacity');
+                        dropdown.style.removeProperty('visibility');
+                        dropdown.style.removeProperty('overflow');
+
+                        // Reset transforms
+                        itemsAfter.forEach(item => {
+                            item.style.removeProperty('transform');
+                            item.style.removeProperty('transition');
+                        });
+                    }
+                }, 300); // Match the CSS transition duration
+            }, 50);
         }
     }
 
@@ -1031,11 +1079,28 @@
 
             if (hasActiveChild) {
                 dropdown.classList.remove('hidden');
+                if (icon) icon.classList.add('rotate-180');
+
                 // Apply animation for auto-opened dropdowns
                 setTimeout(() => {
-                    dropdown.style.maxHeight = dropdown.scrollHeight + 'px';
+                    const targetHeight = dropdown.scrollHeight;
+                    dropdown.style.maxHeight = targetHeight + 'px';
+                    dropdown.style.opacity = '1';
+                    dropdown.style.visibility = 'visible';
+                    dropdown.style.overflow = 'hidden';
+
+                    // Get items after this dropdown and move them down
+                    const dropdownParent = dropdown.parentElement;
+                    const sidebarList = dropdown.closest('ul');
+                    const allItems = Array.from(sidebarList.children);
+                    const currentIndex = allItems.indexOf(dropdownParent);
+                    const itemsAfter = allItems.slice(currentIndex + 1);
+
+                    itemsAfter.forEach(item => {
+                        item.style.transform = `translateY(${targetHeight}px)`;
+                        item.style.transition = 'transform 0.3s ease';
+                    });
                 }, 10);
-                if (icon) icon.classList.add('rotate-180');
             }
         };
 
