@@ -629,7 +629,7 @@
                                 <button type="button"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
                                     onclick="toggleDropdown('profilSaranaDropdown')">
-                                    <i class="fa-solid fa-building text-lg transition-all duration-300"></i>
+                                    <i class="fa-solid fa-tag text-lg transition-all duration-300"></i>
                                     <span>Kategori & Sarana Umum</span>
                                     <i id="dropdown-icon-profil-sarana" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
                                 </button>
@@ -637,14 +637,12 @@
                                     <li>
                                         <a href="{{ route('admin.desa.kategori-sarana.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
                                             {{ request()->routeIs('admin.desa.kategori-sarana.*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
-                                            <i class="fa-solid fa-tag text-sm transition-all duration-300"></i>
                                             <span>Kategori Sarana</span>
                                         </a>
                                     </li>
                                     <li>
                                         <a href="{{ route('admin.desa.sarana-umum.index') }}" class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300
                                             {{ request()->routeIs('admin.desa.sarana-umum.*') ? 'bg-[#2D336B] text-white hover:bg-[#D1D5DB] hover:text-[#2D336B]' : 'text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white' }}">
-                                            <i class="fa-solid fa-map-marker-alt text-sm transition-all duration-300"></i>
                                             <span>Sarana Umum</span>
                                         </a>
                                     </li>

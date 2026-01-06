@@ -14,4 +14,5 @@
 #sidebar ul ul li a,
 #sidebar ul ul li button {
     transition: all 0.2s ease;
+    margin: 0.125rem 0; /* Add small margin to prevent overlapping */
 }
