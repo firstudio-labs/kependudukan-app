@@ -26,42 +26,115 @@
 </nav>
 
 <style>
-    /* Smooth dropdown animations */
+    /* Enhanced smooth dropdown animations */
     #sidebar ul li {
-        transition: margin-bottom 0.3s ease, transform 0.3s ease;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transform-origin: top;
     }
 
+    /* Smooth dropdown container animations */
     #sidebar ul li ul {
-        transition: max-height 0.3s ease, opacity 0.3s ease;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         position: relative;
         z-index: 10;
         overflow: hidden;
+        transform: scaleY(0);
+        transform-origin: top;
+        opacity: 0;
+        max-height: 0;
+        padding: 0;
+        margin: 0;
     }
 
-    /* Ensure dropdown content is visible */
-    #sidebar ul li ul li {
-        opacity: 1 !important;
-        visibility: visible !important;
+    /* Active/open state for dropdowns */
+    #sidebar ul li ul.dropdown-open {
+        transform: scaleY(1);
+        opacity: 1;
+        max-height: 500px; /* Sufficient height for content */
+        padding: 0.5rem 0;
+        margin: 0.5rem 0;
     }
 
-    /* Ensure dropdown icons rotate smoothly */
+    /* Smooth icon rotation with bounce effect */
     #sidebar ul li button i.fa-chevron-down {
-        transition: transform 0.3s ease;
+        transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        transform-origin: center;
     }
 
     .rotate-180 {
-        transform: rotate(180deg);
+        transform: rotate(180deg) scale(1.1);
     }
 
-    /* Initial state for hidden dropdowns */
-    #sidebar ul li ul.hidden {
-        max-height: 0 !important;
-        opacity: 0 !important;
+    /* Enhanced hover effects for menu items */
+    #sidebar ul li a, #sidebar ul li button {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
     }
 
-    /* Force submenu visibility */
-    #sidebar ul li ul.hidden {
-        display: none !important;
+    #sidebar ul li a:hover, #sidebar ul li button:hover {
+        transform: translateX(4px);
+    }
+
+    /* Subtle glow effect on active items */
+    #sidebar ul li a.bg-\[\#2D336B\], #sidebar ul li a.bg-\[\#2D336B\]:hover {
+        box-shadow: 0 4px 12px rgba(45, 51, 107, 0.3);
+        transform: translateX(8px);
+    }
+
+    /* Smooth fade-in for dropdown items */
+    #sidebar ul li ul li {
+        opacity: 0;
+        transform: translateY(-10px);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transition-delay: calc(var(--item-index, 0) * 0.1s);
+    }
+
+    #sidebar ul li ul.dropdown-open li {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    /* Enhanced nested dropdown animations */
+    #sidebar ul li ul li ul {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transform: scaleY(0) translateX(-10px);
+        opacity: 0;
+        max-height: 0;
+    }
+
+    #sidebar ul li ul li ul.dropdown-open {
+        transform: scaleY(1) translateX(0);
+        opacity: 1;
+        max-height: 500px;
+    }
+
+    /* Loading state animation */
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+
+    .loading {
+        animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    /* Smooth sidebar toggle animation */
+    #sidebar {
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Enhanced mobile responsiveness */
+    @media (max-width: 768px) {
+        #sidebar ul li ul {
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            border-radius: 0 0 12px 12px;
+        }
+
+        #sidebar ul li a:hover, #sidebar ul li button:hover {
+            transform: translateX(2px);
+        }
     }
 </style>
 
@@ -973,7 +1046,10 @@
         if (iconId) {
             const icon = document.getElementById(iconId);
             if (icon) {
-                icon.classList.toggle('rotate-180');
+                // Add subtle bounce effect to icon rotation
+                icon.style.transform = isHidden ?
+                    'rotate(180deg) scale(1.1)' :
+                    'rotate(0deg) scale(1)';
             }
         }
 
@@ -983,19 +1059,47 @@
             dropdown._hideTimeout = null;
         }
 
-        // Consistent toggle timing for both open and close
+        // Clear any existing animation timeouts
+        if (dropdown._animationTimeout) {
+            clearTimeout(dropdown._animationTimeout);
+            dropdown._animationTimeout = null;
+        }
+
         if (isHidden) {
-            // Show dropdown - same timing as close animation
+            // Show dropdown with enhanced animation
             dropdown.classList.remove('hidden');
-            dropdown.classList.add('dropdown-open');
+
+            // Force reflow to ensure animation starts properly
+            dropdown.offsetHeight;
+
+            // Add dropdown-open class after a tiny delay for smooth animation
+            dropdown._animationTimeout = setTimeout(() => {
+                dropdown.classList.add('dropdown-open');
+
+                // Animate individual items with staggered delay
+                const items = dropdown.querySelectorAll('li');
+                items.forEach((item, index) => {
+                    item.style.setProperty('--item-index', index);
+                    // Force reflow for each item
+                    item.offsetHeight;
+                });
+            }, 10);
         } else {
             // Hide dropdown with smooth animation
             dropdown.classList.remove('dropdown-open');
+
+            // Reset individual item animations
+            const items = dropdown.querySelectorAll('li');
+            items.forEach((item) => {
+                item.style.setProperty('--item-index', '0');
+            });
+
             // Use timeout to allow CSS transition to complete before hiding
             dropdown._hideTimeout = setTimeout(() => {
                 dropdown.classList.add('hidden');
                 dropdown._hideTimeout = null;
-            }, 400); // Match CSS transition duration
+                dropdown._animationTimeout = null;
+            }, 450); // Slightly longer than CSS transition for safety
         }
     }
 
@@ -1032,7 +1136,7 @@
             }
         }, true); // Use capture phase to intercept before other listeners
 
-        // Auto-open dropdowns if a child link is active
+        // Auto-open dropdowns if a child link is active with smooth animation
         const checkDropdownForActiveItems = (dropdownId, iconId) => {
             const dropdown = document.getElementById(dropdownId);
             const icon = document.getElementById(iconId);
@@ -1044,8 +1148,27 @@
 
             if (hasActiveChild) {
                 dropdown.classList.remove('hidden');
-                if (icon) icon.classList.add('rotate-180');
-                dropdown.classList.add('dropdown-open');
+
+                // Force reflow for smooth animation
+                dropdown.offsetHeight;
+
+                // Smoothly open the dropdown
+                setTimeout(() => {
+                    dropdown.classList.add('dropdown-open');
+
+                    // Animate individual items
+                    const items = dropdown.querySelectorAll('li');
+                    items.forEach((item, index) => {
+                        item.style.setProperty('--item-index', index);
+                        // Force reflow for each item
+                        item.offsetHeight;
+                    });
+
+                    // Rotate icon smoothly
+                    if (icon) {
+                        icon.style.transform = 'rotate(180deg) scale(1.1)';
+                    }
+                }, 50); // Small delay for better visual effect
             }
         };
 
