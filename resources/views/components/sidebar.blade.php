@@ -946,25 +946,40 @@
         }
 
         if (isHidden) {
-            // Show dropdown with animation - using height instead of max-height for better push effect
-            dropdown.style.height = '0';
+            // Show dropdown with animation
             dropdown.classList.remove('hidden');
-            // Force reflow
+            // Force reflow to ensure the element is rendered
             void dropdown.offsetWidth;
             // Apply animation
+            dropdown.style.height = '0';
+            dropdown.style.overflow = 'hidden';
+            // Force reflow again
+            void dropdown.offsetWidth;
+            // Animate to full height
             dropdown.style.height = dropdown.scrollHeight + 'px';
+
+            // After animation completes, remove the inline height to maintain layout
+            setTimeout(() => {
+                if (!dropdown.classList.contains('hidden')) {
+                    dropdown.style.removeProperty('height');
+                    dropdown.style.overflow = 'visible';
+                }
+            }, 300);
         } else {
             // Hide dropdown with animation
             dropdown.style.height = dropdown.scrollHeight + 'px';
+            dropdown.style.overflow = 'hidden';
             // Force reflow
             void dropdown.offsetWidth;
+            // Animate to 0
             dropdown.style.height = '0';
 
+            // After animation completes, hide the element
             setTimeout(() => {
                 dropdown.classList.add('hidden');
-                // Reset inline styles when hidden
                 dropdown.style.removeProperty('height');
-            }, 300); // Match the CSS transition duration
+                dropdown.style.removeProperty('overflow');
+            }, 300);
         }
     }
 
