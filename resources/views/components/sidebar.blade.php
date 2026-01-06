@@ -118,7 +118,7 @@
                     <li class="-ml-5">
                         <button type="button"
                             class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
-                            onclick="toggleDropdown('masterUsersDropdown', event)">
+                            data-dropdown="masterUsersDropdown">
                             <i class="fa-solid fa-users text-lg transition-all duration-300"></i>
                             <span>Master Users</span>
                             <i id="dropdown-icon-master-users"
@@ -141,7 +141,7 @@
                     <li class="-ml-5">
                         <button type="button"
                             class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
-                            onclick="toggleDropdown('pendudukDropdown', event)">
+                            data-dropdown="pendudukDropdown">
                             <i class="fa-solid fa-id-card text-lg transition-all duration-300"></i>
                             <span>Master Penduduk</span>
                             <i id="dropdown-icon-penduduk"
@@ -176,7 +176,7 @@
                     <li class="-ml-5">
                         <button type="button"
                             class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
-                            onclick="toggleDropdown('kelolaAsetDropdown', event)">
+                            data-dropdown="kelolaAsetDropdown">
                             <i class="fa-solid fa-boxes-stacked text-lg transition-all duration-300"></i>
                             <span>Kelola Aset</span>
                             <i id="dropdown-icon-kelola-aset"
@@ -219,7 +219,7 @@
                     <li class="-ml-5">
                         <button type="button"
                             class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
-                            onclick="toggleDropdown('suratDropdown', event)">
+                            data-dropdown="suratDropdown">
                             <i class="fa-solid fa-envelope text-lg transition-all duration-300"></i>
                             <span>Surat</span>
                             <i id="dropdown-icon-surat"
@@ -310,7 +310,7 @@
                     <li class="-ml-5">
                         <button type="button"
                             class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
-                            onclick="toggleDropdown('masterSuratDropdown', event)">
+                            data-dropdown="masterSuratDropdown">
                             <i class="fa-solid fa-file-signature text-lg transition-all duration-300"></i>
                             <span>Master Surat</span>
                             <i id="dropdown-icon-master-surat"
@@ -332,7 +332,7 @@
                     <li class="-ml-5">
                         <button type="button"
                             class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
-                            onclick="toggleDropdown('masterKeperluanDropdown', event)">
+                            data-dropdown="masterKeperluanDropdown">
                             <i class="fa-solid fa-clipboard-list text-lg transition-all duration-300"></i>
                             <span>Master Keperluan</span>
                             <i id="dropdown-icon-master-keperluan"
@@ -354,7 +354,7 @@
                     <li class="-ml-5">
                         <button type="button"
                             class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
-                            onclick="toggleDropdown('wilayahDropdown', event)">
+                            data-dropdown="wilayahDropdown">
                             <i class="fa-solid fa-map text-lg transition-all duration-300"></i>
                             <span>Master Wilayah</span>
                             <i id="dropdown-icon-wilayah"
@@ -463,7 +463,7 @@
                     <li class="-ml-5">
                         <button type="button"
                             class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
-                            onclick="toggleDropdown('pendudukDropdown', event)">
+                            data-dropdown="pendudukDropdown">
                             <i class="fa-solid fa-id-card text-lg transition-all duration-300"></i>
                             <span>Master Penduduk</span>
                             <i id="dropdown-icon-penduduk"
@@ -503,7 +503,7 @@
                     <li class="-ml-5">
                         <button type="button"
                             class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
-                            onclick="toggleDropdown('informasiDesaDropdown', event)">
+                            data-dropdown="informasiDesaDropdown">
                             <i class="fa-solid fa-circle-info text-lg transition-all duration-300"></i>
                             <span>Informasi Desa</span>
                             <i id="dropdown-icon-informasi-desa" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
@@ -518,7 +518,7 @@
                             <li>
                                 <button type="button"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
-                                    onclick="toggleDropdown('informasiLaporDesaDropdown', event)">
+                                    data-dropdown="informasiLaporDesaDropdown">
                                     <span>Lapor Desa</span>
                                     <i id="dropdown-icon-informasi-lapor" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
                                 </button>
@@ -555,7 +555,7 @@
                     <li class="-ml-5">
                         <button type="button"
                             class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
-                            onclick="toggleDropdown('suratDropdown', event)">
+                            data-dropdown="suratDropdown">
                             <i class="fa-solid fa-envelope text-lg transition-all duration-300"></i>
                             <span>Surat</span>
                             <i id="dropdown-icon-surat"
@@ -653,7 +653,7 @@
                     <li class="-ml-5">
                         <button type="button"
                             class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
-                            onclick="toggleDropdown('profilDesaDropdown', event)">
+                            data-dropdown="profilDesaDropdown">
                             <i class="fa-solid fa-home text-lg transition-all duration-300"></i>
                             <span>Profil Desa</span>
                             <i id="dropdown-icon-profil-desa" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
@@ -668,7 +668,7 @@
                             <li>
                                 <button type="button"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
-                                    onclick="toggleDropdown('profilSaranaDropdown', event)">
+                                    data-dropdown="profilSaranaDropdown">
                                     <span>Kategori & Sarana Umum</span>
                                     <i id="dropdown-icon-profil-sarana" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
                                 </button>
@@ -712,7 +712,7 @@
                     <li class="-ml-5">
                         <button type="button"
                             class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
-                            onclick="toggleDropdown('masterTagihanDropdown', event)">
+                            data-dropdown="masterTagihanDropdown">
                             <i class="fa-solid fa-receipt text-lg transition-all duration-300"></i>
                             <span>Master Tagihan</span>
                             <i id="dropdown-icon-master-tagihan" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
@@ -858,7 +858,7 @@
                     <li class="-ml-5">
                         <button type="button"
                             class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
-                            onclick="toggleDropdown('userBeritaDropdown', event)">
+                            data-dropdown="userBeritaDropdown">
                             <i class="fa-solid fa-newspaper text-lg transition-all duration-300"></i>
                             <span>Berita Desa</span>
                             <i id="dropdown-icon-user-berita" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
@@ -897,7 +897,7 @@
                     <li class="-ml-5">
                         <button type="button"
                             class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
-                            onclick="toggleDropdown('userWarungkuDropdown', event)">
+                            data-dropdown="userWarungkuDropdown">
                             <i class="fa-solid fa-store text-lg transition-all duration-300"></i>
                             <span>Warungku</span>
                             <i id="dropdown-icon-user-warungku" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
@@ -937,12 +937,17 @@
 
 <script>
     function toggleDropdown(id, event) {
+        // Prevent default behavior and stop event propagation
         if (event) {
-            event.stopPropagation();
+            event.preventDefault();
+            event.stopImmediatePropagation();
         }
 
         const dropdown = document.getElementById(id);
-        if (!dropdown) return;
+        if (!dropdown) {
+            console.warn('Dropdown not found:', id);
+            return;
+        }
 
         const isHidden = dropdown.classList.contains('hidden');
 
@@ -972,78 +977,60 @@
             }
         }
 
-        // Reset all inline styles
-        dropdown.style.transition = '';
-        dropdown.style.maxHeight = '';
-        dropdown.style.opacity = '';
-        dropdown.style.overflow = '';
-        dropdown.style.visibility = '';
+        // Clear any existing timeouts to prevent conflicts
+        if (dropdown._hideTimeout) {
+            clearTimeout(dropdown._hideTimeout);
+            dropdown._hideTimeout = null;
+        }
 
+        // Simple toggle without complex animations
         if (isHidden) {
-            // Show dropdown with smooth animation
+            // Show dropdown
             dropdown.classList.remove('hidden');
-            dropdown.style.overflow = 'hidden';
-            dropdown.style.maxHeight = '0px';
-            dropdown.style.opacity = '0';
-            dropdown.style.visibility = 'visible';
-
-            // Force reflow
-            void dropdown.offsetWidth;
-
-            const targetHeight = dropdown.scrollHeight;
-
-            // Apply smooth transition
-            dropdown.style.transition = 'max-height 0.3s ease-in-out, opacity 0.3s ease-in-out';
-            dropdown.style.maxHeight = targetHeight + 'px';
-            dropdown.style.opacity = '1';
-
-            // Clean up after animation
-            setTimeout(() => {
-                dropdown.style.overflow = '';
-                dropdown.style.maxHeight = '';
-                dropdown.style.transition = '';
-            }, 300);
-
+            dropdown.classList.add('dropdown-open');
         } else {
-            // Hide dropdown with smooth animation
-            dropdown.style.overflow = 'hidden';
-            dropdown.style.maxHeight = dropdown.scrollHeight + 'px';
-
-            // Force reflow
-            void dropdown.offsetWidth;
-
-            dropdown.style.transition = 'max-height 0.3s ease-in-out, opacity 0.3s ease-in-out';
-            dropdown.style.maxHeight = '0px';
-            dropdown.style.opacity = '0';
-
-            // Hide after animation
-            setTimeout(() => {
+            // Hide dropdown
+            dropdown.classList.remove('dropdown-open');
+            // Use timeout to allow CSS transition to complete
+            dropdown._hideTimeout = setTimeout(() => {
                 dropdown.classList.add('hidden');
-                // Reset all styles
-                dropdown.style.transition = '';
-                dropdown.style.maxHeight = '';
-                dropdown.style.opacity = '';
-                dropdown.style.overflow = '';
-                dropdown.style.visibility = '';
-            }, 300);
+                dropdown._hideTimeout = null;
+            }, 150); // Shorter timeout for better UX
         }
     }
 
+    // Initialize when DOM is loaded
     document.addEventListener('DOMContentLoaded', () => {
         const toggleButton = document.querySelector('[data-drawer-toggle="logo-sidebar"]');
         const sidebar = document.getElementById('sidebar');
 
-        // Toggle sidebar on mobile
-        toggleButton.addEventListener('click', () => {
-            if (sidebar.classList.contains('-translate-x-full')) {
-                sidebar.classList.remove('-translate-x-full');
-            } else {
-                sidebar.classList.add('-translate-x-full');
-            }
-        });
+        if (toggleButton && sidebar) {
+            // Toggle sidebar on mobile
+            toggleButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (sidebar.classList.contains('-translate-x-full')) {
+                    sidebar.classList.remove('-translate-x-full');
+                } else {
+                    sidebar.classList.add('-translate-x-full');
+                }
+            });
+        }
 
-        // Note: User dropdown menu initialization removed from sidebar
-        // This code was interfering with sidebar dropdown functionality
+        // Use event delegation for all dropdown toggles
+        document.addEventListener('click', (e) => {
+            // Only handle clicks on dropdown toggle buttons
+            const button = e.target.closest('button[data-dropdown]');
+            if (!button) return;
+
+            // Get dropdown ID from data attribute
+            const dropdownId = button.getAttribute('data-dropdown');
+            if (dropdownId) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                toggleDropdown(dropdownId, e);
+            }
+        }, true); // Use capture phase to intercept before other listeners
 
         // Auto-open dropdowns if a child link is active
         const checkDropdownForActiveItems = (dropdownId, iconId) => {
@@ -1058,20 +1045,7 @@
             if (hasActiveChild) {
                 dropdown.classList.remove('hidden');
                 if (icon) icon.classList.add('rotate-180');
-
-                // Apply smooth expansion without affecting other elements
-                setTimeout(() => {
-                    const targetHeight = dropdown.scrollHeight;
-                    dropdown.style.maxHeight = targetHeight + 'px';
-                    dropdown.style.opacity = '1';
-                    dropdown.style.visibility = 'visible';
-                    dropdown.style.overflow = 'visible';
-
-                    // Clean up after animation
-                    setTimeout(() => {
-                        dropdown.style.maxHeight = '';
-                    }, 300);
-                }, 10);
+                dropdown.classList.add('dropdown-open');
             }
         };
 
@@ -1093,8 +1067,11 @@
             ['userWarungkuDropdown', 'dropdown-icon-user-warungku']
         ];
 
-        dropdownsToCheck.forEach(([dropdownId, iconId]) => {
-            checkDropdownForActiveItems(dropdownId, iconId);
-        });
+        // Delay auto-open slightly to ensure DOM is fully ready
+        setTimeout(() => {
+            dropdownsToCheck.forEach(([dropdownId, iconId]) => {
+                checkDropdownForActiveItems(dropdownId, iconId);
+            });
+        }, 100);
     });
 </script>
