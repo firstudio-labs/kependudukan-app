@@ -669,7 +669,7 @@
                                 <button type="button"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
                                     data-dropdown="profilSaranaDropdown">
-                                    <span>Kategori & Sarana Umum</span>
+                                    <span>Master Sarana Umum</span>
                                     <i id="dropdown-icon-profil-sarana" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
                                 </button>
                                 <ul id="profilSaranaDropdown" class="hidden space-y-2 pl-6 transition-all duration-300 ease-in-out overflow-hidden">
@@ -995,7 +995,7 @@
             dropdown._hideTimeout = setTimeout(() => {
                 dropdown.classList.add('hidden');
                 dropdown._hideTimeout = null;
-            }, 150); // Shorter timeout for better UX
+            }, 400); // Match CSS transition duration
         }
     }
 

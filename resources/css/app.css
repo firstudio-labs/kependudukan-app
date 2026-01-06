@@ -7,7 +7,8 @@
     opacity: 0;
     visibility: hidden;
     overflow: hidden;
-    transition: max-height 0.15s ease, opacity 0.15s ease, visibility 0.15s ease;
+    transition: max-height 0.4s ease-in-out, opacity 0.4s ease-in-out,
+        visibility 0.4s ease-in-out;
 }
 
 #sidebar ul ul.dropdown-open {
