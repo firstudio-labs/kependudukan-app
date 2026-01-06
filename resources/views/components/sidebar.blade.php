@@ -629,7 +629,6 @@
                                 <button type="button"
                                     class="flex items-center w-full p-3 pl-6 gap-3 rounded-r-full transition-all duration-300 text-[#2D336B] hover:bg-[#D1D5DB] hover:text-white"
                                     onclick="toggleDropdown('profilSaranaDropdown')">
-                                    <i class="fa-solid fa-tag text-lg transition-all duration-300"></i>
                                     <span>Kategori & Sarana Umum</span>
                                     <i id="dropdown-icon-profil-sarana" class="fa-solid fa-chevron-down ml-auto transition-all duration-300"></i>
                                 </button>
@@ -946,28 +945,40 @@
             icon.classList.toggle('rotate-180');
         }
 
+        // Remove animation classes to reset
+        dropdown.style.removeProperty('max-height');
+        dropdown.style.removeProperty('opacity');
+        dropdown.style.removeProperty('visibility');
+        dropdown.style.removeProperty('overflow');
+
         if (isHidden) {
             // Show dropdown with animation
             dropdown.classList.remove('hidden');
-            // Small timeout to ensure the element is rendered before applying animation
-            setTimeout(() => {
-                dropdown.style.maxHeight = dropdown.scrollHeight + 'px';
-            }, 10);
+            // Force reflow
+            void dropdown.offsetWidth;
+            // Apply animation
+            dropdown.style.maxHeight = dropdown.scrollHeight + 'px';
+            dropdown.style.opacity = '1';
+            dropdown.style.visibility = 'visible';
+            dropdown.style.overflow = 'hidden';
         } else {
             // Hide dropdown with animation
             dropdown.style.maxHeight = dropdown.scrollHeight + 'px';
-            // Trigger reflow to ensure the max-height is applied
+            // Force reflow
             void dropdown.offsetWidth;
             dropdown.style.maxHeight = '0';
             dropdown.style.opacity = '0';
             dropdown.style.visibility = 'hidden';
 
             setTimeout(() => {
-                dropdown.classList.add('hidden');
-                // Reset inline styles when hidden
-                dropdown.style.removeProperty('max-height');
-                dropdown.style.removeProperty('opacity');
-                dropdown.style.removeProperty('visibility');
+                if (dropdown.style.maxHeight === '0px' || parseFloat(dropdown.style.maxHeight) === 0) {
+                    dropdown.classList.add('hidden');
+                    // Reset inline styles when hidden
+                    dropdown.style.removeProperty('max-height');
+                    dropdown.style.removeProperty('opacity');
+                    dropdown.style.removeProperty('visibility');
+                    dropdown.style.removeProperty('overflow');
+                }
             }, 300); // Match the CSS transition duration
         }
     }

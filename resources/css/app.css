@@ -16,3 +16,9 @@
     transition: all 0.2s ease;
     margin: 0.125rem 0; /* Add small margin to prevent overlapping */
 }
+
+/* Ensure dropdowns are properly positioned */
+#sidebar ul ul {
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+}
