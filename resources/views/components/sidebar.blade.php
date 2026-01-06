@@ -945,40 +945,25 @@
             icon.classList.toggle('rotate-180');
         }
 
-        // Remove animation classes to reset
-        dropdown.style.removeProperty('max-height');
-        dropdown.style.removeProperty('opacity');
-        dropdown.style.removeProperty('visibility');
-        dropdown.style.removeProperty('overflow');
-
         if (isHidden) {
-            // Show dropdown with animation
+            // Show dropdown with animation - using height instead of max-height for better push effect
+            dropdown.style.height = '0';
             dropdown.classList.remove('hidden');
             // Force reflow
             void dropdown.offsetWidth;
             // Apply animation
-            dropdown.style.maxHeight = dropdown.scrollHeight + 'px';
-            dropdown.style.opacity = '1';
-            dropdown.style.visibility = 'visible';
-            dropdown.style.overflow = 'hidden';
+            dropdown.style.height = dropdown.scrollHeight + 'px';
         } else {
             // Hide dropdown with animation
-            dropdown.style.maxHeight = dropdown.scrollHeight + 'px';
+            dropdown.style.height = dropdown.scrollHeight + 'px';
             // Force reflow
             void dropdown.offsetWidth;
-            dropdown.style.maxHeight = '0';
-            dropdown.style.opacity = '0';
-            dropdown.style.visibility = 'hidden';
+            dropdown.style.height = '0';
 
             setTimeout(() => {
-                if (dropdown.style.maxHeight === '0px' || parseFloat(dropdown.style.maxHeight) === 0) {
-                    dropdown.classList.add('hidden');
-                    // Reset inline styles when hidden
-                    dropdown.style.removeProperty('max-height');
-                    dropdown.style.removeProperty('opacity');
-                    dropdown.style.removeProperty('visibility');
-                    dropdown.style.removeProperty('overflow');
-                }
+                dropdown.classList.add('hidden');
+                // Reset inline styles when hidden
+                dropdown.style.removeProperty('height');
             }, 300); // Match the CSS transition duration
         }
     }
