@@ -983,14 +983,11 @@
             dropdown._hideTimeout = null;
         }
 
-        // Smooth toggle with proper timing
+        // Consistent toggle timing for both open and close
         if (isHidden) {
-            // Show dropdown with smooth animation
+            // Show dropdown - same timing as close animation
             dropdown.classList.remove('hidden');
-            // Add delay to make opening animation visible and smooth
-            setTimeout(() => {
-                dropdown.classList.add('dropdown-open');
-            }, 100); // Longer delay for better visibility of opening animation
+            dropdown.classList.add('dropdown-open');
         } else {
             // Hide dropdown with smooth animation
             dropdown.classList.remove('dropdown-open');
