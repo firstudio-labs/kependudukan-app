@@ -1105,9 +1105,15 @@ class BiodataController extends Controller
             }
 
             foreach ($citizens as $citizen) {
+                // Ensure NIK fields are treated as strings to prevent Excel scientific notation
+                $nik = !empty($citizen['nik']) ? strval($citizen['nik']) : '';
+                $kk = !empty($citizen['kk']) ? strval($citizen['kk']) : '';
+                $nikFather = !empty($citizen['nik_father']) ? strval($citizen['nik_father']) : '';
+                $nikMother = !empty($citizen['nik_mother']) ? strval($citizen['nik_mother']) : '';
+
                 $exportData[] = [
-                    $citizen['nik'] ?? '',
-                    $citizen['kk'] ?? '',
+                    $nik,
+                    $kk,
                     $citizen['full_name'] ?? '',
                     $citizen['gender'] ?? '',
                     $citizen['birth_date'] ?? '',
@@ -1127,8 +1133,8 @@ class BiodataController extends Controller
                     $citizen['family_status'] ?? '',
                     $citizen['father'] ?? '',
                     $citizen['mother'] ?? '',
-                    $citizen['nik_father'] ?? '',
-                    $citizen['nik_mother'] ?? '',
+                    $nikFather,
+                    $nikMother,
                 ];
             }
 

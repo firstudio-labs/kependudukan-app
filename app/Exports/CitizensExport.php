@@ -4,8 +4,10 @@ namespace App\Exports;
 
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithColumnFormatting;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
-class CitizensExport implements FromArray, WithHeadings
+class CitizensExport implements FromArray, WithHeadings, WithColumnFormatting
 {
     protected $data;
     protected $isTemplate;
@@ -108,6 +110,30 @@ class CitizensExport implements FromArray, WithHeadings
             'NIK Ayah',
             'NIK Ibu',
             // Tambahkan heading lain sesuai kebutuhan
+        ];
+    }
+
+    /**
+     * Menentukan format kolom untuk mencegah scientific notation
+     */
+    public function columnFormats(): array
+    {
+        if ($this->isTemplate) {
+            // Untuk template, format kolom NIK
+            return [
+                'A' => NumberFormat::FORMAT_TEXT, // nik
+                'B' => NumberFormat::FORMAT_TEXT, // no_kk
+                'S' => NumberFormat::FORMAT_TEXT, // nik_ayah
+                'T' => NumberFormat::FORMAT_TEXT, // nik_ibu
+            ];
+        }
+
+        // Untuk export data, format kolom NIK, KK, NIK Ayah, NIK Ibu
+        return [
+            'A' => NumberFormat::FORMAT_TEXT, // NIK
+            'B' => NumberFormat::FORMAT_TEXT, // Nomor KK
+            'V' => NumberFormat::FORMAT_TEXT, // NIK Ayah
+            'W' => NumberFormat::FORMAT_TEXT, // NIK Ibu
         ];
     }
 }
