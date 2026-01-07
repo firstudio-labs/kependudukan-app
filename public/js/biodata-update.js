@@ -304,6 +304,52 @@ function setSelectValueDirectly(selectId, value) {
     return false;
 }
 
+// Function to calculate age based on birth date
+function calculateAge(birthDateString) {
+    if (!birthDateString) return '';
+
+    const birthDate = new Date(birthDateString);
+    const today = new Date();
+
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+
+    // If birthday hasn't occurred this year yet, subtract 1
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+    }
+
+    return age > 0 ? age : 0;
+}
+
+// Function to setup birth date listener for automatic age calculation
+function setupBirthDateListener() {
+    const birthDateInput = document.getElementById('birth_date');
+    const ageInput = document.getElementById('age');
+
+    if (!birthDateInput || !ageInput) return;
+
+    // Function to update age when birth date changes
+    const updateAge = function() {
+        const birthDateValue = birthDateInput.value;
+        if (birthDateValue) {
+            const age = calculateAge(birthDateValue);
+            ageInput.value = age;
+        } else {
+            ageInput.value = '';
+        }
+    };
+
+    // Add event listener for birth date changes
+    birthDateInput.addEventListener('change', updateAge);
+    birthDateInput.addEventListener('input', updateAge);
+
+    // Calculate age on page load if birth date is already set
+    if (birthDateInput.value) {
+        updateAge();
+    }
+}
+
 // Function to force set all form values from citizen data
 function forceSyncFormWithData() {
     // Define critical fields for selection
@@ -526,18 +572,19 @@ function populateCitizenDataForUpdate(citizen) {
     // Handle birth_date - reformatting if needed
     if (citizen.birth_date) {
         // Check if birth_date is in DD/MM/YYYY format and convert it
+        let formattedDate;
         if (citizen.birth_date.includes('/')) {
             const [day, month, year] = citizen.birth_date.split('/');
-            const formattedDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+            formattedDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
             $('#birth_date').val(formattedDate);
         } else {
+            formattedDate = citizen.birth_date;
             $('#birth_date').val(citizen.birth_date);
         }
-    }
 
-    // Set age
-    if (citizen.age) {
-        $('#age').val(citizen.age);
+        // Calculate and set age automatically based on birth date
+        const age = calculateAge(formattedDate);
+        $('#age').val(age);
     }
 
     // Handle gender selection
@@ -712,6 +759,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Setup RF ID Tag listener
     setupRfIdTagListener();
+
+    // Setup birth date listener for automatic age calculation
+    setupBirthDateListener();
 
     // Apply date formatting and force select values
     setTimeout(function() {

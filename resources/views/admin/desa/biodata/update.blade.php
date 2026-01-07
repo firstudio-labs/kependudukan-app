@@ -69,8 +69,8 @@
                 <!-- Umur -->
                 <div>
                     <label for="age" class="block text-sm font-medium text-gray-700">Umur <span class="text-red-500">*</span></label>
-                    <input type="number" id="age" name="age" value="{{ $citizen['data']['age'] ?? '' }}"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2"
+                    <input type="number" id="age" name="age" value="{{ $citizen['data']['age'] ?? '' }}" readonly
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg p-2 bg-gray-100"
                         required>
                 </div>
 
