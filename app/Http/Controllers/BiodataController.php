@@ -647,31 +647,65 @@ class BiodataController extends Controller
         $dateFields = ['birth_date', 'marriage_date', 'divorce_certificate_date'];
 
         foreach ($dateFields as $field) {
-            if (isset($data[$field]) && !empty($data[$field]) && $data[$field] !== " ") {
-                try {
-                    // Check if it's already in yyyy-MM-dd format
-                    if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $data[$field])) {
+            // More strict validation for empty/null values
+            if (!isset($data[$field]) ||
+                $data[$field] === null ||
+                $data[$field] === '' ||
+                $data[$field] === ' ' ||
+                $data[$field] === 'null' ||
+                trim($data[$field]) === '') {
+
+                // Set to empty string for HTML date input
+                $data[$field] = '';
+                continue;
+            }
+
+            try {
+                $value = trim($data[$field]);
+
+                // Check if it's already in yyyy-MM-dd format and valid
+                if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $value)) {
+                    // Validate the date is actually valid
+                    $parts = explode('-', $value);
+                    if (count($parts) === 3 &&
+                        checkdate((int)$parts[1], (int)$parts[2], (int)$parts[0])) {
                         continue;
                     }
+                }
 
-                    // Handle dd/MM/yyyy format
-                    if (preg_match('/^\d{2}\/\d{2}\/\d{4}$/', $data[$field])) {
-                        $parts = explode('/', $data[$field]);
-                        if (count($parts) === 3) {
-                            $data[$field] = $parts[2] . '-' . $parts[1] . '-' . $parts[0];
+                // Handle dd/MM/yyyy format
+                if (preg_match('/^\d{2}\/\d{2}\/\d{4}$/', $value)) {
+                    $parts = explode('/', $value);
+                    if (count($parts) === 3) {
+                        $newDate = $parts[2] . '-' . str_pad($parts[1], 2, '0', STR_PAD_LEFT) . '-' . str_pad($parts[0], 2, '0', STR_PAD_LEFT);
+                        // Validate the converted date
+                        $dateParts = explode('-', $newDate);
+                        if (checkdate((int)$dateParts[1], (int)$dateParts[2], (int)$dateParts[0])) {
+                            $data[$field] = $newDate;
                             continue;
                         }
                     }
-
-                    // Try standard date parsing as fallback
-                    $timestamp = strtotime($data[$field]);
-                    if ($timestamp !== false) {
-                        $data[$field] = date('Y-m-d', $timestamp);
-                    }
-                } catch (\Exception $e) {
-                    Log::error('Error formatting date: ' . $e->getMessage());
-                    // Keep original value if we can't format it
                 }
+
+                // Try standard date parsing as fallback
+                $timestamp = strtotime($value);
+                if ($timestamp !== false) {
+                    $formatted = date('Y-m-d', $timestamp);
+                    // Validate the parsed date
+                    $dateParts = explode('-', $formatted);
+                    if (checkdate((int)$dateParts[1], (int)$dateParts[2], (int)$dateParts[0])) {
+                        $data[$field] = $formatted;
+                        continue;
+                    }
+                }
+
+                // If we can't format it properly, set to empty
+                Log::warning("Invalid date format for {$field}: '{$value}' - setting to empty");
+                $data[$field] = '';
+
+            } catch (\Exception $e) {
+                Log::error('Error formatting date for ' . $field . ': ' . $e->getMessage());
+                $data[$field] = '';
             }
         }
     }

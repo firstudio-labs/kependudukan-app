@@ -44,15 +44,25 @@ function manualTriggerAgeUpdate(testDate = null) {
         birthDateInput.value = testDate;
     }
 
-    const currentValue = birthDateInput.value;
-    console.log('🎯 Processing current value:', currentValue);
+    const currentValue = birthDateInput.value.trim();
+    console.log('🎯 Processing current value:', `"${currentValue}"`);
 
-    // Calculate age manually
-    const age = calculateAge(currentValue);
-    ageInput.value = age;
+    // Validate before calculating
+    if (currentValue &&
+        currentValue !== '' &&
+        currentValue !== ' ' &&
+        /^\d{4}-\d{2}-\d{2}$/.test(currentValue)) {
 
-    console.log('✅ Manual update completed - Age set to:', age);
-    return age;
+        // Calculate age manually
+        const age = calculateAge(currentValue);
+        ageInput.value = age;
+        console.log('✅ Manual update completed - Age set to:', age);
+        return age;
+    } else {
+        ageInput.value = '';
+        console.log('❌ Manual update failed - Invalid date:', currentValue);
+        return null;
+    }
 }
 
 // Force update age from current birth date value
@@ -60,14 +70,27 @@ function forceUpdateAge() {
     const birthDateInput = document.getElementById('birth_date');
     const ageInput = document.getElementById('age');
 
-    if (birthDateInput && ageInput) {
-        const age = calculateAge(birthDateInput.value);
-        ageInput.value = age;
-        console.log('💪 Force updated age to:', age);
-        return age;
-    } else {
+    if (!birthDateInput || !ageInput) {
         console.error('❌ Cannot force update - elements not found');
         return false;
+    }
+
+    const currentValue = birthDateInput.value.trim();
+    console.log('💪 Force updating age from:', `"${currentValue}"`);
+
+    if (currentValue &&
+        currentValue !== '' &&
+        currentValue !== ' ' &&
+        /^\d{4}-\d{2}-\d{2}$/.test(currentValue)) {
+
+        const age = calculateAge(currentValue);
+        ageInput.value = age;
+        console.log('✅ Force updated age to:', age);
+        return age;
+    } else {
+        ageInput.value = '';
+        console.log('⚠️ Force update cleared age - invalid date:', currentValue);
+        return null;
     }
 }
 
@@ -448,16 +471,31 @@ function setupBirthDateListener() {
         updateTimeout = setTimeout(() => {
             console.log('⏰ Processing age update after debounce...');
             const birthDateValue = birthDateInput.value.trim();
-            console.log('📅 Birth date value to process:', birthDateValue);
+            console.log('📅 Birth date value to process:', `"${birthDateValue}"`);
+
+            // Check for empty or invalid values
+            if (!birthDateValue ||
+                birthDateValue === '' ||
+                birthDateValue === ' ' ||
+                birthDateValue === 'null' ||
+                birthDateValue.length < 10) {
+
+                ageInput.value = '';
+                console.log('🗑️ Age cleared - empty or invalid birth date value');
+                return;
+            }
 
             // Check if the date is valid and complete
-            if (birthDateValue && /^\d{4}-\d{2}-\d{2}$/.test(birthDateValue)) {
+            if (/^\d{4}-\d{2}-\d{2}$/.test(birthDateValue)) {
                 try {
-                    const birthDate = new Date(birthDateValue);
+                    const birthDate = new Date(birthDateValue + 'T00:00:00'); // Add time to ensure proper parsing
                     console.log('📆 Parsed date object:', birthDate);
 
                     // Make sure the date is valid (not invalid like 2024-02-30)
-                    if (!isNaN(birthDate.getTime()) && birthDate.getFullYear() > 1900) {
+                    if (!isNaN(birthDate.getTime()) &&
+                        birthDate.getFullYear() > 1900 &&
+                        birthDate.getFullYear() < 2100) { // Reasonable year range
+
                         const age = calculateAge(birthDateValue);
                         console.log('🎯 Calculated age:', age, 'for birth date:', birthDateValue);
 
@@ -465,18 +503,16 @@ function setupBirthDateListener() {
                         console.log('✅ Age field updated to:', age);
                     } else {
                         ageInput.value = '';
-                        console.log('⚠️ Invalid date format or year:', birthDateValue, 'year:', birthDate.getFullYear());
+                        console.log('⚠️ Invalid date or year out of range:', birthDateValue, 'year:', birthDate.getFullYear());
                     }
                 } catch (error) {
                     ageInput.value = '';
                     console.log('❌ Error calculating age:', error.message);
                 }
-            } else if (!birthDateValue) {
-                ageInput.value = '';
-                console.log('🗑️ Age cleared - no birth date value');
             } else {
-                // Partial date input, don't update yet
-                console.log('⏳ Waiting for complete date input, current value:', birthDateValue);
+                // Invalid format, clear age
+                ageInput.value = '';
+                console.log('❌ Invalid date format, clearing age:', birthDateValue);
             }
         }, 150); // Slightly longer delay for better UX
     };
@@ -544,10 +580,19 @@ function setupBirthDateListener() {
 
     console.log('✅ Event listeners added successfully');
 
-    // Calculate age immediately on page load if birth date is already set
-    if (birthDateInput.value) {
-        console.log('📅 Initial birth date found, calculating age on page load');
+    // Calculate age immediately on page load if birth date is already set and valid
+    const initialValue = birthDateInput.value.trim();
+    if (initialValue &&
+        initialValue !== '' &&
+        initialValue !== ' ' &&
+        initialValue !== 'null' &&
+        /^\d{4}-\d{2}-\d{2}$/.test(initialValue)) {
+
+        console.log('📅 Initial birth date found, calculating age on page load:', initialValue);
         setTimeout(() => updateAge({ type: 'page_load' }), 50);
+    } else if (initialValue) {
+        console.log('⚠️ Initial birth date invalid, clearing age:', `"${initialValue}"`);
+        ageInput.value = '';
     }
 
     // Add a visual indicator that age is calculated automatically
@@ -867,22 +912,36 @@ function populateCitizenDataForUpdate(citizen) {
     }
 
     // Handle birth_date - reformatting if needed
-    if (citizen.birth_date) {
+    if (citizen.birth_date &&
+        citizen.birth_date.trim() !== '' &&
+        citizen.birth_date.trim() !== ' ' &&
+        citizen.birth_date.trim() !== 'null') {
+
+        let formattedDate = citizen.birth_date.trim();
+
         // Check if birth_date is in DD/MM/YYYY format and convert it
-        let formattedDate;
-        if (citizen.birth_date.includes('/')) {
-            const [day, month, year] = citizen.birth_date.split('/');
+        if (formattedDate.includes('/')) {
+            const [day, month, year] = formattedDate.split('/');
             formattedDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-            $('#birth_date').val(formattedDate);
-        } else {
-            formattedDate = citizen.birth_date;
-            $('#birth_date').val(citizen.birth_date);
         }
 
-        // Calculate and set age automatically based on birth date
-        const age = calculateAge(formattedDate);
-        $('#age').val(age);
-        console.log('Age calculated from RF ID data:', age, 'from birth date:', formattedDate);
+        // Validate the formatted date
+        if (/^\d{4}-\d{2}-\d{2}$/.test(formattedDate)) {
+            $('#birth_date').val(formattedDate);
+
+            // Calculate and set age automatically based on birth date
+            const age = calculateAge(formattedDate);
+            $('#age').val(age);
+            console.log('✅ Age calculated from RF ID data:', age, 'from birth date:', formattedDate);
+        } else {
+            console.log('⚠️ Invalid birth date format from RF ID:', formattedDate);
+            $('#birth_date').val('');
+            $('#age').val('');
+        }
+    } else if (citizen.birth_date) {
+        console.log('⚠️ Empty birth date from RF ID, clearing fields');
+        $('#birth_date').val('');
+        $('#age').val('');
     }
 
     // Handle gender selection
