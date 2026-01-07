@@ -13,9 +13,11 @@ use Illuminate\Support\Facades\Log;
 class PengumumanController extends Controller
 {
     protected $cacheStore;
+    protected $citizenService;
 
-    public function __construct()
+    public function __construct(CitizenService $citizenService)
     {
+        $this->citizenService = $citizenService;
         $this->cacheStore = $this->getCacheStore();
     }
 
@@ -34,7 +36,7 @@ class PengumumanController extends Controller
         return Cache::store(config('cache.default', 'file'));
     }
 
-    public function index(Request $request, CitizenService $citizenService)
+    public function index(Request $request)
     {
         try {
             $tokenOwner = $request->attributes->get('token_owner');
@@ -43,7 +45,7 @@ class PengumumanController extends Controller
             }
 
             $nik = $tokenOwner->nik ?? null;
-            $citizenData = $nik ? $citizenService->getCitizenByNIK($nik) : null;
+            $citizenData = $nik ? $this->citizenService->getCitizenByNIK($nik) : null;
             $payload = is_array($citizenData) ? ($citizenData['data'] ?? $citizenData) : [];
             $villageId = $payload['villages_id'] ?? $payload['village_id'] ?? null;
 
@@ -59,10 +61,8 @@ class PengumumanController extends Controller
                 return response()->json($this->cacheStore->get($cacheKey), 200);
             }
 
-            // Optimasi query dengan select spesifik
-            $query = Pengumuman::query()->select([
-                'id', 'judul', 'deskripsi', 'gambar', 'villages_id', 'created_at', 'updated_at'
-            ]);
+            // Query dengan eager loading untuk konsistensi dengan web controller
+            $query = Pengumuman::query();
             
             if ($villageId) {
                 $query->where('villages_id', (int) $villageId);
@@ -85,6 +85,12 @@ class PengumumanController extends Controller
                     'deskripsi' => $item->deskripsi,
                     'gambar' => $item->gambar,
                     'gambar_url' => $item->gambar_url,
+                    'user_id' => $item->user_id,
+                    'province_id' => $item->province_id,
+                    'districts_id' => $item->districts_id,
+                    'sub_districts_id' => $item->sub_districts_id,
+                    'villages_id' => $item->villages_id,
+                    'status' => $item->status,
                     'created_at' => $item->created_at,
                     'updated_at' => $item->updated_at,
                 ];
@@ -140,7 +146,7 @@ class PengumumanController extends Controller
         PreloadCacheJob::dispatch('pengumuman', (int) $villageId)->delay(now()->addSeconds(5));
     }
 
-    public function show(Request $request, $id, CitizenService $citizenService)
+    public function show(Request $request, $id)
     {
         try {
             $tokenOwner = $request->attributes->get('token_owner');
@@ -151,7 +157,7 @@ class PengumumanController extends Controller
             $pengumuman = Pengumuman::findOrFail($id);
 
             $nik = $tokenOwner->nik ?? null;
-            $citizenData = $nik ? $citizenService->getCitizenByNIK($nik) : null;
+            $citizenData = $nik ? $this->citizenService->getCitizenByNIK($nik) : null;
             $payload = is_array($citizenData) ? ($citizenData['data'] ?? $citizenData) : [];
             $villageId = $payload['villages_id'] ?? $payload['village_id'] ?? null;
 
@@ -165,6 +171,12 @@ class PengumumanController extends Controller
                 'deskripsi' => $pengumuman->deskripsi,
                 'gambar' => $pengumuman->gambar,
                 'gambar_url' => $pengumuman->gambar_url,
+                'user_id' => $pengumuman->user_id,
+                'province_id' => $pengumuman->province_id,
+                'districts_id' => $pengumuman->districts_id,
+                'sub_districts_id' => $pengumuman->sub_districts_id,
+                'villages_id' => $pengumuman->villages_id,
+                'status' => $pengumuman->status,
                 'created_at' => $pengumuman->created_at,
                 'updated_at' => $pengumuman->updated_at,
             ]], 200);
