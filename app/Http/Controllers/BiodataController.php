@@ -359,9 +359,9 @@ class BiodataController extends Controller
             // Batch process nullable fields
             $this->processNullableFields($validatedData);
 
-            // Convert NIK and KK to integers
-            $validatedData['nik'] = (int) $validatedData['nik'];
-            $validatedData['kk'] = (int) $validatedData['kk'];
+            // Keep NIK and KK as strings to preserve full precision
+            $validatedData['nik'] = strval($validatedData['nik']);
+            $validatedData['kk'] = strval($validatedData['kk']);
             $validatedData['religion'] = (int) $validatedData['religion'];
 
             $response = $this->citizenService->createCitizen($validatedData);
@@ -526,10 +526,10 @@ class BiodataController extends Controller
 
             // Process nullable fields
             $this->processNullableFields($validatedData);
-            $nik = (int) $nik;
+            $nik = strval($nik); // Keep as string to preserve precision
 
-            // Convert KK to integer
-            $validatedData['kk'] = (int) $validatedData['kk'];
+            // Keep KK as string to preserve full precision
+            $validatedData['kk'] = strval($validatedData['kk']);
 
             // Calculate age based on birth_date before saving
             if (isset($validatedData['birth_date']) && !empty($validatedData['birth_date'])) {
