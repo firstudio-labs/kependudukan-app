@@ -359,9 +359,9 @@ class BiodataController extends Controller
             // Batch process nullable fields
             $this->processNullableFields($validatedData);
 
-            // Keep NIK and KK as strings to preserve full precision
-            $validatedData['nik'] = strval($validatedData['nik']);
-            $validatedData['kk'] = strval($validatedData['kk']);
+            // Convert NIK and KK to integers
+            $validatedData['nik'] = (int) $validatedData['nik'];
+            $validatedData['kk'] = (int) $validatedData['kk'];
             $validatedData['religion'] = (int) $validatedData['religion'];
 
             $response = $this->citizenService->createCitizen($validatedData);
@@ -526,10 +526,10 @@ class BiodataController extends Controller
 
             // Process nullable fields
             $this->processNullableFields($validatedData);
-            $nik = strval($nik); // Keep as string to preserve precision
+            $nik = (int) $nik;
 
-            // Keep KK as string to preserve full precision
-            $validatedData['kk'] = strval($validatedData['kk']);
+            // Convert KK to integer
+            $validatedData['kk'] = (int) $validatedData['kk'];
 
             // Calculate age based on birth_date before saving
             if (isset($validatedData['birth_date']) && !empty($validatedData['birth_date'])) {
@@ -1044,82 +1044,108 @@ class BiodataController extends Controller
         }
     }
 
-    public function export()
-    {
-        try {
-            $exportData = [];
+    // Controller code (assuming this is in your CitizenController or similar)
+public function export()
+{
+    try {
+        $exportData = [];
+        $exportData[] = [
+            'NIK',
+            'Nomor KK',
+            'Nama Lengkap',
+            'Jenis Kelamin',
+            'Tanggal Lahir',
+            'Tempat Lahir',
+            'Usia',
+            'Alamat',
+            'RT',
+            'RW',
+            'Provinsi',
+            'Kabupaten',
+            'Kecamatan',
+            'Desa',
+            'Kode Pos',
+            'Status Kewarganegaraan',
+            'Agama',
+            'Golongan Darah',
+            'Status Dalam Keluarga',
+            'Nama Ayah',
+            'Nama Ibu',
+            'NIK Ayah',
+            'NIK Ibu',
+        ];
 
-            if (Auth::user()->role == 'admin desa') {
-                $villageId = Auth::user()->villages_id;
-                // Ambil semua data tanpa limit
-                $response = $this->citizenService->getAllCitizensWithHighLimit();
-                $citizens = [];
-                if (isset($response['data']['citizens']) && is_array($response['data']['citizens'])) {
-                    $citizens = $response['data']['citizens'];
-                } elseif (isset($response['citizens']) && is_array($response['citizens'])) {
-                    $citizens = $response['citizens'];
-                } elseif (isset($response['data']) && is_array($response['data'])) {
-                    $citizens = $response['data'];
-                }
-                // Filter hanya untuk desa admin
-                $citizens = array_filter($citizens, function ($c) use ($villageId) {
-                    return (isset($c['village_id']) && $c['village_id'] == $villageId) ||
-                        (isset($c['villages_id']) && $c['villages_id'] == $villageId);
-                });
-            } else {
-                // Superadmin: ambil semua data
-                $response = $this->citizenService->getAllCitizensWithHighLimit();
-                $citizens = [];
-                if (isset($response['data']['citizens']) && is_array($response['data']['citizens'])) {
-                    $citizens = $response['data']['citizens'];
-                } elseif (isset($response['citizens']) && is_array($response['citizens'])) {
-                    $citizens = $response['citizens'];
-                } elseif (isset($response['data']) && is_array($response['data'])) {
-                    $citizens = $response['data'];
-                }
+        if (Auth::user()->role == 'admin desa') {
+            $villageId = Auth::user()->villages_id;
+            // Ambil semua data tanpa limit
+            $response = $this->citizenService->getAllCitizensWithHighLimit();
+            $citizens = [];
+            if (isset($response['data']['citizens']) && is_array($response['data']['citizens'])) {
+                $citizens = $response['data']['citizens'];
+            } elseif (isset($response['citizens']) && is_array($response['citizens'])) {
+                $citizens = $response['citizens'];
+            } elseif (isset($response['data']) && is_array($response['data'])) {
+                $citizens = $response['data'];
             }
-
-            foreach ($citizens as $citizen) {
-                // Ensure NIK fields are treated as strings to prevent Excel scientific notation
-                $nik = !empty($citizen['nik']) ? strval($citizen['nik']) : '';
-                $kk = !empty($citizen['kk']) ? strval($citizen['kk']) : '';
-                $nikFather = !empty($citizen['nik_father']) ? strval($citizen['nik_father']) : '';
-                $nikMother = !empty($citizen['nik_mother']) ? strval($citizen['nik_mother']) : '';
-
-                $exportData[] = [
-                    $nik,
-                    $kk,
-                    $citizen['full_name'] ?? '',
-                    $citizen['gender'] ?? '',
-                    $citizen['birth_date'] ?? '',
-                    $citizen['birth_place'] ?? '',
-                    $citizen['age'] ?? '',
-                    $citizen['address'] ?? '',
-                    $citizen['rt'] ?? '',
-                    $citizen['rw'] ?? '',
-                    $citizen['province_id'] ?? '',
-                    $citizen['district_id'] ?? '',
-                    $citizen['sub_district_id'] ?? '',
-                    $citizen['village_id'] ?? '',
-                    $citizen['postal_code'] ?? '',
-                    $citizen['citizen_status'] ?? '',
-                    $citizen['religion'] ?? '',
-                    $citizen['blood_type'] ?? '',
-                    $citizen['family_status'] ?? '',
-                    $citizen['father'] ?? '',
-                    $citizen['mother'] ?? '',
-                    $nikFather,
-                    $nikMother,
-                ];
+            // Filter hanya untuk desa admin
+            $citizens = array_filter($citizens, function ($c) use ($villageId) {
+                return (isset($c['village_id']) && $c['village_id'] == $villageId) ||
+                    (isset($c['villages_id']) && $c['villages_id'] == $villageId);
+            });
+        } else {
+            // Superadmin: ambil semua data
+            $response = $this->citizenService->getAllCitizensWithHighLimit();
+            $citizens = [];
+            if (isset($response['data']['citizens']) && is_array($response['data']['citizens'])) {
+                $citizens = $response['data']['citizens'];
+            } elseif (isset($response['citizens']) && is_array($response['citizens'])) {
+                $citizens = $response['citizens'];
+            } elseif (isset($response['data']) && is_array($response['data'])) {
+                $citizens = $response['data'];
             }
-
-            $filename = 'biodata_' . date('Ymd_His') . '.xlsx';
-            return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\CitizensExport($exportData), $filename);
-        } catch (\Exception $e) {
-            \Log::error('Error exporting data: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Gagal mengekspor data: ' . $e->getMessage());
         }
+
+        foreach ($citizens as $citizen) {
+            // Format NIK fields as strings (no leading apostrophe needed with custom binder)
+            $nik = !empty($citizen['nik']) ? strval($citizen['nik']) : '';
+            $kk = !empty($citizen['kk']) ? strval($citizen['kk']) : '';
+            $nikFather = !empty($citizen['nik_father']) ? strval($citizen['nik_father']) : '';
+            $nikMother = !empty($citizen['nik_mother']) ? strval($citizen['nik_mother']) : '';
+
+            $exportData[] = [
+                $nik,
+                $kk,
+                $citizen['full_name'] ?? '',
+                $citizen['gender'] ?? '',
+                $citizen['birth_date'] ?? '',
+                $citizen['birth_place'] ?? '',
+                $citizen['age'] ?? '',
+                $citizen['address'] ?? '',
+                $citizen['rt'] ?? '',
+                $citizen['rw'] ?? '',
+                $citizen['province_id'] ?? '',
+                $citizen['district_id'] ?? '',
+                $citizen['sub_district_id'] ?? '',
+                $citizen['village_id'] ?? '',
+                $citizen['postal_code'] ?? '',
+                $citizen['citizen_status'] ?? '',
+                $citizen['religion'] ?? '',
+                $citizen['blood_type'] ?? '',
+                $citizen['family_status'] ?? '',
+                $citizen['father'] ?? '',
+                $citizen['mother'] ?? '',
+                $nikFather,
+                $nikMother,
+            ];
+        }
+
+        $filename = 'biodata_' . date('Ymd_His') . '.xlsx';
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\CitizensExport($exportData), $filename);
+    } catch (\Exception $e) {
+        \Log::error('Error exporting data: ' . $e->getMessage());
+        return redirect()->back()->with('error', 'Gagal mengekspor data: ' . $e->getMessage());
     }
+}
 
     public function downloadTemplate()
     {
