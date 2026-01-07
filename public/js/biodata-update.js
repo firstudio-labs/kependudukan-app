@@ -661,7 +661,7 @@ function calculateAge(birthDateString) {
     }
 }
 
-// Handle birth date change - supports dd/mm/yyyy format
+// Handle birth date change - supports yyyy-mm-dd format from date picker
 function handleBirthDateChange(event) {
     const target = event.target || event;
     const birthDateValue = target.value.trim();
@@ -679,71 +679,17 @@ function handleBirthDateChange(event) {
         return;
     }
 
-    // Convert dd/mm/yyyy to yyyy-mm-dd for calculation
-    let formattedDate = "";
-
-    if (birthDateValue) {
-        // Check if it's already in yyyy-mm-dd format
-        if (/^\d{4}-\d{2}-\d{2}$/.test(birthDateValue)) {
-            formattedDate = birthDateValue;
-        }
-        // Check if it's in dd/mm/yyyy format
-        else if (/^\d{2}\/\d{2}\/\d{4}$/.test(birthDateValue)) {
-            const parts = birthDateValue.split("/");
-            const day = parts[0].padStart(2, "0");
-            const month = parts[1].padStart(2, "0");
-            const year = parts[2];
-
-            // Validate date components
-            const dayNum = parseInt(day);
-            const monthNum = parseInt(month);
-            const yearNum = parseInt(year);
-
-            if (
-                dayNum >= 1 &&
-                dayNum <= 31 &&
-                monthNum >= 1 &&
-                monthNum <= 12 &&
-                yearNum >= 1900 &&
-                yearNum <= new Date().getFullYear()
-            ) {
-                formattedDate = `${year}-${month}-${day}`;
-            } else {
-                console.log("❌ Invalid date components");
-            }
-        }
-        // Check if it's in dd-mm-yyyy format (alternative)
-        else if (/^\d{2}-\d{2}-\d{4}$/.test(birthDateValue)) {
-            const parts = birthDateValue.split("-");
-            const day = parts[0].padStart(2, "0");
-            const month = parts[1].padStart(2, "0");
-            const year = parts[2];
-
-            // Validate date components
-            const dayNum = parseInt(day);
-            const monthNum = parseInt(month);
-            const yearNum = parseInt(year);
-
-            if (
-                dayNum >= 1 &&
-                dayNum <= 31 &&
-                monthNum >= 1 &&
-                monthNum <= 12 &&
-                yearNum >= 1900 &&
-                yearNum <= new Date().getFullYear()
-            ) {
-                formattedDate = `${year}-${month}-${day}`;
-            } else {
-                console.log("❌ Invalid date components");
-            }
-        }
-    }
-
-    if (formattedDate && /^\d{4}-\d{2}-\d{2}$/.test(formattedDate)) {
+    // Date picker returns yyyy-mm-dd format directly
+    if (birthDateValue && /^\d{4}-\d{2}-\d{2}$/.test(birthDateValue)) {
         try {
-            const age = calculateAge(formattedDate);
+            const age = calculateAge(birthDateValue);
             ageInput.value = age;
-            console.log("✅ Age updated to:", age, "from date:", formattedDate);
+            console.log(
+                "✅ Age updated to:",
+                age,
+                "from date:",
+                birthDateValue
+            );
         } catch (error) {
             console.error("❌ Error calculating age:", error);
             ageInput.value = "";
@@ -752,28 +698,6 @@ function handleBirthDateChange(event) {
         ageInput.value = "";
         console.log("🗑️ Age cleared - invalid date format:", birthDateValue);
     }
-}
-
-// Function to format date input as user types (dd/mm/yyyy)
-function formatDateInput(input) {
-    let value = input.value.replace(/\D/g, ""); // Remove non-digits
-
-    // Auto-format as dd/mm/yyyy
-    if (value.length >= 2 && value.length <= 4) {
-        value = value.slice(0, 2) + "/" + value.slice(2);
-    } else if (value.length >= 5 && value.length <= 8) {
-        value =
-            value.slice(0, 2) + "/" + value.slice(2, 4) + "/" + value.slice(4);
-    } else if (value.length > 8) {
-        value =
-            value.slice(0, 2) +
-            "/" +
-            value.slice(2, 4) +
-            "/" +
-            value.slice(4, 8);
-    }
-
-    input.value = value;
 }
 
 // Function to setup birth date listener for automatic age calculation
@@ -794,57 +718,23 @@ function setupBirthDateListener() {
     birthDateInput.removeEventListener("input", handleBirthDateChange);
     birthDateInput.removeEventListener("change", handleBirthDateChange);
     birthDateInput.removeEventListener("blur", handleBirthDateChange);
-    birthDateInput.removeEventListener("input", formatDateInput);
-    birthDateInput.removeEventListener("keydown", handleDateKeydown);
 
-    // Add input formatting listener
-    birthDateInput.addEventListener("input", function (e) {
-        // Allow backspace and delete
-        if (
-            e.inputType === "deleteContentBackward" ||
-            e.inputType === "deleteContentForward"
-        ) {
-            return;
-        }
-
-        // Format the input
-        formatDateInput(this);
-
-        // Calculate age after formatting
-        handleBirthDateChange(e);
-    });
-
-    // Handle keydown for better UX
-    function handleDateKeydown(e) {
-        // Allow backspace, delete, tab, escape, enter, and arrow keys
-        if (
-            [8, 9, 27, 13, 37, 38, 39, 40, 46].includes(e.keyCode) ||
-            (e.keyCode >= 48 && e.keyCode <= 57) || // Numbers 0-9
-            (e.keyCode >= 96 && e.keyCode <= 105)
-        ) {
-            // Numpad numbers
-            return;
-        }
-
-        // Prevent other keys
-        e.preventDefault();
-    }
-
-    birthDateInput.addEventListener("keydown", handleDateKeydown);
-
-    // Add change and blur listeners for final validation
+    // Add change event listener for date picker
     birthDateInput.addEventListener("change", handleBirthDateChange);
-    birthDateInput.addEventListener("blur", handleBirthDateChange);
+
+    // Also add input event listener for immediate updates
+    birthDateInput.addEventListener("input", handleBirthDateChange);
 
     console.log("🎧 Event listeners added successfully");
 
     // Calculate initial age if birth date exists
-    if (birthDateInput.value) {
-        // Try to handle existing value
-        handleBirthDateChange({
-            target: birthDateInput,
-            type: "initialization",
-        });
+    if (
+        birthDateInput.value &&
+        /^\d{4}-\d{2}-\d{2}$/.test(birthDateInput.value)
+    ) {
+        const age = calculateAge(birthDateInput.value);
+        ageInput.value = age;
+        console.log("📅 Initial age calculated:", age);
     }
 
     // Add visual indicator
@@ -865,7 +755,7 @@ function setupBirthDateListener() {
         }
     }, 2000);
 
-    console.log("✅ Birth date listener setup completed with fallback");
+    console.log("✅ Birth date listener setup completed");
 }
 
 // Function to force set all form values from citizen data
@@ -1136,7 +1026,7 @@ function populateCitizenDataForUpdate(citizen) {
         $("#birth_place").val(citizen.birth_place);
     }
 
-    // Handle birth_date - reformatting if needed
+    // Handle birth_date - date picker expects yyyy-mm-dd format
     if (
         citizen.birth_date &&
         citizen.birth_date.trim() !== "" &&
@@ -1144,31 +1034,31 @@ function populateCitizenDataForUpdate(citizen) {
         citizen.birth_date.trim() !== "null"
     ) {
         let formattedDate = citizen.birth_date.trim();
-        let displayDate = "";
 
-        // Convert various formats to dd/mm/yyyy for display
+        // Convert various formats to yyyy-mm-dd for date picker
         if (/^\d{4}-\d{2}-\d{2}$/.test(formattedDate)) {
-            // Already in yyyy-mm-dd format, convert to dd/mm/yyyy for display
-            const [year, month, day] = formattedDate.split("-");
-            displayDate = `${day}/${month}/${year}`;
+            // Already in correct format
         } else if (formattedDate.includes("/")) {
-            // Already in dd/mm/yyyy format
-            displayDate = formattedDate;
+            // Convert from dd/mm/yyyy to yyyy-mm-dd
+            const [day, month, year] = formattedDate.split("/");
+            formattedDate = `${year}-${month.padStart(2, "0")}-${day.padStart(
+                2,
+                "0"
+            )}`;
         } else {
             // Try to parse other formats
             const date = new Date(formattedDate);
             if (!isNaN(date.getTime())) {
-                const day = String(date.getDate()).padStart(2, "0");
-                const month = String(date.getMonth() + 1).padStart(2, "0");
                 const year = date.getFullYear();
-                displayDate = `${day}/${month}/${year}`;
+                const month = String(date.getMonth() + 1).padStart(2, "0");
+                const day = String(date.getDate()).padStart(2, "0");
                 formattedDate = `${year}-${month}-${day}`;
             }
         }
 
-        // Validate and set the display date
-        if (displayDate) {
-            $("#birth_date").val(displayDate);
+        // Validate and set the date
+        if (formattedDate && /^\d{4}-\d{2}-\d{2}$/.test(formattedDate)) {
+            $("#birth_date").val(formattedDate);
 
             // Calculate and set age automatically based on birth date
             const age = calculateAge(formattedDate);
@@ -1177,9 +1067,7 @@ function populateCitizenDataForUpdate(citizen) {
                 "✅ Age calculated from RF ID data:",
                 age,
                 "from birth date:",
-                formattedDate,
-                "display:",
-                displayDate
+                formattedDate
             );
         } else {
             console.log(
