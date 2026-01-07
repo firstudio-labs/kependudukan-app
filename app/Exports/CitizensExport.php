@@ -5,9 +5,10 @@ namespace App\Exports;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithColumnFormatting;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
-class CitizensExport implements FromArray, WithHeadings, WithColumnFormatting
+class CitizensExport implements FromArray, WithHeadings, WithColumnFormatting, ShouldAutoSize
 {
     protected $data;
     protected $isTemplate;
@@ -19,23 +20,12 @@ class CitizensExport implements FromArray, WithHeadings, WithColumnFormatting
     }
 
     /**
-     * Mengembalikan data yang akan diekspor
+     * Mengembalikan data yang akan diekspor.
+     * Controller seharusnya hanya memberikan baris data, tanpa header.
      */
     public function array(): array
     {
-        if ($this->isTemplate) {
-            // Untuk template, kembalikan data asli tanpa heading
-            return $this->data;
-        }
-
-        // Untuk export data, skip baris pertama jika itu adalah header
-        $exportData = [];
-        foreach ($this->data as $row) {
-            if (is_array($row) && !empty($row)) {
-                $exportData[] = $row;
-            }
-        }
-        return $exportData;
+        return $this->data;
     }
 
     /**
@@ -109,31 +99,23 @@ class CitizensExport implements FromArray, WithHeadings, WithColumnFormatting
             'Nama Ibu',
             'NIK Ayah',
             'NIK Ibu',
-            // Tambahkan heading lain sesuai kebutuhan
         ];
     }
 
     /**
-     * Menentukan format kolom untuk mencegah scientific notation
+     * Menentukan format kolom.
      */
     public function columnFormats(): array
     {
-        if ($this->isTemplate) {
-            // Untuk template, format kolom NIK
-            return [
-                'A' => NumberFormat::FORMAT_TEXT, // nik
-                'B' => NumberFormat::FORMAT_TEXT, // no_kk
-                'S' => NumberFormat::FORMAT_TEXT, // nik_ayah
-                'T' => NumberFormat::FORMAT_TEXT, // nik_ibu
-            ];
-        }
-
-        // Untuk export data, format kolom NIK, KK, NIK Ayah, NIK Ibu
+        // NIK: Kolom A
+        // Nomor KK: Kolom B
+        // NIK Ayah: Kolom V
+        // NIK Ibu: Kolom W
         return [
-            'A' => NumberFormat::FORMAT_TEXT, // NIK
-            'B' => NumberFormat::FORMAT_TEXT, // Nomor KK
-            'V' => NumberFormat::FORMAT_TEXT, // NIK Ayah
-            'W' => NumberFormat::FORMAT_TEXT, // NIK Ibu
+            'A' => NumberFormat::FORMAT_TEXT,
+            'B' => NumberFormat::FORMAT_TEXT,
+            'V' => NumberFormat::FORMAT_TEXT,
+            'W' => NumberFormat::FORMAT_TEXT,
         ];
     }
 }

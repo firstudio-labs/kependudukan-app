@@ -1048,31 +1048,6 @@ class BiodataController extends Controller
     {
         try {
             $exportData = [];
-            $exportData[] = [
-                'NIK',
-                'Nomor KK',
-                'Nama Lengkap',
-                'Jenis Kelamin',
-                'Tanggal Lahir',
-                'Tempat Lahir',
-                'Usia',
-                'Alamat',
-                'RT',
-                'RW',
-                'Provinsi',
-                'Kabupaten',
-                'Kecamatan',
-                'Desa',
-                'Kode Pos',
-                'Status Kewarganegaraan',
-                'Agama',
-                'Golongan Darah',
-                'Status Dalam Keluarga',
-                'Nama Ayah',
-                'Nama Ibu',
-                'NIK Ayah',
-                'NIK Ibu',
-            ];
 
             if (Auth::user()->role == 'admin desa') {
                 $villageId = Auth::user()->villages_id;
