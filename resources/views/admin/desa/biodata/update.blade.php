@@ -462,6 +462,10 @@
         window.allCitizens = @json($allCitizens ?? []);
     </script>
 
+    <!-- Include Flatpickr CSS and JS from CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
     <!-- Include JavaScript files -->
     <script src="{{ asset('js/biodata-common.js') }}"></script>
     <script src="{{ asset('js/biodata-update.js') }}"></script>

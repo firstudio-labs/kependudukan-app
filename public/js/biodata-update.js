@@ -157,11 +157,22 @@ window.debugEventListeners = function () {
     console.log("  Element:", birthDateInput);
     console.log("  Value:", `"${birthDateInput.value}"`);
     console.log("  Type:", birthDateInput.type);
+    console.log("  Has Flatpickr:", !!birthDateInput._flatpickr);
+
+    if (birthDateInput._flatpickr) {
+        console.log("  Flatpickr instance:", birthDateInput._flatpickr);
+    }
 
     // Trigger manual change to test
     console.log("🧪 Testing manual change...");
     birthDateInput.value = "1990-01-01";
     birthDateInput.dispatchEvent(new Event("change", { bubbles: true }));
+
+    // Test Flatpickr if available
+    if (birthDateInput._flatpickr) {
+        console.log("🧪 Testing Flatpickr setDate...");
+        birthDateInput._flatpickr.setDate("1990-01-01");
+    }
 };
 
 // Global variables
@@ -703,7 +714,12 @@ function calculateAge(birthDateString) {
 // Handle birth date change - supports yyyy-mm-dd format from date picker
 function handleBirthDateChange(event) {
     const target = event.target || event;
-    const birthDateValue = target.value.trim();
+    let birthDateValue = target.value ? target.value.trim() : "";
+
+    // For Flatpickr events, use the dateStr if available
+    if (event.dateStr) {
+        birthDateValue = event.dateStr;
+    }
 
     console.log(
         "🎯 Birth date changed, value:",
@@ -754,7 +770,7 @@ function handleBirthDateChange(event) {
 
 // Function to setup birth date listener for automatic age calculation
 function setupBirthDateListener() {
-    console.log("🔍 Setting up birth date listener...");
+    console.log("🔍 Setting up birth date listener with Flatpickr...");
     console.log("📍 DOM ready state:", document.readyState);
 
     const birthDateInput = document.getElementById("birth_date");
@@ -769,92 +785,63 @@ function setupBirthDateListener() {
         return;
     }
 
-    console.log("✅ Elements found, setting up listeners...");
+    // Check if Flatpickr is available
+    if (typeof flatpickr === "undefined") {
+        console.warn(
+            "⚠️ Flatpickr not loaded, falling back to basic event listeners"
+        );
 
-    // Clear any existing listeners first
-    birthDateInput.removeEventListener("input", handleBirthDateChange);
-    birthDateInput.removeEventListener("change", handleBirthDateChange);
-    birthDateInput.removeEventListener("blur", handleBirthDateChange);
-    birthDateInput.removeEventListener("focusout", handleBirthDateChange);
+        // Fallback to basic event listeners
+        birthDateInput.addEventListener("change", handleBirthDateChange);
+        birthDateInput.addEventListener("input", handleBirthDateChange);
 
-    // Add multiple event listeners for date picker compatibility
-    birthDateInput.addEventListener("change", handleBirthDateChange);
-    birthDateInput.addEventListener("input", handleBirthDateChange);
-    birthDateInput.addEventListener("blur", handleBirthDateChange);
-    birthDateInput.addEventListener("focusout", handleBirthDateChange);
-
-    // Special handling for date picker - monitor value changes using MutationObserver
-    let lastBirthDateValue = birthDateInput.value;
-
-    // Use MutationObserver for more reliable change detection
-    const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-            if (
-                mutation.type === "attributes" &&
-                mutation.attributeName === "value"
-            ) {
-                const currentValue = birthDateInput.value;
-                if (currentValue !== lastBirthDateValue) {
-                    console.log(
-                        "👁️ MutationObserver detected change from",
-                        `"${lastBirthDateValue}"`,
-                        "to",
-                        `"${currentValue}"`
-                    );
-                    lastBirthDateValue = currentValue;
-                    handleBirthDateChange({
-                        type: "mutation_observer",
-                        target: birthDateInput,
-                    });
-                }
-            }
-        });
-    });
-
-    // Start observing the input element for value changes
-    observer.observe(birthDateInput, {
-        attributes: true,
-        attributeFilter: ["value"],
-    });
-
-    // Additional polling check for date picker compatibility
-    const checkDateChange = () => {
-        const currentValue = birthDateInput.value;
-        if (currentValue !== lastBirthDateValue) {
-            console.log(
-                "📅 Polling detected change from",
-                `"${lastBirthDateValue}"`,
-                "to",
-                `"${currentValue}"`
-            );
-            lastBirthDateValue = currentValue;
-            handleBirthDateChange({
-                type: "polling_check",
-                target: birthDateInput,
-            });
+        // Calculate initial age if birth date exists
+        if (
+            birthDateInput.value &&
+            /^\d{4}-\d{2}-\d{2}$/.test(birthDateInput.value)
+        ) {
+            const age = calculateAge(birthDateInput.value);
+            ageInput.value = age;
+            console.log("📅 Initial age calculated:", age);
         }
-    };
 
-    // Check for changes every 200ms (very frequent for date picker)
-    setInterval(checkDateChange, 200);
+        return;
+    }
 
-    // Add click listener to detect when date picker is opened
-    birthDateInput.addEventListener("click", () => {
-        console.log("🖱️ Date picker clicked/opened");
-        // After a short delay, check if value changed (user might have selected a date)
-        setTimeout(() => {
-            const currentValue = birthDateInput.value;
-            if (currentValue !== lastBirthDateValue) {
-                console.log("📅 Click-triggered change detected");
+    console.log("✅ Flatpickr available, initializing date picker...");
+
+    // Initialize Flatpickr with reliable event handling
+    const fp = flatpickr(birthDateInput, {
+        dateFormat: "Y-m-d", // Keep yyyy-mm-dd format for backend
+        allowInput: true,
+        clickOpens: true,
+        onChange: function (selectedDates, dateStr, instance) {
+            console.log("📅 Flatpickr onChange triggered:", dateStr);
+            handleBirthDateChange({
+                type: "flatpickr_change",
+                target: birthDateInput,
+                selectedDates: selectedDates,
+                dateStr: dateStr,
+            });
+        },
+        onClose: function (selectedDates, dateStr, instance) {
+            console.log("📅 Flatpickr onClose triggered:", dateStr);
+            // Ensure age is updated when calendar closes
+            if (dateStr) {
                 handleBirthDateChange({
-                    type: "click_check",
+                    type: "flatpickr_close",
                     target: birthDateInput,
+                    selectedDates: selectedDates,
+                    dateStr: dateStr,
                 });
             }
-        }, 100);
+        },
+        onOpen: function (selectedDates, dateStr, instance) {
+            console.log("📅 Flatpickr opened");
+        },
     });
 
-    console.log("🎧 Event listeners and observers added successfully");
+    console.log("🎧 Flatpickr initialized successfully");
 
     // Calculate initial age if birth date exists
     if (
@@ -870,13 +857,13 @@ function setupBirthDateListener() {
     ageInput.setAttribute("title", "Umur dihitung otomatis dari tanggal lahir");
     ageInput.style.backgroundColor = "#f8fafc";
 
-    console.log("✅ Birth date listener setup completed with MutationObserver");
+    console.log("✅ Birth date listener setup completed with Flatpickr");
     console.log(
         "🎯 Ready to handle birth date changes and update age automatically"
     );
 
-    // Store observer reference for cleanup if needed
-    birthDateInput._ageObserver = observer;
+    // Store Flatpickr instance for cleanup if needed
+    birthDateInput._flatpickr = fp;
 }
 
 // Function to force set all form values from citizen data
@@ -1404,8 +1391,19 @@ document.addEventListener("DOMContentLoaded", function () {
         forceSyncFormWithData();
 
         // Setup birth date listener for automatic age calculation
-        setTimeout(function () {
-            setupBirthDateListener();
-        }, 100);
+        // Wait for Flatpickr to load if it's being loaded from CDN
+        const waitForFlatpickr = () => {
+            if (typeof flatpickr !== "undefined") {
+                console.log(
+                    "✅ Flatpickr loaded, setting up birth date listener"
+                );
+                setupBirthDateListener();
+            } else {
+                console.log("⏳ Waiting for Flatpickr to load...");
+                setTimeout(waitForFlatpickr, 50);
+            }
+        };
+
+        setTimeout(waitForFlatpickr, 100);
     }, 300);
 });
