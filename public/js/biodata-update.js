@@ -26,8 +26,55 @@ function testBirthDateAgeFunctionality() {
     return 'Test completed - check console for details';
 }
 
-// Make test function globally available for debugging
+// Manual trigger function for testing
+function manualTriggerAgeUpdate(testDate = null) {
+    console.log('🔧 Manual trigger age update called');
+
+    const birthDateInput = document.getElementById('birth_date');
+    const ageInput = document.getElementById('age');
+
+    if (!birthDateInput || !ageInput) {
+        console.error('❌ Elements not found');
+        return false;
+    }
+
+    // If test date provided, set it
+    if (testDate) {
+        console.log('📝 Setting test date:', testDate);
+        birthDateInput.value = testDate;
+    }
+
+    const currentValue = birthDateInput.value;
+    console.log('🎯 Processing current value:', currentValue);
+
+    // Calculate age manually
+    const age = calculateAge(currentValue);
+    ageInput.value = age;
+
+    console.log('✅ Manual update completed - Age set to:', age);
+    return age;
+}
+
+// Force update age from current birth date value
+function forceUpdateAge() {
+    const birthDateInput = document.getElementById('birth_date');
+    const ageInput = document.getElementById('age');
+
+    if (birthDateInput && ageInput) {
+        const age = calculateAge(birthDateInput.value);
+        ageInput.value = age;
+        console.log('💪 Force updated age to:', age);
+        return age;
+    } else {
+        console.error('❌ Cannot force update - elements not found');
+        return false;
+    }
+}
+
+// Make functions globally available for debugging
 window.testBirthDateAgeFunctionality = testBirthDateAgeFunctionality;
+window.manualTriggerAgeUpdate = manualTriggerAgeUpdate;
+window.forceUpdateAge = forceUpdateAge;
 
 // Global variables
 let citizenData = {};
@@ -448,20 +495,52 @@ function setupBirthDateListener() {
     const testEvent = (eventType) => (event) => {
         console.log(`🎯 Event triggered: ${eventType}`, {
             value: event.target.value,
-            type: event.type
+            type: event.type,
+            target: event.target
         });
         updateAge(event);
     };
 
+    // Standard events
     birthDateInput.addEventListener('change', testEvent('change')); // When date is fully selected/changed
     birthDateInput.addEventListener('input', testEvent('input'));   // When input value changes
     birthDateInput.addEventListener('blur', testEvent('blur'));     // When input loses focus
     birthDateInput.addEventListener('focus', testEvent('focus'));   // When input gains focus
     birthDateInput.addEventListener('keyup', testEvent('keyup'));   // When keys are pressed
 
-    // Also try mouse events for date picker
-    birthDateInput.addEventListener('click', (e) => console.log('🖱️ Click on birth date input'));
+    // Mouse events for date picker interaction
+    birthDateInput.addEventListener('click', (e) => {
+        console.log('🖱️ Click on birth date input');
+        // Sometimes date picker opens on click, check for changes after a delay
+        setTimeout(() => {
+            const currentValue = birthDateInput.value;
+            if (currentValue !== lastBirthDateValue) {
+                console.log('📅 Date picker click detected value change');
+                updateAge({ type: 'click_delayed' });
+            }
+        }, 100);
+    });
     birthDateInput.addEventListener('mousedown', (e) => console.log('🖱️ Mouse down on birth date input'));
+
+    // Additional events that might be triggered by date picker
+    birthDateInput.addEventListener('mouseup', (e) => console.log('🖱️ Mouse up on birth date input'));
+    birthDateInput.addEventListener('focusin', (e) => console.log('🎯 Focus in on birth date input'));
+    birthDateInput.addEventListener('focusout', (e) => console.log('🎯 Focus out on birth date input'));
+
+    // Try to detect date picker closing
+    document.addEventListener('click', (e) => {
+        // If clicking outside the date input, it might indicate date picker closed
+        if (!birthDateInput.contains(e.target)) {
+            setTimeout(() => {
+                const currentValue = birthDateInput.value;
+                if (currentValue !== lastBirthDateValue) {
+                    console.log('📅 Outside click detected value change');
+                    lastBirthDateValue = currentValue;
+                    updateAge({ type: 'outside_click' });
+                }
+            }, 50);
+        }
+    });
 
     console.log('✅ Event listeners added successfully');
 
@@ -477,20 +556,95 @@ function setupBirthDateListener() {
 
     console.log('✅ Birth date listener setup completed with comprehensive event handling');
     console.log('💡 Age field is now automatically calculated from birth date');
+    console.log('🛡️ Multiple fallback systems active:');
+    console.log('   - Event listeners (change, input, blur, focus, keyup)');
+    console.log('   - Interval polling (100ms)');
+    console.log('   - MutationObserver');
+    console.log('   - Value property override');
+    console.log('   - requestAnimationFrame monitoring');
+    console.log('   - setAttribute override');
+    console.log('   - Click/outside click detection');
+    console.log('');
+    console.log('🎯 Try these manual tests in console:');
+    console.log('   forceUpdateAge() - Force update age now');
+    console.log('   manualTriggerAgeUpdate("1990-01-01") - Test with specific date');
+    console.log('   testBirthDateAgeFunctionality() - Run full test');
 
-    // Fallback: Check for changes every 500ms as backup for date picker
+    // Fallback 1: Check for changes every 100ms as backup for date picker
     let lastBirthDateValue = birthDateInput.value;
     const fallbackInterval = setInterval(() => {
         const currentValue = birthDateInput.value;
         if (currentValue !== lastBirthDateValue) {
-            console.log('🔄 Fallback detected birth date change:', currentValue);
+            console.log('🔄 Fallback interval detected birth date change:', currentValue);
             lastBirthDateValue = currentValue;
             updateAge({ type: 'fallback_interval' });
         }
-    }, 500);
+    }, 100);
 
-    // Store interval ID for cleanup if needed
+    // Fallback 2: Use MutationObserver to detect attribute changes
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'value') {
+                const newValue = birthDateInput.value;
+                if (newValue !== lastBirthDateValue) {
+                    console.log('🔍 MutationObserver detected value change:', newValue);
+                    lastBirthDateValue = newValue;
+                    updateAge({ type: 'mutation_observer' });
+                }
+            }
+        });
+    });
+
+    observer.observe(birthDateInput, {
+        attributes: true,
+        attributeFilter: ['value']
+    });
+
+    // Fallback 3: Override the input's value property to detect changes
+    let originalValue = birthDateInput.value;
+    Object.defineProperty(birthDateInput, 'value', {
+        get: function() {
+            return this.getAttribute('value') || '';
+        },
+        set: function(newValue) {
+            console.log('📝 Value setter called with:', newValue);
+            this.setAttribute('value', newValue);
+            if (newValue !== lastBirthDateValue) {
+                lastBirthDateValue = newValue;
+                updateAge({ type: 'value_setter' });
+            }
+        }
+    });
+
+    // Fallback 4: Use requestAnimationFrame for real-time monitoring
+    let rafId = null;
+    const checkValueChange = () => {
+        const currentValue = birthDateInput.value;
+        if (currentValue !== lastBirthDateValue) {
+            console.log('🎬 requestAnimationFrame detected change:', currentValue);
+            lastBirthDateValue = currentValue;
+            updateAge({ type: 'raf_change' });
+        }
+        rafId = requestAnimationFrame(checkValueChange);
+    };
+    checkValueChange(); // Start monitoring
+
+    // Fallback 5: Override setAttribute and other DOM methods
+    const originalSetAttribute = birthDateInput.setAttribute;
+    birthDateInput.setAttribute = function(name, value) {
+        const result = originalSetAttribute.call(this, name, value);
+        if (name === 'value' && value !== lastBirthDateValue) {
+            console.log('🏷️ setAttribute detected value change:', value);
+            lastBirthDateValue = value;
+            setTimeout(() => updateAge({ type: 'setAttribute' }), 0);
+        }
+        return result;
+    };
+
+    // Store references for cleanup
     birthDateInput._ageFallbackInterval = fallbackInterval;
+    birthDateInput._ageObserver = observer;
+    birthDateInput._rafId = rafId;
 }
 
 // Function to force set all form values from citizen data
