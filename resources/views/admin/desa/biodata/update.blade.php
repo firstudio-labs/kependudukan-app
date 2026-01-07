@@ -460,6 +460,37 @@
     <script>
         window.citizenData = @json($citizen['data']);
         window.allCitizens = @json($allCitizens ?? []);
+
+        // Function to calculate age based on birth date
+        function calculateAge(birthDate) {
+            const today = new Date();
+            const birth = new Date(birthDate);
+            let age = today.getFullYear() - birth.getFullYear();
+            const m = today.getMonth() - birth.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+                age--;
+            }
+            return age;
+        }
+
+        // Get birth_date and age input elements
+        const birthDateInput = document.getElementById('birth_date');
+        const ageInput = document.getElementById('age');
+
+        // Add event listener to birth_date input
+        birthDateInput.addEventListener('change', function() {
+            if (this.value) {
+                const age = calculateAge(this.value);
+                ageInput.value = age;
+            } else {
+                ageInput.value = ''; // Clear age if birth date is empty
+            }
+        });
+
+        // Initialize age on page load if birth date is already set
+        if (birthDateInput.value) {
+            ageInput.value = calculateAge(birthDateInput.value);
+        }
     </script>
 
     <!-- Include Flatpickr CSS and JS from CDN -->
