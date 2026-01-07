@@ -531,6 +531,27 @@ class BiodataController extends Controller
             // Convert KK to integer
             $validatedData['kk'] = (int) $validatedData['kk'];
 
+            // Calculate age based on birth_date before saving
+            if (isset($validatedData['birth_date']) && !empty($validatedData['birth_date'])) {
+                $birthDate = new \DateTime($validatedData['birth_date']);
+                $today = new \DateTime();
+                $age = $today->diff($birthDate)->y;
+
+                // If birthday hasn't occurred this year yet, subtract 1
+                $currentYear = $today->format('Y');
+                $birthYear = $birthDate->format('Y');
+                $birthMonth = (int)$birthDate->format('m');
+                $birthDay = (int)$birthDate->format('d');
+                $currentMonth = (int)$today->format('m');
+                $currentDay = (int)$today->format('d');
+
+                if ($currentMonth < $birthMonth || ($currentMonth == $birthMonth && $currentDay < $birthDay)) {
+                    $age--;
+                }
+
+                $validatedData['age'] = max(0, $age); // Ensure age is not negative
+            }
+
             $response = $this->citizenService->updateCitizen($nik, $validatedData);
 
             if ($response['status'] === 'OK') {

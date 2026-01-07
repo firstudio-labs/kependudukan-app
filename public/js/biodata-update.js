@@ -327,7 +327,10 @@ function setupBirthDateListener() {
     const birthDateInput = document.getElementById('birth_date');
     const ageInput = document.getElementById('age');
 
-    if (!birthDateInput || !ageInput) return;
+    if (!birthDateInput || !ageInput) {
+        console.warn('Birth date or age input not found');
+        return;
+    }
 
     // Function to update age when birth date changes
     const updateAge = function() {
@@ -335,19 +338,28 @@ function setupBirthDateListener() {
         if (birthDateValue) {
             const age = calculateAge(birthDateValue);
             ageInput.value = age;
+            console.log('Age updated:', age, 'from birth date:', birthDateValue);
         } else {
             ageInput.value = '';
         }
     };
 
-    // Add event listener for birth date changes
+    // Remove any existing event listeners to avoid duplicates
+    birthDateInput.removeEventListener('change', updateAge);
+    birthDateInput.removeEventListener('input', updateAge);
+    birthDateInput.removeEventListener('blur', updateAge);
+
+    // Add event listeners for birth date changes
     birthDateInput.addEventListener('change', updateAge);
     birthDateInput.addEventListener('input', updateAge);
+    birthDateInput.addEventListener('blur', updateAge);
 
     // Calculate age on page load if birth date is already set
     if (birthDateInput.value) {
         updateAge();
     }
+
+    console.log('Birth date listener setup completed');
 }
 
 // Function to force set all form values from citizen data
@@ -585,6 +597,7 @@ function populateCitizenDataForUpdate(citizen) {
         // Calculate and set age automatically based on birth date
         const age = calculateAge(formattedDate);
         $('#age').val(age);
+        console.log('Age calculated from RF ID data:', age, 'from birth date:', formattedDate);
     }
 
     // Handle gender selection
@@ -760,15 +773,17 @@ document.addEventListener('DOMContentLoaded', function() {
     // Setup RF ID Tag listener
     setupRfIdTagListener();
 
-    // Setup birth date listener for automatic age calculation
-    setupBirthDateListener();
-
-    // Apply date formatting and force select values
+    // Apply date formatting and force select values first
     setTimeout(function() {
         // Format dates using the common function
         reformatAllDateInputs();
 
         // Force set select values from citizen data
         forceSyncFormWithData();
+
+        // Setup birth date listener for automatic age calculation after other processing
+        setTimeout(function() {
+            setupBirthDateListener();
+        }, 100);
     }, 300);
 });
