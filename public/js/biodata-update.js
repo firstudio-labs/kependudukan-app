@@ -332,34 +332,70 @@ function setupBirthDateListener() {
         return;
     }
 
+    let updateTimeout;
+
     // Function to update age when birth date changes
-    const updateAge = function() {
-        const birthDateValue = birthDateInput.value;
-        if (birthDateValue) {
-            const age = calculateAge(birthDateValue);
-            ageInput.value = age;
-            console.log('Age updated:', age, 'from birth date:', birthDateValue);
-        } else {
-            ageInput.value = '';
-        }
+    const updateAge = function(event) {
+        // Clear previous timeout to avoid multiple rapid updates
+        clearTimeout(updateTimeout);
+
+        // Use timeout to debounce updates
+        updateTimeout = setTimeout(() => {
+            const birthDateValue = birthDateInput.value.trim();
+
+            // Check if the date is valid and complete
+            if (birthDateValue && /^\d{4}-\d{2}-\d{2}$/.test(birthDateValue)) {
+                try {
+                    const birthDate = new Date(birthDateValue);
+                    // Make sure the date is valid (not invalid like 2024-02-30)
+                    if (!isNaN(birthDate.getTime()) && birthDate.getFullYear() > 1900) {
+                        const age = calculateAge(birthDateValue);
+                        ageInput.value = age;
+                        console.log('✅ Age updated:', age, 'from birth date:', birthDateValue, 'event:', event?.type);
+                    } else {
+                        ageInput.value = '';
+                        console.log('⚠️ Invalid date format:', birthDateValue);
+                    }
+                } catch (error) {
+                    ageInput.value = '';
+                    console.log('❌ Error calculating age:', error.message);
+                }
+            } else if (!birthDateValue) {
+                ageInput.value = '';
+                console.log('🗑️ Age cleared - no birth date');
+            } else {
+                // Partial date input, don't update yet
+                console.log('⏳ Waiting for complete date input:', birthDateValue);
+            }
+        }, 150); // Slightly longer delay for better UX
     };
 
     // Remove any existing event listeners to avoid duplicates
     birthDateInput.removeEventListener('change', updateAge);
     birthDateInput.removeEventListener('input', updateAge);
     birthDateInput.removeEventListener('blur', updateAge);
+    birthDateInput.removeEventListener('focus', updateAge);
+    birthDateInput.removeEventListener('keyup', updateAge);
 
-    // Add event listeners for birth date changes
-    birthDateInput.addEventListener('change', updateAge);
-    birthDateInput.addEventListener('input', updateAge);
-    birthDateInput.addEventListener('blur', updateAge);
+    // Add comprehensive event listeners for birth date changes
+    birthDateInput.addEventListener('change', updateAge); // When date is fully selected/changed
+    birthDateInput.addEventListener('input', updateAge);  // When input value changes
+    birthDateInput.addEventListener('blur', updateAge);   // When input loses focus
+    birthDateInput.addEventListener('focus', updateAge);  // When input gains focus (to update if needed)
+    birthDateInput.addEventListener('keyup', updateAge);  // When keys are pressed (backup)
 
-    // Calculate age on page load if birth date is already set
+    // Calculate age immediately on page load if birth date is already set
     if (birthDateInput.value) {
-        updateAge();
+        console.log('📅 Initial birth date found, calculating age on page load');
+        setTimeout(() => updateAge({ type: 'page_load' }), 50);
     }
 
-    console.log('Birth date listener setup completed');
+    // Add a visual indicator that age is calculated automatically
+    ageInput.setAttribute('title', 'Umur dihitung otomatis dari tanggal lahir');
+    ageInput.style.backgroundColor = '#f8fafc'; // Light gray background to indicate read-only
+
+    console.log('✅ Birth date listener setup completed with comprehensive event handling');
+    console.log('💡 Age field is now automatically calculated from birth date');
 }
 
 // Function to force set all form values from citizen data
