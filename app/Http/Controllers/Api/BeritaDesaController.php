@@ -14,11 +14,13 @@ use Illuminate\Support\Facades\Log;
 class BeritaDesaController extends Controller
 {
     protected $wilayahService;
+    protected $citizenService;
     protected $cacheStore;
 
-    public function __construct(WilayahService $wilayahService)
+    public function __construct(WilayahService $wilayahService, CitizenService $citizenService)
     {
         $this->wilayahService = $wilayahService;
+        $this->citizenService = $citizenService;
         $this->cacheStore = $this->getCacheStore();
     }
 
@@ -40,7 +42,7 @@ class BeritaDesaController extends Controller
         return Cache::store(config('cache.default', 'file'));
     }
 
-    public function index(Request $request, CitizenService $citizenService)
+    public function index(Request $request)
     {
         try {
             // Get token owner from request attributes
@@ -62,7 +64,7 @@ class BeritaDesaController extends Controller
 
             // Ambil NIK penduduk dan cari village_id
             $nik = $tokenOwner->nik ?? null;
-            $citizenData = $nik ? $citizenService->getCitizenByNIK($nik) : null;
+            $citizenData = $nik ? $this->citizenService->getCitizenByNIK($nik) : null;
 
             $villageId = null;
             if (is_array($citizenData)) {
@@ -97,8 +99,7 @@ class BeritaDesaController extends Controller
                 return response()->json($this->cacheStore->get($cacheKey), 200);
             }
 
-            $query = BeritaDesa::query();
-            $query->where('villages_id', $villageId)
+            $query = BeritaDesa::with(['user', 'penduduk'])->where('villages_id', $villageId)
                   ->where('status', 'published');
 
             // Handle search parameter
@@ -109,17 +110,13 @@ class BeritaDesaController extends Controller
                 });
             }
 
-            // Handle pagination - optimasi dengan select spesifik
-            $berita = $query->select([
-                'id', 'judul', 'deskripsi', 'komentar', 'gambar',
-                'user_id', 'villages_id', 'province_id', 'districts_id', 
-                'sub_districts_id', 'created_at', 'updated_at'
-            ])->latest()->paginate($perPage);
+            // Handle pagination
+            $berita = $query->latest()->paginate($perPage);
 
             // Pre-load semua wilayah info yang dibutuhkan untuk menghindari API call berulang
             $wilayahInfoCache = $this->preloadWilayahInfo($berita->items());
 
-            // Transform data to include gambar_url and wilayah_info (dari cache)
+            // Transform data to include gambar_url, wilayah_info, nama_penduduk, and relations
             $items = collect($berita->items())->map(function ($item) use ($wilayahInfoCache) {
                 $wilayahKey = "{$item->province_id}_{$item->districts_id}_{$item->sub_districts_id}_{$item->villages_id}";
                 return [
@@ -130,6 +127,15 @@ class BeritaDesaController extends Controller
                     'gambar' => $item->gambar,
                     'gambar_url' => $item->gambar_url, // URL lengkap gambar
                     'user_id' => $item->user_id,
+                    'nik_penduduk' => $item->nik_penduduk,
+                    'province_id' => $item->province_id,
+                    'districts_id' => $item->districts_id,
+                    'sub_districts_id' => $item->sub_districts_id,
+                    'villages_id' => $item->villages_id,
+                    'status' => $item->status,
+                    'user' => $item->user,
+                    'penduduk' => $item->penduduk,
+                    'nama_penduduk' => $this->getNamaPenduduk($item->nik_penduduk),
                     'wilayah_info' => $wilayahInfoCache[$wilayahKey] ?? [], // Dari cache yang sudah di-preload
                     'created_at' => $item->created_at,
                     'updated_at' => $item->updated_at,
@@ -280,7 +286,7 @@ class BeritaDesaController extends Controller
         }
     }
 
-    public function show(Request $request, $id, CitizenService $citizenService)
+    public function show(Request $request, $id)
     {
         try {
             // Get token owner from request attributes
@@ -301,10 +307,10 @@ class BeritaDesaController extends Controller
             }
 
             // Validasi berita milik desa yang sama dengan penduduk
-            $berita = BeritaDesa::findOrFail($id);
+            $berita = BeritaDesa::with(['user', 'penduduk'])->findOrFail($id);
 
             $nik = $tokenOwner->nik ?? null;
-            $citizenData = $nik ? $citizenService->getCitizenByNIK($nik) : null;
+            $citizenData = $nik ? $this->citizenService->getCitizenByNIK($nik) : null;
             $villageId = null;
             if (is_array($citizenData)) {
                 $payload = $citizenData['data'] ?? $citizenData;
@@ -324,7 +330,7 @@ class BeritaDesaController extends Controller
                 ], 403);
             }
 
-            // Format response with gambar_url and wilayah_info
+            // Format response with complete data like index method
             $data = [
                 'id' => $berita->id,
                 'judul' => $berita->judul,
@@ -333,7 +339,15 @@ class BeritaDesaController extends Controller
                 'gambar' => $berita->gambar,
                 'gambar_url' => $berita->gambar_url, // URL lengkap gambar
                 'user_id' => $berita->user_id,
-                'villages_id' => $berita->villages_id, // Updated field name
+                'nik_penduduk' => $berita->nik_penduduk,
+                'province_id' => $berita->province_id,
+                'districts_id' => $berita->districts_id,
+                'sub_districts_id' => $berita->sub_districts_id,
+                'villages_id' => $berita->villages_id,
+                'status' => $berita->status,
+                'user' => $berita->user,
+                'penduduk' => $berita->penduduk,
+                'nama_penduduk' => $this->getNamaPenduduk($berita->nik_penduduk),
                 'wilayah_info' => $this->getWilayahInfo($berita), // Added wilayah info
                 'created_at' => $berita->created_at,
                 'updated_at' => $berita->updated_at,
@@ -572,6 +586,30 @@ class BeritaDesaController extends Controller
 
         // Warm cache kembali secara asynchronous
         PreloadCacheJob::dispatch('berita_desa', (int) $villageId)->delay(now()->addSeconds(5));
+    }
+
+    /**
+     * Get nama penduduk from CitizenService
+     */
+    private function getNamaPenduduk($nik)
+    {
+        if (!$nik) {
+            return null;
+        }
+
+        try {
+            $citizenData = $this->citizenService->getCitizenByNIK((int) $nik);
+
+            if (is_array($citizenData)) {
+                $data = $citizenData['data'] ?? $citizenData;
+                return $data['full_name'] ?? $data['nama'] ?? 'Nama tidak tersedia';
+            }
+
+            return 'Nama tidak tersedia';
+        } catch (\Exception $e) {
+            Log::error('Error getting citizen name: ' . $e->getMessage(), ['nik' => $nik]);
+            return 'Nama tidak tersedia';
+        }
     }
 }
 
