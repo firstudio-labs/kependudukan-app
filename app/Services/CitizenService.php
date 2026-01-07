@@ -1004,6 +1004,10 @@ class CitizenService
     private function clearCitizenCaches($nik, $data)
     {
         try {
+            // Clear specific citizen cache by NIK (the main issue!)
+            Cache::forget("citizen_nik_{$nik}");
+            Cache::forget("citizen_nik_stale_{$nik}");
+
             // Clear family members cache if KK is updated
             if (isset($data['kk'])) {
                 Cache::forget("family_members_kk_{$data['kk']}");
@@ -1033,6 +1037,8 @@ class CitizenService
             foreach ($cachePatterns as $pattern) {
                 $this->clearCacheByPattern($pattern);
             }
+
+            Log::info("Cleared caches for citizen NIK: {$nik}");
         } catch (\Exception $e) {
             Log::error('Error clearing citizen caches: ' . $e->getMessage());
         }
