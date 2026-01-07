@@ -783,29 +783,78 @@ function setupBirthDateListener() {
     birthDateInput.addEventListener("blur", handleBirthDateChange);
     birthDateInput.addEventListener("focusout", handleBirthDateChange);
 
-    // Special handling for date picker - monitor value changes
+    // Special handling for date picker - monitor value changes using MutationObserver
     let lastBirthDateValue = birthDateInput.value;
+
+    // Use MutationObserver for more reliable change detection
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (
+                mutation.type === "attributes" &&
+                mutation.attributeName === "value"
+            ) {
+                const currentValue = birthDateInput.value;
+                if (currentValue !== lastBirthDateValue) {
+                    console.log(
+                        "👁️ MutationObserver detected change from",
+                        `"${lastBirthDateValue}"`,
+                        "to",
+                        `"${currentValue}"`
+                    );
+                    lastBirthDateValue = currentValue;
+                    handleBirthDateChange({
+                        type: "mutation_observer",
+                        target: birthDateInput,
+                    });
+                }
+            }
+        });
+    });
+
+    // Start observing the input element for value changes
+    observer.observe(birthDateInput, {
+        attributes: true,
+        attributeFilter: ["value"],
+    });
+
+    // Additional polling check for date picker compatibility
     const checkDateChange = () => {
         const currentValue = birthDateInput.value;
         if (currentValue !== lastBirthDateValue) {
             console.log(
-                "📅 Date picker value changed from",
+                "📅 Polling detected change from",
                 `"${lastBirthDateValue}"`,
                 "to",
                 `"${currentValue}"`
             );
             lastBirthDateValue = currentValue;
             handleBirthDateChange({
-                type: "value_change_check",
+                type: "polling_check",
                 target: birthDateInput,
             });
         }
     };
 
-    // Check for changes every 500ms (more frequent for date picker)
-    setInterval(checkDateChange, 500);
+    // Check for changes every 200ms (very frequent for date picker)
+    setInterval(checkDateChange, 200);
 
-    console.log("🎧 Event listeners added successfully");
+    // Add click listener to detect when date picker is opened
+    birthDateInput.addEventListener("click", () => {
+        console.log("🖱️ Date picker clicked/opened");
+        // After a short delay, check if value changed (user might have selected a date)
+        setTimeout(() => {
+            const currentValue = birthDateInput.value;
+            if (currentValue !== lastBirthDateValue) {
+                console.log("📅 Click-triggered change detected");
+                handleBirthDateChange({
+                    type: "click_check",
+                    target: birthDateInput,
+                });
+            }
+        }, 100);
+    });
+
+    console.log("🎧 Event listeners and observers added successfully");
 
     // Calculate initial age if birth date exists
     if (
@@ -821,24 +870,13 @@ function setupBirthDateListener() {
     ageInput.setAttribute("title", "Umur dihitung otomatis dari tanggal lahir");
     ageInput.style.backgroundColor = "#f8fafc";
 
-    // Simple fallback: Check for changes every 2 seconds
-    let lastValue = birthDateInput.value;
-    setInterval(() => {
-        const currentValue = birthDateInput.value;
-        if (currentValue !== lastValue) {
-            console.log("⏰ Interval check detected change:", currentValue);
-            lastValue = currentValue;
-            handleBirthDateChange({
-                type: "interval_check",
-                target: birthDateInput,
-            });
-        }
-    }, 2000);
-
-    console.log("✅ Birth date listener setup completed");
+    console.log("✅ Birth date listener setup completed with MutationObserver");
     console.log(
         "🎯 Ready to handle birth date changes and update age automatically"
     );
+
+    // Store observer reference for cleanup if needed
+    birthDateInput._ageObserver = observer;
 }
 
 // Function to force set all form values from citizen data
