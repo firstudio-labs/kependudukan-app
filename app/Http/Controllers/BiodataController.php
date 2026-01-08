@@ -1089,21 +1089,14 @@ public function export()
             }
         }
 
-         // OPTIMASI: Collect semua unique IDs dulu untuk batch loading
+         // OPTIMASI: Collect unique village IDs untuk batch loading
+        // District & Sub-District akan di-load on-demand dari village code (lebih reliable)
         $uniqueProvinceIds = [];
-        $uniqueDistrictIds = [];
-        $uniqueSubDistrictIds = [];
         $uniqueVillageIds = [];
 
         foreach ($citizens as $citizen) {
             if (!empty($citizen['province_id'])) {
                 $uniqueProvinceIds[$citizen['province_id']] = true;
-            }
-            if (!empty($citizen['district_id'])) {
-                $uniqueDistrictIds[$citizen['district_id']] = true;
-            }
-            if (!empty($citizen['sub_district_id'])) {
-                $uniqueSubDistrictIds[$citizen['sub_district_id']] = true;
             }
             $villageId = $citizen['village_id'] ?? $citizen['villages_id'] ?? null;
             if ($villageId) {
@@ -1111,14 +1104,13 @@ public function export()
             }
         }
 
-        // Pre-load semua data wilayah sekaligus (lebih cepat dari load satu-satu)
+        // Pre-load semua data wilayah sekaligus
         $provinceCache = [];
-        $districtCache = [];
-        $subDistrictCache = [];
+        $districtCache = []; // Akan diisi on-demand dari village code
+        $subDistrictCache = []; // Akan diisi on-demand dari village code
         $villageCache = [];
 
         // OPTIMASI: Load provinces (biasanya cuma beberapa, cepat)
-        // Cache 6 jam karena data jarang berubah
         foreach (array_keys($uniqueProvinceIds) as $provinceId) {
             try {
                 $provinceCache[$provinceId] = Cache::remember("province_{$provinceId}", 21600, function() use ($provinceId) {
@@ -1127,36 +1119,6 @@ public function export()
             } catch (\Exception $e) {
                 Log::warning("Failed to load province {$provinceId}: " . $e->getMessage());
                 $provinceCache[$provinceId] = null;
-            }
-        }
-
-        // OPTIMASI: Load districts dengan chunk untuk menghindari memory overflow pada 100k penduduk
-        $districtChunks = array_chunk(array_keys($uniqueDistrictIds), 50, true);
-        foreach ($districtChunks as $chunk) {
-            foreach ($chunk as $districtId) {
-                try {
-                    $districtCache[$districtId] = Cache::remember("district_{$districtId}", 21600, function() use ($districtId) {
-                        return $this->wilayahService->getDistrictById($districtId);
-                    });
-                } catch (\Exception $e) {
-                    Log::warning("Failed to load district {$districtId}: " . $e->getMessage());
-                    $districtCache[$districtId] = null;
-                }
-            }
-        }
-
-        // OPTIMASI: Load sub-districts dengan chunk
-        $subDistrictChunks = array_chunk(array_keys($uniqueSubDistrictIds), 50, true);
-        foreach ($subDistrictChunks as $chunk) {
-            foreach ($chunk as $subDistrictId) {
-                try {
-                    $subDistrictCache[$subDistrictId] = Cache::remember("sub_district_{$subDistrictId}", 21600, function() use ($subDistrictId) {
-                        return $this->wilayahService->getSubDistrictById($subDistrictId);
-                    });
-                } catch (\Exception $e) {
-                    Log::warning("Failed to load sub-district {$subDistrictId}: " . $e->getMessage());
-                    $subDistrictCache[$subDistrictId] = null;
-                }
             }
         }
 
@@ -1175,13 +1137,11 @@ public function export()
 
         // Log info untuk monitoring
         $totalCitizens = count($citizens);
-        $totalUniqueWilayah = count($uniqueProvinceIds) + count($uniqueDistrictIds) + count($uniqueSubDistrictIds) + count($uniqueVillageIds);
         Log::info("Export started", [
             'total_citizens' => $totalCitizens,
             'unique_provinces' => count($uniqueProvinceIds),
-            'unique_districts' => count($uniqueDistrictIds),
-            'unique_sub_districts' => count($uniqueSubDistrictIds),
             'unique_villages' => count($uniqueVillageIds),
+            'note' => 'District & Sub-district loaded on-demand from village code'
         ]);
 
         // Sekarang loop export data dengan cache yang sudah diisi
@@ -1215,6 +1175,51 @@ public function export()
                         $noKab  = substr($code, 2, 2);
                         $noKec  = substr($code, 4, 2);
                         $noKel  = substr($code, 6, 4);
+                        
+                        // PERBAIKAN: Derive district_code dan sub_district_code dari village code
+                        // Format: 1101012001 -> province: 11, district: 1101, sub_district: 110101
+                        $provinceCodeFromVillage = substr($code, 0, 2);
+                        $districtCodeFromVillage = substr($code, 0, 4); // 4 digit pertama
+                        $subDistrictCodeFromVillage = substr($code, 0, 6); // 6 digit pertama
+                        
+                        // Get district name langsung dari API dengan district code
+                        if (!isset($districtCache[$districtCodeFromVillage])) {
+                            try {
+                                $districts = $this->wilayahService->getKabupaten($provinceCodeFromVillage);
+                                foreach ($districts as $dist) {
+                                    if (isset($dist['code']) && $dist['code'] == $districtCodeFromVillage) {
+                                        $districtCache[$districtCodeFromVillage] = $dist;
+                                        break;
+                                    }
+                                }
+                            } catch (\Exception $e) {
+                                Log::warning("Failed to get district by code {$districtCodeFromVillage}: " . $e->getMessage());
+                            }
+                        }
+                        
+                        // Get sub-district name langsung dari API dengan sub_district code
+                        if (!isset($subDistrictCache[$subDistrictCodeFromVillage])) {
+                            try {
+                                $subDistricts = $this->wilayahService->getKecamatan($districtCodeFromVillage);
+                                foreach ($subDistricts as $subDist) {
+                                    if (isset($subDist['code']) && $subDist['code'] == $subDistrictCodeFromVillage) {
+                                        $subDistrictCache[$subDistrictCodeFromVillage] = $subDist;
+                                        break;
+                                    }
+                                }
+                            } catch (\Exception $e) {
+                                Log::warning("Failed to get sub-district by code {$subDistrictCodeFromVillage}: " . $e->getMessage());
+                            }
+                        }
+                        
+                        // Set nama dari cache yang baru dibuat
+                        if (isset($districtCache[$districtCodeFromVillage])) {
+                            $namaKab = $districtCache[$districtCodeFromVillage]['name'] ?? '';
+                        }
+                        
+                        if (isset($subDistrictCache[$subDistrictCodeFromVillage])) {
+                            $namaKec = $subDistrictCache[$subDistrictCodeFromVillage]['name'] ?? '';
+                        }
                     }
 
                     $namaKel = $villageName;
@@ -1226,38 +1231,6 @@ public function export()
                 $provinceData = $provinceCache[$provinceId];
                 if ($provinceData && is_array($provinceData)) {
                     $namaProp = $provinceData['name'] ?? ($provinceData['data']['name'] ?? '');
-                }
-            }
-
-            // Nama kabupaten/kota (dari cache yang sudah di-load)
-            if ($districtId && isset($districtCache[$districtId])) {
-                $districtData = $districtCache[$districtId];
-                if ($districtData && is_array($districtData)) {
-                    // Coba berbagai kemungkinan struktur response
-                    $namaKab = $districtData['name'] ?? 
-                               ($districtData['data']['name'] ?? 
-                               ($districtData['district_name'] ?? ''));
-                    
-                    // Fallback: jika masih kosong, coba dari code
-                    if (empty($namaKab) && !empty($districtData['code'])) {
-                        $namaKab = "Kabupaten " . $districtData['code'];
-                    }
-                }
-            }
-
-            // Nama kecamatan (dari cache yang sudah di-load)
-            if ($subDistrictId && isset($subDistrictCache[$subDistrictId])) {
-                $subDistrictData = $subDistrictCache[$subDistrictId];
-                if ($subDistrictData && is_array($subDistrictData)) {
-                    // Coba berbagai kemungkinan struktur response
-                    $namaKec = $subDistrictData['name'] ?? 
-                               ($subDistrictData['data']['name'] ?? 
-                               ($subDistrictData['sub_district_name'] ?? ''));
-                    
-                    // Fallback: jika masih kosong, coba dari code
-                    if (empty($namaKec) && !empty($subDistrictData['code'])) {
-                        $namaKec = "Kecamatan " . $subDistrictData['code'];
-                    }
                 }
             }
 
