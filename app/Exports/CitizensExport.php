@@ -80,7 +80,7 @@ class CitizensExport extends DefaultValueBinder implements FromArray, WithHeadin
             ];
         }
 
-        // Untuk export data, gunakan heading sesuai format standar (33 kolom)
+        // Untuk export data, gunakan heading sesuai format standar (35 kolom)
         return [
             'NIK',
             'NO_KK',
@@ -113,7 +113,9 @@ class CitizensExport extends DefaultValueBinder implements FromArray, WithHeadin
             'NO_AKTA_KAWIN',
             'AKTA_CERAI',
             'NO_AKTA_CERAI',
+            'NIK_AYAH',
             'NAMA_AYAH',
+            'NIK_IBU',
             'NAMA_IBU',
         ];
     }
@@ -122,9 +124,8 @@ class CitizensExport extends DefaultValueBinder implements FromArray, WithHeadin
     public function bindValue(Cell $cell, $value)
     {
         // Daftar kolom yang berisi NIK 16 digit: 
-        // A (NIK), B (NO_KK)
-        // L (NO_PROP), N (NO_KAB), P (NO_KEC), R (NO_KEL) - kode wilayah
-        if (in_array($cell->getColumn(), ['A', 'B']) && is_numeric($value)) {
+        // A (NIK), B (NO_KK), AF (NIK_AYAH), AH (NIK_IBU)
+        if (in_array($cell->getColumn(), ['A', 'B', 'AF', 'AH']) && is_numeric($value)) {
             $cell->setValueExplicit((string) $value, DataType::TYPE_STRING);
             return true;
         }

@@ -1302,8 +1302,10 @@ public function export()
                 $citizen['divorce_certificate'] ?? '',
                 $citizen['divorce_certificate_no'] ?? '',
 
-                // NAMA_AYAH, NAMA_IBU
+                // NIK_AYAH, NAMA_AYAH, NIK_IBU, NAMA_IBU
+                !empty($citizen['nik_father']) ? strval($citizen['nik_father']) : '',
                 $citizen['father'] ?? '',
+                !empty($citizen['nik_mother']) ? strval($citizen['nik_mother']) : '',
                 $citizen['mother'] ?? '',
             ];
             
