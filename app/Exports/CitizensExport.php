@@ -30,8 +30,8 @@ class CitizensExport extends DefaultValueBinder implements FromArray, WithHeadin
             return $this->data;
         }
 
-        // Untuk export data, skip baris pertama jika itu adalah header
-        return array_slice($this->data, 1);
+        // Untuk export data, kembalikan semua data (header sudah di-handle oleh headings())
+        return $this->data;
     }
 
     /**
@@ -80,40 +80,51 @@ class CitizensExport extends DefaultValueBinder implements FromArray, WithHeadin
             ];
         }
 
-        // Untuk export data, gunakan heading yang lebih user-friendly
+        // Untuk export data, gunakan heading sesuai format standar (33 kolom)
         return [
             'NIK',
-            'Nomor KK',
-            'Nama Lengkap',
-            'Jenis Kelamin',
-            'Tanggal Lahir',
-            'Tempat Lahir',
-            'Usia',
-            'Alamat',
-            'RT',
-            'RW',
-            'ID Provinsi',
-            'ID Kabupaten',
-            'ID Kecamatan',
-            'ID Desa',
-            'Kode Pos',
-            'Status Kewarganegaraan',
-            'Agama',
-            'Golongan Darah',
-            'Status Dalam Keluarga',
-            'Nama Ayah',
-            'Nama Ibu',
-            'NIK Ayah',
-            'NIK Ibu',
-            // Tambahkan heading lain sesuai kebutuhan
+            'NO_KK',
+            'NAMA_LGKP',
+            'JENIS_KELAMIN',
+            'TANGGAL_LAHIR',
+            'UMUR',
+            'TEMPAT_LAHIR',
+            'ALAMAT',
+            'NO_RT',
+            'NO_RW',
+            'KODE_POS',
+            'NO_PROP',
+            'NAMA_PROP',
+            'NO_KAB',
+            'NAMA_KAB',
+            'NO_KEC',
+            'NAMA_KEC',
+            'NO_KEL',
+            'KELURAHAN',
+            'SHDK',
+            'STATUS_KAWIN',
+            'PENDIDIKAN',
+            'AGAMA',
+            'PEKERJAAN',
+            'GOLONGAN_DARAH',
+            'AKTA_LAHIR',
+            'NO_AKTA_LAHIR',
+            'AKTA_KAWIN',
+            'NO_AKTA_KAWIN',
+            'AKTA_CERAI',
+            'NO_AKTA_CERAI',
+            'NAMA_AYAH',
+            'NAMA_IBU',
         ];
     }
 
     // Custom binder: paksa kolom NIK/KK menjadi string explicit
     public function bindValue(Cell $cell, $value)
     {
-        // Daftar kolom yang berisi NIK 16 digit: A (NIK), B (Nomor KK), V (NIK Ayah), W (NIK Ibu)
-        if (in_array($cell->getColumn(), ['A', 'B', 'V', 'W']) && is_numeric($value)) {
+        // Daftar kolom yang berisi NIK 16 digit: 
+        // A (NIK), B (NO_KK)
+        // L (NO_PROP), N (NO_KAB), P (NO_KEC), R (NO_KEL) - kode wilayah
+        if (in_array($cell->getColumn(), ['A', 'B']) && is_numeric($value)) {
             $cell->setValueExplicit((string) $value, DataType::TYPE_STRING);
             return true;
         }

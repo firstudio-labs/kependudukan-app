@@ -1050,43 +1050,9 @@ public function export()
 {
     try {
         $exportData = [];
-
-        // Header sesuai permintaan
-        $exportData[] = [
-            'NIK',
-            'NO_KK',
-            'NAMA_LGKP',
-            'JENIS_KELAMIN',
-            'TANGGAL_LAHIR',
-            'UMUR',
-            'TEMPAT_LAHIR',
-            'ALAMAT',
-            'NO_RT',
-            'NO_RW',
-            'KODE_POS',
-            'NO_PROP',
-            'NAMA_PROP',
-            'NO_KAB',
-            'NAMA_KAB',
-            'NO_KEC',
-            'NAMA_KEC',
-            'NO_KEL',
-            'KELURAHAN',
-            'SHDK',
-            'STATUS_KAWIN',
-            'PENDIDIKAN',
-            'AGAMA',
-            'PEKERJAAN',
-            'GOLONGAN_DARAH',
-            'AKTA_LAHIR',
-            'NO_AKTA_LAHIR',
-            'AKTA_KAWIN',
-            'NO_AKTA_KAWIN',
-            'AKTA_CERAI',
-            'NO_AKTA_CERAI',
-            'NAMA_AYAH',
-            'NAMA_IBU',
-        ];
+        
+        // CATATAN: Header akan di-handle oleh CitizensExport::headings()
+        // Jadi tidak perlu menambahkan header di sini
 
         // Ambil semua data citizen
         if (Auth::user()->role == 'admin desa') {
