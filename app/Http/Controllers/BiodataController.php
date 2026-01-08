@@ -1051,28 +1051,38 @@ public function export()
         $exportData = [];
         $exportData[] = [
             'NIK',
-            'Nomor KK',
-            'Nama Lengkap',
-            'Jenis Kelamin',
-            'Tanggal Lahir',
-            'Tempat Lahir',
-            'Usia',
-            'Alamat',
-            'RT',
-            'RW',
-            'Provinsi',
-            'Kabupaten',
-            'Kecamatan',
-            'Desa',
-            'Kode Pos',
-            'Status Kewarganegaraan',
-            'Agama',
-            'Golongan Darah',
-            'Status Dalam Keluarga',
-            'Nama Ayah',
-            'Nama Ibu',
-            'NIK Ayah',
-            'NIK Ibu',
+            'NO_KK',
+            'NAMA_LGKP',
+            'JENIS_KELAMIN',
+            'TANGGAL_LAHIR',
+            'UMUR',
+            'TEMPAT_LAHIR',
+            'ALAMAT',
+            'NO_RT',
+            'NO_RW',
+            'KODE_POS',
+            'NO_PROP',
+            'NAMA_PROP',
+            'NO_KAB',
+            'NAMA_KAB',
+            'NO_KEC',
+            'NAMA_KEC',
+            'NO_KEL',
+            'KELURAHAN',
+            'SHDK',
+            'STATUS_KAWIN',
+            'PENDIDIKAN',
+            'AGAMA',
+            'PEKERJAAN',
+            'GOLONGAN_DARAH',
+            'AKTA_LAHIR',
+            'NO_AKTA_LAHIR',
+            'AKTA_KAWIN',
+            'NO_AKTA_KAWIN',
+            'AKTA_CERAI',
+            'NO_AKTA_CERAI',
+            'NAMA_AYAH',
+            'NAMA_IBU',
         ];
 
         if (Auth::user()->role == 'admin desa') {
@@ -1105,37 +1115,193 @@ public function export()
             }
         }
 
+        // Cache untuk wilayah dan pekerjaan untuk menghindari query berulang
+        $wilayahCache = [];
+        $jobCache = [];
+
         foreach ($citizens as $citizen) {
-            // Format NIK fields as strings (no leading apostrophe needed with custom binder)
+            // Format NIK fields as strings
             $nik = !empty($citizen['nik']) ? strval($citizen['nik']) : '';
             $kk = !empty($citizen['kk']) ? strval($citizen['kk']) : '';
-            $nikFather = !empty($citizen['nik_father']) ? strval($citizen['nik_father']) : '';
-            $nikMother = !empty($citizen['nik_mother']) ? strval($citizen['nik_mother']) : '';
+
+            // Ambil village_id
+            $villageId = $citizen['village_id'] ?? $citizen['villages_id'] ?? null;
+            
+            // Parse wilayah code
+            $noProp = '';
+            $namaProp = '';
+            $noKab = '';
+            $namaKab = '';
+            $noKec = '';
+            $namaKec = '';
+            $noKel = '';
+            $kelurahan = '';
+
+            if ($villageId) {
+                // Cek cache dulu
+                if (!isset($wilayahCache[$villageId])) {
+                    try {
+                        $villageData = $this->wilayahService->getVillageById($villageId);
+                        
+                        // Handle different response structures
+                        $code = null;
+                        $kelurahan = '';
+                        
+                        if ($villageData) {
+                            // Try to get code from different possible structures
+                            if (isset($villageData['code'])) {
+                                $code = $villageData['code'];
+                            } elseif (isset($villageData['data']['code'])) {
+                                $code = $villageData['data']['code'];
+                            }
+                            
+                            // Try to get name from different possible structures
+                            if (isset($villageData['name'])) {
+                                $kelurahan = $villageData['name'];
+                            } elseif (isset($villageData['data']['name'])) {
+                                $kelurahan = $villageData['data']['name'];
+                            }
+                        }
+                        
+                        if ($code) {
+                            $code = strval($code);
+                            // Parse code: 1101012001 -> 11 (NO_PROP), 01 (NO_KAB), 01 (NO_KEC), 2001 (NO_KEL)
+                            if (strlen($code) >= 10) {
+                                $noProp = substr($code, 0, 2);
+                                $noKab = substr($code, 2, 2);
+                                $noKec = substr($code, 4, 2);
+                                $noKel = substr($code, 6, 4);
+                                
+                                // Ambil nama provinsi
+                                $provinceId = $citizen['province_id'] ?? null;
+                                if ($provinceId) {
+                                    $province = $this->wilayahService->getProvinceById($provinceId);
+                                    if ($province) {
+                                        $namaProp = $province['name'] ?? '';
+                                    }
+                                }
+                                
+                                // Ambil nama kabupaten
+                                $districtId = $citizen['district_id'] ?? null;
+                                if ($districtId) {
+                                    $district = $this->wilayahService->getDistrictById($districtId);
+                                    if ($district) {
+                                        $namaKab = $district['name'] ?? '';
+                                    }
+                                }
+                                
+                                // Ambil nama kecamatan
+                                $subDistrictId = $citizen['sub_district_id'] ?? null;
+                                if ($subDistrictId) {
+                                    $subDistrict = $this->wilayahService->getSubDistrictById($subDistrictId);
+                                    if ($subDistrict) {
+                                        $namaKec = $subDistrict['name'] ?? '';
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Simpan ke cache
+                        $wilayahCache[$villageId] = [
+                            'no_prop' => $noProp,
+                            'nama_prop' => $namaProp,
+                            'no_kab' => $noKab,
+                            'nama_kab' => $namaKab,
+                            'no_kec' => $noKec,
+                            'nama_kec' => $namaKec,
+                            'no_kel' => $noKel,
+                            'kelurahan' => $kelurahan,
+                        ];
+                    } catch (\Exception $e) {
+                        Log::error('Error getting wilayah data for village_id ' . $villageId . ': ' . $e->getMessage());
+                        $wilayahCache[$villageId] = [
+                            'no_prop' => '',
+                            'nama_prop' => '',
+                            'no_kab' => '',
+                            'nama_kab' => '',
+                            'no_kec' => '',
+                            'nama_kec' => '',
+                            'no_kel' => '',
+                            'kelurahan' => '',
+                        ];
+                    }
+                }
+                
+                // Ambil dari cache
+                $wilayah = $wilayahCache[$villageId];
+                $noProp = $wilayah['no_prop'];
+                $namaProp = $wilayah['nama_prop'];
+                $noKab = $wilayah['no_kab'];
+                $namaKab = $wilayah['nama_kab'];
+                $noKec = $wilayah['no_kec'];
+                $namaKec = $wilayah['nama_kec'];
+                $noKel = $wilayah['no_kel'];
+                $kelurahan = $wilayah['kelurahan'];
+            }
+
+            // Mapping nilai numerik ke teks
+            $jenisKelamin = $this->mapGenderToText($citizen['gender'] ?? null);
+            $shdk = $this->mapFamilyStatusToText($citizen['family_status'] ?? null);
+            $statusKawin = $this->mapMaritalStatusToText($citizen['marital_status'] ?? null);
+            $pendidikan = $this->mapEducationStatusToText($citizen['education_status'] ?? null);
+            $agama = $this->mapReligionToText($citizen['religion'] ?? null);
+            $golonganDarah = $this->mapBloodTypeToText($citizen['blood_type'] ?? null);
+            $aktaLahir = $this->mapCertificateToText($citizen['birth_certificate'] ?? null);
+            $aktaKawin = $this->mapCertificateToText($citizen['marital_certificate'] ?? null);
+            $aktaCerai = $this->mapCertificateToText($citizen['divorce_certificate'] ?? null);
+
+            // Ambil nama pekerjaan
+            $pekerjaan = '';
+            $jobTypeId = $citizen['job_type_id'] ?? null;
+            if ($jobTypeId) {
+                if (!isset($jobCache[$jobTypeId])) {
+                    try {
+                        $job = $this->jobService->getJobById($jobTypeId);
+                        $pekerjaan = $job['name'] ?? '';
+                        $jobCache[$jobTypeId] = $pekerjaan;
+                    } catch (\Exception $e) {
+                        Log::error('Error getting job for job_type_id ' . $jobTypeId . ': ' . $e->getMessage());
+                        $jobCache[$jobTypeId] = '';
+                    }
+                } else {
+                    $pekerjaan = $jobCache[$jobTypeId];
+                }
+            }
 
             $exportData[] = [
                 $nik,
                 $kk,
                 $citizen['full_name'] ?? '',
-                $citizen['gender'] ?? '',
+                $jenisKelamin,
                 $citizen['birth_date'] ?? '',
-                $citizen['birth_place'] ?? '',
                 $citizen['age'] ?? '',
+                $citizen['birth_place'] ?? '',
                 $citizen['address'] ?? '',
                 $citizen['rt'] ?? '',
                 $citizen['rw'] ?? '',
-                $citizen['province_id'] ?? '',
-                $citizen['district_id'] ?? '',
-                $citizen['sub_district_id'] ?? '',
-                $citizen['village_id'] ?? '',
                 $citizen['postal_code'] ?? '',
-                $citizen['citizen_status'] ?? '',
-                $citizen['religion'] ?? '',
-                $citizen['blood_type'] ?? '',
-                $citizen['family_status'] ?? '',
+                $noProp,
+                $namaProp,
+                $noKab,
+                $namaKab,
+                $noKec,
+                $namaKec,
+                $noKel,
+                $kelurahan,
+                $shdk,
+                $statusKawin,
+                $pendidikan,
+                $agama,
+                $pekerjaan,
+                $golonganDarah,
+                $aktaLahir,
+                $citizen['birth_certificate_no'] ?? '',
+                $aktaKawin,
+                $citizen['marital_certificate_no'] ?? '',
+                $aktaCerai,
+                $citizen['divorce_certificate_no'] ?? '',
                 $citizen['father'] ?? '',
                 $citizen['mother'] ?? '',
-                $nikFather,
-                $nikMother,
             ];
         }
 
@@ -1334,5 +1500,164 @@ public function export()
         } catch (\Exception $e) {
             Log::error('Error clearing guest form caches: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Map gender numeric value to text
+     */
+    private function mapGenderToText($value)
+    {
+        if ($value === null || $value === '') {
+            return '';
+        }
+        
+        $value = (int) $value;
+        $map = [
+            1 => 'Laki-laki',
+            2 => 'Perempuan',
+        ];
+        
+        return $map[$value] ?? '';
+    }
+
+    /**
+     * Map family status numeric value to text
+     */
+    private function mapFamilyStatusToText($value)
+    {
+        if ($value === null || $value === '') {
+            return '';
+        }
+        
+        $value = (int) $value;
+        $map = [
+            1 => 'ANAK',
+            2 => 'KEPALA KELUARGA',
+            3 => 'ISTRI',
+            4 => 'ORANG TUA',
+            5 => 'MERTUA',
+            6 => 'CUCU',
+            7 => 'FAMILI LAIN',
+        ];
+        
+        return $map[$value] ?? '';
+    }
+
+    /**
+     * Map marital status numeric value to text
+     */
+    private function mapMaritalStatusToText($value)
+    {
+        if ($value === null || $value === '' || $value === 0) {
+            return '';
+        }
+        
+        $value = (int) $value;
+        $map = [
+            1 => 'Belum Kawin',
+            2 => 'Kawin Tercatat',
+            3 => 'Kawin Belum Tercatat',
+            4 => 'Cerai Hidup Tercatat',
+            5 => 'Cerai Hidup Belum Tercatat',
+            6 => 'Cerai Mati',
+        ];
+        
+        return $map[$value] ?? '';
+    }
+
+    /**
+     * Map education status numeric value to text
+     */
+    private function mapEducationStatusToText($value)
+    {
+        if ($value === null || $value === '') {
+            return '';
+        }
+        
+        $value = (int) $value;
+        $map = [
+            1 => 'Tidak/Belum Sekolah',
+            2 => 'Belum tamat SD/Sederajat',
+            3 => 'Tamat SD/Sederajat',
+            4 => 'SLTP/SMP/Sederajat',
+            5 => 'SLTA/SMA/Sederajat',
+            6 => 'Diploma I/II',
+            7 => 'Akademi/Diploma III/ Sarjana Muda',
+            8 => 'Diploma IV/ Strata I/ Strata II',
+            9 => 'Strata III',
+            10 => 'Lainnya',
+        ];
+        
+        return $map[$value] ?? '';
+    }
+
+    /**
+     * Map religion numeric value to text
+     */
+    private function mapReligionToText($value)
+    {
+        if ($value === null || $value === '') {
+            return '';
+        }
+        
+        $value = (int) $value;
+        $map = [
+            1 => 'Islam',
+            2 => 'Kristen',
+            3 => 'Katolik',
+            4 => 'Hindu',
+            5 => 'Buddha',
+            6 => 'Kong Hu Cu',
+            7 => 'Lainnya',
+        ];
+        
+        return $map[$value] ?? '';
+    }
+
+    /**
+     * Map blood type numeric value to text
+     */
+    private function mapBloodTypeToText($value)
+    {
+        if ($value === null || $value === '') {
+            return '';
+        }
+        
+        $value = (int) $value;
+        $map = [
+            1 => 'A',
+            2 => 'B',
+            3 => 'AB',
+            4 => 'O',
+            5 => 'A+',
+            6 => 'A-',
+            7 => 'B+',
+            8 => 'B-',
+            9 => 'AB+',
+            10 => 'AB-',
+            11 => 'O+',
+            12 => 'O-',
+            13 => 'Tidak Tahu',
+        ];
+        
+        return $map[$value] ?? '';
+    }
+
+    /**
+     * Map certificate numeric value to text
+     */
+    private function mapCertificateToText($value)
+    {
+        if ($value === null || $value === '' || $value === 0) {
+            return '';
+        }
+        
+        $value = (int) $value;
+        $map = [
+            1 => 'Ada',
+            2 => 'Tidak Ada',
+        ];
+        
+        return $map[$value] ?? '';
     }
 }
