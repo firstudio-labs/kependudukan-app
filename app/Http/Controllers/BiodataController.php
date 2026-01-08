@@ -1049,6 +1049,10 @@ class BiodataController extends Controller
 public function export()
 {
     try {
+        // Set memory limit dan execution time untuk handle 100k penduduk
+        ini_set('memory_limit', '512M');
+        set_time_limit(300); // 5 menit
+        
         $exportData = [];
         
         // CATATAN: Header akan di-handle oleh CitizensExport::headings()
@@ -1113,34 +1117,77 @@ public function export()
         $subDistrictCache = [];
         $villageCache = [];
 
-        // Load provinces (biasanya cuma beberapa, cepat)
+        // OPTIMASI: Load provinces (biasanya cuma beberapa, cepat)
+        // Cache 6 jam karena data jarang berubah
         foreach (array_keys($uniqueProvinceIds) as $provinceId) {
-            $provinceCache[$provinceId] = Cache::remember("province_{$provinceId}", 3600, function() use ($provinceId) {
-                return $this->wilayahService->getProvinceById($provinceId);
-            });
+            try {
+                $provinceCache[$provinceId] = Cache::remember("province_{$provinceId}", 21600, function() use ($provinceId) {
+                    return $this->wilayahService->getProvinceById($provinceId);
+                });
+            } catch (\Exception $e) {
+                Log::warning("Failed to load province {$provinceId}: " . $e->getMessage());
+                $provinceCache[$provinceId] = null;
+            }
         }
 
-        // Load districts
-        foreach (array_keys($uniqueDistrictIds) as $districtId) {
-            $districtCache[$districtId] = Cache::remember("district_{$districtId}", 3600, function() use ($districtId) {
-                return $this->wilayahService->getDistrictById($districtId);
-            });
+        // OPTIMASI: Load districts dengan chunk untuk menghindari memory overflow pada 100k penduduk
+        $districtChunks = array_chunk(array_keys($uniqueDistrictIds), 50, true);
+        foreach ($districtChunks as $chunk) {
+            foreach ($chunk as $districtId) {
+                try {
+                    $districtCache[$districtId] = Cache::remember("district_{$districtId}", 21600, function() use ($districtId) {
+                        return $this->wilayahService->getDistrictById($districtId);
+                    });
+                } catch (\Exception $e) {
+                    Log::warning("Failed to load district {$districtId}: " . $e->getMessage());
+                    $districtCache[$districtId] = null;
+                }
+            }
         }
 
-        // Load sub-districts
-        foreach (array_keys($uniqueSubDistrictIds) as $subDistrictId) {
-            $subDistrictCache[$subDistrictId] = Cache::remember("sub_district_{$subDistrictId}", 3600, function() use ($subDistrictId) {
-                return $this->wilayahService->getSubDistrictById($subDistrictId);
-            });
+        // OPTIMASI: Load sub-districts dengan chunk
+        $subDistrictChunks = array_chunk(array_keys($uniqueSubDistrictIds), 50, true);
+        foreach ($subDistrictChunks as $chunk) {
+            foreach ($chunk as $subDistrictId) {
+                try {
+                    $subDistrictCache[$subDistrictId] = Cache::remember("sub_district_{$subDistrictId}", 21600, function() use ($subDistrictId) {
+                        return $this->wilayahService->getSubDistrictById($subDistrictId);
+                    });
+                } catch (\Exception $e) {
+                    Log::warning("Failed to load sub-district {$subDistrictId}: " . $e->getMessage());
+                    $subDistrictCache[$subDistrictId] = null;
+                }
+            }
         }
 
-        // Load villages (sudah ada caching internal di getVillageById)
-        foreach (array_keys($uniqueVillageIds) as $villageId) {
-            $villageCache[$villageId] = $this->wilayahService->getVillageById($villageId);
+        // OPTIMASI: Load villages dengan chunk (sudah ada caching internal di getVillageById)
+        $villageChunks = array_chunk(array_keys($uniqueVillageIds), 50, true);
+        foreach ($villageChunks as $chunk) {
+            foreach ($chunk as $villageId) {
+                try {
+                    $villageCache[$villageId] = $this->wilayahService->getVillageById($villageId);
+                } catch (\Exception $e) {
+                    Log::warning("Failed to load village {$villageId}: " . $e->getMessage());
+                    $villageCache[$villageId] = null;
+                }
+            }
         }
+
+        // Log info untuk monitoring
+        $totalCitizens = count($citizens);
+        $totalUniqueWilayah = count($uniqueProvinceIds) + count($uniqueDistrictIds) + count($uniqueSubDistrictIds) + count($uniqueVillageIds);
+        Log::info("Export started", [
+            'total_citizens' => $totalCitizens,
+            'unique_provinces' => count($uniqueProvinceIds),
+            'unique_districts' => count($uniqueDistrictIds),
+            'unique_sub_districts' => count($uniqueSubDistrictIds),
+            'unique_villages' => count($uniqueVillageIds),
+        ]);
 
         // Sekarang loop export data dengan cache yang sudah diisi
+        $processedCount = 0;
         foreach ($citizens as $citizen) {
+            $processedCount++;
             // NIK & KK sebagai string supaya tidak hilang nol di depan
             $nik = !empty($citizen['nik']) ? strval($citizen['nik']) : '';
             $kk = !empty($citizen['kk']) ? strval($citizen['kk']) : '';
@@ -1177,7 +1224,7 @@ public function export()
             // Nama provinsi (dari cache yang sudah di-load)
             if ($provinceId && isset($provinceCache[$provinceId])) {
                 $provinceData = $provinceCache[$provinceId];
-                if ($provinceData) {
+                if ($provinceData && is_array($provinceData)) {
                     $namaProp = $provinceData['name'] ?? ($provinceData['data']['name'] ?? '');
                 }
             }
@@ -1185,16 +1232,32 @@ public function export()
             // Nama kabupaten/kota (dari cache yang sudah di-load)
             if ($districtId && isset($districtCache[$districtId])) {
                 $districtData = $districtCache[$districtId];
-                if ($districtData) {
-                    $namaKab = $districtData['name'] ?? ($districtData['data']['name'] ?? '');
+                if ($districtData && is_array($districtData)) {
+                    // Coba berbagai kemungkinan struktur response
+                    $namaKab = $districtData['name'] ?? 
+                               ($districtData['data']['name'] ?? 
+                               ($districtData['district_name'] ?? ''));
+                    
+                    // Fallback: jika masih kosong, coba dari code
+                    if (empty($namaKab) && !empty($districtData['code'])) {
+                        $namaKab = "Kabupaten " . $districtData['code'];
+                    }
                 }
             }
 
             // Nama kecamatan (dari cache yang sudah di-load)
             if ($subDistrictId && isset($subDistrictCache[$subDistrictId])) {
                 $subDistrictData = $subDistrictCache[$subDistrictId];
-                if ($subDistrictData) {
-                    $namaKec = $subDistrictData['name'] ?? ($subDistrictData['data']['name'] ?? '');
+                if ($subDistrictData && is_array($subDistrictData)) {
+                    // Coba berbagai kemungkinan struktur response
+                    $namaKec = $subDistrictData['name'] ?? 
+                               ($subDistrictData['data']['name'] ?? 
+                               ($subDistrictData['sub_district_name'] ?? ''));
+                    
+                    // Fallback: jika masih kosong, coba dari code
+                    if (empty($namaKec) && !empty($subDistrictData['code'])) {
+                        $namaKec = "Kecamatan " . $subDistrictData['code'];
+                    }
                 }
             }
 
@@ -1270,7 +1333,19 @@ public function export()
                 $citizen['father'] ?? '',
                 $citizen['mother'] ?? '',
             ];
+            
+            // Free memory setiap 1000 records untuk handle 100k penduduk
+            if ($processedCount % 1000 === 0) {
+                gc_collect_cycles();
+                Log::info("Export progress: {$processedCount}/{$totalCitizens} records processed");
+            }
         }
+
+        // Log completion
+        Log::info("Export completed", [
+            'total_exported' => count($exportData),
+            'execution_time' => round(microtime(true) - LARAVEL_START, 2) . 's'
+        ]);
 
         $filename = 'biodata_' . date('Ymd_His') . '.xlsx';
         return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\CitizensExport($exportData), $filename);
