@@ -5,6 +5,7 @@ namespace App\Services;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class WilayahService
 {
@@ -536,17 +537,34 @@ class WilayahService
      */
     public function getVillageById($id)
     {
-        // Bersihkan cache untuk debugging
         $cacheKey = "village_{$id}";
-        Cache::forget($cacheKey);
 
-        // Log info untuk debugging
-        Log::info("Mencoba mendapatkan data desa dengan ID: {$id}");
+        // Cek cache terlebih dahulu agar tidak hit API berulang
+        if (Cache::has($cacheKey)) {
+            return Cache::get($cacheKey);
+        }
+
+        // Coba ambil dulu dari tabel lokal indonesia_villages (kalau ada)
+        try {
+            $villageRow = DB::table('indonesia_villages')->where('id', $id)->first();
+            if ($villageRow) {
+                $data = [
+                    'id' => $villageRow->id,
+                    'code' => $villageRow->code,
+                    'name' => $villageRow->name,
+                ];
+
+                Cache::put($cacheKey, $data, now()->addDay());
+                return $data;
+            }
+        } catch (\Exception $e) {
+            // Kalau tabel tidak ada atau error lain, lanjut pakai API
+            Log::warning("Gagal mengambil desa dari tabel indonesia_villages: " . $e->getMessage());
+        }
 
         try {
             // Coba endpoint pertama
             $endpoint = "/api/village/{$id}";
-            Log::info("Mencoba endpoint: {$this->baseUrl}{$endpoint}");
 
             $response = Http::withHeaders([
                 'Accept' => 'application/json',
@@ -556,7 +574,6 @@ class WilayahService
 
             if ($response->successful()) {
                 $data = $response->json();
-                Log::info("Respons dari endpoint pertama:", ['data' => $data]);
 
                 if (isset($data['name']) && !empty($data['name'])) {
                     Cache::put($cacheKey, $data, now()->addDay());
@@ -569,7 +586,6 @@ class WilayahService
 
             // Coba endpoint kedua
             $endpoint = "/api/villages/{$id}";
-            Log::info("Mencoba endpoint: {$this->baseUrl}{$endpoint}");
 
             $response = Http::withHeaders([
                 'Accept' => 'application/json',
@@ -579,7 +595,6 @@ class WilayahService
 
             if ($response->successful()) {
                 $data = $response->json();
-                Log::info("Respons dari endpoint kedua:", ['data' => $data]);
 
                 if (isset($data['name']) && !empty($data['name'])) {
                     Cache::put($cacheKey, $data, now()->addDay());
@@ -592,7 +607,6 @@ class WilayahService
 
             // Coba endpoint ketiga
             $endpoint = "/api/village/detail/{$id}";
-            Log::info("Mencoba endpoint: {$this->baseUrl}{$endpoint}");
 
             $response = Http::withHeaders([
                 'Accept' => 'application/json',
@@ -602,7 +616,6 @@ class WilayahService
 
             if ($response->successful()) {
                 $data = $response->json();
-                Log::info("Respons dari endpoint ketiga:", ['data' => $data]);
 
                 if (isset($data['name']) && !empty($data['name'])) {
                     Cache::put($cacheKey, $data, now()->addDay());
@@ -614,8 +627,6 @@ class WilayahService
             }
 
             // Jika semua endpoint gagal, coba cari dari daftar desa
-            Log::info("Mencoba mencari desa dari daftar desa");
-
             // Ambil semua daftar kecamatan (menggunakan metode yang sudah ada)
             $kecamatanPages = $this->getKecamatanByPage();
 
